@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data Sync Agent Walkthrough</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8fafc;
+    --surface-strong: #eef2f7;
+    --fg: #172033;
+    --muted: #5f6b7a;
+    --border: #cbd5e1;
+    --source: #22c55e;
+    --agent: #3b82f6;
+    --cloud: #8b5cf6;
+    --hold: #f59e0b;
+    --risk: #ef4444;
+    --success: #22c55e;
+    --accent: #2563eb;
+    --ink-on-fill: #172033;
+    --shadow: 0 14px 36px rgba(15, 23, 42, .10);
+  }
+
+  body.cb {
+    --source: #009e73;
+    --agent: #0072b2;
+    --cloud: #cc79a7;
+    --hold: #e69f00;
+    --risk: #d55e00;
+    --success: #009e73;
+    --accent: #0072b2;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--agent) 10%, transparent), transparent 26rem),
+      radial-gradient(circle at 94% 8%, color-mix(in srgb, var(--cloud) 10%, transparent), transparent 28rem),
+      var(--bg);
+    color: var(--fg);
+    font: 15px/1.55 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  button { font: inherit; }
+
+  .page { width: min(1500px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 72px; }
+
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 18px;
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .kicker::before { content: ""; width: 28px; height: 3px; background: var(--accent); border-radius: 999px; }
+
+  h1 { margin: 0; max-width: 900px; font-size: clamp(30px, 5vw, 58px); line-height: 1.02; letter-spacing: -.045em; }
+  .lede { max-width: 900px; margin: 14px 0 0; color: var(--muted); font-size: clamp(16px, 2vw, 20px); }
+
+  .theme-button,
+  .controls button,
+  .step-chip {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .theme-button { padding: 10px 14px; font-weight: 750; white-space: nowrap; }
+  .theme-button:hover, .controls button:hover, .step-chip:hover { border-color: var(--accent); }
+  .theme-button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); border-color: var(--accent); }
+
+  .thesis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 24px 0;
+  }
+
+  .thesis-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+  }
+
+  .thesis-card b { display: block; font-size: 13px; }
+  .thesis-card span { color: var(--muted); font-size: 12px; }
+
+  .walkthrough {
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .walkthrough-top { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+
+  .controls { display: grid; grid-template-columns: auto auto auto auto 1fr; gap: 8px; align-items: center; }
+  .controls button { padding: 8px 12px; font-weight: 750; }
+  .controls button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); border-color: var(--accent); }
+  .step-count { color: var(--muted); font: 700 12px/1.2 ui-monospace, "SF Mono", Menlo, monospace; min-width: 72px; text-align: center; }
+  .progress { height: 8px; min-width: 100px; overflow: hidden; border-radius: 999px; background: var(--surface-strong); }
+  .progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width .35s ease; }
+
+  .step-strip { display: flex; gap: 6px; padding-top: 12px; overflow-x: auto; scrollbar-width: thin; }
+  .step-chip { flex: 0 0 auto; width: 34px; height: 30px; font-size: 12px; font-weight: 800; }
+  .step-chip.current { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .step-chip.visited { background: color-mix(in srgb, var(--success) 14%, var(--bg)); border-color: var(--success); }
+
+  .scene { padding: 22px; }
+
+  .step-header { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; min-height: 102px; }
+  .step-number {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--accent);
+    border-radius: 15px;
+    color: var(--accent);
+    font-size: 17px;
+    font-weight: 900;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  }
+  .eyebrow { color: var(--accent); font-size: 11px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+  h2 { margin: 2px 0 5px; font-size: clamp(22px, 3vw, 31px); letter-spacing: -.025em; }
+  #summary { max-width: 1000px; margin: 0; color: var(--muted); }
+
+  .route-wrap {
+    margin: 12px 0 20px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  .route {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    gap: 12px;
+    min-width: 920px;
+  }
+
+  .route::before {
+    content: "";
+    position: absolute;
+    top: 31px;
+    left: 7%;
+    right: 7%;
+    height: 3px;
+    background: repeating-linear-gradient(90deg, var(--border), var(--border) 8px, transparent 8px, transparent 13px);
+    z-index: 0;
+  }
+
+  .route-node { position: relative; z-index: 1; text-align: center; }
+  .node-dot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 9px;
+    border: 2px solid var(--border);
+    border-radius: 21px;
+    background: var(--bg);
+    font-size: 23px;
+    transition: .3s ease;
+  }
+  .route-node b { display: block; font-size: 12px; }
+  .route-node small { display: block; min-height: 34px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+  .route-node .state-glyph { position: absolute; top: -7px; right: -7px; display: none; width: 21px; height: 21px; place-items: center; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 900; box-shadow: 0 0 0 2px var(--bg); }
+
+  .route-node.done .node-dot { border-color: var(--success); background: color-mix(in srgb, var(--success) 16%, var(--bg)); }
+  .route-node.done .state-glyph { display: grid; background: var(--success); }
+  .route-node.active .node-dot { transform: translateY(-4px); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--bg)); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 24%, transparent); }
+  .route-node.active .state-glyph { display: grid; background: var(--accent); }
+  .route-node.hold .node-dot { border-style: dashed; border-color: var(--hold); background: color-mix(in srgb, var(--hold) 24%, var(--bg)); }
+  .route-node.hold .state-glyph { display: grid; background: var(--hold); color: var(--ink-on-fill); }
+  .route-node.risk .node-dot { border-color: var(--risk); background: color-mix(in srgb, var(--risk) 22%, var(--bg)); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px var(--risk); }
+  .route-node.risk .state-glyph { display: grid; background: var(--risk); }
+
+  .trust-row { display: grid; grid-template-columns: 2fr 1fr 3fr; min-width: 920px; margin-top: 12px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+  .trust-row span { padding-top: 7px; border-top: 2px solid var(--border); text-align: center; }
+  .trust-row span:nth-child(1) { border-color: var(--agent); }
+  .trust-row span:nth-child(2) { border-color: var(--hold); }
+  .trust-row span:nth-child(3) { border-color: var(--cloud); }
+
+  .crypto-flow {
+    margin: 0 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .crypto-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .crypto-head b { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  .crypto-head span { color: var(--muted); font-size: 11px; text-align: right; }
+  .key-diagram { padding: 16px; }
+
+  .key-row {
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) 50px minmax(220px, 1.25fr) 50px minmax(170px, 1fr);
+    gap: 9px;
+    align-items: stretch;
+  }
+
+  .key-stack { display: grid; gap: 9px; }
+  .key-arrow { display: grid; place-items: center; color: var(--accent); font-size: 25px; font-weight: 900; }
+
+  .key-card {
+    position: relative;
+    min-height: 88px;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 13px;
+    background: var(--bg);
+  }
+
+  .key-card .key-label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 900; }
+  .key-card .key-label i { font-style: normal; font-size: 18px; }
+  .key-card p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+  .key-card code { display: block; margin-top: 7px; color: var(--fg); font: 10px/1.4 ui-monospace, "SF Mono", Menlo, monospace; }
+  .key-card.public { border-color: var(--agent); background: color-mix(in srgb, var(--agent) 12%, var(--bg)); }
+  .key-card.private { border: 3px double var(--risk); background: color-mix(in srgb, var(--risk) 9%, var(--bg)); }
+  .key-card.private::after { content: "NEVER EXPORTED"; position: absolute; top: 7px; right: 7px; color: var(--risk); font-size: 8px; font-weight: 950; letter-spacing: .06em; }
+  .key-card.document { border-color: var(--hold); background: color-mix(in srgb, var(--hold) 15%, var(--bg)); }
+  .key-card.cloud { border-color: var(--cloud); background: color-mix(in srgb, var(--cloud) 18%, var(--bg)); }
+  .key-card.transient { border-style: dashed; border-color: var(--success); background: color-mix(in srgb, var(--success) 12%, var(--bg)); }
+
+  .inside {
+    display: grid;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px dashed color-mix(in srgb, var(--hold) 70%, var(--border));
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--hold) 7%, var(--bg));
+  }
+  .inside span { display: flex; gap: 6px; align-items: center; font: 750 10px/1.35 ui-monospace, "SF Mono", Menlo, monospace; }
+  .inside .not-inside { color: var(--risk); text-decoration: line-through; }
+
+  .key-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 12px;
+    padding: 9px 11px;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 9px 9px 0;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .key-note b { color: var(--fg); }
+
+  .packet-flow {
+    margin: 0 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .packet-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .packet-head b { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  .packet-head span { color: var(--muted); font-size: 11px; text-align: right; }
+
+  .packet-body { padding: 14px 16px 16px; }
+  .packet-track { position: relative; min-height: 108px; overflow: hidden; }
+  .packet-rail { position: absolute; top: 27px; left: 7%; right: 7%; height: 4px; border-radius: 999px; background: var(--border); }
+  .packet-rail::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--source), var(--agent), var(--hold), var(--cloud), var(--success)); opacity: .65; }
+  .flow-packet {
+    position: absolute;
+    z-index: 2;
+    top: 7px;
+    left: 4%;
+    min-width: 185px;
+    padding: 7px 10px;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+    box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 20%, transparent);
+    font: 850 10px/1.35 ui-monospace, "SF Mono", Menlo, monospace;
+    white-space: nowrap;
+    animation: packet-move 6s linear infinite;
+  }
+  .flow-packet::before { content: "▰"; margin-right: 6px; color: var(--accent); }
+
+  @keyframes packet-move {
+    0% { left: 4%; opacity: 0; }
+    3% { opacity: 1; }
+    94% { left: calc(86% - 185px); opacity: 1; }
+    100% { left: calc(92% - 185px); opacity: 0; }
+  }
+
+  .packet-stages { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .packet-stage { text-align: center; }
+  .packet-stage i { display: grid; place-items: center; width: 20px; height: 20px; margin: 0 auto 4px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); color: var(--accent); font-style: normal; font-size: 9px; font-weight: 900; }
+  .packet-stage b { display: block; font-size: 10px; }
+  .packet-stage small { display: block; color: var(--muted); font-size: 9px; }
+
+  .flow-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .flow-fact { padding: 9px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  .flow-fact b { display: block; font-size: 10px; }
+  .flow-fact span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+  .flow-fact.done { border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, var(--bg)); }
+  .flow-fact.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+  .flow-fact.waiting { border-style: dashed; border-color: var(--hold); background: color-mix(in srgb, var(--hold) 11%, var(--bg)); }
+  .flow-fact.triggered { border: 3px double var(--risk); background: color-mix(in srgb, var(--risk) 9%, var(--bg)); }
+
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 16px; }
+  .detail-grid.lanes-hidden { grid-template-columns: 1fr; }
+
+  .panel { border: 1px solid var(--border); border-radius: 16px; background: var(--bg); overflow: hidden; }
+  .panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .panel-head b { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  .panel-head span { color: var(--muted); font-size: 11px; }
+
+  .lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
+  .lanes.single { grid-template-columns: 1fr; }
+  .lane { min-height: 150px; padding: 13px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); }
+  .lane-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .lane-name { font-weight: 850; }
+  .lane-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 7px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 10px; font-weight: 800; }
+  .lane-status.moving { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+  .lane-status.ready { border-color: var(--success); color: color-mix(in srgb, var(--success) 75%, #111); background: color-mix(in srgb, var(--success) 10%, var(--bg)); }
+  .lane-status.waiting { border-style: dashed; border-color: var(--hold); color: color-mix(in srgb, var(--hold) 68%, #111); background: color-mix(in srgb, var(--hold) 13%, var(--bg)); }
+  .lane-status.blocked { border-color: var(--risk); color: color-mix(in srgb, var(--risk) 78%, #111); background: color-mix(in srgb, var(--risk) 12%, var(--bg)); }
+  .lane p { margin: 9px 0 0; color: var(--muted); font-size: 12px; }
+  .lane code { display: block; margin-top: 10px; padding: 8px 9px; border-radius: 8px; background: var(--surface-strong); color: var(--fg); font: 11px/1.45 ui-monospace, "SF Mono", Menlo, monospace; white-space: pre-wrap; }
+
+  .contract { display: grid; grid-template-rows: auto 1fr auto; }
+  pre { margin: 0; padding: 14px; min-height: 210px; overflow: auto; background: #172033; color: #e8edf5; font: 11px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .gate { padding: 12px 14px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--hold) 11%, var(--bg)); }
+  .gate b { display: flex; gap: 7px; align-items: center; color: color-mix(in srgb, var(--hold) 70%, #111); font-size: 12px; }
+  .gate p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+  .gate.success { background: color-mix(in srgb, var(--success) 10%, var(--bg)); }
+  .gate.success b { color: color-mix(in srgb, var(--success) 70%, #111); }
+  .gate.risk { background: color-mix(in srgb, var(--risk) 10%, var(--bg)); box-shadow: inset 4px 0 0 var(--risk); }
+  .gate.risk b { color: color-mix(in srgb, var(--risk) 78%, #111); }
+
+  .why { margin-top: 16px; padding: 14px 16px; border-left: 4px solid var(--accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
+  .why b { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .why p { margin: 4px 0 0; color: var(--muted); }
+
+  .appendix { display: grid; grid-template-columns: 1.05fr .95fr; gap: 16px; margin-top: 24px; }
+  .appendix-card { padding: 18px; border: 1px solid var(--border); border-radius: 17px; background: var(--surface); }
+  .appendix-card h3 { margin: 0 0 4px; font-size: 18px; }
+  .appendix-card > p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+
+  .state-machine { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+  .state-machine span { padding: 7px 9px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); font: 750 11px/1.2 ui-monospace, "SF Mono", Menlo, monospace; }
+  .state-machine i { color: var(--muted); font-style: normal; }
+  .state-machine .pending { border-style: dashed; border-color: var(--hold); background: color-mix(in srgb, var(--hold) 12%, var(--bg)); }
+  .state-machine .terminal { border-color: var(--success); background: color-mix(in srgb, var(--success) 12%, var(--bg)); }
+
+  .finding { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .finding:first-of-type { border-top: 0; }
+  .severity { min-width: 52px; padding: 4px 7px; align-self: start; border-radius: 7px; color: #fff; background: var(--risk); font-size: 9px; font-weight: 900; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
+  .severity.medium { color: var(--ink-on-fill); background: var(--hold); }
+  .finding b { display: block; font-size: 12px; }
+  .finding p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; color: var(--muted); font-size: 11px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch { width: 13px; height: 13px; border: 1px solid var(--border); border-radius: 4px; }
+  .swatch.active { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); border-color: var(--accent); }
+  .swatch.done { background: color-mix(in srgb, var(--success) 16%, var(--bg)); border-color: var(--success); }
+  .swatch.hold { background: color-mix(in srgb, var(--hold) 24%, var(--bg)); border: 1px dashed var(--hold); }
+  .swatch.risk { background: color-mix(in srgb, var(--risk) 22%, var(--bg)); border: 3px double var(--risk); }
+
+  footer { margin-top: 18px; color: var(--muted); font-size: 11px; }
+
+  .fade { animation: fade .32s ease; }
+  @keyframes fade { from { opacity: .25; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 1000px) {
+    .thesis { grid-template-columns: 1fr 1fr; }
+    .detail-grid, .appendix { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 680px) {
+    .page { width: min(100% - 20px, 1500px); padding-top: 18px; }
+    header { grid-template-columns: 1fr; }
+    .theme-button { justify-self: start; }
+    .thesis { grid-template-columns: 1fr; }
+    .controls { grid-template-columns: repeat(3, auto) 1fr; }
+    .step-count { grid-column: 1 / 2; grid-row: 2; text-align: left; }
+    .progress { grid-column: 2 / -1; grid-row: 2; }
+    .lanes { grid-template-columns: 1fr; }
+    .key-row { grid-template-columns: 1fr; }
+    .key-arrow { min-height: 24px; transform: rotate(90deg); }
+    .packet-track { min-height: 340px; }
+    .packet-rail { top: 4%; bottom: 12%; left: 27px; right: auto; width: 4px; height: auto; }
+    .packet-rail::after { background: linear-gradient(180deg, var(--source), var(--agent), var(--hold), var(--cloud), var(--success)); }
+    .flow-packet { top: 2%; left: 44px; min-width: 190px; animation: packet-move-mobile 6s linear infinite; }
+    .packet-stages { top: 0; bottom: 0; left: 0; right: auto; grid-template-columns: 1fr; grid-template-rows: repeat(5, 1fr); width: 100%; }
+    .packet-stage { display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto; column-gap: 9px; text-align: left; align-content: start; }
+    .packet-stage i { grid-row: 1 / 3; margin: 0; }
+    .packet-stage b, .packet-stage small { grid-column: 2; }
+    .flow-facts { grid-template-columns: 1fr 1fr; }
+    .scene { padding: 14px; }
+  }
+
+  @keyframes packet-move-mobile {
+    0% { top: 2%; opacity: 0; }
+    3% { opacity: 1; }
+    94% { top: 74%; opacity: 1; }
+    100% { top: 82%; opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <div>
+      <div class="kicker">Concourse · Maplewood Library · data plane</div>
+      <h1>Data Sync Agent Walkthrough</h1>
+    </div>
+    <button class="theme-button" id="cb" aria-pressed="false" aria-label="Toggle colorblind-safe palette">Colorblind Mode</button>
+  </header>
+
+  <section class="walkthrough" aria-label="Interactive data walkthrough">
+    <div class="walkthrough-top">
+      <div class="controls">
+        <button id="prev" aria-label="Previous step">← Prev</button>
+        <button id="play" aria-pressed="false">▶ Play</button>
+        <button id="next" aria-label="Next step">Next →</button>
+        <span class="step-count" id="step-count">1 / 13</span>
+        <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+      </div>
+      <div class="step-strip" id="step-strip" aria-label="Jump to a walkthrough step"></div>
+    </div>
+
+    <div class="scene" id="scene">
+      <div class="step-header">
+        <div class="step-number" id="step-number">01</div>
+        <div>
+          <h2 id="title"></h2>
+          <p id="summary"></p>
+        </div>
+      </div>
+
+      <div class="route-wrap">
+        <div class="route" id="route">
+          <div class="route-node" data-stage="source"><div class="node-dot">🗄️<span class="state-glyph">✓</span></div><b>SQL Server</b><small>source rows + CDC</small></div>
+          <div class="route-node" data-stage="agent"><div class="node-dot">🪟<span class="state-glyph">✓</span></div><b>Windows agent</b><small>read · batch · encrypt</small></div>
+          <div class="route-node" data-stage="edge"><div class="node-dot">🔐<span class="state-glyph">✓</span></div><b>mTLS stream</b><small>gRPC HTTP/2 :443</small></div>
+          <div class="route-node" data-stage="processing"><div class="node-dot">⚙️<span class="state-glyph">✓</span></div><b>Cloud Worker</b><small>dedupe · decrypt · apply</small></div>
+          <div class="route-node" data-stage="durable"><div class="node-dot">🏛️<span class="state-glyph">✓</span></div><b>AWS DB</b><small>data · cursor · audit</small></div>
+          <div class="route-node" data-stage="return"><div class="node-dot">↩️<span class="state-glyph">✓</span></div><b>ACK / resume</b><small>authoritative per-table state</small></div>
+        </div>
+        <div class="trust-row"><span>Maplewood trust boundary</span><span>encrypted transit</span><span>Concourse AWS trust boundary</span></div>
+      </div>
+
+      <section class="crypto-flow" id="crypto-flow" hidden>
+        <div class="crypto-head"><b id="crypto-title"></b><span id="crypto-subtitle"></span></div>
+        <div class="key-diagram" id="key-diagram"></div>
+      </section>
+
+      <section class="packet-flow" id="packet-flow" hidden>
+        <div class="packet-head"><b id="packet-title"></b><span id="packet-subtitle"></span></div>
+        <div class="packet-body" id="packet-body"></div>
+      </section>
+
+      <div class="detail-grid" id="detail-grid">
+        <section class="panel" id="lane-panel">
+          <div class="panel-head"><b>Per-table lanes</b><span>tables parallel · each table ordered</span></div>
+          <div class="lanes" id="lanes">
+            <article class="lane">
+              <div class="lane-top"><span class="lane-name">Snapshot lane</span><span class="lane-status" id="snapshot-status"></span></div>
+              <p id="snapshot-copy"></p>
+              <code id="snapshot-code"></code>
+            </article>
+            <article class="lane">
+              <div class="lane-top"><span class="lane-name">CDC lane</span><span class="lane-status" id="cdc-status"></span></div>
+              <p id="cdc-copy"></p>
+              <code id="cdc-code"></code>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel contract">
+          <div class="panel-head"><b id="contract-title">Data / state contract</b><span id="contract-kind"></span></div>
+          <pre id="contract"></pre>
+          <div class="gate" id="gate"><b id="gate-title"></b><p id="gate-copy"></p></div>
+        </section>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="legend" aria-label="Visual legend">
+    <span><i class="swatch active"></i> → active now</span>
+    <span><i class="swatch done"></i> ✓ completed / durable</span>
+    <span><i class="swatch hold"></i> ⏸ deliberately held</span>
+    <span><i class="swatch risk"></i> ⚠ repair or decision required</span>
+  </div>
+
+  <footer>Source: "Data Sync Agent Submission" pasted design brief, 2026-08-24. Timing and values shown are taken from that brief; explicit "modeled" states are synthesis, not claimed implementation.</footer>
+</main>
+
+<script>
+  const STEPS = [
+    {
+      eyebrow: "Control plane · identity",
+      title: "Enroll once; use mTLS thereafter",
+      summary: "The librarian enters a one-time token. The agent generates its own key pair, submits a signed CSR, and receives a Private-CA-signed certificate plus configuration and the tenant wrapping public key.",
+      crypto: "csr",
+      states: { source: "hold", agent: "active", edge: "active", processing: "", durable: "done", return: "done" },
+      snapshot: ["waiting", "⏸ not started", "No source rows move until identity, source configuration, and schema policy are established.", "agent_id = lib_01\ncredential = client certificate"],
+      cdc: ["waiting", "⏸ not started", "CDC capture is configured, but transport authority is not inferred from a successful install alone.", "auth = mTLS\nport = outbound 443"],
+      contractTitle: "Enrollment exchange", contractKind: "control data only",
+      contract: "POST /v1/agents/register\nAuthorization: Bearer <one_time_token>\n\nCSR {\n  agent_id, public_key, metadata,\n  signature_by_agent_private_key\n}\n\nresponse { certificate_chain, source_config, wrapping_public_key }",
+      gate: ["success", "✓ Identity gate", "Only the agent-held private key can prove the long-term certificate identity."],
+      why: ""
+    },
+    {
+      eyebrow: "Baseline · handoff boundary",
+      title: "Capture the starting LSN before reading rows",
+      summary: "For each table, the agent records a snapshot identity and an LSN boundary. That single boundary connects the initial copy to every change that commits while the copy is running.",
+      states: { source: "active", agent: "active", edge: "hold", processing: "", durable: "", return: "" },
+      snapshot: ["moving", "→ boundary captured", "Choose a stable unique ordering key and begin bounded keyset reads for this table.", "snapshot_id = s-104\nsnapshot_order_key = checkout_id"],
+      cdc: ["moving", "→ boundary captured", "Begin collecting changes strictly after the baseline LSN, even though the snapshot has not finished.", "baseline_lsn = 0x002A…\nnext_needed = after(baseline_lsn)"],
+      contractTitle: "Per-table baseline", contractKind: "recovery state",
+      contract: "table = checkout\nsnapshot_id = s-104\nbaseline_lsn = 0x002A…\nschema_version = v12\ncapture_instance = checkout_v12\n\nrule: snapshot + CDC share this handoff boundary",
+      gate: ["", "⏸ Consistency gate", "If no stable key exists: stream only a small keyless table with bounded buffers; require a DBA-approved unique index for a large one."],
+      why: "Starting CDC after the snapshot would create a blind interval. Starting it from the saved boundary gives the cloud enough information to replay changes after the baseline without loss."
+    },
+    {
+      eyebrow: "Baseline · two concurrent lanes",
+      title: "Copy snapshot chunks while staging new changes",
+      summary: "The snapshot lane sends bounded, resumable key ranges. In parallel, the CDC lane captures post-boundary changes; the cloud stages them until the table baseline is complete.",
+      packetFlow: "snapshot",
+      states: { source: "done", agent: "active", edge: "active", processing: "active", durable: "active", return: "active" },
+      snapshot: ["moving", "→ chunks flowing", "Each chunk advances only after its durable snapshot ACK; a restart resends from the last ACKed key.", "rows 1–250   ✓\nrows 251–500 ✓\nrows 501–750 →"],
+      cdc: ["waiting", "⏸ stage, do not apply", "Changes after baseline_lsn are encrypted and delivered, but held in cloud CDC staging until snapshot completion.", "range = (baseline_lsn, current_lsn]\napply = blocked_by_baseline"],
+      contractTitle: "Snapshot chunk identity", contractKind: "idempotency",
+      contract: "{\n  snapshot_id: \"s-104\",\n  table_id: \"checkout\",\n  chunk_id: 3,\n  first_key: 501,\n  last_key: 750,\n  schema_version: \"v12\"\n}\n\ndedupe key = snapshot_id + table_id + chunk_id",
+      gate: ["success", "✓ Resume gate", "Update last_ack_chunk_id only after cloud durability; otherwise keep the same chunk identity and resend."],
+      why: "The two lanes separate completeness from freshness. Snapshot establishes the whole table; staging preserves every concurrent write without letting it race ahead of the baseline."
+    },
+    {
+      eyebrow: "CDC · bounded batching",
+      title: "Seal one ordered, replay-safe table batch",
+      summary: "After a valid baseline, the agent reads a bounded LSN interval. It flushes when any limit fires: 500 changes, 1 MB, or 3 seconds.",
+      packetFlow: "cdc",
+      states: { source: "active", agent: "active", edge: "hold", processing: "", durable: "done", return: "done" },
+      snapshot: ["ready", "✓ baseline valid", "Snapshot is no longer on the hot path. Its completion makes incremental CDC eligible for apply.", "snapshot_status = COMPLETE\nlast_ack_chunk_id = final"],
+      cdc: ["moving", "→ batch sealing", "Read a contiguous source interval from cdc_next_needed_lsn toward the available high watermark.", "flush if count >= 500\n      or bytes >= 1 MB\n      or age >= 3000 ms"],
+      contractTitle: "CDC batch metadata", contractKind: "one table only",
+      contract: "batch_id = b-9f21\ntenant_id = tenant-123\nagent_id = agent-789\nsource_id = library-456\ntable_id = checkout\nfirst_lsn = 0x002B…\nlast_lsn = 0x0038…\nschema_version = v12\ncapture_instance = checkout_v12",
+      gate: ["", "⏸ Memory-pressure gate", "If unACKed data reaches the hard memory cap, stop reading. The remaining durable backlog stays in SQL Server CDC."],
+      why: "Count, bytes, and age bound three different risks: CPU/row work, memory/network size, and end-to-end freshness. A stable batch_id makes every retry the same logical operation."
+    },
+    {
+      eyebrow: "Agent · envelope encryption",
+      title: "Encrypt the immutable batch before transport",
+      summary: "The agent generates a fresh AES-256 data key and 96-bit nonce, authenticates the batch and metadata with AES-GCM, wraps only the data key with the tenant KMS public key, then discards plaintext key material.",
+      crypto: "encryption",
+      states: { source: "done", agent: "active", edge: "hold", processing: "", durable: "", return: "" },
+      snapshot: ["ready", "✓ source read complete", "Customer rows have left SQL Server but remain inside the Maplewood agent trust boundary.", "plaintext_batch = immutable\nlogging = metadata only"],
+      cdc: ["moving", "→ encrypting", "The ciphertext and authenticated metadata become the retry unit; no partial payload is eligible for transport.", "DEK = random(256 bit)\nnonce = random(96 bit)\nmode = AES-256-GCM"],
+      contractTitle: "Encrypted envelope", contractKind: "no plaintext",
+      contract: "{\n  ciphertext,\n  wrapped_dek: RSA-OAEP-SHA-256(DEK),\n  nonce, gcm_tag, key_id,\n  aad: { tenant_id, source_id, batch_id,\n         table_id, schema_version, source_range }\n}\n\nagent retains: public wrapping key only",
+      gate: ["risk", "⚠ Hard cryptographic gate", "On encryption or authentication failure: send nothing, apply nothing, log no row values or DEKs, and advance no checkpoint."],
+      why: "mTLS protects the connection; envelope encryption protects the batch as an object. Fresh per-batch keys limit blast radius while the asymmetric key keeps long-lived decryption authority out of the agent."
+    },
+    {
+      eyebrow: "Transport · resume + flow control",
+      title: "Reconcile first, then open a four-batch window",
+      summary: "A long-lived bidirectional gRPC stream multiplexes table lanes. On every connection the agent sends Resume; the cloud returns its authoritative cursor and the allowed in-flight window.",
+      states: { source: "done", agent: "active", edge: "active", processing: "hold", durable: "done", return: "active" },
+      snapshot: ["ready", "✓ independently ordered", "Snapshot ACKs remain keyed by snapshot/table/chunk while CDC uses the per-table LSN cursor.", "snapshot_last_acked_key = 750"],
+      cdc: ["moving", "→ B1 B2 B3 B4", "Send four batches for this table without individual waits. Do not open the next window until the current window is cumulatively ACKed.", "B1 ✓  B2 …  B3 ✓  B4 ✓\ncloud_last_ack stops before B2\nB5 = held"],
+      contractTitle: "Resume handshake", contractKind: "authoritative reconciliation",
+      contract: "agent → Resume { table_id, agent_copy_last_ack }\ncloud → { cloud_last_ack, in_flight_window: 4 }\n\nnetwork: gRPC + HTTP/2 + bidirectional mTLS\nrouting unit: exactly one table per batch",
+      gate: ["", "⏸ Contiguous-prefix gate", "Out-of-order worker completion is allowed; cursor and ACK cannot cross the first missing batch in the lane."],
+      why: "The window gains concurrency without turning recovery into an unbounded replay problem. Resume resolves lost ACKs using cloud durability, not the agent's volatile memory."
+    },
+    {
+      eyebrow: "Cloud ingress · isolation by table lane",
+      title: "Authenticate, route, dedupe, unwrap, authenticate",
+      summary: "The stream manager authenticates the agent, then routes by tenant + source + table. A bounded worker lane checks batch_id before KMS unwrap and AES-GCM authentication.",
+      states: { source: "done", agent: "done", edge: "done", processing: "active", durable: "hold", return: "hold" },
+      snapshot: ["ready", "✓ route isolated", "Different tables may use different workers. The selected table's own ordering remains serial at the commit boundary.", "route_key = tenant/source/table"],
+      cdc: ["moving", "→ validate envelope", "Duplicate replay is recognized before apply; a valid existing result can return the cumulative ACK without reapplying rows.", "dedupe(batch_id)\nKMS.unwrap(wrapped_dek)\nAES-GCM.open(ciphertext, aad)"],
+      contractTitle: "Ingress checks", contractKind: "fail closed",
+      contract: "1. mTLS identity ↔ tenant/source authorization\n2. envelope metadata + size\n3. table/schema/capture policy\n4. stable batch_id dedupe\n5. KMS unwrap\n6. AES-GCM tag + AAD\n7. decoded source range continuity",
+      gate: ["risk", "⚠ Authorization / decrypt gate", "Authentication, permission, unknown schema, or decrypt failure pauses the affected lane. Nothing downstream is committed or ACKed."],
+      why: "Routing before expensive work protects concurrency; dedupe before apply protects idempotency; authenticated decryption before parsing ensures metadata and ciphertext belong to the same batch."
+    },
+    {
+      eyebrow: "Cloud apply · baseline-aware branch",
+      title: "Stage pre-baseline CDC; otherwise materialize in order",
+      summary: "Snapshot chunks apply toward baseline completion. CDC that arrived before baseline completion stays in staging; afterward the cloud drains it in LSN order, then applies steady-state CDC directly.",
+      states: { source: "done", agent: "done", edge: "done", processing: "active", durable: "active", return: "hold" },
+      snapshot: ["moving", "→ materialize snapshot", "Apply each idempotent chunk. Mark the table baseline complete only after every expected chunk is durable.", "baseline: CHUNKS_APPLYING → COMPLETE"],
+      cdc: ["waiting", "⏸ then replay", "If baseline is incomplete, store the CDC batch in staging. When complete, replay the contiguous range after baseline_lsn.", "if !baseline_complete: STAGE\nelse: UPSERT | DELETE"],
+      contractTitle: "Apply decision", contractKind: "per table",
+      contract: "snapshot batch → materialized baseline\nCDC + baseline incomplete → durable staging\nCDC + baseline complete → ordered apply\n\nafter final snapshot chunk:\n  drain staged CDC from after(baseline_lsn)\n  preserve first_lsn..last_lsn continuity",
+      gate: ["", "⏸ Baseline gate", "A staged CDC batch is durable but not yet part of the materialized table. It is not evidence that the baseline handoff is complete."],
+      why: "Applying new changes before the old snapshot rows can let the snapshot overwrite newer values. Staging converts that race into an explicit, recoverable order."
+    },
+    {
+      eyebrow: "Cloud durability · transactional intent",
+      title: "Commit data, dedupe, cursor candidate, and audit outbox",
+      summary: "The submitted design groups materialized data, dedupe, cursor state, and append-only audit outbox in one durable transaction. The walkthrough treats the cursor as pending until immutable audit publication completes.",
+      states: { source: "done", agent: "done", edge: "done", processing: "done", durable: "active", return: "hold" },
+      snapshot: ["ready", "✓ apply durable", "The snapshot chunk is recoverable and deduplicated even if the connection disappears immediately afterward.", "dedupe_key = snapshot/table/chunk"],
+      cdc: ["moving", "→ APPLIED_PENDING_AUDIT", "Rows are applied once; a replayed batch skips the data mutation and resumes the missing audit-finalization work.", "transaction { data, dedupe,\n  cursor_candidate, audit_outbox }"],
+      contractTitle: "Audit outbox record", contractKind: "append only",
+      contract: "{ audit_event_id, occurred_at,\n  tenant_id, source_id, agent_id,\n  batch_id, table_id,\n  source_range: { from_lsn, to_lsn },\n  row_counts: { upserts, deletes },\n  schema_version, encrypted_payload_sha256\n}",
+      gate: ["", "⏸ No ACK yet", "Durable apply alone is insufficient under the submitted recovery rule. Immutable audit publication must succeed before final cursor advancement and ACK."],
+      why: "The transactional outbox prevents the classic split-brain: rows committed but the evidence event forgotten. The pending state makes retries safe without applying the same batch twice."
+    },
+    {
+      eyebrow: "Evidence + acknowledgment",
+      title: "Publish immutable audit, finalize cursor, then ACK",
+      summary: "The outbox publisher writes the event to the Object-Locked, SSE-KMS audit store. Only after required evidence is durable may the contiguous per-table cursor advance and the cumulative ACK return.",
+      states: { source: "done", agent: "hold", edge: "active", processing: "done", durable: "done", return: "active" },
+      snapshot: ["ready", "✓ durable ACK", "The agent can persist the acknowledged snapshot key in memory and release that chunk's buffer.", "last_ack_chunk_id = 3\nrelease rows 501–750"],
+      cdc: ["ready", "✓ cumulative ACK", "Release every in-memory batch whose last_lsn is at or below the acknowledged contiguous cursor.", "cloud_last_ack = 0x0038…\nagent_copy_last_ack = 0x0038…\nrelease B1..B4"],
+      contractTitle: "Terminal acknowledgment", contractKind: "cloud authority",
+      contract: "audit object = create-only + Object Lock + SSE-KMS\ncloud cursor = highest contiguous committed LSN\nACK { table_id, cloud_last_ack }\n\nagent action after ACK:\n  release acknowledged memory\n  compute cdc_next_needed_lsn",
+      gate: ["success", "✓ Release gate", "ACK means dedupe, apply or staging, required cursor state, and immutable audit evidence are durable for the contiguous prefix."],
+      why: "The ACK is a durability certificate, not merely a network receipt. This is the point where the agent can safely forget data without risking a permanent gap."
+    },
+    {
+      eyebrow: "Steady state · service-level policy",
+      title: "Run live and scheduled tables with the same safety contract",
+      summary: "sync_class changes when a table reads CDC, not the correctness protocol. Near-real-time loops continuously; scheduled captures a run high watermark every two hours by default.",
+      states: { source: "active", agent: "active", edge: "active", processing: "active", durable: "active", return: "active" },
+      snapshot: ["ready", "✓ baseline available", "A rebaseline is exceptional recovery, not the normal low-priority sync method described here.", "baseline required before incremental CDC"],
+      cdc: ["moving", "→ policy selected", "Both classes retain bounded reads, batching, encryption, idempotency, ordered apply, audit, and ACK behavior.", "near_real_time: poll continuously\nscheduled: every 2h to run_target_lsn"],
+      contractTitle: "Sync-class semantics", contractKind: "timing only",
+      contract: "near_real_time:\n  loop from cdc_last_acked_lsn toward current max\n  flush by count / bytes / time\n\nscheduled:\n  capture cdc_run_target_lsn at run start\n  process bounded batches until target\n  stop even if newer changes arrived",
+      gate: ["success", "✓ Same recovery contract", "A slower schedule does not weaken cursor reconciliation, encryption, dedupe, or ACK durability."],
+      why: "Separating business freshness from transport correctness avoids two protocols that drift apart. The schedule changes latency; the batch contract stays stable."
+    },
+    {
+      eyebrow: "Schema drift · fail-closed migration",
+      title: "Freeze the affected table before its shape changes underneath CDC",
+      summary: "The schema manager fingerprints normalized metadata on startup, every 15 minutes, before snapshots, and after CDC errors. Drift freezes new batches while old-version batches drain.",
+      states: { source: "active", agent: "risk", edge: "hold", processing: "hold", durable: "active", return: "hold" },
+      snapshot: ["waiting", "⏸ classify change", "Compatible drift can register and cut over. Breaking shape requires a new capture instance, boundary, and table rebaseline.", "observed schema_hash ≠ registered schema_hash"],
+      cdc: ["blocked", "⚠ freeze new batches", "Drain already sealed v12 batches, but create no mixed-schema batch and accept no unknown schema_version in cloud.", "old: capture_instance checkout_v12\nnew: checkout_v13\nmax instances per table = 2"],
+      contractTitle: "Migration order", contractKind: "durable state required",
+      contract: "1. freeze new batches\n2. drain old schema_version + capture_instance\n3. classify compatible vs breaking\n4. register new schema policy\n5. if breaking: new capture + snapshot boundary\n6. stage concurrent CDC\n7. replay, activate, retire old instance",
+      gate: ["risk", "⚠ Schema gate", "ddl_lsn identifies when DDL committed; it is not the post-rebaseline resume cursor. The new snapshot boundary owns that handoff."],
+      why: "A schema hash detects structural change, while schema_version authorizes meaning. Freezing at the boundary prevents rows decoded under one shape from being labeled as another."
+    },
+    {
+      eyebrow: "Recovery · deterministic branches",
+      title: "Recover from cloud truth; rebaseline only when source history is gone",
+      summary: "After lost ACK, crash, disconnect, or outage, reconnect and Resume from the cloud cursor. Rebuild missing batches from CDC with the same identities. If the next required LSN predates retained CDC, only that table must rebaseline.",
+      states: { source: "active", agent: "active", edge: "active", processing: "hold", durable: "done", return: "active" },
+      snapshot: ["waiting", "⏸ conditional recovery", "Resume a failed snapshot after the last ACKed key. Start a new table baseline only for a CDC retention gap or breaking schema migration.", "if next_needed < min_retained:\n  rebaseline affected table"],
+      cdc: ["moving", "→ reconcile + replay", "No ACK? Compare with cloud_last_ack. Missing commit: replay the same batch_id. Existing commit: do not reapply.", "agent crash → memory lost\ncloud cursor → authoritative\nSQL CDC → rebuild unACKed range"],
+      contractTitle: "Recovery decision", contractKind: "per table isolation",
+      contract: "lost ACK → Resume → replay only if needed\nnetwork/AWS down → backoff; pause reads at memory cap\nagent restart → fetch cloud cursor; rebuild from CDC\naudit failure → resume APPLIED_PENDING_AUDIT\nCDC gap → rebaseline this table\nCDC job stopped → repair; preserve other table lanes",
+      gate: ["risk", "⚠ History-availability gate", "Never advance past missing source history. If cdc_next_needed_lsn < cdc_min_retained_lsn, incremental recovery is impossible."],
+      why: "The design deliberately keeps no disk spool. Recovery therefore depends on two durable authorities: the cloud cursor for what was accepted, and SQL Server CDC for what can be rebuilt."
+    }
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const nodes = [...document.querySelectorAll(".route-node")];
+  let index = 0;
+  let timer = null;
+
+  function esc(value) {
+    return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function renderLane(prefix, tuple) {
+    const [kind, label, copy, code] = tuple;
+    const status = $(prefix + "-status");
+    const lane = status.closest(".lane");
+    const visible = kind === "moving";
+    lane.hidden = !visible;
+    status.className = "lane-status " + kind;
+    status.textContent = label;
+    $(prefix + "-copy").textContent = copy;
+    $(prefix + "-code").textContent = code;
+    return visible;
+  }
+
+  function renderCrypto(kind) {
+    const panel = $("crypto-flow");
+    panel.hidden = !kind;
+    if (!kind) return;
+
+    if (kind === "csr") {
+      $("crypto-title").textContent = "CSR key ownership";
+      $("crypto-subtitle").textContent = "private key proves possession · public key travels";
+      $("key-diagram").innerHTML = `
+        <div class="key-row">
+          <div class="key-stack">
+            <div class="key-card private">
+              <div class="key-label"><i>🔒</i> Agent private key</div>
+              <p>Generated and retained by the Windows agent.</p>
+              <code>uses: sign CSR · prove mTLS identity</code>
+            </div>
+            <div class="key-card public">
+              <div class="key-label"><i>🔓</i> Agent public key</div>
+              <p>Derived from the private key and safe to send.</p>
+              <code>destination: CSR → client certificate</code>
+            </div>
+          </div>
+          <div class="key-arrow" aria-hidden="true">→</div>
+          <div class="key-card document">
+            <div class="key-label"><i>📄</i> Certificate Signing Request</div>
+            <p>The CSR is signed by the private key, but does not contain it.</p>
+            <div class="inside">
+              <span>✓ public key</span>
+              <span>✓ agent_id + request metadata</span>
+              <span>✓ signature made by agent private key</span>
+              <span class="not-inside">✗ private key</span>
+            </div>
+          </div>
+          <div class="key-arrow" aria-hidden="true">→</div>
+          <div class="key-stack">
+            <div class="key-card cloud">
+              <div class="key-label"><i>🏛️</i> AWS Private CA</div>
+              <p>Validates enrollment and CSR proof, then signs the certificate.</p>
+              <code>returns: certificate containing agent public key</code>
+            </div>
+            <div class="key-card public">
+              <div class="key-label"><i>🪪</i> Client certificate</div>
+              <p>Binds the agent identity to its public key for later mTLS.</p>
+              <code>private key remains on agent</code>
+            </div>
+          </div>
+        </div>
+        <div class="key-note"><span>✓</span><span><b>Key rule:</b> the private key never enters the CSR or crosses the Maplewood boundary. Its signature proves that the agent possesses it.</span></div>`;
+      return;
+    }
+
+    $("crypto-title").textContent = "Batch-encryption key ownership";
+    $("crypto-subtitle").textContent = "asymmetric key pair wraps · symmetric DEK encrypts";
+    $("key-diagram").innerHTML = `
+      <div class="key-row">
+        <div class="key-stack">
+          <div class="key-card public">
+            <div class="key-label"><i>🔓</i> Tenant KMS public key</div>
+            <p>Delivered to the agent and used only to wrap the per-batch DEK.</p>
+            <code>RSA-OAEP-SHA-256(public, DEK)</code>
+          </div>
+          <div class="key-card transient">
+            <div class="key-label"><i>🔑</i> Fresh symmetric DEK</div>
+            <p>Generated in agent memory for exactly one batch.</p>
+            <code>AES-256-GCM(DEK, nonce, plaintext, AAD)</code>
+          </div>
+        </div>
+        <div class="key-arrow" aria-hidden="true">→</div>
+        <div class="key-card document">
+          <div class="key-label"><i>📦</i> Encrypted batch envelope</div>
+          <p>This is the only data object sent over the mTLS stream.</p>
+          <div class="inside">
+            <span>✓ ciphertext</span>
+            <span>✓ wrapped DEK</span>
+            <span>✓ nonce + authentication tag</span>
+            <span>✓ key_id + authenticated metadata</span>
+            <span class="not-inside">✗ plaintext rows / raw DEK</span>
+          </div>
+        </div>
+        <div class="key-arrow" aria-hidden="true">→</div>
+        <div class="key-stack">
+          <div class="key-card private">
+            <div class="key-label"><i>🔒</i> Tenant KMS private key</div>
+            <p>Remains inside AWS KMS and unwraps the DEK.</p>
+            <code>KMS decrypts wrapped_dek; key is not exported</code>
+          </div>
+          <div class="key-card transient">
+            <div class="key-label"><i>⚙️</i> Cloud Worker DEK</div>
+            <p>The unwrapped DEK exists transiently to authenticate and decrypt this batch.</p>
+            <code>decrypt → apply → discard DEK</code>
+          </div>
+        </div>
+      </div>
+      <div class="key-note"><span>✓</span><span><b>Two different jobs:</b> the public/private KMS pair protects the DEK; the short-lived symmetric DEK encrypts the customer rows. The database's at-rest KMS key is a separate layer.</span></div>`;
+  }
+
+  function renderPacketFlow(kind) {
+    const panel = $("packet-flow");
+    panel.hidden = !kind;
+    if (!kind) return;
+
+    if (kind === "snapshot") {
+      $("packet-title").textContent = "Snapshot chunks in flight";
+      $("packet-subtitle").textContent = "bounded key ranges · one table · durable ACK advances resume point";
+      $("packet-body").innerHTML = `
+        <div class="packet-track" aria-label="Snapshot chunk moving from SQL Server to durable acknowledgment">
+          <div class="packet-rail"></div>
+          <div class="flow-packet">Chunk 3 · rows 501–750</div>
+          <div class="packet-stages">
+            <div class="packet-stage"><i>1</i><b>SQL rows</b><small>keyset read</small></div>
+            <div class="packet-stage"><i>2</i><b>Agent chunk</b><small>chunk_id = 3</small></div>
+            <div class="packet-stage"><i>3</i><b>Encrypt</b><small>batch envelope</small></div>
+            <div class="packet-stage"><i>4</i><b>AWS DB</b><small>idempotent apply</small></div>
+            <div class="packet-stage"><i>5</i><b>Durable ACK</b><small>resume after 750</small></div>
+          </div>
+        </div>
+        <div class="flow-facts">
+          <div class="flow-fact done"><b>✓ Chunk 1 ACKed</b><span>rows 1–250 released</span></div>
+          <div class="flow-fact done"><b>✓ Chunk 2 ACKed</b><span>rows 251–500 released</span></div>
+          <div class="flow-fact active"><b>→ Chunk 3 flowing</b><span>rows 501–750 retained until ACK</span></div>
+          <div class="flow-fact waiting"><b>⏸ Chunk 4 unread</b><span>rows 751–1000 remain in SQL Server</span></div>
+        </div>`;
+      return;
+    }
+
+    $("packet-title").textContent = "CDC changes become one batch";
+    $("packet-subtitle").textContent = "flush when the first count, byte, or time threshold fires";
+    $("packet-body").innerHTML = `
+      <div class="packet-track" aria-label="CDC changes accumulating, sealing, and moving to encryption">
+        <div class="packet-rail"></div>
+        <div class="flow-packet">Batch b-9f21 · 0x002B…0x0038</div>
+        <div class="packet-stages">
+          <div class="packet-stage"><i>1</i><b>CDC range</b><small>contiguous LSNs</small></div>
+          <div class="packet-stage"><i>2</i><b>Buffer bucket</b><small>bounded memory</small></div>
+          <div class="packet-stage"><i>3</i><b>First threshold</b><small>count fires</small></div>
+          <div class="packet-stage"><i>4</i><b>Seal batch</b><small>assign batch_id</small></div>
+          <div class="packet-stage"><i>5</i><b>Encrypt + handoff</b><small>same retry identity</small></div>
+        </div>
+      </div>
+      <div class="flow-facts">
+        <div class="flow-fact triggered"><b>✓ 500 changes — TRIGGERED</b><span>first threshold seals the batch</span></div>
+        <div class="flow-fact waiting"><b>… 760 KB of 1 MB</b><span>below byte limit</span></div>
+        <div class="flow-fact waiting"><b>… 1.8 s of 3.0 s</b><span>below age limit</span></div>
+        <div class="flow-fact active"><b>→ Stable batch_id assigned</b><span>b-9f21 reused on every retry</span></div>
+      </div>`;
+  }
+
+  function renderStep(nextIndex) {
+    index = (nextIndex + STEPS.length) % STEPS.length;
+    const step = STEPS[index];
+    $("step-number").textContent = String(index + 1).padStart(2, "0");
+    $("title").textContent = step.title;
+    $("summary").textContent = step.summary;
+    $("step-count").textContent = (index + 1) + " / " + STEPS.length;
+    $("bar").style.width = ((index + 1) / STEPS.length * 100) + "%";
+    $("contract-title").textContent = step.contractTitle;
+    $("contract-kind").textContent = step.contractKind;
+    $("contract").textContent = step.contract;
+    renderCrypto(step.crypto);
+    renderPacketFlow(step.packetFlow);
+
+    const snapshotVisible = renderLane("snapshot", step.snapshot);
+    const cdcVisible = renderLane("cdc", step.cdc);
+    const visibleLanes = Number(snapshotVisible) + Number(cdcVisible);
+    $("lane-panel").hidden = visibleLanes === 0;
+    $("detail-grid").classList.toggle("lanes-hidden", visibleLanes === 0);
+    $("lanes").classList.toggle("single", visibleLanes === 1);
+
+    nodes.forEach((node) => {
+      node.className = "route-node " + (step.states[node.dataset.stage] || "");
+      const glyph = node.querySelector(".state-glyph");
+      const state = step.states[node.dataset.stage];
+      glyph.textContent = state === "risk" ? "⚠" : state === "hold" ? "⏸" : state === "active" ? "→" : "✓";
+    });
+
+    const [gateKind, gateTitle, gateCopy] = step.gate;
+    $("gate").className = "gate " + gateKind;
+    $("gate-title").textContent = gateTitle;
+    $("gate-copy").textContent = gateCopy;
+
+    [...document.querySelectorAll(".step-chip")].forEach((chip, i) => {
+      chip.classList.toggle("current", i === index);
+      chip.classList.toggle("visited", i < index);
+      chip.setAttribute("aria-current", i === index ? "step" : "false");
+    });
+
+    $("scene").classList.remove("fade");
+    void $("scene").offsetWidth;
+    $("scene").classList.add("fade");
+  }
+
+  function stopPlay() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    $("play").setAttribute("aria-pressed", "false");
+    $("play").textContent = "▶ Play";
+  }
+
+  $("step-strip").innerHTML = STEPS.map((step, i) =>
+    '<button class="step-chip" data-index="' + i + '" title="' + esc(step.title) + '" aria-label="Go to step ' + (i + 1) + ': ' + esc(step.title) + '">' + (i + 1) + '</button>'
+  ).join("");
+
+  $("step-strip").addEventListener("click", (event) => {
+    const chip = event.target.closest(".step-chip");
+    if (!chip) return;
+    stopPlay();
+    renderStep(Number(chip.dataset.index));
+  });
+
+  $("prev").onclick = () => { stopPlay(); renderStep(index - 1); };
+  $("next").onclick = () => { stopPlay(); renderStep(index + 1); };
+  $("play").onclick = () => {
+    if (timer) { stopPlay(); return; }
+    if (index === STEPS.length - 1) renderStep(0);
+    $("play").setAttribute("aria-pressed", "true");
+    $("play").textContent = "⏸ Pause";
+    timer = setInterval(() => {
+      if (index === STEPS.length - 1) { stopPlay(); return; }
+      renderStep(index + 1);
+    }, 3400);
+  };
+
+  $("cb").onclick = () => {
+    const enabled = document.body.classList.toggle("cb");
+    $("cb").setAttribute("aria-pressed", String(enabled));
+  };
+
+  document.addEventListener("keydown", (event) => {
+    if (event.target.matches("button, input, textarea, select")) return;
+    if (event.key === "ArrowLeft") { stopPlay(); renderStep(index - 1); }
+    else if (event.key === "ArrowRight") { stopPlay(); renderStep(index + 1); }
+    else if (event.key === " ") { event.preventDefault(); $("play").click(); }
+  });
+
+  renderStep(0);
+</script>
+</body>
+</html>
