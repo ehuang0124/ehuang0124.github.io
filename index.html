@@ -19,6 +19,7 @@
       --line: rgba(7, 59, 40, .17);
       --shadow: 0 20px 52px rgba(7, 59, 40, .13);
       --radius: 22px;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -34,7 +35,7 @@
         radial-gradient(circle at 88% 8%, rgba(183, 243, 74, .24), transparent 26rem),
         var(--cream);
       background-size: 42px 42px, 42px 42px, auto, auto;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--sans);
       -webkit-font-smoothing: antialiased;
     }
 
@@ -157,9 +158,9 @@
     h1 {
       max-width: 720px;
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: var(--sans);
       font-size: clamp(65px, 8vw, 112px);
-      font-weight: 500;
+      font-weight: 750;
       line-height: .88;
       letter-spacing: -.07em;
     }
@@ -295,9 +296,9 @@
 
     .focus-card h2 {
       margin: 23px 0 6px;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: var(--sans);
       font-size: 28px;
-      font-weight: 500;
+      font-weight: 750;
       line-height: 1;
       letter-spacing: -.035em;
     }
@@ -334,9 +335,9 @@
 
     .section-head h2 {
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: var(--sans);
       font-size: clamp(43px, 5.5vw, 68px);
-      font-weight: 500;
+      font-weight: 750;
       line-height: .95;
       letter-spacing: -.055em;
     }
@@ -475,9 +476,9 @@
       flex: 1 1 auto;
       min-width: 0;
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: var(--sans);
       font-size: clamp(27px, 2.7vw, 35px);
-      font-weight: 500;
+      font-weight: 700;
       line-height: 1;
       letter-spacing: -.04em;
     }
@@ -520,8 +521,9 @@
       grid-column: 1 / -1;
       max-width: 760px;
       margin: 0 0 5px;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: var(--sans);
       font-size: clamp(22px, 3vw, 30px);
+      font-weight: 700;
       line-height: 1.18;
       letter-spacing: -.025em;
     }
@@ -730,7 +732,7 @@
                   <circle cx="51" cy="68" r="5" fill="#ff6238"/>
                   <circle cx="244" cy="48" r="6" fill="#ff6238"/>
                   <rect x="137" y="15" width="105" height="41" rx="13" fill="#ff6238" transform="rotate(2 189 35)"/>
-                  <text x="189" y="37" fill="#073b28" font-family="Georgia, serif" font-size="22" text-anchor="middle">18%</text>
+                  <text x="189" y="37" fill="#073b28" font-family="system-ui, sans-serif" font-size="22" font-weight="800" text-anchor="middle">18%</text>
                   <text x="189" y="48" fill="#073b28" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · 3 MONTHS</text>
                 </svg>
               </div>
@@ -773,7 +775,7 @@
                     <path d="M190 25v9m16-9v9m16-9v9M190 86v10m16-10v10m16-10v10M170 43h10m-10 16h10m-10 16h10m52-32h10m-10 16h10m-10 16h10"/>
                     <path d="M191 61c2-15 25-17 29-3 8 0 10 14 1 18h-29c-10-2-10-14-1-15z" fill="#f4f8ed"/>
                   </g>
-                  <text x="252" y="38" fill="#073b28" font-family="Georgia, serif" font-size="27" font-weight="500">41B+</text>
+                  <text x="252" y="38" fill="#073b28" font-family="system-ui, sans-serif" font-size="27" font-weight="800">41B+</text>
                   <text x="254" y="52" fill="#073b28" font-family="system-ui, sans-serif" font-size="7" font-weight="900">DAILY REQUESTS</text>
                   <rect x="238" y="102" width="73" height="29" rx="10" fill="#ff6238"/>
                   <text x="274" y="121" fill="#073b28" font-family="system-ui, sans-serif" font-size="11" font-weight="900" text-anchor="middle">0→1 × 2</text>
