@@ -145,6 +145,16 @@
       text-transform: uppercase;
     }
 
+    .name-label { flex-wrap: wrap; }
+
+    .education-badge {
+      padding: 6px 9px;
+      color: var(--ink);
+      background: var(--lime);
+      border-radius: 999px;
+      letter-spacing: .06em;
+    }
+
     .name-label::before,
     .section-kicker::before {
       content: "";
@@ -560,12 +570,6 @@
       margin-top: 7px;
     }
 
-    .source-note {
-      color: var(--ink-soft);
-      font-size: 11px;
-      line-height: 1.45;
-    }
-
     footer {
       padding: 34px 0;
       color: var(--cream);
@@ -670,7 +674,7 @@
   <main id="main">
     <section class="shell hero" id="top">
       <div class="hero-copy">
-        <p class="name-label">Eva Huang</p>
+        <p class="name-label"><span>Eva Huang</span><span class="education-badge">Computer Science + Sustainable Cities minor</span></p>
         <h1>Building <span class="spark">sustainable systems.</span></h1>
         <p class="intro">I build software systems and products that focus on the <strong>infrastructure, energy, and cities</strong> for the future.</p>
         <div class="hero-actions">
@@ -750,7 +754,6 @@
                 <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
                 <div class="detail-actions">
                   <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See WishMobile <span aria-hidden="true">↗</span></a>
-                  <span class="source-note">Product capabilities and reach: WishMobile. Eva’s 18% result: portfolio data.</span>
                 </div>
               </div>
             </div>
