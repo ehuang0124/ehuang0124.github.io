@@ -4,23 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Eva Huang builds cloud systems and products, with a focus on infrastructure, sustainable energy, and cities.">
-  <meta name="theme-color" content="#0b5d3b">
+  <meta name="theme-color" content="#073b28">
   <title>Eva Huang — Digital growth is physical</title>
   <script>document.documentElement.classList.add('js');</script>
   <style>
     :root {
-      --ink: #071a11;
-      --ink-soft: #45594d;
-      --forest: #0b5d3b;
-      --forest-dark: #073b28;
-      --green: #16a866;
-      --mint: #dff7d6;
+      --ink: #073b28;
+      --ink-soft: rgba(7, 59, 40, .72);
       --lime: #b7f34a;
-      --solar: #ffb000;
       --orange: #ff6238;
       --cream: #f4f8ed;
-      --paper: #fbfdf7;
-      --white: #fff;
+      --surface: rgba(244, 248, 237, .82);
+      --lime-wash: rgba(183, 243, 74, .18);
       --line: rgba(7, 59, 40, .17);
       --shadow: 0 20px 52px rgba(7, 59, 40, .13);
       --radius: 22px;
@@ -34,8 +29,8 @@
       overflow-x: clip;
       color: var(--ink);
       background:
-        linear-gradient(rgba(11, 93, 59, .04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(11, 93, 59, .04) 1px, transparent 1px),
+        linear-gradient(rgba(7, 59, 40, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(7, 59, 40, .04) 1px, transparent 1px),
         radial-gradient(circle at 88% 8%, rgba(183, 243, 74, .24), transparent 26rem),
         var(--cream);
       background-size: 42px 42px, 42px 42px, auto, auto;
@@ -58,7 +53,7 @@
       top: -64px;
       z-index: 100;
       padding: 11px 16px;
-      color: var(--white);
+      color: var(--cream);
       background: var(--ink);
       border-radius: 9px;
       transition: top .2s ease;
@@ -87,7 +82,7 @@
     .brand-mark {
       width: 38px;
       height: 38px;
-      filter: drop-shadow(3px 3px 0 var(--solar));
+      filter: drop-shadow(3px 3px 0 var(--orange));
     }
 
     .nav-links {
@@ -103,18 +98,22 @@
       transition: color .2s ease, transform .2s ease;
     }
 
-    .nav-links a:hover { color: var(--forest); }
+    .nav-links a:hover:not(.nav-cta) {
+      text-decoration: underline;
+      text-decoration-color: var(--orange);
+      text-decoration-thickness: 3px;
+      text-underline-offset: 4px;
+    }
 
     .nav-cta {
       padding: 10px 16px;
-      color: var(--white) !important;
-      background: var(--forest);
+      color: var(--cream) !important;
+      background: var(--ink);
       border-radius: 999px;
       box-shadow: 0 8px 20px rgba(7, 59, 40, .2);
     }
 
     .nav-cta:hover {
-      background: var(--forest-dark);
       transform: translateY(-2px);
     }
 
@@ -138,7 +137,7 @@
       align-items: center;
       gap: 10px;
       margin: 0 0 18px;
-      color: var(--forest);
+      color: var(--ink);
       font-size: 11px;
       font-weight: 900;
       letter-spacing: .14em;
@@ -150,9 +149,9 @@
       content: "";
       width: 30px;
       height: 5px;
-      background: var(--solar);
+      background: var(--orange);
       border-radius: 99px;
-      box-shadow: 10px 0 0 var(--orange);
+      box-shadow: 10px 0 0 var(--lime);
     }
 
     h1 {
@@ -208,7 +207,7 @@
       gap: 9px;
       min-height: 47px;
       padding: 0 19px;
-      border: 1px solid var(--forest-dark);
+      border: 1px solid var(--ink);
       border-radius: 999px;
       font-size: 13px;
       font-weight: 900;
@@ -224,11 +223,11 @@
 
     .button.primary,
     .detail-link {
-      color: var(--white);
-      background: var(--forest-dark);
+      color: var(--cream);
+      background: var(--ink);
     }
 
-    .button.secondary { background: rgba(255,255,255,.45); }
+    .button.secondary { background: rgba(244, 248, 237, .52); }
 
     .hero-visual {
       position: relative;
@@ -236,11 +235,11 @@
       min-height: 405px;
       margin: 0;
       overflow: hidden;
-      color: var(--white);
-      background: var(--forest-dark);
+      color: var(--cream);
+      background: var(--ink);
       border: 2px solid var(--ink);
       border-radius: 28px;
-      box-shadow: 14px 14px 0 var(--solar), var(--shadow);
+      box-shadow: 14px 14px 0 var(--orange), var(--shadow);
     }
 
     .hero-visual svg {
@@ -280,18 +279,18 @@
       min-height: 150px;
       padding: 22px;
       overflow: hidden;
-      background: rgba(255,255,255,.62);
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 18px;
     }
 
     .focus-card:nth-child(2) {
-      color: var(--forest-dark);
+      color: var(--ink);
       background: var(--lime);
     }
 
     .focus-number {
-      color: var(--orange);
+      color: var(--ink);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 11px;
       font-weight: 900;
@@ -320,7 +319,7 @@
       position: absolute;
       right: 18px;
       top: 15px;
-      color: var(--forest);
+      color: var(--ink);
       font-size: 31px;
       line-height: 1;
     }
@@ -364,7 +363,7 @@
     details.project {
       grid-column: span 6;
       overflow: clip;
-      background: var(--paper);
+      background: var(--cream);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
@@ -372,14 +371,14 @@
 
     details.project:hover {
       transform: translateY(-4px);
-      border-color: rgba(11, 93, 59, .52);
+      border-color: rgba(7, 59, 40, .52);
       box-shadow: var(--shadow);
     }
 
     details.project[open] {
       grid-column: span 12;
       transform: none;
-      border-color: var(--green);
+      border-color: var(--lime);
       box-shadow: var(--shadow);
     }
 
@@ -414,7 +413,7 @@
       flex: 0 0 auto;
       width: 34px;
       height: 34px;
-      color: var(--forest-dark);
+      color: var(--ink);
       background: var(--lime);
       border: 1px solid currentColor;
       border-radius: 50%;
@@ -441,7 +440,7 @@
       place-items: center;
       min-width: 0;
       overflow: hidden;
-      background: var(--mint);
+      background: var(--lime-wash);
       border-radius: 15px;
     }
 
@@ -461,8 +460,8 @@
 
     .tag {
       padding: 6px 8px;
-      color: var(--forest-dark);
-      background: var(--mint);
+      color: var(--ink);
+      background: var(--lime-wash);
       border-radius: 999px;
       font-size: 9px;
       font-weight: 900;
@@ -491,8 +490,8 @@
       flex: 0 0 auto;
       margin-top: 2px;
       padding: 6px 8px;
-      color: var(--white);
-      background: var(--forest);
+      color: var(--cream);
+      background: var(--ink);
       border-radius: 999px;
       font-size: 8px;
       font-weight: 900;
@@ -511,7 +510,7 @@
 
     .project-detail {
       padding: 26px;
-      background: var(--paper);
+      background: var(--cream);
       border-top: 1px solid var(--line);
     }
 
@@ -534,7 +533,7 @@
     .detail-fact {
       min-height: 115px;
       padding: 16px;
-      background: var(--white);
+      background: var(--lime-wash);
       border: 1px solid var(--line);
       border-radius: 13px;
     }
@@ -542,7 +541,7 @@
     .detail-fact strong {
       display: block;
       margin-bottom: 7px;
-      color: var(--forest);
+      color: var(--ink);
       font-size: 10px;
       letter-spacing: .1em;
       text-transform: uppercase;
@@ -571,15 +570,15 @@
 
     footer {
       padding: 34px 0;
-      color: var(--white);
-      background: var(--forest-dark);
+      color: var(--cream);
+      background: var(--ink);
     }
 
     .footer-bottom {
       display: flex;
       justify-content: space-between;
       gap: 22px;
-      color: rgba(255,255,255,.66);
+      color: rgba(244, 248, 237, .66);
       font-size: 12px;
     }
 
@@ -623,7 +622,7 @@
       .hero { padding: 48px 0 72px; row-gap: 30px; }
       h1 { font-size: clamp(59px, 18vw, 78px); }
       .intro { font-size: 16px; }
-      .hero-visual { min-height: 330px; box-shadow: 9px 9px 0 var(--solar), var(--shadow); }
+      .hero-visual { min-height: 330px; box-shadow: 9px 9px 0 var(--orange), var(--shadow); }
       .focus-card h2 { margin-top: 18px; }
       .projects { padding: 72px 0 80px; }
       .section-head { align-items: flex-start; flex-direction: column; margin-bottom: 27px; }
@@ -693,31 +692,31 @@
           </defs>
           <rect width="500" height="430" fill="#073b28"/>
           <rect width="500" height="430" fill="url(#hero-grid)"/>
-          <circle cx="406" cy="72" r="43" fill="#ffb000"/>
-          <circle cx="406" cy="72" r="59" fill="none" stroke="#ffb000" stroke-opacity=".24" stroke-width="2"/>
+          <circle cx="406" cy="72" r="43" fill="#ff6238"/>
+          <circle cx="406" cy="72" r="59" fill="none" stroke="#ff6238" stroke-opacity=".24" stroke-width="2"/>
           <path d="M-10 333c92-53 160 17 245-30s162-91 285-41" fill="none" stroke="#b7f34a" stroke-opacity=".35" stroke-width="3"/>
           <path class="signal-line" d="M41 342c77-42 143 13 217-31s135-71 211-42" fill="none" stroke="#b7f34a" stroke-width="5"/>
-          <g transform="translate(44 239)" stroke="#dff7d6" stroke-width="5" stroke-linecap="round">
+          <g transform="translate(44 239)" stroke="#f4f8ed" stroke-width="5" stroke-linecap="round">
             <path d="M37 26v103M37 26L13 0m24 26L72 16m-35 10L25 64"/>
-            <circle cx="37" cy="26" r="6" fill="#ffb000" stroke="none"/>
+            <circle cx="37" cy="26" r="6" fill="#ff6238" stroke="none"/>
           </g>
           <g transform="translate(155 178)">
-            <rect x="0" y="66" width="108" height="138" rx="9" fill="#0b5d3b" stroke="#dff7d6" stroke-width="4"/>
-            <rect x="17" y="84" width="74" height="23" rx="4" fill="#dff7d6"/>
-            <rect x="17" y="119" width="74" height="23" rx="4" fill="#dff7d6" opacity=".7"/>
-            <rect x="17" y="154" width="74" height="23" rx="4" fill="#dff7d6" opacity=".45"/>
+            <rect x="0" y="66" width="108" height="138" rx="9" fill="#073b28" stroke="#f4f8ed" stroke-width="4"/>
+            <rect x="17" y="84" width="74" height="23" rx="4" fill="#f4f8ed"/>
+            <rect x="17" y="119" width="74" height="23" rx="4" fill="#f4f8ed" opacity=".7"/>
+            <rect x="17" y="154" width="74" height="23" rx="4" fill="#f4f8ed" opacity=".45"/>
             <circle cx="80" cy="95" r="5" fill="#ff6238"/>
             <circle cx="80" cy="130" r="5" fill="#b7f34a"/>
-            <path d="M17 66V31h30V7h33v59" fill="#16a866" stroke="#dff7d6" stroke-width="4"/>
+            <path d="M17 66V31h30V7h33v59" fill="#b7f34a" stroke="#f4f8ed" stroke-width="4"/>
           </g>
-          <g transform="translate(305 193)" fill="#16a866" stroke="#dff7d6" stroke-width="3">
+          <g transform="translate(305 193)" fill="#b7f34a" stroke="#f4f8ed" stroke-width="3">
             <path d="M0 177V74h42v103zM47 177V30h52v147zM105 177v-82h39v82z"/>
             <path d="M13 93h15m0 22H13m0 22h15M63 55h20M63 80h20M63 105h20M117 116h15m-15 22h15"/>
           </g>
-          <g fill="#ff6238" stroke="#fff" stroke-width="4">
+          <g fill="#ff6238" stroke="#f4f8ed" stroke-width="4">
             <circle cx="41" cy="342" r="8"/><circle cx="258" cy="311" r="8"/><circle cx="469" cy="269" r="8"/>
           </g>
-          <text x="26" y="36" fill="#dff7d6" font-family="ui-monospace, monospace" font-size="11" font-weight="800" letter-spacing="2">CLOUD ↔ GRID ↔ CITY</text>
+          <text x="26" y="36" fill="#f4f8ed" font-family="ui-monospace, monospace" font-size="11" font-weight="800" letter-spacing="2">CLOUD ↔ GRID ↔ CITY</text>
         </svg>
         <figcaption>Cloud infrastructure, energy, and cities connected as one physical system.</figcaption>
       </figure>
@@ -757,12 +756,12 @@
               <div class="project-top"><span>01 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#dff7d6"/>
-                  <path d="M30 115H302" stroke="#0b5d3b" stroke-opacity=".26" stroke-width="2"/>
-                  <path d="M36 111C84 106 115 96 149 82s67-21 91-42 43-21 61-23" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
-                  <path d="M289 9l12 8-9 11" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
+                  <rect width="330" height="145" fill="#b7f34a" fill-opacity=".18"/>
+                  <path d="M30 115H302" stroke="#073b28" stroke-opacity=".26" stroke-width="2"/>
+                  <path d="M36 111C84 106 115 96 149 82s67-21 91-42 43-21 61-23" fill="none" stroke="#073b28" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M289 9l12 8-9 11" fill="none" stroke="#073b28" stroke-width="5" stroke-linecap="round"/>
                   <circle cx="36" cy="111" r="6" fill="#ff6238"/><circle cx="301" cy="17" r="7" fill="#ff6238"/>
-                  <rect x="196" y="56" width="105" height="43" rx="14" fill="#ffb000"/>
+                  <rect x="196" y="56" width="105" height="43" rx="14" fill="#ff6238"/>
                   <text x="248" y="77" fill="#073b28" font-family="Georgia, serif" font-size="22" text-anchor="middle">18%</text>
                   <text x="248" y="89" fill="#073b28" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · MONTH 3</text>
                   <text x="31" y="133" fill="#073b28" font-family="system-ui, sans-serif" font-size="8" font-weight="900">LAUNCH</text>
@@ -793,12 +792,12 @@
               <div class="project-top"><span>02 / AI infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#dff7d6"/>
-                  <path d="M23 115C82 109 87 92 137 90s61-25 103-27 44-23 70-30" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
+                  <rect width="330" height="145" fill="#b7f34a" fill-opacity=".18"/>
+                  <path d="M23 115C82 109 87 92 137 90s61-25 103-27 44-23 70-30" fill="none" stroke="#073b28" stroke-width="5" stroke-linecap="round"/>
                   <circle cx="310" cy="33" r="8" fill="#ff6238"/>
                   <text x="24" y="54" fill="#073b28" font-family="Georgia, serif" font-size="38" font-weight="500">41B+</text>
                   <text x="25" y="73" fill="#073b28" font-family="system-ui, sans-serif" font-size="9" font-weight="900">DAILY REQUESTS</text>
-                  <rect x="231" y="91" width="79" height="34" rx="12" fill="#ffb000"/>
+                  <rect x="231" y="91" width="79" height="34" rx="12" fill="#ff6238"/>
                   <text x="270" y="113" fill="#073b28" font-family="system-ui, sans-serif" font-size="12" font-weight="900" text-anchor="middle">0→1 × 2</text>
                 </svg>
               </div>
@@ -824,17 +823,17 @@
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
                   <rect width="330" height="145" fill="#b7f34a"/>
-                  <rect x="25" y="42" width="63" height="61" rx="11" fill="#fff" stroke="#073b28" stroke-width="3"/>
+                  <rect x="25" y="42" width="63" height="61" rx="11" fill="#f4f8ed" stroke="#073b28" stroke-width="3"/>
                   <path d="M39 58h35M39 70h35M39 82h24" stroke="#073b28" stroke-width="4" stroke-linecap="round"/>
                   <path d="M103 73h49" stroke="#ff6238" stroke-width="5" stroke-linecap="round"/>
                   <path d="M142 63l10 10-10 10" fill="none" stroke="#ff6238" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <g fill="#0b5d3b">
+                  <g fill="#073b28">
                     <rect x="173" y="28" width="57" height="38" rx="9"/>
                     <rect x="240" y="28" width="57" height="38" rx="9"/>
                     <rect x="173" y="77" width="57" height="38" rx="9"/>
                     <rect x="240" y="77" width="57" height="38" rx="9"/>
                   </g>
-                  <g fill="#dff7d6" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle">
+                  <g fill="#f4f8ed" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle">
                     <text x="201" y="51">REUSABLE</text><text x="268" y="51">REVIEWABLE</text><text x="201" y="100">CONSISTENT</text><text x="268" y="100">GOVERNED</text>
                   </g>
                   <text x="56" y="122" fill="#073b28" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle">CUSTOMER SOP</text>
