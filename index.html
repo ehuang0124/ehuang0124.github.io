@@ -362,7 +362,7 @@
     }
 
     details.project {
-      grid-column: span 4;
+      grid-column: span 6;
       overflow: clip;
       background: var(--paper);
       border: 1px solid var(--line);
@@ -470,13 +470,36 @@
       text-transform: uppercase;
     }
 
+    .project-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
     .project h3 {
+      flex: 1 1 auto;
+      min-width: 0;
       margin: 0;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(29px, 3vw, 36px);
+      font-size: clamp(27px, 2.7vw, 35px);
       font-weight: 500;
       line-height: 1;
       letter-spacing: -.04em;
+    }
+
+    .role {
+      flex: 0 0 auto;
+      margin-top: 2px;
+      padding: 6px 8px;
+      color: var(--white);
+      background: var(--forest);
+      border-radius: 999px;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .project-brief {
@@ -590,7 +613,6 @@
       .focus-grid { grid-template-columns: 1fr; }
       .focus-card { min-height: 125px; }
       details.project { grid-column: span 6; }
-      details.project:last-child { grid-column: span 12; }
       details.project[open] { grid-column: span 12; }
     }
 
@@ -606,7 +628,6 @@
       .projects { padding: 72px 0 80px; }
       .section-head { align-items: flex-start; flex-direction: column; margin-bottom: 27px; }
       details.project,
-      details.project:last-child,
       details.project[open] { grid-column: 1 / -1; }
       .project summary { min-height: 350px; padding: 20px; }
       .detail-grid { grid-template-columns: 1fr; }
@@ -727,13 +748,117 @@
             <p class="section-kicker">Selected work</p>
             <h2>Proof in practice.</h2>
           </div>
-          <p class="section-note">Three projects. Three outcomes. Open a card for the short version.</p>
+          <p class="section-note">Four projects. Four outcomes. Open a card for the short version.</p>
         </div>
 
         <div class="project-grid">
           <details class="project reveal" name="projects">
             <summary>
-              <div class="project-top"><span>01 / Cloud infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="project-top"><span>01 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic" aria-hidden="true">
+                <svg viewBox="0 0 330 145">
+                  <rect width="330" height="145" fill="#dff7d6"/>
+                  <path d="M30 115H302" stroke="#0b5d3b" stroke-opacity=".26" stroke-width="2"/>
+                  <path d="M36 111C84 106 115 96 149 82s67-21 91-42 43-21 61-23" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M289 9l12 8-9 11" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
+                  <circle cx="36" cy="111" r="6" fill="#ff6238"/><circle cx="301" cy="17" r="7" fill="#ff6238"/>
+                  <rect x="196" y="56" width="105" height="43" rx="14" fill="#ffb000"/>
+                  <text x="248" y="77" fill="#073b28" font-family="Georgia, serif" font-size="22" text-anchor="middle">18%</text>
+                  <text x="248" y="89" fill="#073b28" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · MONTH 3</text>
+                  <text x="31" y="133" fill="#073b28" font-family="system-ui, sans-serif" font-size="8" font-weight="900">LAUNCH</text>
+                </svg>
+              </div>
+              <div class="project-body">
+                <div class="project-tags"><span class="tag">Booking + CRM</span><span class="tag">Google-native</span></div>
+                <div class="project-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role">Product Manager</span></div>
+                <p class="project-brief">Reached 18% of revenue in three months.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">Led WishMobile from product scope to customer launch.</p>
+                <div class="detail-fact"><strong>Experience</strong><span>Book and pay through Google Maps or the merchant website.</span></div>
+                <div class="detail-fact"><strong>Business result</strong><span>18% of company revenue within three months.</span></div>
+                <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
+                <div class="detail-actions">
+                  <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See WishMobile <span aria-hidden="true">↗</span></a>
+                  <span class="source-note">Product capabilities and reach: WishMobile. Eva’s 18% result: portfolio data.</span>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>02 / AI infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic" aria-hidden="true">
+                <svg viewBox="0 0 330 145">
+                  <rect width="330" height="145" fill="#dff7d6"/>
+                  <path d="M23 115C82 109 87 92 137 90s61-25 103-27 44-23 70-30" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
+                  <circle cx="310" cy="33" r="8" fill="#ff6238"/>
+                  <text x="24" y="54" fill="#073b28" font-family="Georgia, serif" font-size="38" font-weight="500">41B+</text>
+                  <text x="25" y="73" fill="#073b28" font-family="system-ui, sans-serif" font-size="9" font-weight="900">DAILY REQUESTS</text>
+                  <rect x="231" y="91" width="79" height="34" rx="12" fill="#ffb000"/>
+                  <text x="270" y="113" fill="#073b28" font-family="system-ui, sans-serif" font-size="12" font-weight="900" text-anchor="middle">0→1 × 2</text>
+                </svg>
+              </div>
+              <div class="project-body">
+                <div class="project-tags"><span class="tag">AI infrastructure</span><span class="tag">Distributed systems</span></div>
+                <div class="project-title"><h3>Salesforce API platform | Salesforce</h3><span class="role">Software Engineer</span></div>
+                <p class="project-brief">Tenant isolation for critical AI/ML infrastructure.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">Founding engineering work where AI scale and tenant isolation meet.</p>
+                <div class="detail-fact"><strong>41B+</strong><span>Daily platform requests.</span></div>
+                <div class="detail-fact"><strong>0→1 × 2</strong><span>Salesforce API platform initiatives.</span></div>
+                <div class="detail-fact"><strong>AI infrastructure</strong><span>Tenant isolation for critical AI/ML workloads.</span></div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>03 / Policy governance</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic" aria-hidden="true">
+                <svg viewBox="0 0 330 145">
+                  <rect width="330" height="145" fill="#b7f34a"/>
+                  <rect x="25" y="42" width="63" height="61" rx="11" fill="#fff" stroke="#073b28" stroke-width="3"/>
+                  <path d="M39 58h35M39 70h35M39 82h24" stroke="#073b28" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M103 73h49" stroke="#ff6238" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M142 63l10 10-10 10" fill="none" stroke="#ff6238" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g fill="#0b5d3b">
+                    <rect x="173" y="28" width="57" height="38" rx="9"/>
+                    <rect x="240" y="28" width="57" height="38" rx="9"/>
+                    <rect x="173" y="77" width="57" height="38" rx="9"/>
+                    <rect x="240" y="77" width="57" height="38" rx="9"/>
+                  </g>
+                  <g fill="#dff7d6" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle">
+                    <text x="201" y="51">REUSABLE</text><text x="268" y="51">REVIEWABLE</text><text x="201" y="100">CONSISTENT</text><text x="268" y="100">GOVERNED</text>
+                  </g>
+                  <text x="56" y="122" fill="#073b28" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle">CUSTOMER SOP</text>
+                </svg>
+              </div>
+              <div class="project-body">
+                <div class="project-tags"><span class="tag">Policy governance</span><span class="tag">Customer debugging</span></div>
+                <div class="project-title"><h3>Mesh Analyzer | Salesforce</h3><span class="role">Project Lead</span></div>
+                <p class="project-brief">Turned a debugging SOP into reusable policy governance.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">Led the shift from one-off customer debugging to governed policy.</p>
+                <div class="detail-fact"><strong>Captured</strong><span>Turned expert debugging knowledge into explicit policy.</span></div>
+                <div class="detail-fact"><strong>Governed</strong><span>Made decisions reviewable and consistent.</span></div>
+                <div class="detail-fact"><strong>Reusable</strong><span>Applied the policy beyond one customer incident.</span></div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>04 / Cloud infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
                   <rect width="330" height="145" fill="#b7f34a"/>
@@ -752,7 +877,7 @@
               </div>
               <div class="project-body">
                 <div class="project-tags"><span class="tag">System design</span><span class="tag">CDC</span></div>
-                <h3>Data Sync Agent</h3>
+                <div class="project-title"><h3>Data Sync Agent</h3><span class="role">Software Engineer</span></div>
                 <p class="project-brief">A safe path from customer data to cloud durability.</p>
               </div>
             </summary>
@@ -764,72 +889,6 @@
                 <div class="detail-fact"><strong>Focused recovery</strong><span>Only the affected table rebaselines after a history gap.</span></div>
                 <div class="detail-actions">
                   <a class="detail-link" href="https://github.com/ehuang0124/ehuang0124.github.io/blob/d53ff1b2aa051e2daea97936083659d549ab15cf/data-sync/index.html" target="_blank" rel="noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>02 / Platform scale</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#dff7d6"/>
-                  <path d="M23 115C82 109 87 92 137 90s61-25 103-27 44-23 70-30" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
-                  <circle cx="310" cy="33" r="8" fill="#ff6238"/>
-                  <text x="24" y="54" fill="#073b28" font-family="Georgia, serif" font-size="38" font-weight="500">41B+</text>
-                  <text x="25" y="73" fill="#073b28" font-family="system-ui, sans-serif" font-size="9" font-weight="900">DAILY REQUESTS</text>
-                  <rect x="231" y="91" width="79" height="34" rx="12" fill="#ffb000"/>
-                  <text x="270" y="113" fill="#073b28" font-family="system-ui, sans-serif" font-size="12" font-weight="900" text-anchor="middle">0→1 × 2</text>
-                </svg>
-              </div>
-              <div class="project-body">
-                <div class="project-tags"><span class="tag">Salesforce</span><span class="tag">Distributed systems</span></div>
-                <h3>API platform at scale</h3>
-                <p class="project-brief">Two 0→1 initiatives on a 41B+ request platform.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Founding engineering work where scale and isolation meet.</p>
-                <div class="detail-fact"><strong>41B+</strong><span>Daily platform requests.</span></div>
-                <div class="detail-fact"><strong>0→1 × 2</strong><span>Salesforce API platform initiatives.</span></div>
-                <div class="detail-fact"><strong>Result</strong><span>Tenant isolation for critical AI/ML infrastructure.</span></div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>03 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#dff7d6"/>
-                  <path d="M30 115H302" stroke="#0b5d3b" stroke-opacity=".26" stroke-width="2"/>
-                  <path d="M36 111C84 106 115 96 149 82s67-21 91-42 43-21 61-23" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
-                  <path d="M289 9l12 8-9 11" fill="none" stroke="#0b5d3b" stroke-width="5" stroke-linecap="round"/>
-                  <circle cx="36" cy="111" r="6" fill="#ff6238"/><circle cx="301" cy="17" r="7" fill="#ff6238"/>
-                  <rect x="196" y="56" width="105" height="43" rx="14" fill="#ffb000"/>
-                  <text x="248" y="77" fill="#073b28" font-family="Georgia, serif" font-size="22" text-anchor="middle">18%</text>
-                  <text x="248" y="89" fill="#073b28" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · MONTH 3</text>
-                  <text x="31" y="133" fill="#073b28" font-family="system-ui, sans-serif" font-size="8" font-weight="900">LAUNCH</text>
-                </svg>
-              </div>
-              <div class="project-body">
-                <div class="project-tags"><span class="tag">WishMobile</span><span class="tag">Product management</span></div>
-                <h3>Booking people chose</h3>
-                <p class="project-brief">A Google-native product that reached 18% of revenue in three months.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Eva led WishMobile from product scope to customer launch.</p>
-                <div class="detail-fact"><strong>Experience</strong><span>Book and pay through Google Maps or the merchant website.</span></div>
-                <div class="detail-fact"><strong>Business result</strong><span>18% of company revenue within three months.</span></div>
-                <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
-                <div class="detail-actions">
-                  <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See WishMobile <span aria-hidden="true">↗</span></a>
-                  <span class="source-note">Product capabilities and reach: WishMobile. Eva’s 18% result: portfolio data.</span>
                 </div>
               </div>
             </div>
