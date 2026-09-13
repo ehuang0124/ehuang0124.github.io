@@ -3,24 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Eva Huang — building systems end-to-end and bringing them to the people who use them.">
-  <title>Eva Huang — Systems, shipped.</title>
+  <meta name="description" content="Eva Huang builds ambitious data systems and products, with interests spanning data centers, sustainable energy, and cities.">
+  <meta name="theme-color" content="#0b5d3b">
+  <title>Eva Huang — Systems for a changing world</title>
+  <script>document.documentElement.classList.add('js');</script>
   <style>
     :root {
-      --ink: #0b1f3a;
-      --ink-soft: #53647c;
-      --cream: #f3f7ff;
-      --paper: #fbfdff;
-      --sea: #326ce5;
-      --sea-dark: #1f4fc4;
-      --sea-light: #e3ecff;
-      --mint: #c7d8ff;
-      --accent: #13c7b7;
-      --accent-ink: #007f75;
-      --accent-light: #bdf7f0;
-      --line: rgba(11, 31, 58, 0.16);
-      --shadow: 0 22px 60px rgba(13, 50, 92, 0.14);
-      --radius: 22px;
+      --ink: #071a11;
+      --ink-soft: #41584b;
+      --forest: #0b5d3b;
+      --forest-dark: #073b28;
+      --green: #12a865;
+      --green-light: #dff7d6;
+      --lime: #b7f34a;
+      --solar: #ffb000;
+      --orange: #ff6238;
+      --cream: #f4f8ed;
+      --paper: #fbfdf7;
+      --white: #ffffff;
+      --line: rgba(7, 59, 40, .18);
+      --shadow: 0 24px 64px rgba(7, 59, 40, .14);
+      --radius: 26px;
     }
 
     * { box-sizing: border-box; }
@@ -29,23 +32,30 @@
 
     body {
       margin: 0;
+      overflow-x: clip;
       color: var(--ink);
       background:
-        radial-gradient(circle at 3% 12%, rgba(191, 213, 239, 0.72), transparent 23rem),
+        linear-gradient(rgba(11, 93, 59, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(11, 93, 59, .045) 1px, transparent 1px),
+        radial-gradient(circle at 88% 8%, rgba(183, 243, 74, .28), transparent 28rem),
         var(--cream);
+      background-size: 42px 42px, 42px 42px, auto, auto;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-font-smoothing: antialiased;
     }
 
     a { color: inherit; }
 
+    button,
+    summary { font: inherit; }
+
     .skip-link {
       position: fixed;
       left: 16px;
-      top: -60px;
-      z-index: 99;
+      top: -64px;
+      z-index: 100;
       padding: 12px 18px;
-      color: white;
+      color: var(--white);
       background: var(--ink);
       border-radius: 10px;
       transition: top .2s ease;
@@ -54,12 +64,17 @@
     .skip-link:focus { top: 16px; }
 
     .shell {
-      width: min(1180px, calc(100% - 40px));
+      width: min(1200px, calc(100% - 48px));
       margin-inline: auto;
     }
 
+    .site-header {
+      position: relative;
+      z-index: 10;
+    }
+
     .nav {
-      min-height: 88px;
+      min-height: 86px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -69,31 +84,26 @@
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
+      gap: 11px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: -.02em;
       text-decoration: none;
     }
 
     .brand-mark {
       position: relative;
-      width: 30px;
-      height: 30px;
-      border: 2px solid var(--sea);
-      border-radius: 9px;
-      transform: rotate(-4deg);
-    }
-
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      right: -5px;
-      bottom: -5px;
-      width: 9px;
-      height: 9px;
-      background: var(--accent);
-      border: 3px solid var(--cream);
-      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: var(--forest-dark);
+      background: var(--lime);
+      border: 2px solid var(--forest-dark);
+      border-radius: 10px 10px 4px 10px;
+      box-shadow: 4px 4px 0 var(--solar);
+      font-size: 16px;
+      transform: rotate(-3deg);
     }
 
     .nav-links {
@@ -101,93 +111,155 @@
       align-items: center;
       gap: 28px;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .nav-links a {
       text-decoration: none;
-      transition: color .2s ease;
+      transition: color .2s ease, transform .2s ease;
     }
 
-    .nav-links a:hover { color: var(--accent-ink); }
+    .nav-links a:hover { color: var(--forest); }
 
     .nav-cta {
-      padding: 11px 16px;
-      color: white !important;
-      background: var(--sea);
+      padding: 11px 17px;
+      color: var(--white) !important;
+      background: var(--forest);
       border-radius: 999px;
-      box-shadow: 0 8px 20px rgba(23, 79, 140, .2);
+      box-shadow: 0 8px 20px rgba(7, 59, 40, .2);
     }
 
-    .nav-cta:hover { background: var(--sea-dark); }
+    .nav-cta:hover {
+      background: var(--forest-dark);
+      transform: translateY(-2px);
+    }
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(380px, .88fr);
+      grid-template-columns: repeat(12, minmax(0, 1fr));
       align-items: center;
-      gap: clamp(44px, 7vw, 96px);
-      min-height: 680px;
-      padding: 72px 0 88px;
+      gap: 28px;
+      min-height: 690px;
+      padding: 72px 0 92px;
     }
 
-    .eyebrow {
+    .hero-copy {
+      grid-column: span 7;
+      min-width: 0;
+    }
+
+    .eyebrow,
+    .section-kicker {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      margin: 0 0 23px;
-      color: var(--sea-dark);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: .12em;
+      gap: 10px;
+      margin: 0 0 20px;
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .14em;
       text-transform: uppercase;
     }
 
-    .eyebrow::before {
+    .eyebrow::before,
+    .section-kicker::before {
       content: "";
-      width: 28px;
-      height: 3px;
-      background: var(--accent);
+      width: 30px;
+      height: 5px;
+      background: var(--solar);
       border-radius: 99px;
+      box-shadow: 10px 0 0 var(--orange);
     }
 
+    h1,
+    h2,
+    h3,
+    p { text-wrap: pretty; }
+
     h1 {
-      max-width: 720px;
+      max-width: 760px;
       margin: 0;
-      color: var(--ink);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(58px, 8.2vw, 112px);
+      font-size: clamp(60px, 7.2vw, 105px);
       font-weight: 500;
-      line-height: .88;
+      line-height: .91;
       letter-spacing: -.07em;
     }
 
-    h1 span {
+    h1 .name {
       display: block;
-      margin-top: 14px;
-      color: var(--sea);
+      margin-bottom: 12px;
+      color: var(--forest);
       font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      font-size: .31em;
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -.04em;
+      font-size: .17em;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 .spark {
+      position: relative;
+      display: inline-block;
+      z-index: 0;
+    }
+
+    h1 .spark::after {
+      content: "";
+      position: absolute;
+      left: -.02em;
+      right: -.08em;
+      bottom: .06em;
+      z-index: -1;
+      height: .14em;
+      background: var(--lime);
+      border-radius: 2px;
+      transform: rotate(-1deg);
     }
 
     .intro {
-      max-width: 690px;
-      margin: 30px 0 0;
+      max-width: 700px;
+      margin: 28px 0 0;
       color: var(--ink-soft);
-      font-size: clamp(17px, 1.7vw, 20px);
+      font-size: clamp(17px, 1.6vw, 20px);
       line-height: 1.65;
     }
 
     .intro strong { color: var(--ink); }
 
+    .interest-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin: 27px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .interest-list li {
+      padding: 9px 12px;
+      color: var(--forest-dark);
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .interest-list li::before {
+      content: "+";
+      margin-right: 6px;
+      color: var(--orange);
+    }
+
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 14px;
-      margin-top: 34px;
+      gap: 13px;
+      margin-top: 32px;
     }
 
     .button {
@@ -195,182 +267,182 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      min-height: 50px;
+      min-height: 51px;
       padding: 0 21px;
-      border: 1px solid var(--ink);
+      border: 1px solid var(--forest-dark);
       border-radius: 999px;
       font-size: 14px;
-      font-weight: 800;
+      font-weight: 900;
       text-decoration: none;
       transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
 
     .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px rgba(11, 31, 58, .14);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(7, 59, 40, .16);
     }
 
     .button.primary {
-      color: white;
-      background: var(--ink);
+      color: var(--white);
+      background: var(--forest-dark);
     }
 
-    .button.secondary { background: transparent; }
+    .button.primary:hover { background: var(--forest); }
+    .button.secondary { background: rgba(255, 255, 255, .42); }
 
-    .arrow { font-size: 18px; line-height: 1; }
-
-    .system-card {
+    .hero-visual {
       position: relative;
-      min-height: 470px;
-      padding: 34px;
-      overflow: hidden;
-      color: #e8fffa;
-      background: var(--sea);
-      border: 1px solid rgba(255,255,255,.3);
-      border-radius: 30px;
-      box-shadow: var(--shadow);
+      grid-column: span 5;
+      margin: 0;
       isolation: isolate;
     }
 
-    .system-card::before {
+    .hero-visual::before {
+      content: "";
+      position: absolute;
+      inset: -16px 18px 16px -14px;
+      z-index: -1;
+      background: var(--solar);
+      border-radius: 36px;
+      transform: rotate(-2.5deg);
+    }
+
+    .visual-frame {
+      position: relative;
+      min-height: 520px;
+      overflow: hidden;
+      color: var(--white);
+      background: var(--forest-dark);
+      border: 2px solid var(--ink);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .visual-frame::after {
       content: "";
       position: absolute;
       inset: 0;
-      z-index: -1;
-      opacity: .22;
-      background-image:
-        linear-gradient(rgba(255,255,255,.25) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.25) 1px, transparent 1px);
-      background-size: 38px 38px;
-      mask-image: linear-gradient(to bottom, black, transparent 85%);
+      pointer-events: none;
+      background: linear-gradient(125deg, rgba(255,255,255,.12), transparent 32%);
     }
 
-    .system-label {
+    .visual-label {
+      position: absolute;
+      left: 27px;
+      top: 25px;
+      z-index: 2;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      color: rgba(255,255,255,.72);
+      gap: 8px;
+      color: rgba(255,255,255,.78);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11px;
-      letter-spacing: .08em;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .11em;
       text-transform: uppercase;
     }
 
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .status-dot {
+    .live-dot {
       width: 8px;
       height: 8px;
-      background: #9ed0ff;
+      background: var(--lime);
       border-radius: 50%;
-      box-shadow: 0 0 0 5px rgba(158,208,255,.16);
+      box-shadow: 0 0 0 5px rgba(183, 243, 74, .16);
+      animation: pulse 2s ease-out infinite;
     }
 
-    .network {
-      position: relative;
-      height: 250px;
-      margin: 26px 0 8px;
-    }
-
-    .node {
+    .hero-visual svg {
       position: absolute;
-      display: grid;
-      place-items: center;
-      width: 64px;
-      height: 64px;
-      border: 1px solid rgba(255,255,255,.45);
-      border-radius: 18px;
-      color: white;
-      background: rgba(12, 55, 104, .9);
-      box-shadow: 0 16px 28px rgba(0,0,0,.14);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11px;
-      font-weight: 800;
-      text-align: center;
-      line-height: 1.2;
+      inset: 38px -18px 0;
+      width: calc(100% + 36px);
+      height: calc(100% - 15px);
     }
 
-    .node.core {
-      left: calc(50% - 42px);
-      top: 76px;
-      width: 84px;
-      height: 84px;
-      border-radius: 50%;
-      color: var(--ink);
-      background: var(--accent-light);
-      border: 8px solid rgba(255,255,255,.16);
-      background-clip: padding-box;
-      z-index: 2;
+    .energy-route {
+      stroke-dasharray: 7 10;
+      animation: route 8s linear infinite;
     }
 
-    .node.one { left: 3%; top: 16px; }
-    .node.two { right: 1%; top: 2px; }
-    .node.three { left: 3%; bottom: 3px; }
-    .node.four { right: 5%; bottom: 2px; }
-
-    .network svg {
+    .visual-pills {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-    }
-
-    .signal {
-      position: absolute;
-      left: 66%;
-      top: 28%;
+      left: 25px;
+      right: 25px;
+      bottom: 24px;
       z-index: 3;
-      width: 13px;
-      height: 13px;
-      background: var(--accent);
-      border: 3px solid white;
-      border-radius: 50%;
-      animation: pulse 2.2s ease-out infinite;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .visual-pills span {
+      padding: 10px 8px;
+      color: var(--white);
+      background: rgba(7, 26, 17, .64);
+      border: 1px solid rgba(255,255,255,.23);
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-align: center;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-visual figcaption {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(19,199,183,.6); }
-      70% { box-shadow: 0 0 0 14px rgba(19,199,183,0); }
-      100% { box-shadow: 0 0 0 0 rgba(19,199,183,0); }
+      0% { box-shadow: 0 0 0 0 rgba(183, 243, 74, .55); }
+      70% { box-shadow: 0 0 0 13px rgba(183, 243, 74, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(183, 243, 74, 0); }
     }
 
-    .system-copy {
-      max-width: 340px;
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 29px;
-      line-height: 1.1;
-      letter-spacing: -.025em;
-    }
-
-    .system-copy em { color: var(--accent-light); }
+    @keyframes route { to { stroke-dashoffset: -136; } }
 
     .metric-strip {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      margin: 0 0 110px;
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 118px;
+      background: rgba(255, 255, 255, .5);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 12px 34px rgba(7, 59, 40, .05);
     }
 
     .metric {
-      padding: 28px clamp(12px, 3vw, 38px);
+      position: relative;
+      padding: 27px clamp(22px, 3vw, 38px);
       border-right: 1px solid var(--line);
     }
 
-    .metric:first-child { padding-left: 0; }
     .metric:last-child { border-right: 0; }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      left: clamp(22px, 3vw, 38px);
+      top: 0;
+      width: 38px;
+      height: 5px;
+      background: var(--green);
+    }
+
+    .metric:nth-child(2)::before { background: var(--solar); }
+    .metric:nth-child(3)::before { background: var(--orange); }
 
     .metric strong {
       display: block;
-      color: var(--sea-dark);
+      color: var(--forest);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(31px, 4vw, 50px);
+      font-size: clamp(34px, 4vw, 50px);
       font-weight: 500;
       line-height: 1;
       letter-spacing: -.05em;
@@ -380,10 +452,10 @@
       display: block;
       margin-top: 9px;
       color: var(--ink-soft);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      line-height: 1.4;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      line-height: 1.45;
       text-transform: uppercase;
     }
 
@@ -391,267 +463,567 @@
       display: flex;
       align-items: end;
       justify-content: space-between;
-      gap: 30px;
-      margin-bottom: 42px;
+      gap: 34px;
+      margin-bottom: 40px;
     }
 
-    .section-kicker {
-      margin: 0 0 12px;
-      color: var(--accent-ink);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
+    .section-kicker { margin-bottom: 13px; }
 
     h2 {
       margin: 0;
-      color: var(--ink);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(42px, 6vw, 72px);
+      font-size: clamp(46px, 6vw, 76px);
       font-weight: 500;
-      line-height: .98;
+      line-height: .96;
       letter-spacing: -.055em;
     }
 
     .section-note {
-      max-width: 370px;
+      max-width: 390px;
       margin: 0;
       color: var(--ink-soft);
       font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
-    .projects { padding-bottom: 80px; }
+    .projects { padding-bottom: 118px; }
 
     .project-grid {
       display: grid;
-      grid-template-columns: repeat(12, 1fr);
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: start;
       gap: 22px;
     }
 
-    .project {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      min-height: 430px;
-      padding: clamp(25px, 3.2vw, 38px);
-      overflow: hidden;
+    details.project {
+      grid-column: span 6;
+      overflow: clip;
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      text-decoration: none;
       transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
     }
 
-    .project:hover {
-      transform: translateY(-5px);
-      border-color: rgba(23,79,140,.5);
+    details.project.featured {
+      grid-column: span 12;
+      color: var(--white);
+      background: var(--forest-dark);
+      border-color: var(--forest-dark);
+    }
+
+    details.project:hover {
+      transform: translateY(-4px);
+      border-color: rgba(11, 93, 59, .52);
       box-shadow: var(--shadow);
     }
 
-    .project:focus-visible,
-    .button:focus-visible,
-    .nav a:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 4px;
+    details.project[open] {
+      grid-column: span 12;
+      transform: none;
+      border-color: var(--green);
+      box-shadow: var(--shadow);
     }
 
-    .project.featured {
-      grid-column: span 7;
-      color: white;
-      background: var(--ink);
+    .project summary {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(145px, auto) auto;
+      min-height: 430px;
+      padding: clamp(25px, 3.4vw, 42px);
+      overflow: hidden;
+      cursor: pointer;
+      list-style: none;
     }
 
-    .project.side { grid-column: span 5; }
-    .project.half { grid-column: span 6; min-height: 360px; }
+    .project.featured summary {
+      grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr);
+      grid-template-rows: auto 1fr;
+      gap: 20px 36px;
+      min-height: 470px;
+    }
 
-    .project-number {
+    .project summary::-webkit-details-marker { display: none; }
+
+    .project summary::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(183, 243, 74, .08), transparent 40%);
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .project summary:hover::after { opacity: 1; }
+
+    .project-top {
+      position: relative;
+      z-index: 2;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 20px;
       color: var(--ink-soft);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .1em;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .11em;
       text-transform: uppercase;
     }
 
-    .featured .project-number { color: rgba(255,255,255,.6); }
+    .featured .project-top {
+      grid-column: 1 / -1;
+      color: rgba(255,255,255,.65);
+    }
 
-    .project-arrow {
-      display: grid;
-      place-items: center;
-      width: 38px;
-      height: 38px;
+    .expand-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .expand-icon {
+      position: relative;
+      width: 39px;
+      height: 39px;
+      color: var(--forest-dark);
+      background: var(--lime);
       border: 1px solid currentColor;
       border-radius: 50%;
-      font-size: 18px;
-      transition: transform .25s ease, background .25s ease, color .25s ease;
+      transition: transform .3s ease, background .2s ease;
     }
 
-    .project:hover .project-arrow {
-      transform: rotate(-35deg);
-      color: white;
-      background: var(--accent);
-      border-color: var(--accent);
+    .expand-icon::before,
+    .expand-icon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 13px;
+      height: 2px;
+      background: currentColor;
+      transform: translate(-50%, -50%);
     }
 
-    .project-body { margin-top: auto; position: relative; z-index: 2; }
+    .expand-icon::after { transform: translate(-50%, -50%) rotate(90deg); }
+
+    details[open] .expand-icon { transform: rotate(45deg); }
+
+    .project-graphic {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      min-height: 165px;
+      margin: 18px 0 24px;
+      overflow: hidden;
+      color: var(--forest);
+      background: var(--green-light);
+      border-radius: 18px;
+    }
+
+    .project-graphic svg {
+      width: 100%;
+      height: 100%;
+      min-height: 165px;
+    }
+
+    .featured .project-graphic {
+      grid-column: 2;
+      grid-row: 2;
+      min-height: 315px;
+      margin: 6px 0 0;
+      color: var(--forest-dark);
+      background: var(--lime);
+    }
+
+    .featured .project-graphic svg { min-height: 315px; }
+
+    .project-body {
+      position: relative;
+      z-index: 2;
+      align-self: end;
+    }
+
+    .featured .project-body {
+      grid-column: 1;
+      grid-row: 2;
+    }
 
     .project-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 7px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .tag {
       padding: 7px 10px;
-      color: var(--sea-dark);
-      background: var(--sea-light);
+      color: var(--forest-dark);
+      background: var(--green-light);
       border-radius: 999px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .05em;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .06em;
       text-transform: uppercase;
     }
 
     .featured .tag {
-      color: #c6dcf7;
-      background: rgba(198,220,247,.12);
-      border: 1px solid rgba(191,213,239,.2);
+      color: var(--lime);
+      background: rgba(183, 243, 74, .1);
+      border: 1px solid rgba(183, 243, 74, .24);
     }
 
     .project h3 {
-      max-width: 590px;
+      max-width: 660px;
       margin: 0;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(30px, 4vw, 49px);
+      font-size: clamp(31px, 4vw, 52px);
       font-weight: 500;
       line-height: 1;
-      letter-spacing: -.04em;
+      letter-spacing: -.045em;
     }
 
-    .project p {
-      max-width: 570px;
+    .project-brief {
+      max-width: 650px;
       margin: 15px 0 0;
       color: var(--ink-soft);
       font-size: 15px;
+      line-height: 1.58;
+    }
+
+    .featured .project-brief { color: rgba(255,255,255,.72); }
+
+    .open-prompt {
+      display: block;
+      margin-top: 20px;
+      color: var(--forest);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .featured .open-prompt { color: var(--lime); }
+    details[open] .open-prompt { display: none; }
+
+    .project-detail {
+      padding: clamp(26px, 4vw, 48px);
+      color: var(--ink);
+      background: var(--paper);
+      border-top: 1px solid var(--line);
+    }
+
+    .project-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .detail-intro { grid-column: span 4; }
+    .detail-main { grid-column: span 8; }
+
+    .detail-label {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--forest);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .detail-intro p,
+    .detail-main p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .detail-main h4 {
+      margin: 0 0 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 27px;
+      font-weight: 500;
+      letter-spacing: -.025em;
+    }
+
+    .architecture-flow {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .architecture-flow span {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 83px;
+      padding: 12px;
+      color: var(--forest-dark);
+      background: var(--green-light);
+      border: 1px solid rgba(11, 93, 59, .16);
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .architecture-flow span:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -17px;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 23px;
+      height: 23px;
+      color: var(--white);
+      background: var(--forest);
+      border: 3px solid var(--paper);
+      border-radius: 50%;
+    }
+
+    .decision-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 21px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .decision-list li {
+      position: relative;
+      padding: 17px 17px 17px 43px;
+      color: var(--ink-soft);
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      font-size: 13px;
+      line-height: 1.52;
+    }
+
+    .decision-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 15px;
+      top: 16px;
+      display: grid;
+      place-items: center;
+      width: 19px;
+      height: 19px;
+      color: var(--white);
+      background: var(--forest);
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .impact-callout {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 5px;
+      padding: 19px 21px;
+      color: var(--forest-dark);
+      background: rgba(183, 243, 74, .38);
+      border-left: 5px solid var(--solar);
+      border-radius: 0 14px 14px 0;
+      font-size: 14px;
+      font-weight: 750;
       line-height: 1.55;
     }
 
-    .featured p { color: rgba(255,255,255,.68); }
+    .impact-callout strong {
+      color: var(--forest);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
 
-    .project-orbit {
+    .interests {
+      padding: 102px 0;
+      color: var(--white);
+      background: var(--forest);
+      border-radius: 38px 38px 0 0;
+    }
+
+    .interests .section-kicker { color: var(--lime); }
+    .interests .section-note { color: rgba(255,255,255,.72); }
+    .interests h2 { max-width: 720px; }
+
+    .interest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 43px;
+    }
+
+    .interest-card {
+      position: relative;
+      min-height: 270px;
+      padding: 25px;
+      overflow: hidden;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.19);
+      border-radius: 20px;
+    }
+
+    .interest-card:nth-child(2) { background: var(--lime); color: var(--forest-dark); }
+
+    .interest-icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      color: var(--forest-dark);
+      background: var(--solar);
+      border-radius: 17px;
+      font-size: 27px;
+      transform: rotate(-3deg);
+    }
+
+    .interest-card:nth-child(2) .interest-icon {
+      color: var(--white);
+      background: var(--forest-dark);
+    }
+
+    .interest-card:nth-child(3) .interest-icon { background: var(--orange); }
+
+    .interest-card h3 {
+      margin: 42px 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 30px;
+      font-weight: 500;
+      letter-spacing: -.03em;
+    }
+
+    .interest-card p {
+      margin: 0;
+      color: rgba(255,255,255,.68);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .interest-card:nth-child(2) p { color: rgba(7, 59, 40, .75); }
+
+    .interest-index {
       position: absolute;
-      right: -70px;
-      top: -90px;
-      width: 310px;
-      height: 310px;
-      border: 1px solid rgba(191,213,239,.22);
-      border-radius: 50%;
+      right: 22px;
+      top: 18px;
+      color: rgba(255,255,255,.36);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 56px;
+      line-height: 1;
     }
 
-    .project-orbit::before,
-    .project-orbit::after {
-      content: "";
-      position: absolute;
-      border: 1px solid rgba(191,213,239,.2);
-      border-radius: 50%;
-    }
-
-    .project-orbit::before { inset: 42px; }
-    .project-orbit::after {
-      inset: 92px;
-      background: var(--accent);
-      border: 15px solid var(--ink);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.2);
-    }
-
-    .mini-chart {
-      position: absolute;
-      right: 28px;
-      top: 75px;
-      display: flex;
-      align-items: end;
-      gap: 7px;
-      height: 90px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(255,255,255,.8);
-    }
-
-    .mini-chart i {
-      display: block;
-      width: 8px;
-      background: var(--sea);
-      border-radius: 99px 99px 2px 2px;
-    }
-
-    .mini-chart i:nth-child(1) { height: 25%; }
-    .mini-chart i:nth-child(2) { height: 38%; }
-    .mini-chart i:nth-child(3) { height: 44%; }
-    .mini-chart i:nth-child(4) { height: 67%; background: var(--accent); }
-    .mini-chart i:nth-child(5) { height: 86%; }
+    .interest-card:nth-child(2) .interest-index { color: rgba(7, 59, 40, .22); }
 
     footer {
-      padding: 0 0 34px;
-      background: var(--paper);
+      padding: 44px 0 34px;
+      color: var(--white);
+      background: var(--forest-dark);
     }
 
     .footer-bottom {
       display: flex;
       justify-content: space-between;
       gap: 24px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
-      color: var(--ink-soft);
+      color: rgba(255,255,255,.66);
       font-size: 12px;
     }
 
     .footer-links { display: flex; gap: 18px; }
-    .footer-links a { font-weight: 800; text-decoration: none; }
-    .footer-links a:hover { color: var(--accent-ink); }
+    .footer-links a { font-weight: 900; text-decoration: none; }
+    .footer-links a:hover { color: var(--lime); }
 
-    .reveal {
+    .js .reveal {
       opacity: 0;
       transform: translateY(18px);
-      transition: opacity .7s ease, transform .7s ease;
+      transition: opacity .65s ease, transform .65s ease;
     }
 
-    .reveal.visible { opacity: 1; transform: none; }
-
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; padding-top: 55px; }
-      .system-card { min-height: 430px; }
-      .project.featured,
-      .project.side,
-      .project.half { grid-column: span 12; }
+    .js .reveal.visible {
+      opacity: 1;
+      transform: none;
     }
 
-    @media (max-width: 650px) {
-      .shell { width: min(100% - 28px, 1180px); }
+    :focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 4px;
+    }
+
+    @media (max-width: 940px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+        column-gap: 0;
+        row-gap: 48px;
+        padding-top: 56px;
+      }
+      .hero-copy,
+      .hero-visual { grid-column: 1 / -1; }
+      .hero-visual { width: min(100%, 650px); margin-inline: auto; }
+      .visual-frame { min-height: 500px; }
+      .project.featured summary { grid-template-columns: 1fr; }
+      .featured .project-top,
+      .featured .project-graphic,
+      .featured .project-body { grid-column: 1; grid-row: auto; }
+      .featured .project-graphic { min-height: 240px; }
+      .detail-intro,
+      .detail-main { grid-column: 1 / -1; }
+      .interest-grid { grid-template-columns: 1fr; }
+      .interest-card { min-height: 230px; }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 28px, 1200px); }
       .nav { min-height: 72px; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .hero { min-height: 0; padding: 58px 0 68px; }
-      h1 { font-size: clamp(58px, 20vw, 84px); }
-      h1 span { font-size: .29em; }
+      .hero { min-height: 0; padding: 50px 0 76px; }
+      h1 { font-size: clamp(54px, 17vw, 78px); }
       .intro { font-size: 17px; line-height: 1.58; }
-      .system-card { min-height: 410px; padding: 25px; }
-      .network { height: 235px; }
-      .node { transform: scale(.85); }
-      .node.one, .node.three { left: -2%; }
-      .node.two, .node.four { right: -3%; }
-      .system-copy { font-size: 25px; }
-      .metric-strip { grid-template-columns: 1fr; margin-bottom: 80px; }
-      .metric { padding: 24px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .eyebrow {
+        position: relative;
+        display: block;
+        max-width: 100%;
+        padding-left: 48px;
+        line-height: 1.5;
+      }
+      .eyebrow::before {
+        position: absolute;
+        left: 0;
+        top: .55em;
+      }
+      .visual-frame { min-height: 430px; }
+      .metric-strip { grid-template-columns: 1fr; margin-bottom: 88px; }
+      .metric { border-right: 0; border-bottom: 1px solid var(--line); }
       .metric:last-child { border-bottom: 0; }
       .section-head { align-items: flex-start; flex-direction: column; }
-      .project { min-height: 390px; }
-      .mini-chart { opacity: .55; }
+      .projects { padding-bottom: 88px; }
+      details.project,
+      details.project.featured,
+      details.project[open] { grid-column: 1 / -1; }
+      .project summary,
+      .project.featured summary { min-height: 410px; padding: 24px; }
+      .featured .project-graphic { min-height: 210px; }
+      .architecture-flow { grid-template-columns: 1fr; }
+      .architecture-flow span { min-height: 60px; }
+      .architecture-flow span:not(:last-child)::after {
+        left: 50%;
+        right: auto;
+        bottom: -17px;
+        transform: translateX(-50%) rotate(90deg);
+      }
+      .decision-list { grid-template-columns: 1fr; }
+      .impact-callout { align-items: flex-start; flex-direction: column; gap: 5px; }
+      .interests { padding: 82px 0; border-radius: 28px 28px 0 0; }
       .footer-bottom { flex-direction: column; }
     }
 
@@ -662,21 +1034,22 @@
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
       }
-      .reveal { opacity: 1; transform: none; }
+      .js .reveal { opacity: 1; transform: none; }
     }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <header class="shell">
+  <header class="site-header shell">
     <nav class="nav" aria-label="Main navigation">
       <a class="brand" href="#top" aria-label="Eva Huang, home">
-        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-mark" aria-hidden="true">↗</span>
         <span>Eva Huang</span>
       </a>
       <div class="nav-links">
         <a href="#work">Selected work</a>
+        <a href="#interests">Interests</a>
         <!-- Replace with your real email address. -->
         <a class="nav-cta" href="mailto:hello@evahuang.dev">Let's talk</a>
       </div>
@@ -685,109 +1058,314 @@
 
   <main id="main">
     <section class="shell hero" id="top">
-      <div>
-        <h1>Eva Huang <span>I build the system and shape the product.</span></h1>
+      <div class="hero-copy">
+        <p class="eyebrow">Engineer · product builder · systems thinker</p>
+        <h1><span class="name">Eva Huang</span>Building the systems behind a <span class="spark">changing world.</span></h1>
         <p class="intro">
-          I build systems end-to-end and bring them to the people who use them. At Salesforce, I was a founding member of two 0→1 initiatives for the Salesforce API platform, which now handles <strong>41B+ daily requests</strong>. My work helped achieve tenant isolation for critical AI/ML infrastructure. Before that, as a <strong>Product Manager at OH!Bot</strong>, I led a cross-functional team across engineering, UX, and customer success to scope and launch a Google-native booking platform that grew to <strong>18% of revenue in 3 months</strong>. I've onboarded customers, worked directly with vendors, and driven GTM from day one. I'm looking for forward deployed or founding engineering roles where I can stay close to customers and ship things that matter.
+          I turn ambiguous problems into useful products—from distributed data infrastructure to customer-facing platforms. My work sits where <strong>deep systems, product judgment, and real-world adoption</strong> meet.
         </p>
+        <ul class="interest-list" aria-label="Areas of interest">
+          <li>Data infrastructure</li>
+          <li>Sustainable energy</li>
+          <li>Future cities</li>
+        </ul>
         <div class="hero-actions">
-          <a class="button primary" href="#work">Explore my work <span class="arrow" aria-hidden="true">↓</span></a>
-          <!-- Replace with your real GitHub profile URL. -->
-          <a class="button secondary" href="https://github.com/" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+          <a class="button primary" href="#work">Explore selected work <span aria-hidden="true">↓</span></a>
+          <a class="button secondary" href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
         </div>
       </div>
 
-      <aside class="system-card" aria-label="Visual summary: systems connected to customers">
-        <div class="system-label">
-          <span>system.map</span>
-          <span class="status"><i class="status-dot" aria-hidden="true"></i> building</span>
-        </div>
-        <div class="network" aria-hidden="true">
-          <svg viewBox="0 0 400 250" fill="none">
-            <path d="M63 48 C120 50, 132 100, 195 119" stroke="rgba(255,255,255,.48)" stroke-width="2" stroke-dasharray="4 7"/>
-            <path d="M341 36 C286 42, 272 88, 207 119" stroke="rgba(255,255,255,.48)" stroke-width="2"/>
-            <path d="M64 218 C125 210, 135 158, 195 134" stroke="rgba(255,255,255,.48)" stroke-width="2"/>
-            <path d="M335 216 C279 208, 267 162, 207 134" stroke="rgba(255,255,255,.48)" stroke-width="2" stroke-dasharray="4 7"/>
+      <figure class="hero-visual">
+        <div class="visual-frame">
+          <span class="visual-label"><i class="live-dot" aria-hidden="true"></i> Infrastructure in motion</span>
+          <svg viewBox="0 0 600 600" role="img" aria-labelledby="city-title city-desc">
+            <title id="city-title">Connected infrastructure powering a sustainable city</title>
+            <desc id="city-desc">A solar field, wind turbine, data center, and city skyline connected through bright energy and data paths.</desc>
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0b5d3b"/>
+                <stop offset="1" stop-color="#073b28"/>
+              </linearGradient>
+              <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                <path d="M36 0H0V36" fill="none" stroke="#b7f34a" stroke-opacity=".09"/>
+              </pattern>
+            </defs>
+            <rect width="600" height="600" fill="url(#sky)"/>
+            <rect width="600" height="600" fill="url(#grid)"/>
+            <circle cx="480" cy="104" r="56" fill="#ffb000"/>
+            <circle cx="480" cy="104" r="75" fill="none" stroke="#ffb000" stroke-opacity=".25" stroke-width="2"/>
+            <path d="M-10 415C112 350 190 435 300 383S489 295 625 350" fill="none" stroke="#b7f34a" stroke-width="3" opacity=".34"/>
+            <path class="energy-route" d="M65 447C145 405 197 458 278 400S430 356 548 290" fill="none" stroke="#b7f34a" stroke-width="5"/>
+            <path class="energy-route" d="M120 330C203 280 262 322 332 278S448 242 533 270" fill="none" stroke="#ffb000" stroke-width="3"/>
+            <g transform="translate(61 312)" stroke="#dff7d6" stroke-width="5" stroke-linecap="round">
+              <path d="M42 34V146"/>
+              <path d="M42 34L16 3M42 34L81 22M42 34L29 76"/>
+              <circle cx="42" cy="34" r="7" fill="#ffb000" stroke="none"/>
+            </g>
+            <g transform="translate(154 365)">
+              <path d="M0 42L73 15l89 13-70 31z" fill="#12a865" stroke="#dff7d6" stroke-width="3"/>
+              <path d="M0 42v18l91 19 71-32V28L92 59z" fill="#0b5d3b" stroke="#dff7d6" stroke-width="3"/>
+              <path d="M31 34l17 4M66 26l18 4M101 24l18 3M35 54l18 4M72 45l18 4M108 38l17 4" stroke="#b7f34a" stroke-width="4"/>
+            </g>
+            <g transform="translate(330 248)">
+              <rect x="0" y="72" width="120" height="174" rx="9" fill="#0b5d3b" stroke="#dff7d6" stroke-width="4"/>
+              <rect x="18" y="92" width="84" height="25" rx="4" fill="#dff7d6" opacity=".85"/>
+              <rect x="18" y="131" width="84" height="25" rx="4" fill="#dff7d6" opacity=".65"/>
+              <rect x="18" y="170" width="84" height="25" rx="4" fill="#dff7d6" opacity=".45"/>
+              <circle cx="91" cy="104" r="5" fill="#ff6238"/>
+              <circle cx="91" cy="143" r="5" fill="#b7f34a"/>
+              <circle cx="91" cy="182" r="5" fill="#ffb000"/>
+              <path d="M20 72V38h31V8h34v64M84 49h35v23" fill="#12a865" stroke="#dff7d6" stroke-width="4"/>
+              <path d="M34 24v15M68 24v15M101 59v13" stroke="#073b28" stroke-width="7"/>
+            </g>
+            <g transform="translate(467 251)" fill="#12a865" stroke="#dff7d6" stroke-width="3">
+              <path d="M0 203V83h47v120z"/>
+              <path d="M51 203V35h55v168z"/>
+              <path d="M110 203V111h42v92z"/>
+              <path d="M17 105h14M17 128h14M17 151h14M68 61h20M68 88h20M68 115h20M122 132h17M122 155h17"/>
+            </g>
+            <g fill="#ff6238" stroke="#ffffff" stroke-width="4">
+              <circle cx="65" cy="447" r="9"/>
+              <circle cx="278" cy="400" r="9"/>
+              <circle cx="548" cy="290" r="9"/>
+            </g>
+            <path d="M0 516H600V600H0z" fill="#071a11"/>
+            <path d="M0 516H600" stroke="#b7f34a" stroke-width="4"/>
           </svg>
-          <div class="node one">idea</div>
-          <div class="node two">system</div>
-          <div class="node core">ship</div>
-          <div class="node three">team</div>
-          <div class="node four">customer</div>
-          <i class="signal"></i>
+          <div class="visual-pills" aria-hidden="true">
+            <span>Data</span><span>Energy</span><span>Cities</span>
+          </div>
         </div>
-        <p class="system-copy">From ambiguous problem to <em>useful product</em>—and every layer between.</p>
-      </aside>
+        <figcaption>Data infrastructure, clean energy, and cities connected as one living system.</figcaption>
+      </figure>
     </section>
 
     <div class="shell metric-strip" aria-label="Career highlights">
       <div class="metric reveal"><strong>41B+</strong><span>Daily platform requests</span></div>
       <div class="metric reveal"><strong>0→1 × 2</strong><span>Salesforce API platform initiatives</span></div>
-      <div class="metric reveal"><strong>18%</strong><span>Revenue contribution in 3 months</span></div>
+      <div class="metric reveal"><strong>18%</strong><span>Revenue contribution in three months</span></div>
     </div>
 
     <section class="shell projects" id="work">
       <div class="section-head reveal">
         <div>
           <p class="section-kicker">Selected work</p>
-          <h2>Systems with<br>real-world weight.</h2>
+          <h2>Complex systems,<br>made useful.</h2>
         </div>
-        <p class="section-note">A selection of API platform, product, and customer-facing work—built across the stack and measured by what changed after launch.</p>
+        <p class="section-note">Three high-impact projects across infrastructure and product. Select any card to open the decisions, architecture, and outcome behind it.</p>
       </div>
 
       <div class="project-grid">
-        <!-- Replace each # with a case-study page or repository URL. -->
-        <a class="project featured reveal" href="#" aria-label="View Salesforce API platform case study">
-          <span class="project-orbit" aria-hidden="true"></span>
-          <div class="project-number"><span>01 / Platform</span><span class="project-arrow" aria-hidden="true">↗</span></div>
-          <div class="project-body">
-            <div class="project-tags"><span class="tag">0→1</span><span class="tag">Distributed systems</span><span class="tag">41B+ requests</span></div>
-            <h3>Salesforce API platform at massive scale</h3>
-            <p>Early engineering work on a platform that now handles 41B+ daily requests, including tenant isolation for critical AI/ML infrastructure.</p>
+        <details class="project featured reveal" name="projects">
+          <summary>
+            <div class="project-top">
+              <span>01 / Data infrastructure</span>
+              <span class="expand-control"><span class="expand-copy">Explore</span><i class="expand-icon" aria-hidden="true"></i></span>
+            </div>
+            <div class="project-graphic" aria-hidden="true">
+              <svg viewBox="0 0 520 315" fill="none">
+                <defs>
+                  <pattern id="sync-grid" width="26" height="26" patternUnits="userSpaceOnUse">
+                    <path d="M26 0H0V26" stroke="#073b28" stroke-opacity=".1"/>
+                  </pattern>
+                </defs>
+                <rect width="520" height="315" fill="url(#sync-grid)"/>
+                <path class="energy-route" d="M75 157H445" stroke="#073b28" stroke-width="4" stroke-dasharray="8 10"/>
+                <g fill="#f4f8ed" stroke="#073b28" stroke-width="3">
+                  <rect x="38" y="113" width="76" height="88" rx="15"/>
+                  <rect x="138" y="113" width="76" height="88" rx="15"/>
+                  <rect x="238" y="113" width="76" height="88" rx="15"/>
+                  <rect x="338" y="113" width="76" height="88" rx="15"/>
+                  <rect x="438" y="113" width="44" height="88" rx="15"/>
+                </g>
+                <g fill="#073b28">
+                  <path d="M57 137h39v8H57zm0 16h39v8H57zm0 16h39v8H57z"/>
+                  <path d="M157 137h38v42h-38z" opacity=".14"/>
+                  <path d="M164 148h24v7h-24zm0 13h24v7h-24z"/>
+                  <path d="M276 135l22 10v17c0 14-9 24-22 30-13-6-22-16-22-30v-17z"/>
+                  <path d="M365 142h22v10h-22zm0 17h22v10h-22zm0 17h22v10h-22z"/>
+                  <path d="M450 139h21v37h-21z"/>
+                </g>
+                <g fill="#ff6238" stroke="#f4f8ed" stroke-width="4">
+                  <circle cx="126" cy="157" r="8"/><circle cx="226" cy="157" r="8"/><circle cx="326" cy="157" r="8"/><circle cx="426" cy="157" r="8"/>
+                </g>
+                <g fill="#073b28" font-family="system-ui, sans-serif" font-size="10" font-weight="800" text-anchor="middle">
+                  <text x="76" y="222">SOURCE</text><text x="176" y="222">AGENT</text><text x="276" y="222">ENCRYPT</text><text x="376" y="222">APPLY</text><text x="460" y="222">ACK</text>
+                </g>
+                <path d="M76 84c74-54 293-54 384 0" stroke="#ffb000" stroke-width="4"/>
+                <path d="M451 73l9 11-14 4" fill="#ffb000" stroke="#ffb000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+                <text x="261" y="60" fill="#073b28" font-family="system-ui, sans-serif" font-size="12" font-weight="900" text-anchor="middle">CLOUD CURSOR = DURABLE TRUTH</text>
+              </svg>
+            </div>
+            <div class="project-body">
+              <div class="project-tags"><span class="tag">CDC</span><span class="tag">Encryption</span><span class="tag">Recovery</span><span class="tag">Interactive architecture</span></div>
+              <h3>Data Sync Agent</h3>
+              <p class="project-brief">A secure, resumable path from customer SQL Server changes to cloud durability—made legible through a 13-step interactive system walkthrough.</p>
+              <span class="open-prompt">Open the architecture + decisions</span>
+            </div>
+          </summary>
+          <div class="project-detail">
+            <div class="project-detail-grid">
+              <div class="architecture-flow" aria-label="Data Sync Agent architecture flow">
+                <span>SQL Server<br>snapshot + CDC</span>
+                <span>Windows agent<br>read + batch</span>
+                <span>Encrypted mTLS<br>gRPC stream</span>
+                <span>Cloud worker<br>dedupe + apply</span>
+                <span>AWS durability<br>cursor + audit</span>
+              </div>
+              <div class="detail-intro">
+                <span class="detail-label">The challenge</span>
+                <p>Move a consistent baseline and every later change without gaps, protect customer rows across trust boundaries, and recover deterministically after a lost acknowledgment or outage.</p>
+              </div>
+              <div class="detail-main">
+                <span class="detail-label">System decisions</span>
+                <h4>Correctness is designed into every handoff.</h4>
+                <ul class="decision-list">
+                  <li>Capture the starting LSN before snapshot reads so concurrent changes never fall into a blind interval.</li>
+                  <li>Encrypt each immutable batch and authenticate its metadata before it leaves the agent.</li>
+                  <li>Treat the cloud cursor—not volatile agent memory—as the authority when reconciling retries.</li>
+                  <li>Rebaseline only the affected table when required CDC history is no longer retained.</li>
+                </ul>
+              </div>
+              <div class="impact-callout"><strong>What it demonstrates</strong><span>End-to-end reasoning across enrollment, snapshot/CDC coordination, encryption, flow control, idempotency, audit, acknowledgment, and recovery.</span></div>
+            </div>
           </div>
-        </a>
+        </details>
 
-        <a class="project side reveal" href="#" aria-label="View OH!Bot booking platform case study">
-          <div class="mini-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="project-number"><span>02 / Product</span><span class="project-arrow" aria-hidden="true">↗</span></div>
-          <div class="project-body">
-            <div class="project-tags"><span class="tag">Product management</span><span class="tag">Google-native</span><span class="tag">GTM</span></div>
-            <h3>A booking platform customers chose</h3>
-            <p>As Product Manager at OH!Bot, I led engineering, UX, and customer success from scope to launch. The result grew to 18% of company revenue in its first three months.</p>
+        <details class="project reveal" name="projects">
+          <summary>
+            <div class="project-top">
+              <span>02 / Platform</span>
+              <span class="expand-control"><span class="expand-copy">Explore</span><i class="expand-icon" aria-hidden="true"></i></span>
+            </div>
+            <div class="project-graphic" aria-hidden="true">
+              <svg viewBox="0 0 520 180" fill="none">
+                <path d="M35 139C133 52 213 158 306 74S442 46 495 29" stroke="#0b5d3b" stroke-width="4" stroke-dasharray="8 9"/>
+                <g fill="#fff" stroke="#0b5d3b" stroke-width="3">
+                  <circle cx="61" cy="121" r="31"/><circle cx="183" cy="112" r="31"/><circle cx="311" cy="71" r="31"/><circle cx="458" cy="41" r="31"/>
+                </g>
+                <g fill="#ff6238"><circle cx="61" cy="121" r="9"/><circle cx="183" cy="112" r="9"/><circle cx="311" cy="71" r="9"/><circle cx="458" cy="41" r="9"/></g>
+                <text x="260" y="163" fill="#073b28" font-family="Georgia, serif" font-size="20" text-anchor="middle">41B+ requests / day</text>
+              </svg>
+            </div>
+            <div class="project-body">
+              <div class="project-tags"><span class="tag">0→1</span><span class="tag">Distributed systems</span><span class="tag">AI/ML infrastructure</span></div>
+              <h3>Salesforce API platform at massive scale</h3>
+              <p class="project-brief">Founding engineering work on two initiatives for a platform that now handles more than 41 billion daily requests.</p>
+              <span class="open-prompt">Open the contribution + impact</span>
+            </div>
+          </summary>
+          <div class="project-detail">
+            <div class="project-detail-grid">
+              <div class="detail-intro">
+                <span class="detail-label">Context</span>
+                <p>A platform-scale environment where reliability and tenant boundaries matter at enormous request volume.</p>
+              </div>
+              <div class="detail-main">
+                <span class="detail-label">Eva's contribution</span>
+                <h4>Built at the intersection of scale and isolation.</h4>
+                <p>As a founding member of two 0→1 Salesforce API platform initiatives, Eva worked on the systems behind the platform and helped achieve tenant isolation for critical AI/ML infrastructure.</p>
+                <ul class="decision-list">
+                  <li>Worked from early-stage ambiguity rather than a mature, fixed implementation path.</li>
+                  <li>Connected infrastructure choices to the reliability needs of high-volume platform consumers.</li>
+                </ul>
+              </div>
+              <div class="impact-callout"><strong>Scale</strong><span>The platform now handles 41B+ daily requests. Specific implementation details remain intentionally high-level.</span></div>
+            </div>
           </div>
-        </a>
+        </details>
 
-        <a class="project half reveal" href="#" aria-label="View customer enablement case study">
-          <div class="project-number"><span>03 / Customers</span><span class="project-arrow" aria-hidden="true">↗</span></div>
-          <div class="project-body">
-            <div class="project-tags"><span class="tag">Onboarding</span><span class="tag">Enablement</span></div>
-            <h3>Closing the gap between platform and people</h3>
-            <p>Hands-on customer onboarding, early adopter feedback loops, and the practical tools teams need to make new platforms stick.</p>
+        <details class="project reveal" name="projects">
+          <summary>
+            <div class="project-top">
+              <span>03 / Product</span>
+              <span class="expand-control"><span class="expand-copy">Explore</span><i class="expand-icon" aria-hidden="true"></i></span>
+            </div>
+            <div class="project-graphic" aria-hidden="true">
+              <svg viewBox="0 0 520 180" fill="none">
+                <path d="M46 145H481" stroke="#0b5d3b" stroke-opacity=".35" stroke-width="2"/>
+                <g fill="#0b5d3b">
+                  <rect x="66" y="115" width="48" height="30" rx="7" opacity=".38"/>
+                  <rect x="141" y="98" width="48" height="47" rx="7" opacity=".52"/>
+                  <rect x="216" y="80" width="48" height="65" rx="7" opacity=".66"/>
+                  <rect x="291" y="54" width="48" height="91" rx="7" opacity=".82"/>
+                  <rect x="366" y="24" width="48" height="121" rx="7"/>
+                </g>
+                <path d="M73 106l90-26 73 4 82-47 87-16" stroke="#ff6238" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M392 13l13 8-9 12" stroke="#ff6238" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="426" y="39" width="66" height="50" rx="15" fill="#ffb000"/>
+                <text x="459" y="70" fill="#073b28" font-family="system-ui, sans-serif" font-size="15" font-weight="900" text-anchor="middle">18%</text>
+              </svg>
+            </div>
+            <div class="project-body">
+              <div class="project-tags"><span class="tag">Product management</span><span class="tag">Google-native</span><span class="tag">GTM</span></div>
+              <h3>A booking platform customers chose</h3>
+              <p class="project-brief">A cross-functional launch at OH!Bot that grew to 18% of company revenue within its first three months.</p>
+              <span class="open-prompt">Open the product story</span>
+            </div>
+          </summary>
+          <div class="project-detail">
+            <div class="project-detail-grid">
+              <div class="detail-intro">
+                <span class="detail-label">The opportunity</span>
+                <p>Turn a customer need into a Google-native booking product—and create a path from initial scope to measurable business value.</p>
+              </div>
+              <div class="detail-main">
+                <span class="detail-label">Eva's role</span>
+                <h4>Product strategy stayed close to delivery and customers.</h4>
+                <p>As Product Manager, Eva led a cross-functional team across engineering, UX, and customer success. Her work included scoping, customer onboarding, vendor conversations, product tradeoffs, launch planning, and go-to-market execution.</p>
+                <ul class="decision-list">
+                  <li>Used early customer feedback to close the gap between platform capability and a product people would adopt.</li>
+                  <li>Coordinated technical delivery and go-to-market as one launch system rather than separate workstreams.</li>
+                </ul>
+              </div>
+              <div class="impact-callout"><strong>Business outcome</strong><span>The booking platform grew to 18% of OH!Bot's revenue in three months.</span></div>
+            </div>
           </div>
-        </a>
-
-        <a class="project half reveal" href="#" aria-label="View vendor and go-to-market case study">
-          <div class="project-number"><span>04 / Execution</span><span class="project-arrow" aria-hidden="true">↗</span></div>
-          <div class="project-body">
-            <div class="project-tags"><span class="tag">Vendors</span><span class="tag">Strategy</span><span class="tag">Launch</span></div>
-            <h3>Turning ambiguity into a launch plan</h3>
-            <p>Cross-functional execution spanning vendor conversations, product tradeoffs, technical delivery, and go-to-market from day one.</p>
-          </div>
-        </a>
+        </details>
       </div>
     </section>
 
+    <section class="interests" id="interests">
+      <div class="shell">
+        <div class="section-head reveal">
+          <div>
+            <p class="section-kicker">Where I'm looking next</p>
+            <h2>Infrastructure with planetary stakes.</h2>
+          </div>
+          <p class="section-note">The next systems I want to understand and shape connect digital growth to the physical world.</p>
+        </div>
+        <div class="interest-grid">
+          <article class="interest-card reveal">
+            <span class="interest-index" aria-hidden="true">01</span>
+            <span class="interest-icon" aria-hidden="true">▦</span>
+            <h3>Data centers</h3>
+            <p>Compute infrastructure as a physical system: capacity, reliability, cooling, site constraints, and the software that makes it operable.</p>
+          </article>
+          <article class="interest-card reveal">
+            <span class="interest-index" aria-hidden="true">02</span>
+            <span class="interest-icon" aria-hidden="true">↯</span>
+            <h3>Energy + sustainability</h3>
+            <p>How energy supply, demand, storage, and efficiency can make rapidly growing digital infrastructure more resilient.</p>
+          </article>
+          <article class="interest-card reveal">
+            <span class="interest-index" aria-hidden="true">03</span>
+            <span class="interest-icon" aria-hidden="true">⌂</span>
+            <h3>Cities</h3>
+            <p>The connective tissue between infrastructure and daily life—from urban systems and logistics to the products people actually experience.</p>
+          </article>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
-    <div class="shell">
-      <div class="footer-bottom">
-        <span>© <span id="year"></span> Eva Huang</span>
-        <div class="footer-links">
-          <!-- Replace these placeholder URLs. -->
-          <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub ↗</a>
-          <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
-        </div>
+    <div class="shell footer-bottom">
+      <span>© <span id="year"></span> Eva Huang · Built for useful change.</span>
+      <div class="footer-links">
+        <a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub ↗</a>
+        <!-- Replace with your real LinkedIn URL. -->
+        <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
       </div>
     </div>
   </footer>
@@ -795,19 +1373,26 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
+    const revealItems = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      revealItems.forEach((element) => observer.observe(element));
+    } else {
+      revealItems.forEach((element) => element.classList.add('visible'));
+    }
+
+    document.querySelectorAll('details.project').forEach((project) => {
+      project.addEventListener('toggle', () => {
+        const copy = project.querySelector('.expand-copy');
+        copy.textContent = project.open ? 'Close' : 'Explore';
       });
-    }, { threshold: 0.12 });
-
-    document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
-
-    document.querySelectorAll('a[href="#"]').forEach((link) => {
-      link.addEventListener('click', (event) => event.preventDefault());
     });
   </script>
 </body>
