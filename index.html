@@ -142,16 +142,6 @@
       text-transform: uppercase;
     }
 
-    .name-label { flex-wrap: wrap; }
-
-    .education-badge {
-      padding: 6px 9px;
-      color: var(--ink);
-      background: var(--lime);
-      border-radius: 999px;
-      letter-spacing: .06em;
-    }
-
     .name-label::before,
     .section-kicker::before {
       content: "";
@@ -201,6 +191,31 @@
     }
 
     .intro strong { color: var(--ink); }
+
+    .education-line {
+      margin: 13px 0 0;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .education-focus {
+      position: relative;
+      z-index: 0;
+      display: inline-block;
+      padding: 0 .12em;
+    }
+
+    .education-focus::before {
+      content: "";
+      position: absolute;
+      inset: 38% -.08em 1%;
+      z-index: -1;
+      background: repeating-linear-gradient(-5deg, rgba(139, 187, 146, .9) 0 3px, rgba(139, 187, 146, .58) 3px 5px);
+      clip-path: polygon(1% 10%, 98% 0, 100% 88%, 3% 100%);
+      transform: rotate(-.7deg);
+    }
 
     .hero-actions {
       display: flex;
@@ -513,6 +528,7 @@
     .project-title {
       display: flex;
       align-items: flex-start;
+      flex-wrap: wrap;
       gap: 9px;
     }
 
@@ -530,16 +546,25 @@
     .role {
       flex: 0 0 auto;
       margin-top: 2px;
-      padding: 6px 8px;
+      padding: 7px 9px;
       color: var(--cream);
       background: var(--ink);
       border-radius: 999px;
-      font-size: 8px;
+      font-size: 9px;
       font-weight: 900;
       letter-spacing: .06em;
       line-height: 1;
       text-transform: uppercase;
       white-space: nowrap;
+    }
+
+    .role.primary-role {
+      padding: 8px 11px;
+      color: var(--cream);
+      background: var(--orange);
+      border: 1px solid var(--ink);
+      box-shadow: 3px 3px 0 var(--lime);
+      font-size: 10px;
     }
 
     .project-brief {
@@ -778,9 +803,10 @@
   <main id="main">
     <section class="shell hero" id="top">
       <div class="hero-copy">
-        <p class="name-label"><span>Eva Huang</span><span class="education-badge">Computer Science + Sustainable Cities minor</span></p>
+        <p class="name-label">Eva Huang</p>
         <h1>Building <span class="spark">sustainable systems.</span></h1>
         <p class="intro">I build software systems and products that focus on the <strong>infrastructure, energy, and cities</strong> for the future.</p>
+        <p class="education-line">Computer Science + <span class="education-focus">Sustainable Cities minor</span></p>
         <div class="hero-actions">
           <a class="button primary" href="#work">See the evidence <span aria-hidden="true">↓</span></a>
           <a class="button secondary" href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
@@ -830,19 +856,19 @@
                 <img src="assets/wishmobile-booking-confirmation.webp" alt="WishMobile mobile booking confirmation screen" width="465" height="516">
               </div>
               <div class="project-body">
-                <div class="project-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role">Product Manager</span></div>
-                <div class="project-tags"><span class="tag">Agile</span></div>
-                <p class="project-brief">Reached <span class="crayon-highlight">18%</span> of revenue in three months.</p>
+                <div class="project-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role primary-role">Product Manager</span></div>
+                <div class="project-tags"><span class="tag">Agile</span><span class="tag">Miro</span><span class="tag">Figma</span><span class="tag">Market research</span><span class="tag">Google Analytics</span><span class="tag">SQL</span></div>
+                <p class="project-brief"><span class="crayon-highlight">18%</span> of platform revenue in three months.</p>
               </div>
             </summary>
             <div class="project-detail">
               <div class="detail-grid">
-                <p class="detail-lead">Led WishMobile from product scope to customer launch.</p>
+                <p class="detail-lead">Led 0→1 from product vision to customer launch.</p>
                 <div class="detail-fact"><strong>Experience</strong><span>Book and pay through Google Maps or the merchant website.</span></div>
-                <div class="detail-fact"><strong>Business result</strong><span><span class="crayon-highlight">18%</span> of company revenue within three months.</span></div>
+                <div class="detail-fact"><strong>Business result</strong><span><span class="crayon-highlight">18%</span> of platform revenue within three months.</span></div>
                 <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
                 <div class="detail-actions">
-                  <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See WishMobile <span aria-hidden="true">↗</span></a>
+                  <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See product website <span aria-hidden="true">↗</span></a>
                 </div>
               </div>
             </div>
@@ -855,7 +881,7 @@
                 <img src="assets/salesforce-api-library.svg" alt="Salesforce API Library illustration" width="1000" height="735">
               </div>
               <div class="project-body">
-                <div class="project-title"><h3>Salesforce API platform | Salesforce</h3><span class="role">Software Engineer</span></div>
+                <div class="project-title"><h3>Salesforce API platform | Salesforce</h3><span class="role primary-role">Software Engineer</span></div>
                 <div class="project-tags"><span class="tag">Kubernetes</span><span class="tag">AWS</span></div>
                 <p class="project-brief">Tenant isolation for critical AI/ML infrastructure.</p>
               </div>
@@ -936,7 +962,7 @@
                 </svg>
               </div>
               <div class="project-body">
-                <div class="project-title"><h3>Data Sync Agent</h3><span class="role">Software Engineer</span></div>
+                <div class="project-title"><h3>Data Sync Agent</h3><span class="role primary-role">Software Engineer</span></div>
                 <div class="project-tags"><span class="tag">Python</span><span class="tag">AWS</span></div>
                 <p class="project-brief">A safe path from customer data to cloud durability.</p>
               </div>
