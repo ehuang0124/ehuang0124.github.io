@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CurveFinder turns ordered LiDAR-derived road centerline points into curvature metrics and GIS-ready segments.">
+  <meta name="theme-color" content="#073b28">
+  <title>CurveFinder — LiDAR curvature GIS demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#analysis">Skip to analysis</a>
+  <header class="site-header">
+    <a class="brand" href="../" aria-label="Back to Eva Huang's portfolio">
+      <span class="brand-mark" aria-hidden="true">CF</span>
+      <span>CurveFinder</span>
+    </a>
+    <a class="back-link" href="../">Portfolio <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">LiDAR → curvature → GIS</p>
+        <h1>Find the road’s <span>turning story.</span></h1>
+        <p class="lede">A working prototype that converts ordered, LiDAR-derived centerline samples into signed curvature, radius, direction, and GIS-ready line segments.</p>
+      </div>
+      <aside class="scope-note">
+        <strong>Honest scope</strong>
+        <p>This demo starts after a road centerline has been extracted from a LiDAR point cloud. Production point-cloud classification and centerline extraction are separate preprocessing steps.</p>
+      </aside>
+    </section>
+
+    <section class="analysis" id="analysis" aria-labelledby="analysis-title">
+      <div class="analysis-head">
+        <div>
+          <p class="eyebrow">Interactive plugin preview</p>
+          <h2 id="analysis-title">Curvature layer</h2>
+          <p class="dataset-line">Dataset: <strong id="dataset-name">Mock LiDAR centerline</strong></p>
+        </div>
+        <div class="controls">
+          <label class="range-control" for="span">
+            <span>Smoothing span <output id="span-value" for="span">2 samples</output></span>
+            <input id="span" type="range" min="1" max="5" value="2" step="1">
+          </label>
+          <label class="file-control" for="geojson-file">
+            Import point GeoJSON
+            <input id="geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json">
+          </label>
+          <button id="reset-demo" type="button" class="button secondary">Reset sample</button>
+        </div>
+      </div>
+
+      <div class="metric-grid" aria-label="Computed demo metrics">
+        <article><span id="metric-samples">—</span><strong>centerline samples</strong></article>
+        <article><span id="metric-bends">—</span><strong>bends detected</strong></article>
+        <article><span id="metric-radius">—</span><strong>minimum radius</strong></article>
+        <article><span id="metric-length">—</span><strong>analyzed length</strong></article>
+      </div>
+
+      <div class="viz-grid">
+        <figure class="viz-panel map-panel">
+          <figcaption>
+            <span>GIS layer preview</span>
+            <span class="legend" aria-label="Curvature classes">
+              <i class="straight"></i> Straight
+              <i class="gentle"></i> Gentle
+              <i class="moderate"></i> Moderate
+              <i class="tight"></i> Tight
+            </span>
+          </figcaption>
+          <svg id="curvature-map" viewBox="0 0 760 420" role="img" aria-label="Road centerline map colored and patterned by curvature"></svg>
+        </figure>
+
+        <figure class="viz-panel chart-panel">
+          <figcaption>
+            <span>Curvature over distance</span>
+            <span>curvature · 1/m</span>
+          </figcaption>
+          <svg id="curvature-chart" viewBox="0 0 760 260" role="img" aria-label="Signed road curvature chart over distance"></svg>
+        </figure>
+      </div>
+
+      <div class="analysis-footer">
+        <p id="live-status" aria-live="polite"></p>
+        <button id="export-geojson" type="button" class="button primary">Export curvature GeoJSON ↓</button>
+      </div>
+    </section>
+
+    <section class="method" aria-labelledby="method-title">
+      <div>
+        <p class="eyebrow">Method</p>
+        <h2 id="method-title">Small, inspectable geometry.</h2>
+      </div>
+      <ol>
+        <li><strong>Order</strong><span>Sort projected centerline points by <code>station_m</code>.</span></li>
+        <li><strong>Measure</strong><span>Estimate signed Menger curvature across a configurable window.</span></li>
+        <li><strong>Classify</strong><span>Convert curvature to radius and mark straight, gentle, moderate, and tight segments.</span></li>
+        <li><strong>Publish</strong><span>Export a GeoJSON line layer or run the included ArcGIS Pro toolbox.</span></li>
+      </ol>
+    </section>
+
+    <section class="plugin-callout" aria-labelledby="plugin-title">
+      <div>
+        <p class="eyebrow">ArcGIS Pro toolbox</p>
+        <h2 id="plugin-title">The demo has a GIS handoff.</h2>
+        <p>The included Python toolbox accepts a projected point layer with a <code>station_m</code> field and creates classified line features with curvature, radius, and turn direction.</p>
+      </div>
+      <a class="button primary" href="arcgis/CurveFinder.pyt" download>Download ArcGIS toolbox ↓</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>CurveFinder · portfolio prototype</span>
+    <a href="../">Eva Huang</a>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

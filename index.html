@@ -444,6 +444,52 @@
       height: 145px;
     }
 
+    .result-graphic img {
+      width: 100%;
+      height: 145px;
+      display: block;
+      object-fit: cover;
+      object-position: 50% 58%;
+    }
+
+    .result-graphic.media-graphic {
+      background: var(--cream);
+      border: 1px solid var(--line);
+    }
+
+    .result-graphic.booking-flow {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 6px 12px;
+    }
+
+    .result-graphic.booking-flow img {
+      height: 133px;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .result-graphic.api-library img {
+      height: 145px;
+      padding: 5px 22px;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .result-graphic.community-photo img { object-position: 50% 52%; }
+
+    .result-graphic.curvefinder-graphic {
+      padding: 8px;
+      background: var(--cream);
+    }
+
+    .result-graphic.curvefinder-graphic img {
+      height: 129px;
+      object-fit: contain;
+      object-position: center;
+      mix-blend-mode: multiply;
+    }
+
     .project-body { align-self: end; }
 
     .project-tags {
@@ -503,6 +549,27 @@
       line-height: 1.45;
     }
 
+    .crayon-highlight {
+      position: relative;
+      z-index: 0;
+      display: inline-block;
+      padding: 0 .12em;
+      color: var(--ink);
+      background: transparent;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .crayon-highlight::before {
+      content: "";
+      position: absolute;
+      inset: 13% -.12em 2%;
+      z-index: -1;
+      background: repeating-linear-gradient(-7deg, rgba(230, 126, 34, .8) 0 3px, rgba(230, 126, 34, .5) 3px 5px);
+      clip-path: polygon(2% 12%, 96% 0, 100% 82%, 4% 100%);
+      transform: rotate(-1.5deg);
+    }
+
     .project-detail {
       padding: 26px;
       background: var(--cream);
@@ -556,6 +623,53 @@
       align-items: center;
       gap: 12px;
       margin-top: 7px;
+    }
+
+    .detail-note {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .detail-graph {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      align-items: stretch;
+      margin: 0 0 4px;
+      overflow: hidden;
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .detail-graph img {
+      width: 100%;
+      height: 330px;
+      display: block;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+    }
+
+    .detail-graph figcaption {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 9px;
+      padding: 22px;
+      color: var(--cream);
+      background: var(--ink);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .detail-graph figcaption strong {
+      color: var(--lime);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
     }
 
     footer {
@@ -622,6 +736,9 @@
       .detail-grid { grid-template-columns: 1fr; }
       .detail-lead,
       .detail-actions { grid-column: 1; }
+      .detail-graph { grid-column: 1; grid-template-columns: 1fr; }
+      .detail-graph img { height: 280px; }
+      .detail-note { grid-column: 1; }
       .detail-fact { min-height: 0; }
       .footer-bottom { flex-direction: column; }
     }
@@ -707,36 +824,22 @@
           <details class="project reveal" name="projects">
             <summary>
               <div class="project-top"><span>01 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#ffffff"/>
-                  <g fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="24" y="18" width="76" height="110" rx="15" fill="#ffffff" transform="rotate(-3 62 73)"/>
-                    <path d="M43 39h39M42 52h41M44 68h12m10 0h16M43 82h12m11 0h16M44 96h38"/>
-                    <path d="M38 29l12 2m27-2 10-1" opacity=".35"/>
-                    <path d="M116 112c27-4 39-16 58-32 19-17 35-31 68-32" stroke-width="4"/>
-                    <path d="M232 38l11 10-12 8" stroke-width="4"/>
-                    <path d="M260 58v55h45V58m-50 0h55l-9-17h-37z" fill="#ffffff"/>
-                    <path d="M271 75h23M271 87h23M279 113V96h10v17"/>
-                  </g>
-                  <circle cx="51" cy="68" r="5" fill="#e67e22"/>
-                  <circle cx="244" cy="48" r="6" fill="#12544f"/>
-                  <rect x="137" y="15" width="105" height="41" rx="13" fill="#8bbb92" transform="rotate(2 189 35)"/>
-                  <text x="189" y="37" fill="#111111" font-family="system-ui, sans-serif" font-size="22" font-weight="800" text-anchor="middle">18%</text>
-                  <text x="189" y="48" fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · 3 MONTHS</text>
-                </svg>
+              <div class="result-graphic media-graphic booking-flow">
+                <img src="assets/wishmobile-booking-flow.webp" alt="WishMobile booking link shown in a Google Maps business listing" width="465" height="516">
+                <img src="assets/wishmobile-booking-details.webp" alt="WishMobile mobile reservation screen for a tea experience" width="465" height="516">
+                <img src="assets/wishmobile-booking-confirmation.webp" alt="WishMobile mobile booking confirmation screen" width="465" height="516">
               </div>
               <div class="project-body">
                 <div class="project-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role">Product Manager</span></div>
-                <div class="project-tags"><span class="tag">Booking + CRM</span><span class="tag">Google-native</span></div>
-                <p class="project-brief">Reached 18% of revenue in three months.</p>
+                <div class="project-tags"><span class="tag">Agile</span></div>
+                <p class="project-brief">Reached <span class="crayon-highlight">18%</span> of revenue in three months.</p>
               </div>
             </summary>
             <div class="project-detail">
               <div class="detail-grid">
                 <p class="detail-lead">Led WishMobile from product scope to customer launch.</p>
                 <div class="detail-fact"><strong>Experience</strong><span>Book and pay through Google Maps or the merchant website.</span></div>
-                <div class="detail-fact"><strong>Business result</strong><span>18% of company revenue within three months.</span></div>
+                <div class="detail-fact"><strong>Business result</strong><span><span class="crayon-highlight">18%</span> of company revenue within three months.</span></div>
                 <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
                 <div class="detail-actions">
                   <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See WishMobile <span aria-hidden="true">↗</span></a>
@@ -748,31 +851,12 @@
           <details class="project reveal" name="projects">
             <summary>
               <div class="project-top"><span>02 / AI infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#ffffff"/>
-                  <g fill="#ffffff" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 30l57-5 3 101-56 2z"/>
-                    <path d="M31 43h37v18H31zM32 72h37v18H32zM33 101h37v17H33z"/>
-                    <path d="M90 41l48-4 3 88-48 2z"/>
-                    <path d="M101 53h29v16h-29zM102 79h29v16h-29zM103 104h29v14h-29z"/>
-                  </g>
-                  <g fill="#e67e22"><circle cx="61" cy="51" r="3"/><circle cx="62" cy="80" r="3"/><circle cx="123" cy="61" r="3"/><circle cx="124" cy="87" r="3"/></g>
-                  <g fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round">
-                    <path d="M149 91c21 0 21-37 42-37s21 37 42 37 21-37 42-37" stroke-dasharray="4 7"/>
-                    <rect x="177" y="31" width="58" height="58" rx="13" fill="#8bbb92"/>
-                    <path d="M190 25v9m16-9v9m16-9v9M190 86v10m16-10v10m16-10v10M170 43h10m-10 16h10m-10 16h10m52-32h10m-10 16h10m-10 16h10"/>
-                    <path d="M191 61c2-15 25-17 29-3 8 0 10 14 1 18h-29c-10-2-10-14-1-15z" fill="#ffffff"/>
-                  </g>
-                  <text x="252" y="38" fill="#111111" font-family="system-ui, sans-serif" font-size="27" font-weight="800">41B+</text>
-                  <text x="254" y="52" fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900">DAILY REQUESTS</text>
-                  <rect x="238" y="102" width="73" height="29" rx="10" fill="#8bbb92"/>
-                  <text x="274" y="121" fill="#111111" font-family="system-ui, sans-serif" font-size="11" font-weight="900" text-anchor="middle">0→1 × 2</text>
-                </svg>
+              <div class="result-graphic media-graphic api-library">
+                <img src="assets/salesforce-api-library.svg" alt="Salesforce API Library illustration" width="1000" height="735">
               </div>
               <div class="project-body">
                 <div class="project-title"><h3>Salesforce API platform | Salesforce</h3><span class="role">Software Engineer</span></div>
-                <div class="project-tags"><span class="tag">Golang</span><span class="tag">Kubernetes</span><span class="tag">Envoy / Istio</span><span class="tag">AWS</span><span class="tag">GCP</span></div>
+                <div class="project-tags"><span class="tag">Kubernetes</span><span class="tag">AWS</span></div>
                 <p class="project-brief">Tenant isolation for critical AI/ML infrastructure.</p>
               </div>
             </summary>
@@ -811,7 +895,7 @@
               </div>
               <div class="project-body">
                 <div class="project-title"><h3>Mesh Analyzer | Salesforce</h3><span class="role">Project Lead</span></div>
-                <div class="project-tags"><span class="tag">Policy governance</span><span class="tag">Customer debugging</span></div>
+                <div class="project-tags"><span class="tag">Agile</span><span class="tag">Kubernetes</span></div>
                 <p class="project-brief">Turned a debugging SOP into reusable policy governance.</p>
               </div>
             </summary>
@@ -853,7 +937,7 @@
               </div>
               <div class="project-body">
                 <div class="project-title"><h3>Data Sync Agent</h3><span class="role">Software Engineer</span></div>
-                <div class="project-tags"><span class="tag">System design</span><span class="tag">CDC</span></div>
+                <div class="project-tags"><span class="tag">Python</span><span class="tag">AWS</span></div>
                 <p class="project-brief">A safe path from customer data to cloud durability.</p>
               </div>
             </summary>
@@ -865,6 +949,86 @@
                 <div class="detail-fact"><strong>Focused recovery</strong><span>Only the affected table rebaselines after a history gap.</span></div>
                 <div class="detail-actions">
                   <a class="detail-link" href="https://github.com/ehuang0124/ehuang0124.github.io/blob/d53ff1b2aa051e2daea97936083659d549ab15cf/data-sync/index.html" target="_blank" rel="noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>05 / Sustainability research</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic">
+                <img src="assets/living-building-mobility-map.jpg" alt="GIS map of community destinations and resources around Atlanta's Westside" width="1200" height="746">
+              </div>
+              <div class="project-body">
+                <div class="project-title"><h3>Living Building Initiative mobility research | Energy Institute</h3><span class="role">Researcher</span></div>
+                <div class="project-tags"><span class="tag">GIS / ArcGIS</span><span class="tag">Agile</span></div>
+                <p class="project-brief">Investigated how people access a sustainable building through four personas, user interviews, and GIS.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">Connected a sustainable building initiative to the mobility needs of the people around it.</p>
+                <div class="detail-fact"><strong>GIS</strong><span>Mapped community destinations and resources to study the building in its mobility context.</span></div>
+                <div class="detail-fact"><strong>4 personas</strong><span>Built four personas to frame distinct mobility needs and behaviors.</span></div>
+                <div class="detail-fact"><strong>User interviews</strong><span>Conducted interviews to test assumptions and understand the mobility experience.</span></div>
+                <div class="detail-actions">
+                  <a class="detail-link" href="living-building-mobility/index.html">Explore the mobility story <span aria-hidden="true">↗</span></a>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>06 / VIP · Smart city infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic curvefinder-graphic">
+                <img src="assets/curvefinder-arc-fit-graph.png" alt="CurveFinder prototype graph showing a blue road centerline with red fitted radius markers" width="695" height="583">
+              </div>
+              <div class="project-body">
+                <div class="project-title"><h3>CurveFinder ArcGIS plugin</h3><span class="role">Developer</span></div>
+                <div class="project-tags"><span class="tag">GIS / ArcGIS</span><span class="tag">Python</span></div>
+                <p class="project-brief">Turns LiDAR-derived centerlines into inspectable curvature evidence and GIS-ready segments.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">The original arc-fit graph, now paired with a working curvature demo.</p>
+                <figure class="detail-graph">
+                  <img src="assets/curvefinder-arc-fit-graph.png" alt="Prototype graph with a blue road centerline and red radius lines from fitted arc centers" width="695" height="583">
+                  <figcaption><strong>Original prototype output</strong><span>The blue path is the projected road centerline. Red markers visualize the fitted arc centers and radii used to describe each curve.</span></figcaption>
+                </figure>
+                <div class="detail-fact"><strong>49 samples</strong><span>Ordered points in the included mock LiDAR-derived centerline.</span></div>
+                <div class="detail-fact"><strong>5 bends</strong><span>Left and right bend groups detected at the default smoothing span.</span></div>
+                <div class="detail-fact"><strong>45.3 m radius</strong><span>Minimum fitted radius in the demo dataset; lower means a tighter curve.</span></div>
+                <div class="detail-actions">
+                  <a class="detail-link" href="curvefinder/">Explore the live GIS demo <span aria-hidden="true">→</span></a>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="project reveal" name="projects">
+            <summary>
+              <div class="project-top"><span>07 / Cultural geography</span><i class="expand-icon" aria-hidden="true"></i></div>
+              <div class="result-graphic media-graphic community-photo">
+                <img src="assets/southeast-asian-community.png" alt="Community bookstore in Taiwan with Southeast Asian flags, books, and cultural materials" width="754" height="412">
+              </div>
+              <div class="project-body">
+                <div class="project-title"><h3>Southeast Asian migrant cultural + spatial analysis in Taiwan</h3><span class="role">Researcher</span></div>
+                <div class="project-tags"><span class="tag">GIS / ArcGIS</span></div>
+                <p class="project-brief">Selected for the Geographic Olympiad; combined field visits, GIS, surveys, and user interviews across five community sites.</p>
+              </div>
+            </summary>
+            <div class="project-detail">
+              <div class="detail-grid">
+                <p class="detail-lead">Co-authored research on how community spaces shape cultural identity and belonging.</p>
+                <div class="detail-fact"><strong>Geographic Olympiad</strong><span>Selected research paper on Southeast Asian migrant workers and immigrants in Taiwan.</span></div>
+                <div class="detail-fact"><strong>5 field sites</strong><span>Visited bookstore-alliance and worker-support spaces across New Taipei, Taoyuan, Keelung, and Yilan.</span></div>
+                <div class="detail-fact"><strong>Mixed methods</strong><span>Combined GIS analysis, field observation, questionnaires, and first-person interviews.</span></div>
+                <p class="detail-note">The study found that bookstores and support spaces work at two scales: building everyday belonging for migrants while creating platforms for wider cross-cultural understanding.</p>
+                <div class="detail-actions">
+                  <a class="detail-link" href="https://docs.google.com/presentation/d/0BzW7Mt3pnvR8VnlrOXJBY19FTHc/edit?usp=drive_link&amp;ouid=101359900920162144873&amp;resourcekey=0-9OkbSZs-mfs8n-ovzbCMqw&amp;rtpof=true&amp;sd=true" target="_blank" rel="noreferrer">View the research deck <span aria-hidden="true">↗</span></a>
                 </div>
               </div>
             </div>
