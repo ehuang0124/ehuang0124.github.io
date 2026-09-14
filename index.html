@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Eva Huang builds sustainable software systems and products for infrastructure, energy, and cities.">
-  <meta name="theme-color" content="#092328">
+  <meta name="theme-color" content="#ffffff">
   <title>Eva Huang — Building sustainable systems</title>
   <script>document.documentElement.classList.add('js');</script>
   <style>
     :root {
-      --ink: #092328;
-      --ink-soft: rgba(9, 35, 40, .74);
+      --ink: #111111;
+      --ink-soft: rgba(17, 17, 17, .68);
       --lime: #8bbb92;
-      --orange: #2a835f;
-      --cream: #8bbb92;
-      --surface: rgba(139, 187, 146, .82);
-      --lime-wash: rgba(42, 131, 95, .12);
-      --line: rgba(9, 35, 40, .2);
-      --shadow: 0 14px 32px rgba(9, 35, 40, .12);
+      --orange: #12544f;
+      --cream: #ffffff;
+      --surface: #ffffff;
+      --lime-wash: rgba(139, 187, 146, .16);
+      --line: rgba(17, 17, 17, .16);
+      --shadow: 0 14px 32px rgba(17, 17, 17, .1);
       --radius: 22px;
       --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -29,12 +29,7 @@
       margin: 0;
       overflow-x: clip;
       color: var(--ink);
-      background:
-        linear-gradient(rgba(9, 35, 40, .04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(9, 35, 40, .04) 1px, transparent 1px),
-        radial-gradient(circle at 88% 8%, rgba(42, 131, 95, .16), transparent 26rem),
-        var(--cream);
-      background-size: 42px 42px, 42px 42px, auto, auto;
+      background: var(--cream);
       font-family: var(--sans);
       -webkit-font-smoothing: antialiased;
     }
@@ -83,7 +78,7 @@
     .brand-mark {
       width: 38px;
       height: 38px;
-      filter: drop-shadow(3px 3px 0 var(--orange));
+      filter: none;
     }
 
     .nav-links {
@@ -111,7 +106,7 @@
       color: var(--cream) !important;
       background: var(--ink);
       border-radius: 999px;
-      box-shadow: 0 8px 20px rgba(9, 35, 40, .2);
+      box-shadow: 0 8px 20px rgba(17, 17, 17, .14);
     }
 
     .nav-cta:hover {
@@ -229,7 +224,7 @@
     .button:hover,
     .detail-link:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 22px rgba(9, 35, 40, .14);
+      box-shadow: 0 10px 22px rgba(17, 17, 17, .12);
     }
 
     .button.primary,
@@ -238,7 +233,7 @@
       background: var(--ink);
     }
 
-    .button.secondary { background: rgba(139, 187, 146, .52); }
+    .button.secondary { background: var(--cream); }
 
     .hero-visual {
       position: relative;
@@ -291,10 +286,7 @@
       border-radius: 18px;
     }
 
-    .focus-card:nth-child(2) {
-      color: var(--ink);
-      background: var(--lime);
-    }
+    .focus-card:nth-child(2) { background: var(--surface); }
 
     .focus-number {
       color: var(--ink);
@@ -320,7 +312,7 @@
       line-height: 1.48;
     }
 
-    .focus-card:nth-child(2) p { color: rgba(9, 35, 40, .74); }
+    .focus-card:nth-child(2) p { color: var(--ink-soft); }
 
     .focus-glyph {
       position: absolute;
@@ -370,7 +362,7 @@
 
     details.project:hover {
       transform: translateY(-4px);
-      border-color: rgba(9, 35, 40, .52);
+      border-color: rgba(17, 17, 17, .52);
       box-shadow: var(--shadow);
     }
 
@@ -413,7 +405,7 @@
       width: 34px;
       height: 34px;
       color: var(--ink);
-      background: var(--lime);
+      background: var(--cream);
       border: 1px solid currentColor;
       border-radius: 50%;
       transition: transform .25s ease;
@@ -572,7 +564,7 @@
       display: flex;
       justify-content: space-between;
       gap: 22px;
-      color: rgba(139, 187, 146, .76);
+      color: rgba(255, 255, 255, .72);
       font-size: 12px;
     }
 
@@ -648,9 +640,9 @@
     <nav class="nav" aria-label="Main navigation">
       <a class="brand" href="#top" aria-label="Eva Huang, home">
         <svg class="brand-mark" viewBox="0 0 40 40" role="img" aria-label="EH monogram">
-          <rect x="2" y="2" width="36" height="36" rx="10" fill="#8bbb92" stroke="#092328" stroke-width="2"/>
-          <path d="M9 10v20m0-20h10M9 20h8M9 30h10M24 10v20m9-20v20m-9-10h9" fill="none" stroke="#092328" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="33" cy="10" r="3" fill="#2a835f"/>
+          <rect x="2" y="2" width="36" height="36" rx="10" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+          <path d="M9 10v20m0-20h10M9 20h8M9 30h10M24 10v20m9-20v20m-9-10h9" fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="33" cy="10" r="3" fill="#12544f"/>
         </svg>
         <span>Eva Huang</span>
       </a>
@@ -713,21 +705,21 @@
               <div class="project-top"><span>01 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#8bbb92" fill-opacity=".18"/>
-                  <g fill="none" stroke="#092328" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="24" y="18" width="76" height="110" rx="15" fill="#8bbb92" transform="rotate(-3 62 73)"/>
+                  <rect width="330" height="145" fill="#ffffff"/>
+                  <g fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="24" y="18" width="76" height="110" rx="15" fill="#ffffff" transform="rotate(-3 62 73)"/>
                     <path d="M43 39h39M42 52h41M44 68h12m10 0h16M43 82h12m11 0h16M44 96h38"/>
                     <path d="M38 29l12 2m27-2 10-1" opacity=".35"/>
                     <path d="M116 112c27-4 39-16 58-32 19-17 35-31 68-32" stroke-width="4"/>
                     <path d="M232 38l11 10-12 8" stroke-width="4"/>
-                    <path d="M260 58v55h45V58m-50 0h55l-9-17h-37z" fill="#8bbb92"/>
+                    <path d="M260 58v55h45V58m-50 0h55l-9-17h-37z" fill="#ffffff"/>
                     <path d="M271 75h23M271 87h23M279 113V96h10v17"/>
                   </g>
-                  <circle cx="51" cy="68" r="5" fill="#2a835f"/>
-                  <circle cx="244" cy="48" r="6" fill="#2a835f"/>
-                  <rect x="137" y="15" width="105" height="41" rx="13" fill="#2a835f" transform="rotate(2 189 35)"/>
-                  <text x="189" y="37" fill="#092328" font-family="system-ui, sans-serif" font-size="22" font-weight="800" text-anchor="middle">18%</text>
-                  <text x="189" y="48" fill="#092328" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · 3 MONTHS</text>
+                  <circle cx="51" cy="68" r="5" fill="#12544f"/>
+                  <circle cx="244" cy="48" r="6" fill="#12544f"/>
+                  <rect x="137" y="15" width="105" height="41" rx="13" fill="#8bbb92" transform="rotate(2 189 35)"/>
+                  <text x="189" y="37" fill="#111111" font-family="system-ui, sans-serif" font-size="22" font-weight="800" text-anchor="middle">18%</text>
+                  <text x="189" y="48" fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle">REVENUE · 3 MONTHS</text>
                 </svg>
               </div>
               <div class="project-body">
@@ -754,24 +746,24 @@
               <div class="project-top"><span>02 / AI infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#8bbb92" fill-opacity=".18"/>
-                  <g fill="#8bbb92" stroke="#092328" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="330" height="145" fill="#ffffff"/>
+                  <g fill="#ffffff" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 30l57-5 3 101-56 2z"/>
                     <path d="M31 43h37v18H31zM32 72h37v18H32zM33 101h37v17H33z"/>
                     <path d="M90 41l48-4 3 88-48 2z"/>
                     <path d="M101 53h29v16h-29zM102 79h29v16h-29zM103 104h29v14h-29z"/>
                   </g>
-                  <g fill="#2a835f"><circle cx="61" cy="51" r="3"/><circle cx="62" cy="80" r="3"/><circle cx="123" cy="61" r="3"/><circle cx="124" cy="87" r="3"/></g>
-                  <g fill="none" stroke="#092328" stroke-width="3" stroke-linecap="round">
+                  <g fill="#12544f"><circle cx="61" cy="51" r="3"/><circle cx="62" cy="80" r="3"/><circle cx="123" cy="61" r="3"/><circle cx="124" cy="87" r="3"/></g>
+                  <g fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round">
                     <path d="M149 91c21 0 21-37 42-37s21 37 42 37 21-37 42-37" stroke-dasharray="4 7"/>
                     <rect x="177" y="31" width="58" height="58" rx="13" fill="#8bbb92"/>
                     <path d="M190 25v9m16-9v9m16-9v9M190 86v10m16-10v10m16-10v10M170 43h10m-10 16h10m-10 16h10m52-32h10m-10 16h10m-10 16h10"/>
-                    <path d="M191 61c2-15 25-17 29-3 8 0 10 14 1 18h-29c-10-2-10-14-1-15z" fill="#8bbb92"/>
+                    <path d="M191 61c2-15 25-17 29-3 8 0 10 14 1 18h-29c-10-2-10-14-1-15z" fill="#ffffff"/>
                   </g>
-                  <text x="252" y="38" fill="#092328" font-family="system-ui, sans-serif" font-size="27" font-weight="800">41B+</text>
-                  <text x="254" y="52" fill="#092328" font-family="system-ui, sans-serif" font-size="7" font-weight="900">DAILY REQUESTS</text>
-                  <rect x="238" y="102" width="73" height="29" rx="10" fill="#2a835f"/>
-                  <text x="274" y="121" fill="#092328" font-family="system-ui, sans-serif" font-size="11" font-weight="900" text-anchor="middle">0→1 × 2</text>
+                  <text x="252" y="38" fill="#111111" font-family="system-ui, sans-serif" font-size="27" font-weight="800">41B+</text>
+                  <text x="254" y="52" fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900">DAILY REQUESTS</text>
+                  <rect x="238" y="102" width="73" height="29" rx="10" fill="#8bbb92"/>
+                  <text x="274" y="121" fill="#111111" font-family="system-ui, sans-serif" font-size="11" font-weight="900" text-anchor="middle">0→1 × 2</text>
                 </svg>
               </div>
               <div class="project-body">
@@ -795,22 +787,22 @@
               <div class="project-top"><span>03 / Policy governance</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#8bbb92" fill-opacity=".38"/>
-                  <g fill="none" stroke="#092328" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="330" height="145" fill="#ffffff"/>
+                  <g fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M31 39l44-12 28 30-18 42-45-7zM75 27l43 13 13 44-46 15M103 57l28 27M40 92l-9-53 44-12" opacity=".7"/>
                     <path d="M44 47l32 20-20 17m20-17 30 7"/>
                   </g>
-                  <g fill="#2a835f" stroke="#092328" stroke-width="2"><circle cx="31" cy="39" r="6"/><circle cx="75" cy="27" r="6"/><circle cx="103" cy="57" r="6"/><circle cx="85" cy="99" r="6"/><circle cx="40" cy="92" r="6"/><circle cx="76" cy="67" r="7"/></g>
-                  <g fill="none" stroke="#092328" stroke-width="4" stroke-linecap="round">
+                  <g fill="#8bbb92" stroke="#111111" stroke-width="2"><circle cx="31" cy="39" r="6"/><circle cx="75" cy="27" r="6"/><circle cx="103" cy="57" r="6"/><circle cx="85" cy="99" r="6"/><circle cx="40" cy="92" r="6"/><circle cx="76" cy="67" r="7"/></g>
+                  <g fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round">
                     <circle cx="74" cy="66" r="42"/>
                     <path d="M104 96l29 28" stroke-width="8"/>
                   </g>
-                  <g transform="translate(167 20)" stroke="#092328" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M63 0c18 13 37 15 50 16v39c0 29-19 47-50 62C32 102 13 84 13 55V16C27 15 46 13 63 0z" fill="#8bbb92"/>
-                    <path d="M39 58l16 16 32-38" fill="none" stroke="#2a835f" stroke-width="8"/>
+                  <g transform="translate(167 20)" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M63 0c18 13 37 15 50 16v39c0 29-19 47-50 62C32 102 13 84 13 55V16C27 15 46 13 63 0z" fill="#ffffff"/>
+                    <path d="M39 58l16 16 32-38" fill="none" stroke="#12544f" stroke-width="8"/>
                     <path d="M28 91c21 9 47 8 69-4" fill="none" opacity=".25"/>
                   </g>
-                  <text x="230" y="136" fill="#092328" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle" letter-spacing="1.5">GOVERNED POLICY</text>
+                  <text x="230" y="136" fill="#111111" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle" letter-spacing="1.5">GOVERNED POLICY</text>
                 </svg>
               </div>
               <div class="project-body">
@@ -834,23 +826,23 @@
               <div class="project-top"><span>04 / Cloud infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
               <div class="result-graphic" aria-hidden="true">
                 <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#8bbb92" fill-opacity=".38"/>
-                  <g fill="#8bbb92" stroke="#092328" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="330" height="145" fill="#ffffff"/>
+                  <g fill="#ffffff" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <ellipse cx="56" cy="36" rx="35" ry="13"/>
                     <path d="M21 36v61c0 8 16 14 35 14s35-6 35-14V36"/>
                     <path d="M21 57c0 8 16 14 35 14s35-6 35-14M21 78c0 8 16 14 35 14s35-6 35-14"/>
                     <path d="M237 80c-14-2-15-23 0-27 2-25 38-32 50-11 18-4 31 9 28 25 14 7 8 28-8 29h-67c-14 0-17-13-3-16z"/>
                   </g>
-                  <path d="M101 69c33-27 72-28 108-2" fill="none" stroke="#092328" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 8"/>
-                  <path d="M197 55l14 12-16 10" fill="none" stroke="#092328" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M101 69c33-27 72-28 108-2" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 8"/>
+                  <path d="M197 55l14 12-16 10" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                   <g transform="translate(136 43)">
-                    <rect x="0" y="19" width="43" height="36" rx="9" fill="#2a835f" stroke="#092328" stroke-width="3"/>
-                    <path d="M10 19v-8c0-15 23-15 23 0v8" fill="none" stroke="#092328" stroke-width="4"/>
-                    <path d="M21 31v12" stroke="#092328" stroke-width="4" stroke-linecap="round"/>
+                    <rect x="0" y="19" width="43" height="36" rx="9" fill="#12544f" stroke="#111111" stroke-width="3"/>
+                    <path d="M10 19v-8c0-15 23-15 23 0v8" fill="none" stroke="#111111" stroke-width="4"/>
+                    <path d="M21 31v12" stroke="#111111" stroke-width="4" stroke-linecap="round"/>
                   </g>
-                  <circle cx="105" cy="67" r="6" fill="#2a835f" stroke="#092328" stroke-width="2"/>
-                  <circle cx="211" cy="67" r="6" fill="#2a835f" stroke="#092328" stroke-width="2"/>
-                  <g fill="#092328" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle" letter-spacing=".7">
+                  <circle cx="105" cy="67" r="6" fill="#8bbb92" stroke="#111111" stroke-width="2"/>
+                  <circle cx="211" cy="67" r="6" fill="#8bbb92" stroke="#111111" stroke-width="2"/>
+                  <g fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle" letter-spacing=".7">
                     <text x="57" y="132">SECURE</text><text x="158" y="132">RESUMABLE</text><text x="271" y="132">AUDITABLE</text>
                   </g>
                 </svg>
