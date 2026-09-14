@@ -467,6 +467,13 @@
       object-position: 50% 58%;
     }
 
+    .result-graphic.kendeda-photo {
+      position: relative;
+      background: #dce8dd;
+    }
+
+    .result-graphic.kendeda-photo img { object-position: 50% 38%; }
+
     .result-graphic.media-graphic {
       background: var(--cream);
       border: 1px solid var(--line);
@@ -1008,23 +1015,24 @@
           <details class="project reveal" name="projects">
             <summary>
               <div class="project-top"><span>04 / Sustainability research</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic">
-                <img src="assets/living-building-mobility-map.jpg" alt="GIS map of community destinations and resources around Atlanta's Westside" width="1200" height="746">
+              <div class="result-graphic kendeda-photo">
+                <img src="assets/kendeda-building-porch.jpg" alt="The Kendeda Building porch beneath its expansive solar canopy at Georgia Tech" width="647" height="800">
               </div>
               <div class="project-body">
-                <div class="project-title"><h3>Living Building Initiative mobility research | Energy Institute</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">GIS / ArcGIS</span><span class="tag">Agile</span></div>
-                <p class="project-brief">Investigated how people access a sustainable building through four personas, user interviews, and GIS.</p>
+                <div class="project-title"><h3>Kendeda Building mobility research | Energy Institute</h3><span class="role">Researcher</span></div>
+                <div class="project-tags"><span class="tag">GIS / ArcGIS</span><span class="tag">User research</span><span class="tag">LBC 3.1</span><span class="tag">Agile</span></div>
+                <p class="project-brief">Mapped how people access Georgia Tech’s flagship regenerative building through four personas, interviews, and GIS.</p>
               </div>
             </summary>
             <div class="project-detail">
               <div class="detail-grid">
-                <p class="detail-lead">Connected a sustainable building initiative to the mobility needs of the people around it.</p>
-                <div class="detail-fact"><strong>GIS</strong><span>Mapped community destinations and resources to study the building in its mobility context.</span></div>
-                <div class="detail-fact"><strong>4 personas</strong><span>Built four personas to frame distinct mobility needs and behaviors.</span></div>
-                <div class="detail-fact"><strong>User interviews</strong><span>Conducted interviews to test assumptions and understand the mobility experience.</span></div>
+                <p class="detail-lead">Connected mobility needs to The Kendeda Building, Georgia Tech’s Living Building Challenge-certified model for regenerative design.</p>
+                <div class="detail-fact"><strong>LBC 3.1 · 2021</strong><span>Grounded the study in Georgia’s first fully certified Living Building—a net-positive energy and water learning hub.</span></div>
+                <div class="detail-fact"><strong>GIS + interviews</strong><span>Mapped community destinations and tested assumptions about how people experience access.</span></div>
+                <div class="detail-fact"><strong>4 personas</strong><span>Framed distinct mobility needs and behaviors without averaging people into one user.</span></div>
                 <div class="detail-actions">
                   <a class="detail-link" href="living-building-mobility/index.html">Explore the mobility story <span aria-hidden="true">↗</span></a>
+                  <a class="detail-link" href="https://livingbuilding.gatech.edu/" target="_blank" rel="noreferrer">Visit The Kendeda Building <span aria-hidden="true">↗</span></a>
                 </div>
               </div>
             </div>
@@ -1085,50 +1093,6 @@
             </div>
           </details>
 
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>07 / Cloud infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#ffffff"/>
-                  <g fill="#ffffff" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <ellipse cx="56" cy="36" rx="35" ry="13"/>
-                    <path d="M21 36v61c0 8 16 14 35 14s35-6 35-14V36"/>
-                    <path d="M21 57c0 8 16 14 35 14s35-6 35-14M21 78c0 8 16 14 35 14s35-6 35-14"/>
-                    <path d="M237 80c-14-2-15-23 0-27 2-25 38-32 50-11 18-4 31 9 28 25 14 7 8 28-8 29h-67c-14 0-17-13-3-16z"/>
-                  </g>
-                  <path d="M101 69c33-27 72-28 108-2" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 8"/>
-                  <path d="M197 55l14 12-16 10" fill="none" stroke="#111111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <g transform="translate(136 43)">
-                    <rect x="0" y="19" width="43" height="36" rx="9" fill="#12544f" stroke="#111111" stroke-width="3"/>
-                    <path d="M10 19v-8c0-15 23-15 23 0v8" fill="none" stroke="#111111" stroke-width="4"/>
-                    <path d="M21 31v12" stroke="#111111" stroke-width="4" stroke-linecap="round"/>
-                  </g>
-                  <circle cx="105" cy="67" r="6" fill="#8bbb92" stroke="#111111" stroke-width="2"/>
-                  <circle cx="211" cy="67" r="6" fill="#8bbb92" stroke="#111111" stroke-width="2"/>
-                  <g fill="#111111" font-family="system-ui, sans-serif" font-size="7" font-weight="900" text-anchor="middle" letter-spacing=".7">
-                    <text x="57" y="132">SECURE</text><text x="158" y="132">RESUMABLE</text><text x="271" y="132">AUDITABLE</text>
-                  </g>
-                </svg>
-              </div>
-              <div class="project-body">
-                <div class="project-title"><h3>Data Sync Agent</h3><span class="role primary-role">Software Engineer</span></div>
-                <div class="project-tags"><span class="tag">Python</span><span class="tag">AWS</span></div>
-                <p class="project-brief">A safe path from customer data to cloud durability.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Designed for safe replay, encrypted transit, and durable evidence.</p>
-                <div class="detail-fact"><strong>No gaps</strong><span>Snapshot and CDC share one consistency boundary.</span></div>
-                <div class="detail-fact"><strong>No unsafe ACK</strong><span>The agent forgets data only after cloud durability.</span></div>
-                <div class="detail-fact"><strong>Focused recovery</strong><span>Only the affected table rebaselines after a history gap.</span></div>
-                <div class="detail-actions">
-                  <a class="detail-link" href="https://github.com/ehuang0124/ehuang0124.github.io/blob/d53ff1b2aa051e2daea97936083659d549ab15cf/data-sync/index.html" target="_blank" rel="noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-            </div>
-          </details>
         </div>
       </div>
     </section>
