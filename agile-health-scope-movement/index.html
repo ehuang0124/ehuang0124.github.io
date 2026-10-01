@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Leadership view of mid-sprint work-item movement across six completed sprints.">
+  <title>Mid-sprint Scope Movement | Agile Health</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --paper: #f6f3e8;
+      --card: #fffdf7;
+      --line: #d9dddf;
+      --navy: #004f71;
+      --feature: #0072b2;
+      --bug: #d55e00;
+      --priority: #009e73;
+      --blocking: #cc79a7;
+      --lime: #d7ff59;
+      --orange: #ff9e57;
+      --shadow: 0 18px 50px rgba(18, 46, 40, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 82% 2%, rgba(215, 255, 89, .38), transparent 27rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; }
+    button { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 2rem)); margin-inline: auto; }
+
+    header {
+      padding: 4.5rem 0 2.5rem;
+      border-bottom: 1px solid rgba(23, 32, 51, .12);
+    }
+    .eyebrow {
+      margin: 0 0 .75rem;
+      color: var(--navy);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+    .dek {
+      max-width: 760px;
+      margin: 1.4rem 0 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: 1.5rem;
+    }
+    .pill {
+      border: 1px solid rgba(23, 32, 51, .16);
+      border-radius: 999px;
+      padding: .42rem .78rem;
+      background: rgba(255, 253, 247, .64);
+      color: #445066;
+      font-size: .88rem;
+      font-weight: 700;
+    }
+
+    main { padding: 2rem 0 5rem; }
+    .callout {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.4rem;
+      align-items: center;
+      margin: 0 0 1.5rem;
+      padding: 1.7rem 1.9rem;
+      border-radius: 24px;
+      background: #102f2b;
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    .callout strong {
+      color: var(--lime);
+      font-size: clamp(3.1rem, 8vw, 5rem);
+      line-height: 1;
+      letter-spacing: -.06em;
+    }
+    .callout h2 { margin: 0; font-size: clamp(1.3rem, 3vw, 2rem); line-height: 1.15; }
+    .callout p { margin: .45rem 0 0; color: #d9e7e3; }
+
+    .grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 1.5rem; }
+    .card {
+      min-width: 0;
+      padding: clamp(1.2rem, 3vw, 2rem);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    .card h2 { margin: 0; font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -.025em; }
+    .subhead { margin: .35rem 0 1.5rem; color: var(--muted); }
+
+    .switcher {
+      display: inline-flex;
+      gap: .35rem;
+      max-width: 100%;
+      margin-bottom: 1.5rem;
+      padding: .3rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #eef0ea;
+      overflow-x: auto;
+    }
+    .switcher button {
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: 999px;
+      padding: .6rem .9rem;
+      background: transparent;
+      color: #445066;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .switcher button[aria-pressed="true"] { background: var(--ink); color: white; }
+    .switcher button:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+    .bar-list { display: grid; gap: 1.25rem; }
+    .bar-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .42rem; }
+    .bar-label { font-weight: 750; }
+    .bar-value { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 800; }
+    .track { height: 18px; border-radius: 999px; background: #e7eae5; overflow: hidden; }
+    .fill { height: 100%; width: 0; border-radius: inherit; transition: width 520ms cubic-bezier(.2,.8,.2,1); }
+
+    .stack-wrap { margin-top: 1rem; }
+    .stack-head { display: flex; justify-content: space-between; gap: 1rem; font-weight: 800; }
+    .stack {
+      display: flex;
+      height: 64px;
+      margin: .65rem 0 .8rem;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #e7eae5;
+    }
+    .segment { display: grid; place-items: center; min-width: 0; color: white; font-size: .83rem; font-weight: 850; }
+    .legend { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1rem; margin: 1.3rem 0 0; padding: 0; list-style: none; }
+    .legend li { display: flex; gap: .55rem; align-items: center; color: #4f5c70; font-size: .92rem; }
+    .dot { width: .8rem; height: .8rem; flex: 0 0 auto; border-radius: 50%; }
+
+    .wide { grid-column: 1 / -1; }
+    .ask-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem 2rem; }
+    .ask {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .35rem 1rem;
+      align-items: end;
+    }
+    .ask .track { grid-column: 1 / -1; }
+    .ask strong { font-variant-numeric: tabular-nums; }
+
+    .note {
+      margin-top: 1.5rem;
+      padding: 1.25rem 1.4rem;
+      border-left: 5px solid var(--orange);
+      border-radius: 0 14px 14px 0;
+      background: #fff4e8;
+    }
+    .note strong { display: block; margin-bottom: .25rem; }
+    .note p { margin: 0; color: #5d4b3d; }
+
+    footer { padding: 0 0 3rem; color: var(--muted); font-size: .9rem; }
+
+    @media (max-width: 820px) {
+      header { padding-top: 3rem; }
+      .grid, .ask-grid { grid-template-columns: 1fr; }
+      .wide { grid-column: auto; }
+      .callout { grid-template-columns: 1fr; gap: .65rem; }
+      .legend { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .fill { transition: none; }
+    }
+
+    @media print {
+      body { background: white; }
+      header { padding-top: 1rem; }
+      .shell { width: 100%; }
+      .card, .callout { box-shadow: none; break-inside: avoid; }
+      .switcher { display: none; }
+      main { padding-bottom: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <p class="eyebrow">Agile health • scope stability</p>
+      <h1>Why work moved mid-sprint</h1>
+      <p class="dek">A leadership view of 133 add/remove events across six completed sprints, with the dominant demand patterns and evidence limits made explicit.</p>
+      <div class="meta" aria-label="Analysis scope">
+        <span class="pill">2026.07a–2026.09b</span>
+        <span class="pill">117 additions</span>
+        <span class="pill">16 removals</span>
+        <span class="pill">109 unique WIs</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="callout" aria-labelledby="top-insight">
+      <strong>52%</strong>
+      <div>
+        <h2 id="top-insight">Feature and customer work drove the majority of scope movement</h2>
+        <p>It represented 69 of 133 events overall—and 75% of work removed mid-sprint.</p>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="reason-title">
+        <h2 id="reason-title">Movement by reason</h2>
+        <p class="subhead">Switch the view to compare the overall mix with additions or removals.</p>
+        <div class="switcher" role="group" aria-label="Movement view">
+          <button type="button" data-view="overall" aria-pressed="true">Overall</button>
+          <button type="button" data-view="added" aria-pressed="false">Added</button>
+          <button type="button" data-view="removed" aria-pressed="false">Removed</button>
+        </div>
+        <div class="bar-list" id="reason-bars" aria-live="polite"></div>
+      </section>
+
+      <section class="card" aria-labelledby="timing-title">
+        <h2 id="timing-title">Added vs. removed mix</h2>
+        <p class="subhead">Each bar is normalized to 100%; totals differ substantially.</p>
+        <div class="stack-wrap" id="stacks"></div>
+        <ul class="legend" id="legend"></ul>
+      </section>
+
+      <section class="card wide" aria-labelledby="ask-title">
+        <h2 id="ask-title">Inside the feature/customer bucket</h2>
+        <p class="subhead">The 69 movement events were manually reviewed by WI title and epic, then assigned to one mutually exclusive type of ask.</p>
+        <div class="ask-grid" id="ask-types"></div>
+        <div class="note">
+          <strong>Leadership takeaway</strong>
+          <p>Reliability/failover/safety and onboarding/environment enablement together account for 53.6% of feature/customer movement. The bucket is not one kind of interruption.</p>
+        </div>
+      </section>
+
+      <section class="card wide" aria-labelledby="method-title">
+        <h2 id="method-title">Method and interpretation</h2>
+        <p class="subhead">Counts use movement occurrences from the end-of-day day-one sprint baseline. The same WI can contribute more than once when it moves repeatedly.</p>
+        <div class="note">
+          <strong>Important evidence boundary</strong>
+          <p>The structured reason field was blank for every WI. “Priority shift / uncoded reason” is a residual 28-event group after stronger bug, feature/customer, and blocker signals were excluded—not a recorded explanation. Customer identities were also omitted because the structured customer field was blank.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="shell">Prepared for leadership discussion • Aggregate view only • No individual work-item or customer identifiers</footer>
+
+  <script>
+    const categories = [
+      { key: "feature", label: "Feature / customer", color: "#0072b2" },
+      { key: "bug", label: "Bug fix", color: "#d55e00" },
+      { key: "priority", label: "Priority shift / uncoded reason*", color: "#009e73" },
+      { key: "blocking", label: "Blocking lane / other", color: "#cc79a7" }
+    ];
+
+    const views = {
+      overall: { total: 133, counts: { feature: 69, bug: 31, priority: 28, blocking: 5 } },
+      added: { total: 117, counts: { feature: 57, bug: 30, priority: 26, blocking: 4 } },
+      removed: { total: 16, counts: { feature: 12, bug: 1, priority: 2, blocking: 1 } }
+    };
+
+    const asks = [
+      { label: "Reliability, failover & safety", count: 22, color: "#0072b2" },
+      { label: "Onboarding & environment enablement", count: 15, color: "#009e73" },
+      { label: "Developer tooling & operations", count: 12, color: "#cc79a7" },
+      { label: "Release, deployment & migration", count: 11, color: "#e69f00" },
+      { label: "Platform / API capability", count: 9, color: "#6b5fb5" }
+    ];
+
+    const pct = (count, total) => `${(count / total * 100).toFixed(1)}%`;
+
+    function renderReasonBars(viewName) {
+      const view = views[viewName];
+      const host = document.querySelector("#reason-bars");
+      host.innerHTML = categories.map(category => {
+        const count = view.counts[category.key];
+        const percent = count / view.total * 100;
+        return `<div class="bar-row">
+          <div class="bar-head"><span class="bar-label">${category.label}</span><span class="bar-value">${percent.toFixed(1)}% (${count})</span></div>
+          <div class="track" role="img" aria-label="${category.label}: ${percent.toFixed(1)} percent, ${count} events"><div class="fill" style="width:${percent}%;background:${category.color}"></div></div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderStacks() {
+      const host = document.querySelector("#stacks");
+      host.innerHTML = ["added", "removed"].map(viewName => {
+        const view = views[viewName];
+        const segments = categories.map(category => {
+          const count = view.counts[category.key];
+          const percent = count / view.total * 100;
+          const label = percent >= 11 ? `${percent.toFixed(1)}%` : "";
+          return `<div class="segment" title="${category.label}: ${count} (${percent.toFixed(1)}%)" style="width:${percent}%;background:${category.color}">${label}</div>`;
+        }).join("");
+        return `<div class="stack-wrap"><div class="stack-head"><span>${viewName === "added" ? "Added mid-sprint" : "Removed mid-sprint"}</span><span>${view.total} events</span></div><div class="stack" role="img" aria-label="${viewName} movement composition">${segments}</div></div>`;
+      }).join("");
+      document.querySelector("#legend").innerHTML = categories.map(category => `<li><span class="dot" style="background:${category.color}"></span>${category.label}</li>`).join("");
+    }
+
+    function renderAsks() {
+      const host = document.querySelector("#ask-types");
+      host.innerHTML = asks.map(ask => {
+        const percent = ask.count / 69 * 100;
+        return `<div class="ask"><span class="bar-label">${ask.label}</span><strong>${percent.toFixed(1)}% (${ask.count})</strong><div class="track" role="img" aria-label="${ask.label}: ${percent.toFixed(1)} percent, ${ask.count} events"><div class="fill" style="width:${percent / 31.9 * 100}%;background:${ask.color}"></div></div></div>`;
+      }).join("");
+    }
+
+    document.querySelectorAll("[data-view]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-view]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+        renderReasonBars(button.dataset.view);
+      });
+    });
+
+    renderReasonBars("overall");
+    renderStacks();
+    renderAsks();
+  </script>
+</body>
+</html>
