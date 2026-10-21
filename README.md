@@ -3,7 +3,7 @@ Eva's GitHub Pages site.
 
 ## Writing archive
 
-The static WordPress archive lives under [`writing/`](writing/). The source WXR export is intentionally not stored in this repository.
+The static WordPress archive lives under [`writing/`](writing/). The source WXR export is intentionally not stored in this repository. Its magazine-style index and shared article styling live in `writing/style.css`; the 2N mark and roadside feature image are hand-maintained in `writing/assets/` and are retained when the archive is regenerated.
 
 To regenerate the HTML from a WordPress export:
 
