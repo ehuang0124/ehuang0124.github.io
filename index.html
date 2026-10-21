@@ -817,7 +817,7 @@
     @media (max-width: 650px) {
       .shell { width: min(100% - 28px, 1160px); }
       .nav { min-height: 70px; }
-      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-links a:not(.nav-cta):not(.nav-writing) { display: none; }
       .hero { padding: 48px 0 72px; row-gap: 30px; }
       h1 { font-size: clamp(54px, 15vw, 68px); }
       .intro { font-size: 16px; }
@@ -865,6 +865,7 @@
       <div class="nav-links">
         <a href="#focus">Focus</a>
         <a href="#work">Selected work</a>
+        <a class="nav-writing" href="/writing/">Writing</a>
         <a class="nav-cta" href="mailto:ehuang0124@gmail.com">Let's talk</a>
       </div>
     </nav>
