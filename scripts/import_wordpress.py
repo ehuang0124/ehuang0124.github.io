@@ -38,6 +38,12 @@ NS = {
     "wp": "http://wordpress.org/export/1.2/",
 }
 MANIFEST_NAME = ".import-manifest.json"
+HAND_MAINTAINED = {
+    "writing/style.css",
+    "writing/archive.js",
+    "writing/assets/2n-mark.svg",
+    "writing/assets/forest-roadside-pickup.png",
+}
 
 BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -300,7 +306,12 @@ def previous_generated_paths(output_dir: Path) -> list[str]:
         return []
     result: list[str] = []
     for entry in data.get("generated_files", []):
-        if isinstance(entry, str) and entry.startswith("writing/") and ".." not in Path(entry).parts:
+        if (
+            isinstance(entry, str)
+            and entry.startswith("writing/")
+            and entry not in HAND_MAINTAINED
+            and ".." not in Path(entry).parts
+        ):
             result.append(entry)
     return result
 
@@ -370,6 +381,48 @@ def categories_for(item: ET.Element) -> list[str]:
     return values
 
 
+# The archive is intentionally organized by recurring subjects rather than by
+# publication year. These are editorial tags, separate from the legacy
+# WordPress categories carried by the export.
+ROADTRIP_TITLES = {
+    "搭船的人",
+    "布朗斯維克燉肉（Brunswick Stew）",
+    "學路",
+    "909 天美國南方紀實",
+    "北京隨筆",
+    "地理閱讀筆記",
+    "高空彈跳",
+    "Teleport｜20200802",
+    "穴居人｜2015 夏",
+    "Ivy Day",
+}
+PEOPLE_TITLES = {
+    "銅板將軍",
+    "午安，垃圾少女組",
+    "你好，再見，高中同學會",
+    "因為遇見你",
+    "Love Is Blind | 20200613",
+    "伊恩",
+    "鄰・居",
+    "都市觀察——我呼喊了，你的名字",
+    "327號 診療日記",
+    "告別｜2021-06-08",
+    "民生小孩 ｜20200721",
+}
+TAG_LABELS = {"essay": "Essay", "roadtrip": "Roadtrip", "people": "People", "poem": "Poem"}
+
+
+def writing_tags(item: ET.Element) -> list[str]:
+    title = html.unescape(field(item, "title", "Untitled")).strip()
+    categories = {label.casefold() for label in categories_for(item)}
+    tags = ["poem"] if "poem" in categories else ["essay"]
+    if title in ROADTRIP_TITLES:
+        tags.append("roadtrip")
+    if title in PEOPLE_TITLES or title.endswith("的人") or "的人——" in title or "同學" in title:
+        tags.append("people")
+    return tags
+
+
 def item_thumbnail(item: ET.Element, attachment_urls: dict[str, str], local_media: dict[str, str]) -> str | None:
     thumb_id = ""
     for meta in item.findall("wp:postmeta", NS):
@@ -397,6 +450,8 @@ def html_document(title: str, site_title: str, canonical: str, body: str, extra_
   <meta name="theme-color" content="#F4F0E5">
   <meta property="og:title" content="{safe_title}">
   <link rel="canonical" href="{safe_canonical}">
+  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+  <link rel="apple-touch-icon" href="/writing/assets/2n-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;display=swap" rel="stylesheet">
@@ -428,8 +483,11 @@ def render_categories(labels: Iterable[str]) -> str:
     values = list(labels)
     if not values:
         return ""
-    tags = "".join(f'<span class="tag">{html.escape(label)}</span>' for label in values)
-    return f'<div class="category-list" aria-label="Categories">{tags}</div>'
+    tags = "".join(
+        f'<span class="tag tag--{html.escape(label, quote=True)}">{html.escape(TAG_LABELS.get(label, label))}</span>'
+        for label in values
+    )
+    return f'<div class="category-list" aria-label="Tags">{tags}</div>'
 
 
 def expand_reusable_blocks(content: str, reusable_blocks: dict[str, str], depth: int = 0) -> str:
@@ -470,141 +528,218 @@ def expand_reusable_blocks(content: str, reusable_blocks: dict[str, str], depth:
     return social_link.sub(replace_social_link, expanded)
 
 
+def _prose_fragments(fragment: str) -> list[str]:
+    fragment = re.sub(r"<br\s*/?>", "\n", fragment, flags=re.IGNORECASE)
+    fragment = re.sub(r"<[^>]+>", " ", fragment)
+    fragment = html.unescape(fragment).replace("\xa0", " ")
+    values: list[str] = []
+    for value in re.split(r"\n\s*\n+", fragment):
+        value = re.sub(r"[ \t\r\f\v]+", " ", value).strip()
+        if value:
+            values.append(value)
+    return values
+
+
+def _is_editorial_note(value: str) -> bool:
+    value = re.sub(r"\s+", " ", value).strip()
+    return (
+        not value
+        or value.startswith(("#", "刊登於", "獲選", "收錄於"))
+        or value.startswith(("2022台中", "《2024北美洲文苑文學獎》"))
+        or value in {"微電影合作邀約", "link"}
+    )
+
+
 def first_prose_block(content: str) -> str:
     # Extract existing article copy rather than creating a new editorial blurb.
     source = re.sub(r"<!--.*?-->", "", content or "", flags=re.DOTALL)
+    candidates: list[str] = []
     block_pattern = re.compile(r"<(p|pre)\b[^>]*>(.*?)</\1\s*>", re.IGNORECASE | re.DOTALL)
     for match in block_pattern.finditer(source):
-        text = re.sub(r"<br\s*/?>", "\n", match.group(2), flags=re.IGNORECASE)
-        text = re.sub(r"<[^>]+>", " ", text)
-        text = html.unescape(text).replace("\xa0", " ")
-        paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n+", text)]
-        for paragraph in paragraphs:
-            if paragraph:
-                return paragraph
+        candidates.extend(_prose_fragments(match.group(2)))
+    if not candidates:
+        # A small number of imported poems are plain text in the post body.
+        candidates.extend(_prose_fragments(source))
+    for candidate in candidates:
+        if not _is_editorial_note(candidate):
+            return candidate
     return ""
 
 
+def teaser_from_content(content: str) -> str:
+    text = re.sub(r"\s+", " ", first_prose_block(content)).strip()
+    if not text:
+        return "A piece from the writing archive."
+    if len(text) <= 168:
+        return text
+    sentences = re.split(r"(?<=[。！？!?])\s*", text)
+    selected = ""
+    for sentence in sentences:
+        if not sentence:
+            continue
+        if selected and len(selected) + len(sentence) > 150:
+            break
+        selected += sentence
+        if len(selected) >= 70:
+            break
+    if not selected:
+        selected = text[:150]
+    if len(selected) < len(text):
+        selected = selected.rstrip(" ,，。；;") + "…"
+    return selected
+
 def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: list[tuple[ET.Element, str]], attachment_urls: dict[str, str], local_media: dict[str, str]) -> str:
-    ordered_posts = sorted(posts, key=lambda pair: (field(pair[0], "wp:post_date"), int(field(pair[0], "wp:post_id", "0") or 0)), reverse=True)
-    grouped: dict[str, list[tuple[ET.Element, str]]] = defaultdict(list)
+    ordered_posts = sorted(
+        posts,
+        key=lambda pair: (field(pair[0], "wp:post_date"), int(field(pair[0], "wp:post_id", "0") or 0)),
+        reverse=True,
+    )
+
+    entries: list[dict[str, object]] = []
     for item, route in ordered_posts:
-        _, year, _ = date_parts(item)
-        grouped[year].append((item, route))
+        date, _, _ = date_parts(item)
+        entries.append({
+            "title": html.unescape(field(item, "title", "Untitled")),
+            "date": date,
+            "path": route,
+            "tags": writing_tags(item),
+            "excerpt": teaser_from_content(field(item, "content:encoded")),
+        })
 
-    latest_item, latest_route = ordered_posts[0] if ordered_posts else (None, "/writing/")
-    latest_title = html.unescape(field(latest_item, "title", "Untitled")) if latest_item is not None else site_title
-    latest_date = date_parts(latest_item)[0] if latest_item is not None else ""
-    latest_categories = categories_for(latest_item) if latest_item is not None else []
-    latest_category = latest_categories[0] if latest_categories else ""
-    latest_excerpt = first_prose_block(field(latest_item, "content:encoded")) if latest_item is not None else ""
-    latest_meta = f'<span class="meta-separator" aria-hidden="true"></span><span>{html.escape(latest_category)}</span>' if latest_category else ""
-    latest_excerpt_markup = f'<p class="latest-excerpt">{html.escape(latest_excerpt)}</p>' if latest_excerpt else ""
-    latest_markup = f'''<section class="latest-story" aria-labelledby="latest-title">
-  <p class="section-label"><span>01 /</span> Latest</p>
-  <p class="story-meta"><time datetime="{html.escape(latest_date, quote=True)}">{html.escape(latest_date)}</time>{latest_meta}</p>
-  <h1 id="latest-title">{html.escape(latest_title)}</h1>
-  {latest_excerpt_markup}
-  <a class="reading-link" href="{html.escape(latest_route, quote=True)}"><span>Read more</span><span aria-hidden="true">→</span></a>
-</section>'''
-
-    featured_pair = next((pair for pair in ordered_posts if safe_slug(field(pair[0], "wp:post_name"), field(pair[0], "wp:post_id", "0")).casefold() == "brunswick-stew"), None)
+    featured_pair = next(
+        (
+            pair for pair in ordered_posts
+            if safe_slug(field(pair[0], "wp:post_name"), field(pair[0], "wp:post_id", "0")).casefold() == "brunswick-stew"
+        ),
+        None,
+    )
     if featured_pair is None and len(ordered_posts) > 1:
         featured_pair = ordered_posts[1]
+
+    featured: dict[str, str] = {}
     if featured_pair is not None:
         featured_item, featured_route = featured_pair
-        featured_title = html.unescape(field(featured_item, "title", "Untitled"))
-        featured_date = date_parts(featured_item)[0]
-        featured_categories = categories_for(featured_item)
-        featured_label = featured_categories[0] if featured_categories else ""
-        featured_meta = f'{featured_date} <span aria-hidden="true">/</span> {html.escape(featured_label)}' if featured_label else featured_date
-        cover_markup = f'''<a class="cover-story" href="{html.escape(featured_route, quote=True)}" aria-label="{html.escape(featured_title, quote=True)}">
-  <img class="cover-image" src="/writing/assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
-  <span class="cover-caption">Roadside detail</span>
-  <span class="cover-copy">
-    <span class="cover-kicker">From the archive <span aria-hidden="true">·</span> {featured_meta}</span>
-    <span class="cover-title">{html.escape(featured_title)}</span>
-    <span class="cover-arrow" aria-hidden="true">↗</span>
-  </span>
-</a>'''
-    else:
-        cover_markup = ""
+        featured = {
+            "title": html.unescape(field(featured_item, "title", "Untitled")),
+            "date": date_parts(featured_item)[0],
+            "path": featured_route,
+            "excerpt": teaser_from_content(field(featured_item, "content:encoded")),
+        }
 
-    groups: list[str] = []
-    for group_index, year in enumerate(sorted(grouped, reverse=True), start=1):
-        cards: list[str] = []
-        for item, route in grouped[year]:
-            title = html.unescape(field(item, "title", "Untitled"))
-            date, _, _ = date_parts(item)
-            categories = categories_for(item)
-            category = categories[0] if categories else ""
-            image = item_thumbnail(item, attachment_urls, local_media)
-            image_markup = f'<img class="story-image" src="{html.escape(image, quote=True)}" alt="" loading="lazy" decoding="async">' if image else ""
-            category_markup = f'<span class="story-category">{html.escape(category)}</span>' if category else ""
-            image_line = f"    {image_markup}\n" if image_markup else ""
-            cards.append(f'''<article class="story-card{' has-image' if image else ''}">
-  <a class="story-card-link" href="{html.escape(route, quote=True)}">
-{image_line}    <span class="story-card-copy">
-      <span class="story-card-meta"><time datetime="{html.escape(date, quote=True)}">{html.escape(date)}</time>{category_markup}</span>
-      <span class="story-card-title">{html.escape(title)}</span>
-    </span>
-    <span class="story-card-arrow" aria-hidden="true">↗</span>
-  </a>
-</article>''')
-        groups.append(f'''<section class="year-section" aria-labelledby="year-{year}">
-  <header class="year-heading">
-    <h3 id="year-{year}"><span>{group_index:02d} /</span> {html.escape(year)}</h3>
-    <span class="year-count">{len(grouped[year]):02d} pieces</span>
-  </header>
-  <div class="story-grid">{''.join(cards)}</div>
-</section>''')
-
-    year_links = ''.join(f'<a href="#year-{year}">{html.escape(year)}</a>' for year in sorted(grouped, reverse=True))
-    archive_section = f'''<section class="archive-section" id="archive" aria-labelledby="archive-title">
-  <div class="archive-heading">
-    <div>
-      <p class="section-label"><span>02 /</span> Contents</p>
-      <h2 id="archive-title">Writing</h2>
+    def card_markup(entry: dict[str, object], index: int) -> str:
+        tags_markup = "".join(
+            f'<span class="tag tag--small tag--{html.escape(str(tag), quote=True)}">{html.escape(TAG_LABELS.get(str(tag), str(tag)))}</span>'
+            for tag in entry["tags"]  # type: ignore[union-attr]
+        )
+        return f'''<article class="story-card">
+  <a class="story-card-link" href="{html.escape(str(entry["path"]), quote=True)}">
+    <div class="story-card-topline">
+      <span class="story-card-number">{index:02d}</span>
+      <time datetime="{html.escape(str(entry["date"]), quote=True)}">{html.escape(str(entry["date"]))}</time>
     </div>
-    <nav class="year-nav" aria-label="Browse by year">{year_links}</nav>
-  </div>
-  {''.join(groups)}
-</section>'''
+    <h3 class="story-card-title">{html.escape(str(entry["title"]))}</h3>
+    <p class="story-excerpt"><span class="quote-mark" aria-hidden="true">“</span>{html.escape(str(entry["excerpt"]))}</p>
+    <div class="story-card-bottom">
+      <span class="story-tags">{tags_markup}</span>
+      <span class="story-card-arrow" aria-hidden="true">↗</span>
+    </div>
+  </a>
+</article>'''
+
+    data_json = json.dumps(entries, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    page_count = max(1, (len(entries) + 19) // 20)
+    pagination_links = ""
+    for page in range(1, page_count + 1):
+        current_class = " is-current" if page == 1 else ""
+        current_attr = ' aria-current="page"' if page == 1 else ""
+        pagination_links += f'<button class="pagination-link{current_class}" type="button" data-page="{page}"{current_attr}>{page:02d}</button>'
 
     page_links: list[str] = []
     for item, route in sorted(pages, key=lambda pair: field(pair[0], "title").casefold()):
         if route == "/writing/":
             continue
         title = html.unescape(field(item, "title", "Untitled"))
-        page_links.append(f'<a class="page-link" href="{html.escape(route, quote=True)}">{html.escape(title)}<span aria-hidden="true">↗</span></a>')
+        page_links.append(
+            f'<a class="page-link" href="{html.escape(route, quote=True)}">{html.escape(title)}<span aria-hidden="true">↗</span></a>'
+        )
     pages_section = ""
     if page_links:
         pages_section = f'''<section class="pages-section" aria-label="Pages">
   <p class="section-label"><span>03 /</span> Pages</p>
-  <div class="page-links">{''.join(page_links)}</div>
+  <div class="page-links">{"".join(page_links)}</div>
 </section>'''
 
+    feature_markup = ""
+    if featured:
+        feature_markup = f'''<a class="feature-story" href="{html.escape(featured["path"], quote=True)}" aria-label="{html.escape(featured["title"], quote=True)}">
+        <img class="feature-image" src="/writing/assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
+        <span class="feature-caption">Roadside detail</span>
+        <span class="feature-copy">
+          <span class="feature-kicker">Featured <span aria-hidden="true">·</span> Roadtrip essay <span aria-hidden="true">/</span> {html.escape(featured["date"])}</span>
+          <span class="feature-title">{html.escape(featured["title"])}</span>
+          <span class="feature-excerpt">{html.escape(featured["excerpt"])}</span>
+          <span class="feature-arrow" aria-hidden="true">↗</span>
+        </span>
+      </a>'''
+
+    initial_cards = "".join(card_markup(entry, index) for index, entry in enumerate(entries[:20], start=1))
     body = f'''<a class="skip-link" href="#main">Skip to main content</a>
 <div class="shell">
   {header(site_title)}
   <main id="main" class="archive-main">
-    <div class="lead-grid">
-      {latest_markup}
-      {cover_markup}
-    </div>
-    {archive_section}
+    <section class="archive-intro" aria-labelledby="archive-intro-title">
+      <div class="intro-copy">
+        <p class="section-label"><span>01 /</span> Writing archive</p>
+        <h1 id="archive-intro-title">Writing, <em>in motion.</em></h1>
+        <p class="archive-dek">Essays, poems, and notes about roads, people, and the places where they meet.</p>
+        <p class="archive-note">Follow a feeling instead of a timeline. Browse by the shape of a piece: an essay on the road, an essay about people, or a poem.</p>
+      </div>
+      {feature_markup}
+    </section>
+
+    <section class="archive-browser" id="archive" aria-labelledby="archive-title">
+      <div class="browser-heading">
+        <div class="browser-heading-copy">
+          <p class="section-label"><span>02 /</span> Browse by tag</p>
+          <h2 id="archive-title">Not a timeline.</h2>
+        </div>
+        <p class="browser-heading-note">Use a tag to find the current running thread through the archive. Every card offers a line from the piece itself.</p>
+      </div>
+      <div class="tag-nav" id="tag-nav" aria-label="Filter writing" role="toolbar">
+        <button class="tag-filter is-active" type="button" data-tag="all" aria-pressed="true">All pieces</button>
+        <button class="tag-filter" type="button" data-tag="essay" aria-pressed="false">Essay</button>
+        <button class="tag-filter" type="button" data-tag="roadtrip" aria-pressed="false">Roadtrip</button>
+        <button class="tag-filter" type="button" data-tag="people" aria-pressed="false">People</button>
+        <button class="tag-filter" type="button" data-tag="poem" aria-pressed="false">Poem</button>
+      </div>
+      <div class="results-toolbar" aria-live="polite">
+        <p><span id="results-count">{len(entries)} pieces</span> <span aria-hidden="true">/</span> <span id="results-range">1–{min(20, len(entries))} of {len(entries)}</span></p>
+        <p id="page-label">Page 1 of {page_count}</p>
+      </div>
+      <div class="story-grid" id="story-grid" tabindex="-1">
+{initial_cards}
+      </div>
+      <p class="empty-state" id="empty-state" hidden>No pieces carry this tag yet.</p>
+      <nav class="pagination" id="pagination" aria-label="Writing pagination">
+        <button class="pagination-link" type="button" data-page="0" disabled>Previous</button>
+        {pagination_links}
+        <button class="pagination-link" type="button" data-page="2">Next</button>
+      </nav>
+      <noscript><p class="archive-note">Turn on JavaScript to filter the archive and move between pages. The first twenty pieces are shown above.</p></noscript>
+    </section>
     {pages_section}
   </main>
   <footer class="site-footer"><span>2N <span aria-hidden="true">/</span> Eva Huang</span><a href="/">Portfolio <span aria-hidden="true">↗</span></a></footer>
-</div>'''
+</div>
+<script id="writing-data" type="application/json">{data_json}</script>
+<script src="/writing/archive.js" defer></script>'''
     return html_document(site_title, site_title, "/writing/", body)
-
 def render_post(site_title: str, item: ET.Element, route: str, content: str, reusable_blocks: dict[str, str], url_routes: dict[str, str], id_routes: dict[str, str], local_media: dict[str, str]) -> str:
     title = html.unescape(field(item, "title", "Untitled"))
     date, _, _ = date_parts(item)
     expanded = expand_reusable_blocks(content, reusable_blocks)
     rewritten = rewrite_html_urls(expanded, url_routes, id_routes, local_media)
-    tags = render_categories(categories_for(item))
+    tags = render_categories(writing_tags(item))
     body = f'''<a class="skip-link" href="#article-content">Skip to article</a>
 <div class="shell">
   {header(site_title)}
