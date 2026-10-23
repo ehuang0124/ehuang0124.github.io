@@ -394,9 +394,12 @@ def html_document(title: str, site_title: str, canonical: str, body: str, extra_
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#F4F0E5">
   <meta property="og:title" content="{safe_title}">
   <link rel="canonical" href="{safe_canonical}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/writing/style.css">
   <title>{document_title}</title>
 {extra_head_markup}</head>
@@ -409,8 +412,15 @@ def html_document(title: str, site_title: str, canonical: str, body: str, extra_
 
 def header(site_title: str, home_label: str = "Eva Huang") -> str:
     return f'''<header class="site-header">
-  <a class="brand" href="/writing/">{html.escape(site_title)}</a>
-  <a class="portfolio-link" href="/">{html.escape(home_label)} <span aria-hidden="true">↗</span></a>
+  <a class="brand" href="/writing/" aria-label="2N — Eva Huang, 黃樂恩">
+    <img class="brand-mark" src="/writing/assets/2n-mark.svg" alt="" width="72" height="72" decoding="async">
+    <span class="brand-copy">
+      <span class="brand-name">{html.escape(home_label)}</span>
+      <span class="brand-subname">黃樂恩 <span aria-hidden="true">·</span> 2N</span>
+    </span>
+  </a>
+  <p class="site-tagline"><span>Candid.</span><span>Curious.</span><span>Independent.</span></p>
+  <a class="portfolio-link" href="/">Portfolio <span aria-hidden="true">↗</span></a>
 </header>'''
 
 
@@ -460,35 +470,106 @@ def expand_reusable_blocks(content: str, reusable_blocks: dict[str, str], depth:
     return social_link.sub(replace_social_link, expanded)
 
 
+def first_prose_block(content: str) -> str:
+    # Extract existing article copy rather than creating a new editorial blurb.
+    source = re.sub(r"<!--.*?-->", "", content or "", flags=re.DOTALL)
+    block_pattern = re.compile(r"<(p|pre)\b[^>]*>(.*?)</\1\s*>", re.IGNORECASE | re.DOTALL)
+    for match in block_pattern.finditer(source):
+        text = re.sub(r"<br\s*/?>", "\n", match.group(2), flags=re.IGNORECASE)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = html.unescape(text).replace("\xa0", " ")
+        paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n+", text)]
+        for paragraph in paragraphs:
+            if paragraph:
+                return paragraph
+    return ""
+
+
 def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: list[tuple[ET.Element, str]], attachment_urls: dict[str, str], local_media: dict[str, str]) -> str:
     ordered_posts = sorted(posts, key=lambda pair: (field(pair[0], "wp:post_date"), int(field(pair[0], "wp:post_id", "0") or 0)), reverse=True)
     grouped: dict[str, list[tuple[ET.Element, str]]] = defaultdict(list)
     for item, route in ordered_posts:
-        date, year, _ = date_parts(item)
+        _, year, _ = date_parts(item)
         grouped[year].append((item, route))
 
+    latest_item, latest_route = ordered_posts[0] if ordered_posts else (None, "/writing/")
+    latest_title = html.unescape(field(latest_item, "title", "Untitled")) if latest_item is not None else site_title
+    latest_date = date_parts(latest_item)[0] if latest_item is not None else ""
+    latest_categories = categories_for(latest_item) if latest_item is not None else []
+    latest_category = latest_categories[0] if latest_categories else ""
+    latest_excerpt = first_prose_block(field(latest_item, "content:encoded")) if latest_item is not None else ""
+    latest_meta = f'<span class="meta-separator" aria-hidden="true"></span><span>{html.escape(latest_category)}</span>' if latest_category else ""
+    latest_excerpt_markup = f'<p class="latest-excerpt">{html.escape(latest_excerpt)}</p>' if latest_excerpt else ""
+    latest_markup = f'''<section class="latest-story" aria-labelledby="latest-title">
+  <p class="section-label"><span>01 /</span> Latest</p>
+  <p class="story-meta"><time datetime="{html.escape(latest_date, quote=True)}">{html.escape(latest_date)}</time>{latest_meta}</p>
+  <h1 id="latest-title">{html.escape(latest_title)}</h1>
+  {latest_excerpt_markup}
+  <a class="reading-link" href="{html.escape(latest_route, quote=True)}"><span>Read more</span><span aria-hidden="true">→</span></a>
+</section>'''
+
+    featured_pair = next((pair for pair in ordered_posts if safe_slug(field(pair[0], "wp:post_name"), field(pair[0], "wp:post_id", "0")).casefold() == "brunswick-stew"), None)
+    if featured_pair is None and len(ordered_posts) > 1:
+        featured_pair = ordered_posts[1]
+    if featured_pair is not None:
+        featured_item, featured_route = featured_pair
+        featured_title = html.unescape(field(featured_item, "title", "Untitled"))
+        featured_date = date_parts(featured_item)[0]
+        featured_categories = categories_for(featured_item)
+        featured_label = featured_categories[0] if featured_categories else ""
+        featured_meta = f'{featured_date} <span aria-hidden="true">/</span> {html.escape(featured_label)}' if featured_label else featured_date
+        cover_markup = f'''<a class="cover-story" href="{html.escape(featured_route, quote=True)}" aria-label="{html.escape(featured_title, quote=True)}">
+  <img class="cover-image" src="/writing/assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
+  <span class="cover-caption">Roadside detail</span>
+  <span class="cover-copy">
+    <span class="cover-kicker">From the archive <span aria-hidden="true">·</span> {featured_meta}</span>
+    <span class="cover-title">{html.escape(featured_title)}</span>
+    <span class="cover-arrow" aria-hidden="true">↗</span>
+  </span>
+</a>'''
+    else:
+        cover_markup = ""
+
     groups: list[str] = []
-    for year in sorted(grouped, reverse=True):
+    for group_index, year in enumerate(sorted(grouped, reverse=True), start=1):
         cards: list[str] = []
         for item, route in grouped[year]:
             title = html.unescape(field(item, "title", "Untitled"))
             date, _, _ = date_parts(item)
+            categories = categories_for(item)
+            category = categories[0] if categories else ""
             image = item_thumbnail(item, attachment_urls, local_media)
-            media_markup = f'    <img class="post-image" src="{html.escape(image, quote=True)}" alt="" loading="lazy" decoding="async">\n' if image else ""
-            tags = render_categories(categories_for(item))
-            tags_markup = f"      {tags}\n" if tags else ""
-            cards.append(f'''<article class="post-card">
-  <a class="post-card-link" href="{html.escape(route, quote=True)}">
-{media_markup}    <div class="post-card-copy">
-      <time class="post-date" datetime="{html.escape(date, quote=True)}">{html.escape(date)}</time>
-      <h3>{html.escape(title)}</h3>
-{tags_markup}    </div>
+            image_markup = f'<img class="story-image" src="{html.escape(image, quote=True)}" alt="" loading="lazy" decoding="async">' if image else ""
+            category_markup = f'<span class="story-category">{html.escape(category)}</span>' if category else ""
+            image_line = f"    {image_markup}\n" if image_markup else ""
+            cards.append(f'''<article class="story-card{' has-image' if image else ''}">
+  <a class="story-card-link" href="{html.escape(route, quote=True)}">
+{image_line}    <span class="story-card-copy">
+      <span class="story-card-meta"><time datetime="{html.escape(date, quote=True)}">{html.escape(date)}</time>{category_markup}</span>
+      <span class="story-card-title">{html.escape(title)}</span>
+    </span>
+    <span class="story-card-arrow" aria-hidden="true">↗</span>
   </a>
 </article>''')
         groups.append(f'''<section class="year-section" aria-labelledby="year-{year}">
-  <div class="year-heading"><h2 id="year-{year}">{html.escape(year)}</h2><span aria-hidden="true"></span></div>
-  <div class="post-grid">{''.join(cards)}</div>
+  <header class="year-heading">
+    <h3 id="year-{year}"><span>{group_index:02d} /</span> {html.escape(year)}</h3>
+    <span class="year-count">{len(grouped[year]):02d} pieces</span>
+  </header>
+  <div class="story-grid">{''.join(cards)}</div>
 </section>''')
+
+    year_links = ''.join(f'<a href="#year-{year}">{html.escape(year)}</a>' for year in sorted(grouped, reverse=True))
+    archive_section = f'''<section class="archive-section" id="archive" aria-labelledby="archive-title">
+  <div class="archive-heading">
+    <div>
+      <p class="section-label"><span>02 /</span> Contents</p>
+      <h2 id="archive-title">Writing</h2>
+    </div>
+    <nav class="year-nav" aria-label="Browse by year">{year_links}</nav>
+  </div>
+  {''.join(groups)}
+</section>'''
 
     page_links: list[str] = []
     for item, route in sorted(pages, key=lambda pair: field(pair[0], "title").casefold()):
@@ -499,7 +580,7 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
     pages_section = ""
     if page_links:
         pages_section = f'''<section class="pages-section" aria-label="Pages">
-  <div class="year-heading"><h2>Pages</h2><span aria-hidden="true"></span></div>
+  <p class="section-label"><span>03 /</span> Pages</p>
   <div class="page-links">{''.join(page_links)}</div>
 </section>'''
 
@@ -507,15 +588,16 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
 <div class="shell">
   {header(site_title)}
   <main id="main" class="archive-main">
-    <div class="archive-kicker" aria-hidden="true"><span></span></div>
-    <h1 class="archive-title">{html.escape(site_title)}</h1>
-    {''.join(groups)}
+    <div class="lead-grid">
+      {latest_markup}
+      {cover_markup}
+    </div>
+    {archive_section}
     {pages_section}
   </main>
-  <footer class="site-footer"><a href="/">Eva Huang</a></footer>
+  <footer class="site-footer"><span>2N <span aria-hidden="true">/</span> Eva Huang</span><a href="/">Portfolio <span aria-hidden="true">↗</span></a></footer>
 </div>'''
     return html_document(site_title, site_title, "/writing/", body)
-
 
 def render_post(site_title: str, item: ET.Element, route: str, content: str, reusable_blocks: dict[str, str], url_routes: dict[str, str], id_routes: dict[str, str], local_media: dict[str, str]) -> str:
     title = html.unescape(field(item, "title", "Untitled"))

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">2N pencil mark</title>
+  <desc id="desc">A cream circle with 2N lettering inside a fern-green disc, crossed by a marigold pencil.</desc>
+  <circle cx="100" cy="100" r="94" fill="#3E614A"/>
+  <circle cx="100" cy="100" r="59" fill="#F4F0E5"/>
+  <text x="100" y="120" text-anchor="middle" fill="#252922" font-family="Georgia, 'Times New Roman', serif" font-size="53" font-weight="700" letter-spacing="-4">2N</text>
+  <g transform="rotate(42 153 48)">
+    <path d="M147 18h12v38h-12z" fill="#C59C32"/>
+    <path d="M147 56h12l-6 15z" fill="#8B6820"/>
+    <path d="M147 18h12l-6-9z" fill="#E8D095"/>
+    <path d="M153 18v38" fill="none" stroke="#F4F0E5" stroke-width="1.3" opacity=".65"/>
+    <path d="M149 24h8" stroke="#F4F0E5" stroke-width="1" opacity=".55"/>
+  </g>
+</svg>
