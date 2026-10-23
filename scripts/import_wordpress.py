@@ -436,12 +436,21 @@ def item_thumbnail(item: ET.Element, attachment_urls: dict[str, str], local_medi
     return local or original
 
 
-def html_document(title: str, site_title: str, canonical: str, body: str, extra_head: str = "") -> str:
+def html_document(
+    title: str,
+    site_title: str,
+    canonical: str,
+    body: str,
+    extra_head: str = "",
+    asset_prefix: str = "/writing/",
+) -> str:
     safe_title = html.escape(title, quote=True)
     safe_site = html.escape(site_title, quote=True)
     document_title = safe_title if title == site_title else f"{safe_title} | {safe_site}"
     extra_head_markup = f"  {extra_head}\n" if extra_head else ""
     safe_canonical = html.escape("https://ehuang0124.github.io" + canonical, quote=True)
+    asset_root = f"{asset_prefix}assets/" if asset_prefix else "assets/"
+    style_href = f"{asset_prefix}style.css" if asset_prefix else "style.css"
     return f'''<!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -450,12 +459,12 @@ def html_document(title: str, site_title: str, canonical: str, body: str, extra_
   <meta name="theme-color" content="#F4F0E5">
   <meta property="og:title" content="{safe_title}">
   <link rel="canonical" href="{safe_canonical}">
-  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
-  <link rel="apple-touch-icon" href="/writing/assets/2n-mark.svg">
+  <link rel="icon" type="image/svg+xml" href="{asset_root}2n-mark.svg">
+  <link rel="apple-touch-icon" href="{asset_root}2n-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/writing/style.css">
+  <link rel="stylesheet" href="{style_href}">
   <title>{document_title}</title>
 {extra_head_markup}</head>
 <body>
@@ -465,10 +474,11 @@ def html_document(title: str, site_title: str, canonical: str, body: str, extra_
 '''
 
 
-def header(site_title: str, home_label: str = "Eva Huang") -> str:
+def header(site_title: str, home_label: str = "Eva Huang", asset_prefix: str = "/writing/") -> str:
+    asset_root = f"{asset_prefix}assets/" if asset_prefix else "assets/"
     return f'''<header class="site-header">
   <a class="brand" href="/writing/" aria-label="2N — Eva Huang, 黃樂恩">
-    <img class="brand-mark" src="/writing/assets/2n-mark.svg" alt="" width="72" height="72" decoding="async">
+    <img class="brand-mark" src="{asset_root}2n-mark.svg" alt="" width="72" height="72" decoding="async">
     <span class="brand-copy">
       <span class="brand-name">{html.escape(home_label)}</span>
       <span class="brand-subname">黃樂恩 <span aria-hidden="true">·</span> 2N</span>
@@ -672,7 +682,7 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
     feature_markup = ""
     if featured:
         feature_markup = f'''<a class="feature-story" href="{html.escape(featured["path"], quote=True)}" aria-label="{html.escape(featured["title"], quote=True)}">
-        <img class="feature-image" src="/writing/assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
+        <img class="feature-image" src="assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
         <span class="feature-caption">Roadside detail</span>
         <span class="feature-copy">
           <span class="feature-kicker">Featured <span aria-hidden="true">·</span> Roadtrip essay <span aria-hidden="true">/</span> {html.escape(featured["date"])}</span>
@@ -685,12 +695,12 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
     initial_cards = "".join(card_markup(entry, index) for index, entry in enumerate(entries[:20], start=1))
     body = f'''<a class="skip-link" href="#main">Skip to main content</a>
 <div class="shell">
-  {header(site_title)}
+  {header(site_title, asset_prefix="")}
   <main id="main" class="archive-main">
     <section class="archive-intro" aria-labelledby="archive-intro-title">
       <div class="intro-copy">
         <p class="section-label"><span>01 /</span> Writing archive</p>
-        <h1 id="archive-intro-title">Writing, <em>in motion.</em></h1>
+        <h1 id="archive-intro-title">Writing</h1>
         <p class="archive-dek">Essays, poems, and notes about roads, people, and the places where they meet.</p>
         <p class="archive-note">Follow a feeling instead of a timeline. Browse by the shape of a piece: an essay on the road, an essay about people, or a poem.</p>
       </div>
@@ -701,7 +711,7 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
       <div class="browser-heading">
         <div class="browser-heading-copy">
           <p class="section-label"><span>02 /</span> Browse by tag</p>
-          <h2 id="archive-title">Not a timeline.</h2>
+          <h2 id="archive-title">Browse by tag.</h2>
         </div>
         <p class="browser-heading-note">Use a tag to find the current running thread through the archive. Every card offers a line from the piece itself.</p>
       </div>
@@ -732,8 +742,10 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
   <footer class="site-footer"><span>2N <span aria-hidden="true">/</span> Eva Huang</span><a href="/">Portfolio <span aria-hidden="true">↗</span></a></footer>
 </div>
 <script id="writing-data" type="application/json">{data_json}</script>
-<script src="/writing/archive.js" defer></script>'''
-    return html_document(site_title, site_title, "/writing/", body)
+<script src="archive.js" defer></script>'''
+    return html_document(site_title, site_title, "/writing/", body, asset_prefix="")
+
+
 def render_post(site_title: str, item: ET.Element, route: str, content: str, reusable_blocks: dict[str, str], url_routes: dict[str, str], id_routes: dict[str, str], local_media: dict[str, str]) -> str:
     title = html.unescape(field(item, "title", "Untitled"))
     date, _, _ = date_parts(item)
