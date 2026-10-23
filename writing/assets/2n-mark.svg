@@ -1,14 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
-  <title id="title">2N pencil mark</title>
-  <desc id="desc">A fern-green ring with 2N lettering and a marigold pencil crossing its upper-right edge.</desc>
-  <circle cx="100" cy="100" r="94" fill="#3E614A"/>
-  <circle cx="100" cy="100" r="59" fill="#F4F0E5"/>
-  <text x="100" y="126" text-anchor="middle" fill="#3E614A" font-family="IBM Plex Sans, Arial Narrow, Arial, sans-serif" font-size="61" font-weight="700" letter-spacing="-5">2N</text>
-  <g transform="translate(24 0) rotate(42 153 48)">
-    <path d="M147 18h12v38h-12z" fill="#C59C32"/>
-    <path d="M147 56h12l-6 15z" fill="#8B6820"/>
-    <path d="M147 18h12l-6-9z" fill="#E8D095"/>
-    <path d="M153 18v38" fill="none" stroke="#F4F0E5" stroke-width="1.3" opacity=".65"/>
-    <path d="M149 24h8" stroke="#F4F0E5" stroke-width="1" opacity=".55"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="mark-title mark-desc">
+  <title id="mark-title">2N mark</title>
+  <desc id="mark-desc">A fern-green ring opening at the upper right, the letters 2N set inside it, and a marigold pencil entering the opening.</desc>
+  <path d="M162.42 43.79A84.0 84.0 0 1 1 125.96 20.11L117.00 47.69A55.0 55.0 0 1 0 140.87 63.20Z" fill="#3E614A"/>
+  <g fill="#3E614A"><g transform="translate(55.50 147.00) scale(0.03835 -0.06456)"><path d="M953 0H95V200L489 701Q564 805 599.5 883.5Q635 962 635 1034Q635 1131 601.5 1186.0Q568 1241 505 1241Q436 1241 395.5 1177.0Q355 1113 355 997H71Q71 1131 126.5 1242.0Q182 1353 282.5 1414.5Q383 1476 510 1476Q705 1476 812.5 1368.5Q920 1261 920 1063Q920 940 860.5 813.5Q801 687 645 502L458 235H953Z"/></g><g transform="translate(96.41 147.00) scale(0.03835 -0.06456)"><path d="M1135 0H841L411 955V0H117V1456H411L842 500V1456H1135Z"/></g></g>
+  <g transform="translate(157 31) rotate(43)">
+    <path d="M-6.5 -22h13v6h-13z" fill="#C59C32"/>
+    <path d="M-6.5 -16h13v22h-13z" fill="#C59C32"/>
+    <path d="M-6.5 6h13l-6.5 12z" fill="#E8D095"/>
+    <path d="M-6.5 6h13v1.3h-13z" fill="#8B6820"/>
+    <path d="M-6.5 -18.4h13v1.3h-13z" fill="#8B6820" opacity=".5"/>
   </g>
 </svg>

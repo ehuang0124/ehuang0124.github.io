@@ -42,6 +42,9 @@ HAND_MAINTAINED = {
     "writing/style.css",
     "writing/archive.js",
     "writing/assets/2n-mark.svg",
+    "writing/assets/favicon-32.png",
+    "writing/assets/apple-touch-icon.png",
+    "writing/assets/icon-512.png",
     "writing/assets/forest-roadside-pickup.png",
 }
 
@@ -409,7 +412,7 @@ PEOPLE_TITLES = {
     "告別｜2021-06-08",
     "民生小孩 ｜20200721",
 }
-TAG_LABELS = {"essay": "Essay", "roadtrip": "Roadtrip", "people": "People", "poem": "Poem"}
+TAG_LABELS = {"essay": "散文", "roadtrip": "公路", "people": "人物", "poem": "詩"}
 
 
 def writing_tags(item: ET.Element) -> list[str]:
@@ -460,10 +463,12 @@ def html_document(
   <meta property="og:title" content="{safe_title}">
   <link rel="canonical" href="{safe_canonical}">
   <link rel="icon" type="image/svg+xml" href="{asset_root}2n-mark.svg">
-  <link rel="apple-touch-icon" href="{asset_root}2n-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="{asset_root}favicon-32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="{asset_root}icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="{asset_root}apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400..700&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{style_href}">
   <title>{document_title}</title>
 {extra_head_markup}</head>
@@ -474,18 +479,18 @@ def html_document(
 '''
 
 
-def header(site_title: str, home_label: str = "Eva Huang", asset_prefix: str = "/writing/") -> str:
+def header(site_title: str, home_label: str = "黃樂恩", asset_prefix: str = "/writing/") -> str:
     asset_root = f"{asset_prefix}assets/" if asset_prefix else "assets/"
     return f'''<header class="site-header">
-  <a class="brand" href="/writing/" aria-label="2N — Eva Huang, 黃樂恩">
+  <a class="brand" href="/writing/" aria-label="2N — 黃樂恩">
     <img class="brand-mark" src="{asset_root}2n-mark.svg" alt="" width="72" height="72" decoding="async">
     <span class="brand-copy">
       <span class="brand-name">{html.escape(home_label)}</span>
-      <span class="brand-subname">黃樂恩 <span aria-hidden="true">·</span> 2N</span>
+      <span class="brand-subname">Eva Huang <span aria-hidden="true">·</span> 2N</span>
     </span>
   </a>
   <p class="site-tagline"><span>Candid.</span><span>Curious.</span><span>Independent.</span></p>
-  <a class="portfolio-link" href="/">Portfolio <span aria-hidden="true">↗</span></a>
+  <a class="portfolio-link" href="/">作品集 <span aria-hidden="true">↗</span></a>
 </header>'''
 
 
@@ -497,7 +502,7 @@ def render_categories(labels: Iterable[str]) -> str:
         f'<span class="tag tag--{html.escape(label, quote=True)}">{html.escape(TAG_LABELS.get(label, label))}</span>'
         for label in values
     )
-    return f'<div class="category-list" aria-label="Tags">{tags}</div>'
+    return f'<div class="category-list" aria-label="文章題材">{tags}</div>'
 
 
 def expand_reusable_blocks(content: str, reusable_blocks: dict[str, str], depth: int = 0) -> str:
@@ -579,7 +584,7 @@ def first_prose_block(content: str) -> str:
 def teaser_from_content(content: str) -> str:
     text = re.sub(r"\s+", " ", first_prose_block(content)).strip()
     if not text:
-        return "A piece from the writing archive."
+        return "一篇收在書寫檔案裡的文章。"
     if len(text) <= 168:
         return text
     sentences = re.split(r"(?<=[。！？!?])\s*", text)
@@ -598,6 +603,27 @@ def teaser_from_content(content: str) -> str:
         selected = selected.rstrip(" ,，。；;") + "…"
     return selected
 
+FIRST_IMAGE_RE = re.compile(r"<img[^>]*>", re.IGNORECASE)
+
+
+def first_content_image(content: str, url_routes: dict[str, str], id_routes: dict[str, str], local_media: dict[str, str]) -> str | None:
+    """Return the first usable illustration inside a piece, localized when possible."""
+    for tag in FIRST_IMAGE_RE.findall(content):
+        src = re.search(r'src="([^"]+)"', tag, re.IGNORECASE)
+        if not src:
+            continue
+        url = html.unescape(src.group(1)).strip()
+        if not url or url.startswith("data:"):
+            continue
+        localized = local_asset_url(url, local_media)
+        if localized:
+            return localized
+        if SITE_HOSTS & {urlsplit(url).netloc}:
+            return url
+        continue
+    return None
+
+
 def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: list[tuple[ET.Element, str]], attachment_urls: dict[str, str], local_media: dict[str, str]) -> str:
     ordered_posts = sorted(
         posts,
@@ -614,6 +640,9 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
             "path": route,
             "tags": writing_tags(item),
             "excerpt": teaser_from_content(field(item, "content:encoded")),
+            "image": first_content_image(
+                field(item, "content:encoded"), url_routes, id_routes, local_media
+            ),
         })
 
     featured_pair = next(
@@ -641,12 +670,21 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
             f'<span class="tag tag--small tag--{html.escape(str(tag), quote=True)}">{html.escape(TAG_LABELS.get(str(tag), str(tag)))}</span>'
             for tag in entry["tags"]  # type: ignore[union-attr]
         )
-        return f'''<article class="story-card">
+        image = entry.get("image")
+        figure = ""
+        if image:
+            figure = f'''<figure class="story-card-figure">
+      <img class="story-card-image" src="{html.escape(str(image), quote=True)}" alt="" loading="lazy" decoding="async">
+      <figcaption class="story-card-figure-caption">原文附圖</figcaption>
+    </figure>'''
+        card_class = "story-card story-card--has-image" if image else "story-card"
+        return f'''<article class="{card_class}">
   <a class="story-card-link" href="{html.escape(str(entry["path"]), quote=True)}">
     <div class="story-card-topline">
       <span class="story-card-number">{index:02d}</span>
       <time datetime="{html.escape(str(entry["date"]), quote=True)}">{html.escape(str(entry["date"]))}</time>
     </div>
+    {figure}
     <h3 class="story-card-title">{html.escape(str(entry["title"]))}</h3>
     <p class="story-excerpt"><span class="quote-mark" aria-hidden="true">“</span>{html.escape(str(entry["excerpt"]))}</p>
     <div class="story-card-bottom">
@@ -675,17 +713,17 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
     pages_section = ""
     if page_links:
         pages_section = f'''<section class="pages-section" aria-label="Pages">
-  <p class="section-label"><span>03 /</span> Pages</p>
+  <p class="section-label"><span>03 /</span> 頁面</p>
   <div class="page-links">{"".join(page_links)}</div>
 </section>'''
 
     feature_markup = ""
     if featured:
         feature_markup = f'''<a class="feature-story" href="{html.escape(featured["path"], quote=True)}" aria-label="{html.escape(featured["title"], quote=True)}">
-        <img class="feature-image" src="assets/forest-roadside-pickup.png" alt="A red pickup on a forest roadside" decoding="async">
-        <span class="feature-caption">Roadside detail</span>
+        <img class="feature-image" src="assets/forest-roadside-pickup.png" alt="公路邊的樹林與一輛紅色小貨卡" decoding="async">
+        <span class="feature-caption">公路速寫</span>
         <span class="feature-copy">
-          <span class="feature-kicker">Featured <span aria-hidden="true">·</span> Roadtrip essay <span aria-hidden="true">/</span> {html.escape(featured["date"])}</span>
+          <span class="feature-kicker">精選 <span aria-hidden="true">·</span> 公路散文 <span aria-hidden="true">/</span> {html.escape(featured["date"])}</span>
           <span class="feature-title">{html.escape(featured["title"])}</span>
           <span class="feature-excerpt">{html.escape(featured["excerpt"])}</span>
           <span class="feature-arrow" aria-hidden="true">↗</span>
@@ -693,16 +731,16 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
       </a>'''
 
     initial_cards = "".join(card_markup(entry, index) for index, entry in enumerate(entries[:20], start=1))
-    body = f'''<a class="skip-link" href="#main">Skip to main content</a>
+    body = f'''<a class="skip-link" href="#main">跳至主要內容</a>
 <div class="shell">
   {header(site_title, asset_prefix="")}
   <main id="main" class="archive-main">
     <section class="archive-intro" aria-labelledby="archive-intro-title">
       <div class="intro-copy">
-        <p class="section-label"><span>01 /</span> Writing archive</p>
-        <h1 id="archive-intro-title">Writing</h1>
-        <p class="archive-dek">Essays, poems, and notes about roads, people, and the places where they meet.</p>
-        <p class="archive-note">Follow a feeling instead of a timeline. Browse by the shape of a piece: an essay on the road, an essay about people, or a poem.</p>
+        <p class="section-label"><span>01 /</span> 散文與詩</p>
+        <h1 id="archive-intro-title">寫字的人</h1>
+        <p class="archive-dek">散文、詩，還有一些長在公路邊上的筆記。寫移動中遇見的人，也寫人身上那條走不完的路。</p>
+        <p class="archive-note">這裡不照時間排，而照感覺排。順著一個念頭往下讀，你會走到同一題材的另一端——因此每一篇都留著幾句原本的句子，讓文章自己替你選路。</p>
       </div>
       {feature_markup}
     </section>
@@ -710,36 +748,36 @@ def render_archive(site_title: str, posts: list[tuple[ET.Element, str]], pages: 
     <section class="archive-browser" id="archive" aria-labelledby="archive-title">
       <div class="browser-heading">
         <div class="browser-heading-copy">
-          <p class="section-label"><span>02 /</span> Browse by tag</p>
-          <h2 id="archive-title">Browse by tag.</h2>
+          <p class="section-label"><span>02 /</span> 依題材閱讀</p>
+          <h2 id="archive-title">順著題材讀。</h2>
         </div>
-        <p class="browser-heading-note">Use a tag to find the current running thread through the archive. Every card offers a line from the piece itself.</p>
+        <p class="browser-heading-note">標籤不是分類，是同一條線上的幾個結。文章附圖者，圖也一併留在版面上。</p>
       </div>
-      <div class="tag-nav" id="tag-nav" aria-label="Filter writing" role="toolbar">
-        <button class="tag-filter is-active" type="button" data-tag="all" aria-pressed="true">All pieces</button>
-        <button class="tag-filter" type="button" data-tag="essay" aria-pressed="false">Essay</button>
-        <button class="tag-filter" type="button" data-tag="roadtrip" aria-pressed="false">Roadtrip</button>
-        <button class="tag-filter" type="button" data-tag="people" aria-pressed="false">People</button>
-        <button class="tag-filter" type="button" data-tag="poem" aria-pressed="false">Poem</button>
+      <div class="tag-nav" id="tag-nav" aria-label="依題材篩選" role="toolbar">
+        <button class="tag-filter is-active" type="button" data-tag="all" aria-pressed="true">全部文章</button>
+        <button class="tag-filter" type="button" data-tag="essay" aria-pressed="false">散文</button>
+        <button class="tag-filter" type="button" data-tag="roadtrip" aria-pressed="false">公路</button>
+        <button class="tag-filter" type="button" data-tag="people" aria-pressed="false">人物</button>
+        <button class="tag-filter" type="button" data-tag="poem" aria-pressed="false">詩</button>
       </div>
       <div class="results-toolbar" aria-live="polite">
-        <p><span id="results-count">{len(entries)} pieces</span> <span aria-hidden="true">/</span> <span id="results-range">1–{min(20, len(entries))} of {len(entries)}</span></p>
-        <p id="page-label">Page 1 of {page_count}</p>
+        <p><span id="results-count">{len(entries)} 篇</span> <span aria-hidden="true">/</span> <span id="results-range">第 1–{min(20, len(entries))} 篇，共 {len(entries)} 篇</span></p>
+        <p id="page-label">第 1 頁，共 {page_count} 頁</p>
       </div>
       <div class="story-grid" id="story-grid" tabindex="-1">
 {initial_cards}
       </div>
-      <p class="empty-state" id="empty-state" hidden>No pieces carry this tag yet.</p>
-      <nav class="pagination" id="pagination" aria-label="Writing pagination">
-        <button class="pagination-link" type="button" data-page="0" disabled>Previous</button>
+      <p class="empty-state" id="empty-state" hidden>這個題材下暫時沒有文章。</p>
+      <nav class="pagination" id="pagination" aria-label="文章分頁">
+        <button class="pagination-link" type="button" data-page="0" disabled>上一頁</button>
         {pagination_links}
-        <button class="pagination-link" type="button" data-page="2">Next</button>
+        <button class="pagination-link" type="button" data-page="2">下一頁</button>
       </nav>
-      <noscript><p class="archive-note">Turn on JavaScript to filter the archive and move between pages. The first twenty pieces are shown above.</p></noscript>
+      <noscript><p class="archive-note">請開啟 JavaScript 以篩選題材與翻頁；上方已列出最近二十篇。</p></noscript>
     </section>
     {pages_section}
   </main>
-  <footer class="site-footer"><span>2N <span aria-hidden="true">/</span> Eva Huang</span><a href="/">Portfolio <span aria-hidden="true">↗</span></a></footer>
+  <footer class="site-footer"><span>2N <span aria-hidden="true">/</span> 黃樂恩</span><a href="/">作品集 <span aria-hidden="true">↗</span></a></footer>
 </div>
 <script id="writing-data" type="application/json">{data_json}</script>
 <script src="archive.js" defer></script>'''
@@ -752,11 +790,11 @@ def render_post(site_title: str, item: ET.Element, route: str, content: str, reu
     expanded = expand_reusable_blocks(content, reusable_blocks)
     rewritten = rewrite_html_urls(expanded, url_routes, id_routes, local_media)
     tags = render_categories(writing_tags(item))
-    body = f'''<a class="skip-link" href="#article-content">Skip to article</a>
+    body = f'''<a class="skip-link" href="#article-content">跳至文章內容</a>
 <div class="shell">
   {header(site_title)}
   <main class="article-main" id="main">
-    <a class="back-link" href="/writing/" aria-label="Writing index"><span aria-hidden="true">←</span></a>
+    <a class="back-link" href="/writing/" aria-label="返回文章列表"><span aria-hidden="true">←</span></a>
     <article>
       <header class="article-head">
         <time class="post-date" datetime="{html.escape(date, quote=True)}">{html.escape(date)}</time>
@@ -776,11 +814,11 @@ def render_page(site_title: str, item: ET.Element, route: str, content: str, reu
     date, _, _ = date_parts(item)
     expanded = expand_reusable_blocks(content, reusable_blocks)
     rewritten = rewrite_html_urls(expanded, url_routes, id_routes, local_media)
-    body = f'''<a class="skip-link" href="#page-content">Skip to page</a>
+    body = f'''<a class="skip-link" href="#page-content">跳至頁面內容</a>
 <div class="shell">
   {header(site_title)}
   <main class="article-main" id="main">
-    <a class="back-link" href="/writing/" aria-label="Writing index"><span aria-hidden="true">←</span></a>
+    <a class="back-link" href="/writing/" aria-label="返回文章列表"><span aria-hidden="true">←</span></a>
     <article>
       <header class="article-head">
         <time class="post-date" datetime="{html.escape(date, quote=True)}">{html.escape(date)}</time>
