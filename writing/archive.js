@@ -20,10 +20,10 @@
 
   const pageSize = 20;
   const labels = {
-    essay: 'Essay',
-    roadtrip: 'Roadtrip',
-    people: 'People',
-    poem: 'Poem'
+    essay: '散文',
+    roadtrip: '公路',
+    people: '人物',
+    poem: '詩'
   };
 
   const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
@@ -57,14 +57,23 @@
     `<span class="tag${small ? ' tag--small' : ''} tag--${escapeHTML(tag)}">${escapeHTML(labels[tag] || tag)}</span>`
   )).join('');
 
+  const imageMarkup = (item) => {
+    if (!item.image) return '';
+    return `<figure class="story-card-figure">
+      <img class="story-card-image" src="${escapeHTML(item.image)}" alt="" loading="lazy" decoding="async">
+      <figcaption class="story-card-figure-caption">原文附圖</figcaption>
+    </figure>`;
+  };
+
   const cardMarkup = (item, index) => {
-    const excerpt = item.excerpt || 'A piece from the writing archive.';
-    return `<article class="story-card">
+    const excerpt = item.excerpt || '一篇收在書寫檔案裡的文章。';
+    return `<article class="story-card${item.image ? ' story-card--has-image' : ''}">
   <a class="story-card-link" href="${escapeHTML(item.path)}">
     <div class="story-card-topline">
       <span class="story-card-number">${String(index).padStart(2, '0')}</span>
       <time datetime="${escapeHTML(item.date)}">${escapeHTML(item.date)}</time>
     </div>
+    ${imageMarkup(item)}
     <h3 class="story-card-title">${escapeHTML(item.title)}</h3>
     <p class="story-excerpt"><span class="quote-mark" aria-hidden="true">“</span>${escapeHTML(excerpt)}</p>
     <div class="story-card-bottom">
@@ -88,11 +97,11 @@
     }
 
     const pages = [];
-    pages.push(paginationButton('Previous', page - 1, page === 1));
+    pages.push(paginationButton('上一頁', page - 1, page === 1));
     for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
       pages.push(paginationButton(String(pageNumber).padStart(2, '0'), pageNumber, false, pageNumber === page));
     }
-    pages.push(paginationButton('Next', page + 1, page === totalPages));
+    pages.push(paginationButton('下一頁', page + 1, page === totalPages));
     pagination.innerHTML = pages.join('');
     pagination.hidden = false;
   };
@@ -117,9 +126,9 @@
     grid.innerHTML = visible.map((item, index) => cardMarkup(item, start + index + 1)).join('');
     grid.hidden = visible.length === 0;
     emptyState.hidden = visible.length !== 0;
-    count.textContent = `${filtered.length} ${filtered.length === 1 ? 'piece' : 'pieces'}`;
-    range.textContent = visible.length ? `${start + 1}–${start + visible.length} of ${filtered.length}` : 'No pieces';
-    pageLabel.textContent = totalPages > 1 ? `Page ${page} of ${totalPages}` : 'One page';
+    count.textContent = `${filtered.length} 篇`;
+    range.textContent = visible.length ? `第 ${start + 1}–${start + visible.length} 篇，共 ${filtered.length} 篇` : '沒有文章';
+    pageLabel.textContent = totalPages > 1 ? `第 ${page} 頁，共 ${totalPages} 頁` : '僅一頁';
     renderPagination(page, totalPages);
 
     tagNav.querySelectorAll('[data-tag]').forEach((button) => {
@@ -144,6 +153,16 @@
     render();
     grid.focus({ preventScroll: true });
   });
+
+  grid.addEventListener('error', (event) => {
+    const image = event.target;
+    if (!image || image.tagName !== 'IMG') return;
+    const figure = image.closest('.story-card-figure');
+    const card = image.closest('.story-card');
+    figure?.remove();
+    card?.classList.remove('story-card--has-image');
+    card?.classList.add('story-card--no-image');
+  }, true);
 
   window.addEventListener('popstate', render);
   render();
