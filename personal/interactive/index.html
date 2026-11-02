@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Eva Huang 的互動與視覺化作品集，探索地圖、資料與故事。">
+  <title>Interactive Index — Eva Huang</title>
+  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+  <style>
+    :root { --ink:#191b19; --paper:#f2f0e9; --red:#d74d34; --line:#b7b8ae; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial,"Helvetica Neue","Noto Sans TC",sans-serif; }
+    a { color:inherit; }
+    a:focus-visible { outline:3px solid var(--red); outline-offset:5px; }
+    .shell { width:min(100% - 80px, 1500px); margin:auto; }
+    .header { border-bottom:1px solid var(--ink); }
+    .header-inner { min-height:83px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .brand { text-decoration:none; font-weight:800; font-size:19px; letter-spacing:-.06em; line-height:1.05; }
+    .brand span { display:block; font-size:9px; letter-spacing:.13em; font-weight:600; margin-top:5px; }
+    .nav { display:flex; align-items:center; gap:32px; font-size:12px; font-weight:700; }
+    .nav a { text-decoration:none; }
+    .nav a:hover { color:var(--red); }
+    .hero { padding:84px 0 73px; display:grid; grid-template-columns:1fr 1.9fr; gap:30px; }
+    .eyebrow, .section-label, .card-meta, .footer { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.11em; }
+    .eyebrow { display:flex; gap:10px; align-items:flex-start; padding-top:12px; }
+    .dot { width:9px; height:9px; flex:none; background:var(--red); border-radius:50%; margin-top:2px; }
+    h1 { font-size:clamp(70px, 10.8vw, 164px); letter-spacing:-.075em; line-height:.83; margin:0; font-weight:700; }
+    h1 span { color:var(--red); }
+    .intro { margin:35px 0 0; display:flex; justify-content:space-between; gap:24px; align-items:end; }
+    .intro p { font-size:15px; line-height:1.9; max-width:420px; margin:0; }
+    .intro .arrow { font-size:32px; font-weight:400; line-height:1; }
+    .section-head { border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:17px 0; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .section-head h2 { margin:0; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+    .section-head span { font-size:11px; }
+    .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:28px; }
+    .card { padding:28px 0 38px; border-bottom:1px solid var(--line); text-decoration:none; display:block; min-width:0; }
+    .card-meta { display:flex; justify-content:space-between; gap:15px; margin-bottom:13px; font-size:10px; }
+    .visual { height:clamp(240px, 29vw, 430px); overflow:hidden; position:relative; background:#ddd; }
+    .visual img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s ease; }
+    .card:hover .visual img { transform:scale(1.035); }
+    .visual-kyushu { background:#355c4c; color:#e4e9d7; }
+    .visual-kyushu svg, .visual-agile svg { width:100%; height:100%; display:block; }
+    .visual-label { position:absolute; left:24px; top:24px; font-size:10px; letter-spacing:.14em; font-weight:700; text-transform:uppercase; }
+    .visual-caption { position:absolute; left:24px; bottom:22px; font-family:Georgia,serif; font-size:clamp(24px,3vw,43px); line-height:1.1; }
+    .visual-agile { background:#e4a38c; color:#422a25; }
+    .visual-agile .visual-label { color:#422a25; }
+    .card-title { display:flex; align-items:start; justify-content:space-between; gap:20px; margin-top:20px; }
+    .card-title h3 { margin:0; font-size:clamp(23px,2.5vw,35px); line-height:1.12; letter-spacing:-.035em; }
+    .card-title .go { font-size:26px; line-height:1; transition:transform .2s; }
+    .card:hover .go { transform:translate(4px,-4px); }
+    .card p { margin:12px 0 0; max-width:510px; color:#555951; font-size:13px; line-height:1.8; }
+    .card:hover h3 { color:var(--red); }
+    .footer { margin-top:100px; padding:25px 0 35px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; line-height:1.8; }
+    .footer a { text-decoration:none; }
+    .footer a:hover { color:var(--red); }
+    @media(max-width:700px) {
+      .shell { width:calc(100% - 36px); }
+      .header-inner { min-height:70px; }
+      .nav { gap:17px; font-size:11px; }
+      .hero { display:block; padding:62px 0 50px; }
+      .eyebrow { margin-bottom:38px; }
+      h1 { font-size:clamp(64px, 15vw, 105px); }
+      .intro { margin-top:28px; }
+      .grid { grid-template-columns:1fr; }
+      .visual { height:65vw; max-height:390px; }
+      .card { padding:23px 0 30px; }
+      .footer { margin-top:65px; }
+    }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } * { transition:none !important; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="shell header-inner">
+      <a class="brand" href="/">EVA HUANG<span>INDEPENDENT INDEX</span></a>
+      <nav class="nav" aria-label="主要導覽">
+        <a href="#projects">Projects ↓</a>
+        <a href="/writing/">Writing ↗</a>
+        <a href="/">About ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="shell hero" aria-labelledby="page-title">
+      <div class="eyebrow"><span class="dot"></span> A collection by Eva Huang<br>Maps, data &amp; stories</div>
+      <div>
+        <h1 id="page-title">Interactive<br>Index<span>.</span></h1>
+        <div class="intro"><p>用地圖、資料與互動探索世界。<br>一個收集視覺化實驗與故事的地方。</p><span class="arrow" aria-hidden="true">↘</span></div>
+      </div>
+    </section>
+    <section class="shell" id="projects" aria-labelledby="projects-title">
+      <div class="section-head"><h2 id="projects-title">Selected projects / 作品索引</h2><span>01 — 04</span></div>
+      <div class="grid">
+        <a class="card" href="/personal/interactive/kyushu/">
+          <div class="card-meta"><span>01 / History &amp; geography</span><span>Interactive map</span></div>
+          <div class="visual visual-kyushu" aria-hidden="true">
+            <svg viewBox="0 0 700 420" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#c7d8bc" opacity=".36"><circle cx="440" cy="205" r="145"/><circle cx="440" cy="205" r="115"/><circle cx="440" cy="205" r="85"/><path d="M0 95H700M0 210H700M0 325H700M180 0V420M440 0V420M600 0V420"/></g><path d="M411 48l48 21 13 34-24 23 38 25-11 35 24 22-27 28 7 42-33 17-13 55-32 25-17-34-31-18 11-40-24-31 18-33-13-39 30-21 2-36z" fill="#d5dfc7" opacity=".92"/><path d="M386 130 Q450 166 422 213 T429 310" fill="none" stroke="#b5684d" stroke-width="3" stroke-dasharray="5 7"/><g fill="#b5684d" stroke="#f2f0e9" stroke-width="3"><circle cx="386" cy="130" r="7"/><circle cx="422" cy="213" r="7"/><circle cx="429" cy="310" r="7"/></g></svg>
+            <span class="visual-label">A journey through time</span><span class="visual-caption">Kyushu<br>九州</span>
+          </div>
+          <div class="card-title"><h3>幕末歷史與九州</h3><span class="go" aria-hidden="true">↗</span></div>
+          <p>沿著時間軸與互動地圖，走訪長崎、鹿兒島與宮崎的幕末維新歷史。</p>
+        </a>
+        <a class="card" href="/curvefinder/">
+          <div class="card-meta"><span>02 / Geospatial tools</span><span>GIS demo</span></div>
+          <div class="visual"><img src="/assets/curvefinder-arc-fit-graph.png" alt="道路中心線與擬合圓弧的視覺化圖表" loading="lazy"></div>
+          <div class="card-title"><h3>CurveFinder</h3><span class="go" aria-hidden="true">↗</span></div>
+          <p>將 LiDAR 道路中心線轉化為可檢視的曲率分析與 GIS 圖層。</p>
+        </a>
+        <a class="card" href="/living-building-mobility/">
+          <div class="card-meta"><span>03 / Mobility &amp; research</span><span>Spatial story</span></div>
+          <div class="visual"><img src="/assets/living-building-mobility-map.jpg" alt="Kendeda Building 周邊交通與空間研究地圖" loading="lazy"></div>
+          <div class="card-title"><h3>Living Building Mobility</h3><span class="go" aria-hidden="true">↗</span></div>
+          <p>結合 GIS、訪談與人物誌，探索人們如何抵達喬治亞理工學院的 Kendeda Building。</p>
+        </a>
+        <a class="card" href="/agile-health-scope-movement/">
+          <div class="card-meta"><span>04 / Data &amp; process</span><span>Interactive analysis</span></div>
+          <div class="visual visual-agile" aria-hidden="true"><svg viewBox="0 0 700 420" preserveAspectRatio="xMidYMid slice"><g stroke="#643d35" opacity=".25"><path d="M0 95H700M0 175H700M0 255H700M0 335H700"/></g><g fill="#653d35"><rect x="295" y="215" width="45" height="120"/><rect x="360" y="145" width="45" height="190"/><rect x="425" y="185" width="45" height="150"/><rect x="490" y="100" width="45" height="235"/><rect x="555" y="165" width="45" height="170"/></g><path d="M318 195L382 123 447 164 512 78 577 143" fill="none" stroke="#f8e7d7" stroke-width="3"/><g fill="#f8e7d7"><circle cx="318" cy="195" r="5"/><circle cx="382" cy="123" r="5"/><circle cx="447" cy="164" r="5"/><circle cx="512" cy="78" r="5"/><circle cx="577" cy="143" r="5"/></g></svg><span class="visual-label">Six sprints / A closer look</span><span class="visual-caption">Scope<br>in motion.</span></div>
+          <div class="card-title"><h3>Why Scope Moved Mid-sprint</h3><span class="go" aria-hidden="true">↗</span></div>
+          <p>透過互動分析，理解六個已完成的 sprint 中工作範圍變動的原因。</p>
+        </a>
+      </div>
+    </section>
+  </main>
+  <footer class="shell footer"><span>Eva Huang © Interactive Index</span><a href="/">Back to main site ↗</a></footer>
+</body>
+</html>
