@@ -40,7 +40,8 @@
     .visual img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s ease; }
     .card:hover .visual img { transform:scale(1.035); }
     .visual-kyushu { background:#355c4c; color:#e4e9d7; }
-    .visual-kyushu svg, .visual-agile svg { width:100%; height:100%; display:block; }
+    .visual-eastjapan { background:#33415e; color:#e8e4d4; }
+    .visual-kyushu svg, .visual-eastjapan svg, .visual-agile svg { width:100%; height:100%; display:block; }
     .visual-label { position:absolute; left:24px; top:24px; font-size:10px; letter-spacing:.14em; font-weight:700; text-transform:uppercase; }
     .visual-caption { position:absolute; left:24px; bottom:22px; font-family:Georgia,serif; font-size:clamp(24px,3vw,43px); line-height:1.1; }
     .visual-agile { background:#e4a38c; color:#422a25; }
@@ -90,7 +91,7 @@
       </div>
     </section>
     <section class="shell" id="projects" aria-labelledby="projects-title">
-      <div class="section-head"><h2 id="projects-title">Selected projects / 作品索引</h2><span>01 — 04</span></div>
+      <div class="section-head"><h2 id="projects-title">Selected projects / 作品索引</h2><span>01 — 05</span></div>
       <div class="grid">
         <a class="card" href="/personal/interactive/kyushu/">
           <div class="card-meta"><span>01 / History &amp; geography</span><span>Interactive map</span></div>
@@ -101,20 +102,29 @@
           <div class="card-title"><h3>幕末歷史與九州</h3><span class="go" aria-hidden="true">↗</span></div>
           <p>沿著時間軸與互動地圖，走訪長崎、鹿兒島與宮崎的幕末維新歷史。</p>
         </a>
+        <a class="card" href="/personal/interactive/east-japan/">
+          <div class="card-meta"><span>02 / History &amp; geography</span><span>Interactive map</span></div>
+          <div class="visual visual-eastjapan" aria-hidden="true">
+            <svg viewBox="0 0 700 420" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#9fb2d8" opacity=".3"><circle cx="520" cy="90" r="120"/><circle cx="520" cy="90" r="90"/><circle cx="520" cy="90" r="60"/><path d="M0 105H700M0 210H700M0 315H700M120 0V420M300 0V420M480 0V420M620 0V420"/></g><path d="M690 15 C610 55 645 125 560 158 C480 190 505 248 420 260 C335 272 300 330 185 352 C120 365 55 385 5 408 L5 420 L690 420 Z" fill="#d8deeb" opacity=".92"/><path d="M640 62 Q560 130 470 176 T300 252 T118 342" fill="none" stroke="#d98a6a" stroke-width="3" stroke-dasharray="5 7"/><g fill="#d98a6a" stroke="#33415e" stroke-width="3"><circle cx="640" cy="62" r="7"/><circle cx="470" cy="176" r="7"/><circle cx="300" cy="252" r="7"/><circle cx="118" cy="342" r="7"/></g></svg>
+            <span class="visual-label">Bakumatsu trail</span><span class="visual-caption">East Japan<br>東日本</span>
+          </div>
+          <div class="card-title"><h3>幕末歷史與東日本</h3><span class="go" aria-hidden="true">↗</span></div>
+          <p>沿著 12/6–12/17 的旅程、時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新故事。</p>
+        </a>
         <a class="card" href="/curvefinder/">
-          <div class="card-meta"><span>02 / Geospatial tools</span><span>GIS demo</span></div>
+          <div class="card-meta"><span>03 / Geospatial tools</span><span>GIS demo</span></div>
           <div class="visual"><img src="/assets/curvefinder-arc-fit-graph.png" alt="道路中心線與擬合圓弧的視覺化圖表" loading="lazy"></div>
           <div class="card-title"><h3>CurveFinder</h3><span class="go" aria-hidden="true">↗</span></div>
           <p>將 LiDAR 道路中心線轉化為可檢視的曲率分析與 GIS 圖層。</p>
         </a>
         <a class="card" href="/living-building-mobility/">
-          <div class="card-meta"><span>03 / Mobility &amp; research</span><span>Spatial story</span></div>
+          <div class="card-meta"><span>04 / Mobility &amp; research</span><span>Spatial story</span></div>
           <div class="visual"><img src="/assets/living-building-mobility-map.jpg" alt="Kendeda Building 周邊交通與空間研究地圖" loading="lazy"></div>
           <div class="card-title"><h3>Living Building Mobility</h3><span class="go" aria-hidden="true">↗</span></div>
           <p>結合 GIS、訪談與人物誌，探索人們如何抵達喬治亞理工學院的 Kendeda Building。</p>
         </a>
         <a class="card" href="/agile-health-scope-movement/">
-          <div class="card-meta"><span>04 / Data &amp; process</span><span>Interactive analysis</span></div>
+          <div class="card-meta"><span>05 / Data &amp; process</span><span>Interactive analysis</span></div>
           <div class="visual visual-agile" aria-hidden="true"><svg viewBox="0 0 700 420" preserveAspectRatio="xMidYMid slice"><g stroke="#643d35" opacity=".25"><path d="M0 95H700M0 175H700M0 255H700M0 335H700"/></g><g fill="#653d35"><rect x="295" y="215" width="45" height="120"/><rect x="360" y="145" width="45" height="190"/><rect x="425" y="185" width="45" height="150"/><rect x="490" y="100" width="45" height="235"/><rect x="555" y="165" width="45" height="170"/></g><path d="M318 195L382 123 447 164 512 78 577 143" fill="none" stroke="#f8e7d7" stroke-width="3"/><g fill="#f8e7d7"><circle cx="318" cy="195" r="5"/><circle cx="382" cy="123" r="5"/><circle cx="447" cy="164" r="5"/><circle cx="512" cy="78" r="5"/><circle cx="577" cy="143" r="5"/></g></svg><span class="visual-label">Six sprints / A closer look</span><span class="visual-caption">Scope<br>in motion.</span></div>
           <div class="card-title"><h3>Why Scope Moved Mid-sprint</h3><span class="go" aria-hidden="true">↗</span></div>
           <p>透過互動分析，理解六個已完成的 sprint 中工作範圍變動的原因。</p>

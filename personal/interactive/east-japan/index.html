@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幕末歷史與東日本</title>
+<meta name="theme-color" content="#162e2a">
+<meta name="description" content="幕末歷史與東日本：沿著 12/6–12/17 的旅程、時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新景點。">
+<link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--text);background:var(--cream);font-family:'Noto Sans TC',"PingFang TC","Microsoft JhengHei",sans-serif}
+button,a{font:inherit}
+button{cursor:pointer}
+.serif{font-family:'Noto Serif TC',"Songti TC",serif}
+
+/* ===== 頂部幕末歷史圖片 ===== */
+.hero{position:relative;background:#183a34;min-height:min(72vh,620px);display:flex;align-items:flex-end;overflow:hidden}
+.hero-photo{position:absolute;inset:0}
+.hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-photo:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,28,24,.30) 0%,rgba(14,28,24,.12) 34%,rgba(10,22,19,.90) 100%)}
+.hero-inner{position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto;padding:0 24px 54px}
+.hero h1{font-size:clamp(36px,6vw,74px);line-height:1.24;margin:0 0 14px;font-weight:500;color:#f7f2e3;text-shadow:0 2px 24px rgba(0,0,0,.45)}
+.hero p{font-size:15px;line-height:2;color:#e6ece1;max-width:780px;margin:0;text-shadow:0 1px 12px rgba(0,0,0,.5)}
+.hero .metrics{display:flex;gap:34px;margin-top:28px;flex-wrap:wrap}
+.metric b{font-size:20px;display:block;font-family:'Noto Serif TC',serif;color:#f6efdd}
+.metric span{color:#cdd8ca;font-size:11px}
+.hero-credit{position:absolute;right:12px;bottom:10px;z-index:3;color:#e8e8e8;background:rgba(0,0,0,.42);font-size:10px;padding:3px 7px;border-radius:3px}
+
+/* ===== 導覽 ===== */
+.wrap{max-width:1300px;margin:auto;padding:0 24px}
+.intro{padding:40px 0 22px}
+.intro p{color:#667369;font-size:13px;line-height:1.9;margin:0;max-width:860px}
+.intro a{color:var(--green);font-weight:600}
+
+/* ===== 時間軸（在地圖上方） ===== */
+.timeline-panel{background:var(--paper);border:1px solid #e8e4d9;border-radius:12px;overflow:hidden;margin-bottom:24px}
+.timeline-scroll{padding:8px 20px 22px}
+.period{font-size:11px;letter-spacing:.12em;color:#9b8d73;margin:20px 10px 12px;font-weight:700}
+.event{width:100%;background:transparent;border:0;display:grid;grid-template-columns:104px 26px 1fr;text-align:left;padding:0;position:relative;color:inherit}
+.event .year{font-family:'Noto Serif TC',serif;color:#8a826e;padding-top:21px;text-align:right;padding-right:16px;font-size:15px}
+.event .stem{position:relative;display:flex;justify-content:center}
+.event .stem:before{content:'';position:absolute;top:0;bottom:0;width:1px;background:#d9d9ce}
+.event:first-of-type .stem:before{top:30px}
+.event .dot{background:#fefcf6;border:2px solid var(--gold);width:12px;height:12px;border-radius:50%;margin-top:26px;z-index:1}
+.event .event-body{margin:5px 5px 6px;padding:13px 16px;border-radius:9px;transition:.2s;border:1px solid transparent}
+.event:hover .event-body{background:#f7f2e6}
+.event.active .event-body{background:#eef3eb;border-color:#bacdbd}
+.event.active .dot{background:var(--green2);border-color:var(--green2);box-shadow:0 0 0 4px #d9e5d9}
+.event h4{font-size:16px;margin:0 0 5px;font-weight:600}
+.event .sub{font-size:12px;line-height:1.8;color:#7b8176}
+.date-pill{color:#99694c;font-size:11px;font-weight:700;margin-top:8px;display:inline-block}
+
+/* ===== 地圖 ===== */
+.map-panel{background:var(--paper);border:1px solid #e8e4d9;border-radius:12px;overflow:hidden}
+.map-head{display:flex;align-items:center;justify-content:space-between;padding:18px 23px 13px;gap:12px;flex-wrap:wrap}
+.map-actions{display:flex;gap:8px;flex-wrap:wrap}
+.map-actions button{background:#fff;border:1px solid #d8dbd0;color:#58665b;border-radius:100px;padding:8px 12px;font-size:11px}
+.map-actions button.active{background:var(--green);color:white;border-color:var(--green)}
+.map-head a.gbtn{border:1px solid var(--green);background:var(--green);color:#fff;border-radius:100px;padding:9px 14px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap}
+.map-head a.gbtn:hover{background:var(--green2);border-color:var(--green2)}
+.map-hint{font-size:11px;color:#9aa298}
+.map-body{display:grid;grid-template-columns:1fr;border-top:1px solid #eceae0}
+#map{position:relative;height:min(60vh,580px);background:var(--sea);overflow:hidden}
+#map svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#map svg.dragging{cursor:grabbing}
+.land{fill:#f2eddf;stroke:#bcc7b4;stroke-width:1.1}
+.land-shadow{fill:none;stroke:rgba(90,120,105,.18);stroke-width:7}
+.sea-label{fill:#93aaa8;font-size:19px;letter-spacing:.42em;font-family:'Noto Serif TC',serif}
+.pref-label{fill:#b0a897;font-size:17px;letter-spacing:.18em;font-family:'Noto Serif TC',serif}
+.route{fill:none;stroke:#ae7655;stroke-width:2.6;stroke-dasharray:7 8;stroke-linecap:round;opacity:.85}
+.mk{cursor:pointer}
+.mk .ring{fill:rgba(25,58,51,.12);stroke:rgba(25,58,51,.35);stroke-width:1.4;transition:.25s}
+.mk .core{fill:var(--green);stroke:#fff;stroke-width:2;transition:.25s}
+.mk .mlabel{font-family:'Noto Sans TC',sans-serif;font-size:19px;font-weight:700;fill:#25453c;paint-order:stroke;stroke:#fffdf8;stroke-width:5px;stroke-linejoin:round}
+.mk:hover .ring{fill:rgba(25,58,51,.2)}
+.mk.active .ring{fill:rgba(172,101,73,.2);stroke:rgba(172,101,73,.6)}
+.mk.active .core{fill:var(--terra)}
+.mk.active .mlabel{fill:#8c4f36}
+.mk .count{fill:#fffdf8;font-size:12px;font-weight:700;font-family:'Noto Sans TC',sans-serif}
+.compass{fill:#8aa09b;font-size:13px;font-family:'Noto Serif TC',serif}
+.fuji{fill:#8aa09b;font-size:12px;font-family:'Noto Serif TC',serif}
+.map-zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
+.map-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid #cfd6c9;background:#fffdf8;color:#3d534a;font-size:16px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.map-zoom button:hover{background:#eef2ea}
+.map-badge{position:absolute;left:14px;bottom:14px;background:rgba(255,253,248,.92);border:1px solid #d9ddcf;border-radius:8px;padding:6px 10px;font-size:10px;color:#6d7a6f;line-height:1.6}
+.map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:#5c6f63;font-size:13px;line-height:1.9}
+
+.map-side{border-top:1px solid #eceae0;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);min-width:0}
+.photo{width:100%;height:320px;flex:0 0 auto;background:linear-gradient(135deg,#637f70,#d7c4a9);display:flex;align-items:center;justify-content:center;color:white;font:22px 'Noto Serif TC',serif;position:relative;overflow:hidden;border-right:1px solid #eceae0}
+.photo img{width:100%;height:100%;object-fit:cover}
+.photo .credit{position:absolute;bottom:5px;right:8px;color:white;background:#0008;font-size:9px;padding:3px 5px;border-radius:3px}
+
+.detail{padding:22px 25px 26px;min-height:180px}
+.detail .micro{font-size:11px;color:#a86e51;letter-spacing:.08em;font-weight:700}
+.detail h3{font:600 25px 'Noto Serif TC',serif;margin:9px 0}
+.detail p{color:#55645b;line-height:1.95;font-size:13px;margin:8px 0}
+.detail p a{color:var(--green);font-weight:600}
+.detail .linkrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.linkrow a,.linkrow button{border:1px solid #c7d0c3;border-radius:6px;padding:9px 12px;text-decoration:none;color:var(--green);font-size:12px;background:#f9fbf6;cursor:pointer}
+.linkrow a:hover{background:#e9f1e8}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 4px}
+.chips button{border:1px solid #d5dccf;background:#fbfcf8;color:#5b6b60;border-radius:100px;padding:6px 11px;font-size:11px}
+.chips button.on{background:var(--green);border-color:var(--green);color:#fff}
+
+.footer{background:#193a33;color:#e6eadf;padding:30px 24px;text-align:center;font-size:12px;margin-top:56px;line-height:1.9}
+.footer a{color:#efdeba}
+
+@media(max-width:980px){
+  .map-side{grid-template-columns:1fr}
+  .photo{height:240px;border-right:0;border-bottom:1px solid #eceae0}
+  #map{height:min(58vh,520px)}
+}
+@media(max-width:850px){
+  #map{height:min(56vh,460px)}
+  .hero{min-height:56vh}
+}
+@media(max-width:480px){
+  .hero h1{font-size:38px}
+  #map{height:420px}
+  .event{grid-template-columns:78px 22px 1fr}
+  .event h4{font-size:14px}
+  .event .year{font-size:13px}
+  .map-head{padding:16px}
+  .photo{height:200px}
+  .map-badge{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末時代的江戶與黑船" decoding="async"></div>
+  <div class="hero-inner">
+    <h1 class="serif">幕末歷史與東日本</h1>
+    <p>從東京江戶城的櫻田門外之變與無血開城，到下田的黑船與神奈川條約、靜岡駿府城的大政奉還——沿著 12/6–12/17 的東日本旅程，跟著時間軸走進幕末那段風雨年代，地圖會帶你找到每一個故事真正發生的地方。</p>
+    <div class="metrics">
+      <div class="metric"><b>12/6 – 12/17</b><span>東日本旅程日期</span></div>
+      <div class="metric"><b>15 個</b><span>歷史與文化事件</span></div>
+      <div class="metric"><b>東京 → 志摩</b><span>地圖互動探索</span></div>
+    </div>
+  </div>
+  <div class="hero-credit" id="hero-credit" style="display:none">圖片來源：Wikimedia Commons</div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <p>歷史依年代排序，時間軸在上、地圖在下；每個事件標註了這趟旅程的實際日期（📍 後方）。點選時間軸上的任何事件，地圖就會移動到對應的景點；也可以直接點擊地圖上的標記，反過來閱讀那段歷史。每個景點都能一鍵在 Google 地圖開啟。12/17 抵達博多之後，故事接續到 <a href="/personal/interactive/kyushu/">「幕末歷史與九州」</a>。</p>
+  </div>
+
+  <section class="timeline-panel" aria-label="東日本歷史時間軸">
+    <div class="timeline-scroll" id="timeline"></div>
+  </section>
+
+  <aside class="map-panel">
+    <div class="map-head">
+      <div class="map-actions">
+        <button id="all-map" class="active">全部景點</button>
+        <button id="route-map">旅行路線</button>
+        <button id="reset-map">重設視角</button>
+      </div>
+      <a class="gbtn" id="gmaps-here" href="#" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟此景點 ↗</a>
+    </div>
+
+    <div class="map-body">
+      <div id="map" aria-label="東日本歷史景點互動地圖">
+        <div class="map-fallback" id="map-fallback"></div>
+        <div class="map-zoom">
+          <button id="zoom-in" aria-label="放大">＋</button>
+          <button id="zoom-out" aria-label="縮小">－</button>
+        </div>
+        <div class="map-badge">內嵌向量圖資（Natural Earth）· 離線可顯示 · 可拖曳／縮放<br>景點可連結至 Google 地圖</div>
+      </div>
+      <div class="map-side">
+        <div class="photo" id="photo">歷史景點圖片</div>
+        <div class="detail" id="detail"></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer class="footer" id="sources">
+  歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
+  地圖為內嵌向量圖資（Natural Earth 10m），離線也能正常顯示；「在 Google 地圖開啟景點」會另開 Google 地圖頁面。照片由 Wikimedia Commons 自動取得，需連網載入。<br>
+  <a href="/personal/interactive/">← 互動作品索引</a> · <a href="/personal/interactive/kyushu/">接續：幕末歷史與九州 ↗</a>
+</footer>
+
+<script>
+const events=[
+{id:'ise',year:'神話時代',era:'神話與信仰',title:'伊勢神宮：天照大神的居所',where:'伊勢・三重',date:'12/15 · 上勢（伊勢神宮）',spot:'伊勢神宮・內宮',lat:34.4551,lng:136.6979,brief:'日本信仰的中心，也是幕末群眾狂熱的發源地。',story:'伊勢神宮祭祀天照大神，長久以來被視為日本精神文化的中心。到了幕末慶應3年（1867年），「御札從伊勢神宮從天而降」的傳說引發全國性的歌舞狂熱——這股民眾能量，正是幕府統治走向終結的徵兆之一。12/15 的行程安排在上勢參拜伊勢神宮，正好站在這個故事的原點。',query:'Ise Grand Shrine Naiku inner shrine torii',wp:'Ise Grand Shrine'},
+{id:'atetsu',year:'神話時代',era:'神話與信仰',title:'熱田神宮：草薙劍的棲息地',where:'名古屋',date:'12/12 · 名古屋',spot:'熱田神宮',lat:35.1263,lng:136.9066,brief:'相傳鎮座三種神器之一的草薙劍，與尾張德川家的歷史緊密相連。',story:'熱田神宮相傳供奉著三種神器之一的草薙劍，是尾張地區最重要的信仰中心。尾張藩為德川御三家之首，熱田神宮與藩的權力運作關係密切。12/12 的名古屋行程中，熱田神宮可以從「地方信仰與藩權力」的角度，理解江戶時代尾張的社會樣貌。',query:'Atsuta Shrine main hall Nagoya',wp:'Atsuta Shrine'},
+{id:'inuyama',year:'1440頃',era:'江戶時代・德川的權力',title:'犬山城：木曾川邊的國寶天守',where:'犬山',date:'12/13 · 犬山城・城下町',spot:'犬山城',lat:35.3896,lng:136.9394,brief:'現存最古老的木造天守之一，俯瞰木曾川與尾張平原。',story:'犬山城天守是現存十二座天守中最古老的木造建築。江戶時代犬山由尾張藩的重臣成瀨氏統治；12/13 的行程從名古屋取車前往犬山城與城下町，走進御三家尾張藩的支城風景。保存下來的城下町街道，也是理解江戶時代地方統治的窗口。',query:'Inuyama Castle keep tower Kiso river',wp:'Inuyama Castle'},
+{id:'nagoya',year:'1612',era:'江戶時代・德川的權力',title:'名古屋城：家康賜予尾張的城',where:'名古屋',date:'12/12 · 名古屋城',spot:'名古屋城',lat:35.1858,lng:136.8995,brief:'金鯱閃耀，德川御三家之首的居城。',story:'1612 年，德川家康動員諸大名建造名古屋城，作為尾張德川家（御三家之首）的居城，鎮守伊勢灣並防範西國大名。城頭的金鯱自此成為名古屋的象徵。12/12 行程的第一站就是名古屋城——從德川政權的建城起點出發，再回看後來「大政奉還」時尾張藩的選擇。',query:'Nagoya Castle golden shachihoko roof',wp:'Nagoya Castle'},
+{id:'matsusaka',year:'1730–1801',era:'江戶時代的學問',title:'松阪：本居宣長的故鄉',where:'松阪',date:'12/14 · 松阪',spot:'本居宣長記念館',lat:34.7297,lng:136.5236,brief:'國學大成者本居宣長的出生地，江戶時代的學問重鎮。',story:'松阪是國學者本居宣長（1730–1801）的出生地，宣長以《源氏物語》研究聞名，提出「もののあはれ」的美學觀。江戶時代的松阪因松阪木棉與商業而繁榮，孕育了宣長這樣的學者。12/14 在松阪品嚐松阪牛之餘，也能走進宣長的故鄉——這是江戶日本「學問與町人文化」的一面。',query:'Motoori Norinaga memorial hall Matsusaka',wp:'Motoori Norinaga'},
+{id:'koku',year:'1853–1854',era:'幕末・開國',title:'下田：黑船與神奈川條約',where:'下田・伊豆',date:'12/9 · 下田',spot:'下田・了仙寺',lat:34.6692,lng:138.9394,brief:'1853 年黑船來航，1854 年《神奈川條約》在此簽訂。',story:'1853 年 7 月，美國培里准將率領黑船進入浦賀（今神奈川縣橫須賀），要求日本開國。次年，日美雙方在下田的了仙寺簽訂《神奈川條約》，日本結束鎖國，開放下田與函館兩港。12/9 的行程安排在下田（小室山、城山一帶），可以走到當年的談判現場了仙寺，以及美國首任總領事進駐的玉泉寺，現場感受「開國」發生的港口。',query:'Ryosenji temple Shimoda Treaty of Kanagawa 1854',wp:'Treaty of Kanagawa'},
+{id:'port',year:'1858–1859',era:'幕末・開國',title:'下田開港：條約港的第一個黎明',where:'下田',date:'12/9 · 下田港',spot:'下田・玉泉寺（舊美國總領事館）',lat:34.6722,lng:138.9417,brief:'1858 年修好通商條約簽訂，1859 年下田正式開港。',story:'1858 年，日美在江戶簽訂《日米修好通商條約》（哈里斯條約），同意開放神奈川（橫濱）、下田、函館、長崎等港；1859 年下田正式開港，成為日本面向太平洋的窗口，美國總領事湯森・哈里斯進駐玉泉寺。對照九州篇的長崎開港，下田是太平洋側的開港原點——12/9 在下田，可以把東西兩個開港故事連起來看。',query:'Gyokusenji temple Shimoda Townsend Harris first US consulate',wp:'Townsend Harris'},
+{id:'sakuradamon',year:'1860',era:'幕末・暗殺與動盪',title:'櫻田門外之變：井伊直弼遇刺',where:'東京',date:'12/6–12/7 · 東京（虎ノ門・麻布台周邊）',spot:'櫻田門外・井伊直弼銅像',lat:35.6756,lng:139.7529,brief:'1860 年，水戶浪士在江戶城櫻田門外刺殺大老井伊直弼。',story:'1860 年 3 月 24 日（安政 7 年 3 月 3 日），水戶與薩摩的浪士趁井伊直弼登城時，在江戶城的櫻田門外發動襲擊並將其刺殺。井伊直弼主導的「安政大獄」曾大規模鎮壓反對開國的志士，他的死成為幕府權威崩解的象徵。12/6–12/7 住在虎ノ門・麻布台，散步可達櫻田門（皇居西側），正是當年事件的現場。',query:'Sakuradamon gate Tokyo Ii Naomasa statue',wp:'Sakuradamon Incident'},
+{id:'eejanai',year:'1867',era:'幕末與維新',title:'「ええじゃないか」：幕末前夜的群眾狂熱',where:'伊勢',date:'12/15 · 伊勢神宮一帶',spot:'伊勢神宮・內宮',lat:34.4551,lng:136.6979,brief:'慶應 3 年的御札降り與歌舞風潮，倒幕氣氛席捲全國。',story:'1867 年（慶應 3 年）夏天起，伊勢御札「從天而降」的傳說讓全國陷入「ええじゃないか」的集體歌舞——不分身份地位，眾人唱跳狂歡。歷史學者認為這股無組織的民眾能量削弱了幕府的統治正當性。同年 10 月 14 日，德川慶喜在京都二條城奉還大政。12/15 參拜伊勢神宮時，走的正是當年群眾狂熱的發源地。',query:'Eejanaika dancing 1867 Japan Ise pilgrimage',wp:'Eejanaika'},
+{id:'sunpu',year:'1867–1868',era:'幕末與維新',title:'駿府城：大政奉還後的慶喜',where:'靜岡',date:'12/10 · 靜岡（日本平・駿府城）',spot:'駿府城公園',lat:34.9928,lng:138.3833,brief:'末代將軍德川慶喜退隱之城，大政奉還後日本權力的交會點。',story:'1867 年 10 月 14 日，第 15 代將軍德川慶喜在京都二條城「大政奉還」，把政權交還天皇。1868 年，慶喜移居駿府（今靜岡），幕府直轄領改為靜岡藩。駿府城自 1585 年起就是德川家康的居城之一。12/10 住在日本平、行程排了「靜岡市區武士歷史」，走訪駿府城公園，就是走進末代將軍退隱生活的城下町。',query:'Sunpu Castle Shizuoka Tokugawa Yoshinobu residence',wp:'Sunpu Castle'},
+{id:'edo',year:'1868',era:'幕末與維新',title:'江戶城無血開城',where:'東京',date:'12/6–12/7 · 東京',spot:'江戶城本丸跡（皇居東御苑）',lat:35.6861,lng:139.7545,brief:'1868 年，勝海舟與西鄉隆盛談判，江戶不流血易主。',story:'1868 年（慶應 4 年）戊辰戰爭爆發，新政府軍東征。3 月，幕府海軍總裁勝海舟與西鄉隆盛在江戶談判，達成江戶城無血開城；5 月 3 日，德川慶喜離開江戶城前往水戶，江戶隨後改名東京。12/6 抵達東京之後，皇居東御苑一帶的江戶城遺跡，就是這段「改朝換代卻未流血」的見證地。',query:'Edo Castle honmaru keep site Tokyo Imperial Palace east gardens',wp:'Siege of Edo'},
+{id:'ueno',year:'1868',era:'幕末與維新',title:'上野之戰：彰義隊的最後抵抗',where:'東京・上野',date:'12/7 · 東京（上野）',spot:'上野公園・寬永寺遺跡',lat:35.7153,lng:139.7767,brief:'戊辰戰爭在江戶的焦點戰場，一天之內結束。',story:'江戶無血開城後，主張抗戰的彰義隊以寬永寺（上野）為據點，與新政府軍對峙。1868 年 7 月 4 日（慶應 4 年 5 月 15 日）上野之戰爆發，彰義隊當天潰敗，戊辰戰爭的江戶戰線就此結束。上野公園內至今仍留有寬永寺的遺跡與戰死者之墓，是東京少數能直接感受 1868 年戰火的地方。',query:'Battle of Ueno 1868 Kaneiji temple ruins',wp:'Battle of Ueno'},
+{id:'ago',year:'1893',era:'明治・海洋文化',title:'英虞灣・志摩：養殖珍珠的故鄉',where:'志摩',date:'12/16 · 鳥羽・志摩・英虞灣',spot:'賢島・英虞灣',lat:34.3161,lng:136.8267,brief:'御木本幸吉在此培育出養殖珍珠，開啟明治以來的海洋產業。',story:'12/16 的行程在鳥羽、志摩與英虞灣一帶（住賢島寶生苑）。這裡是御木本幸吉的故鄉，他於 1893 年（明治 26 年）在志摩成功培育出半球形養殖珍珠，開啟了世界珍珠產業。幕末開國之後，日本開始面向海洋與世界貿易——從下田的開港，到志摩的珍珠，可以看到同一個「開國後的日本」在海洋上的延伸。',query:'Mikimoto Pearl Island Ago Bay Shima Mie',wp:'Kōkichi Mikimoto'},
+{id:'sangyo',year:'1911–',era:'明治・工業化',title:'產業技術紀念館：明治之後的工業日本',where:'名古屋',date:'12/12 · 名古屋',spot:'產業技術紀念館（原豐田紡織廠房）',lat:35.1716,lng:136.8817,brief:'從紡織到汽車，看開國後日本如何追趕工業化。',story:'名古屋的產業技術紀念館設在明治時代創業的豐田紡織舊廠房（約 1911 年建成），展示紡織機械與汽車產業的發展。開國後的幕末志士曾以「富國強兵」為目標——對照九州篇鹿兒島的集成館（薩摩的近代工業策源地），名古屋的產業遺產呈現的是明治以後由民間主導的工業化路線。12/12 的下午行程安排在此參觀。',query:'Toyota Commemorative Museum of Industry and Technology Nagoya loom hall',wp:'Toyota Commemorative Museum of Industry and Technology'},
+{id:'hakata',year:'1868 →',era:'接續：九州幕末篇',title:'抵達博多：幕末故事在九州繼續',where:'福岡・博多',date:'12/17 · 名古屋 15:49 → 博多 19:09（NOZOMI 39）',spot:'博多（福岡）',lat:33.5904,lng:130.4017,offmap:true,brief:'東日本段的終點；長崎開港、薩摩與西南戰爭的故事接續在九州篇。',story:'12/17 上午在名古屋還車（15:30 前），搭 NOZOMI 39 新幹線從名古屋 15:49 直達博多 19:09，抵達後接續福岡／九州行程。九州的幕末故事——長崎開港、格洛弗園、龜山社中、薩英戰爭、城山之戰——已整理在 <a href="/personal/interactive/kyushu/">「幕末歷史與九州」</a> 專頁，點連結即可接續閱讀。',query:'Hakata station Fukuoka',wp:'Hakata Station',next:'/personal/interactive/kyushu/'}
+];
+
+const GROUPS={
+  tokyo:{name:'東京',lat:35.6923,lng:139.7614,ids:['sakuradamon','edo','ueno'],dx:26,dy:8,anchor:'start'},
+  shimoda:{name:'下田・伊豆',lat:34.6707,lng:138.9406,ids:['koku','port'],dx:20,dy:-16,anchor:'start'},
+  shizuoka:{name:'靜岡',lat:34.9928,lng:138.3833,ids:['sunpu'],dx:18,dy:24,anchor:'start'},
+  nagoya:{name:'名古屋',lat:35.163,lng:136.902,ids:['atetsu','nagoya','sangyo'],dx:-22,dy:-18,anchor:'end'},
+  inuyama:{name:'犬山',lat:35.3896,lng:136.9394,ids:['inuyama'],dx:20,dy:-14,anchor:'start'},
+  matsusaka:{name:'松阪',lat:34.7297,lng:136.5236,ids:['matsusaka'],dx:-20,dy:-16,anchor:'end'},
+  ise:{name:'伊勢',lat:34.4551,lng:136.6979,ids:['ise','eejanai'],dx:22,dy:26,anchor:'start'},
+  shima:{name:'志摩・英虞灣',lat:34.3161,lng:136.8267,ids:['ago'],dx:18,dy:-12,anchor:'start'},
+  hakata:{name:'博多',lat:33.5904,lng:130.4017,ids:['hakata'],offmap:true}
+};
+events.forEach(e=>{for(const k in GROUPS){if(GROUPS[k].ids.includes(e.id))e.group=k}});
+
+const LAND=[
+"M-70.0,301.0 L-47.0,296.1 L-42.6,293.1 L-36.4,297.6 L-33.7,303.2 L-30.2,305.7 L-26.7,311.3 L-23.2,318.4 L-23.2,323.5 L-24.9,327.5 L-29.3,324.5 L-34.6,328.0 L-39.0,338.2 L-47.9,348.8 L-52.3,355.4 L-52.3,361.5 L-49.6,363.0 L-47.0,362.5 L-47.0,357.4 L-43.5,354.4 L-40.8,349.8 L-37.3,347.3 L-35.5,353.9 L-32.0,355.9 L-33.7,357.9 L-39.0,357.4 L-39.9,362.5 L-24.0,371.1 L-20.5,369.6 L-18.7,367.5 L-16.1,372.6 L-17.0,376.7 L-18.7,379.2 L-21.4,387.3 L-19.6,390.8 L-17.0,388.8 L-11.7,378.7 L-7.3,379.2 L-1.1,382.2 L0.7,380.2 L0.7,373.1 L-6.4,374.6 L-12.6,372.1 L-15.2,364.0 L-9.9,358.9 L4.2,356.4 L8.6,350.8 L9.5,347.8 L15.7,344.2 L13.0,353.4 L20.1,357.4 L19.2,362.0 L20.1,365.0 L19.2,368.1 L21.9,368.6 L23.6,368.1 L25.4,365.5 L27.2,360.5 L26.3,371.6 L27.2,375.7 L31.6,377.2 L38.6,377.7 L41.3,377.2 L48.3,373.6 L50.1,370.1 L60.7,362.0 L66.0,364.5 L65.1,366.0 L58.9,368.6 L57.2,377.2 L54.5,379.2 L59.8,380.7 L73.0,377.7 L79.2,377.7 L82.7,375.1 L85.4,371.1 L85.4,365.0 L78.3,368.6 L75.7,363.0 L71.3,361.5 L74.8,356.4 L82.7,353.9 L85.4,355.9 L87.2,360.5 L92.5,359.9 L96.9,365.5 L100.4,367.0 L106.6,364.5 L103.9,363.5 L98.6,354.4 L99.5,352.3 L102.2,351.8 L104.8,354.4 L111.9,351.3 L107.5,345.3 L106.6,341.2 L102.2,335.6 L101.3,332.1 L103.9,331.6 L111.0,337.7 L114.5,339.7 L123.3,337.7 L125.1,340.7 L127.8,342.7 L132.2,339.7 L134.8,336.1 L140.1,337.2 L142.8,335.6 L142.8,332.1 L138.3,328.5 L141.0,317.9 L140.1,314.4 L136.6,314.9 L136.6,306.3 L142.8,303.2 L151.6,295.6 L155.1,301.2 L155.1,303.7 L158.6,313.8 L157.8,317.4 L155.1,317.4 L153.4,320.9 L157.8,324.0 L158.6,327.5 L163.9,326.5 L165.7,321.4 L167.5,319.9 L167.5,313.8 L170.1,310.3 L170.1,302.2 L171.9,297.1 L171.9,292.1 L163.9,277.4 L158.6,273.3 L145.4,259.6 L146.3,251.0 L145.4,244.4 L140.1,236.9 L136.6,233.3 L138.3,225.2 L143.6,221.7 L147.2,217.6 L155.1,200.9 L157.8,191.8 L170.1,176.6 L176.3,164.9 L179.8,157.8 L176.3,151.2 L177.2,149.2 L182.5,148.7 L186.9,149.2 L195.7,145.7 L215.1,128.4 L220.4,120.8 L231.9,115.3 L240.7,107.7 L252.2,95.0 L304.3,26.1 L315.7,5.9 L333.4,-36.2 L335.2,-41.8 L335.2,-48.9 L330.7,-52.9 L333.2,-60.0 L401.6,-60.0 L398.7,-56.5 L398.7,-49.4 L389.0,-36.2 L393.4,-25.6 L404.9,-18.5 L411.9,-11.9 L423.4,-7.8 L430.5,-3.3 L440.2,-2.3 L451.6,-4.3 L465.8,-2.3 L473.7,-3.8 L478.1,-9.9 L486.1,-14.9 L488.7,-23.0 L492.2,-28.6 L494.9,-38.2 L494.0,-44.3 L496.7,-51.4 L511.5,-60.0 L1358.1,-60.0 L1354.5,-56.5 L1346.5,-54.4 L1338.6,-49.4 L1332.4,-47.3 L1328.9,-43.3 L1324.5,-40.8 L1324.5,-32.1 L1321.8,-26.1 L1309.5,-5.3 L1298.0,39.8 L1283.9,63.1 L1280.3,73.2 L1276.8,95.0 L1281.2,115.8 L1278.6,123.9 L1269.7,133.5 L1266.2,140.1 L1266.2,151.2 L1269.7,176.6 L1285.6,221.1 L1320.9,282.4 L1331.5,296.6 L1334.2,302.2 L1342.1,306.3 L1343.0,308.8 L1340.3,315.9 L1338.6,318.9 L1335.1,316.4 L1330.6,310.8 L1324.5,312.3 L1304.2,320.4 L1303.3,315.4 L1290.0,318.4 L1274.2,329.6 L1245.9,355.4 L1231.8,377.7 L1222.1,410.6 L1227.4,426.3 L1229.2,434.4 L1226.5,447.1 L1225.6,458.2 L1223.9,465.8 L1220.3,471.9 L1213.3,470.9 L1208.9,477.5 L1209.7,482.5 L1206.2,486.1 L1201.8,485.1 L1200.0,481.0 L1195.6,485.6 L1189.4,484.6 L1185.9,491.2 L1165.6,489.6 L1160.3,488.1 L1153.3,495.7 L1152.4,502.3 L1146.2,507.4 L1140.9,507.4 L1125.0,519.0 L1121.5,528.1 L1118.8,532.2 L1118.0,542.8 L1116.2,546.4 L1110.0,553.0 L1098.5,554.5 L1095.9,553.5 L1088.8,555.0 L1087.9,553.5 L1084.4,551.4 L1084.4,544.3 L1080.9,541.8 L1073.8,538.8 L1067.6,538.3 L1066.8,535.7 L1066.8,532.2 L1077.4,533.2 L1083.5,530.7 L1085.3,528.1 L1088.8,527.6 L1093.2,529.1 L1095.0,527.6 L1095.9,525.1 L1095.0,521.0 L1092.4,518.5 L1087.1,517.0 L1087.1,513.9 L1089.7,510.9 L1090.6,504.3 L1087.1,495.2 L1087.9,484.6 L1083.5,477.5 L1084.4,473.9 L1083.5,469.4 L1084.4,465.3 L1095.0,457.7 L1095.0,451.1 L1090.6,443.5 L1090.6,436.9 L1073.8,430.9 L1073.8,429.3 L1079.1,429.9 L1084.4,426.3 L1084.4,420.7 L1087.9,417.2 L1089.7,412.1 L1101.2,415.7 L1104.7,411.6 L1104.7,407.1 L1102.9,397.9 L1106.5,394.9 L1113.5,392.4 L1118.0,388.3 L1123.2,387.3 L1129.4,382.7 L1145.3,362.0 L1149.7,363.0 L1152.4,354.9 L1148.8,354.9 L1147.1,343.7 L1129.4,327.0 L1126.8,328.0 L1123.2,324.5 L1115.3,323.5 L1108.2,326.5 L1112.7,334.1 L1102.1,340.7 L1101.2,338.2 L1098.5,337.7 L1095.9,335.6 L1094.1,335.6 L1090.6,333.6 L1088.8,336.1 L1087.9,340.7 L1084.4,338.2 L1083.5,333.6 L1080.0,333.6 L1079.1,339.2 L1075.6,344.2 L1072.1,339.7 L1072.9,332.6 L1070.3,329.0 L1068.5,335.6 L1071.2,344.8 L1074.7,350.8 L1074.7,354.4 L1078.2,363.0 L1075.6,367.0 L1075.6,371.6 L1072.9,374.6 L1065.0,379.7 L1057.9,385.8 L1050.9,386.8 L1045.6,384.8 L1042.1,385.8 L1040.3,388.8 L1049.1,393.4 L1050.9,395.4 L1050.0,399.5 L1050.9,405.0 L1042.1,402.0 L1038.5,404.5 L1040.3,408.6 L1043.8,412.1 L1041.2,435.4 L1043.8,439.0 L1045.6,435.4 L1048.2,437.5 L1052.6,444.5 L1062.4,445.6 L1065.0,450.1 L1060.6,455.2 L1062.4,458.2 L1060.6,462.8 L1051.8,462.3 L1045.6,466.8 L1044.7,471.4 L1046.5,477.0 L1050.9,483.0 L1045.6,484.6 L1039.4,483.0 L1035.9,485.6 L1033.2,484.6 L1032.3,482.5 L1033.2,479.0 L1033.2,472.9 L1029.7,464.3 L1035.9,461.3 L1034.1,459.2 L1030.6,457.7 L1028.8,453.2 L1021.8,444.5 L1021.8,442.0 L1020.0,439.0 L1017.3,438.5 L1015.6,432.4 L1012.0,434.4 L1006.8,433.9 L1001.5,434.9 L997.0,430.9 L983.8,429.3 L952.0,435.9 L939.7,439.5 L927.3,446.1 L918.5,454.7 L917.6,469.9 L921.1,484.1 L912.3,480.0 L904.4,492.2 L900.9,508.9 L908.8,510.4 L906.1,521.5 L903.5,525.6 L907.0,532.7 L915.0,535.2 L917.6,542.3 L918.5,553.5 L916.7,563.6 L911.4,564.6 L907.0,568.1 L904.4,572.2 L903.5,576.3 L900.9,582.3 L897.3,587.4 L895.6,591.5 L892.9,594.5 L889.4,595.5 L882.3,605.1 L883.2,608.7 L881.4,610.7 L879.7,614.8 L878.8,619.8 L880.6,630.0 L877.9,631.5 L876.1,631.5 L868.2,626.9 L856.7,636.5 L841.7,646.2 L834.7,641.1 L826.7,631.0 L828.5,625.9 L825.0,622.4 L821.4,620.3 L820.5,617.8 L819.7,606.1 L823.2,603.6 L824.1,600.6 L827.6,599.6 L823.2,590.4 L820.5,580.8 L823.2,576.3 L824.1,571.2 L824.1,564.1 L822.3,561.1 L824.1,557.0 L827.6,553.5 L831.1,553.0 L826.7,545.4 L824.1,531.2 L830.2,517.0 L847.0,519.5 L856.7,519.0 L860.3,516.0 L847.0,501.3 L842.6,495.2 L834.7,488.6 L819.7,484.6 L808.2,483.6 L793.2,490.1 L780.8,490.6 L772.9,496.2 L766.7,509.9 L759.6,515.5 L758.8,524.6 L761.4,527.6 L761.4,521.5 L764.9,519.0 L767.6,520.0 L763.2,531.2 L752.6,537.2 L727.0,549.9 L719.9,562.6 L718.2,568.7 L718.2,571.2 L720.8,577.3 L717.3,582.8 L714.6,585.4 L709.3,595.5 L698.8,603.1 L689.9,611.2 L684.6,632.5 L686.4,638.6 L692.6,640.1 L696.1,644.1 L694.3,646.7 L683.7,644.6 L649.3,628.4 L629.0,624.9 L611.4,624.9 L586.7,633.0 L560.2,623.9 L538.1,621.8 L526.7,621.8 L496.7,624.9 L475.5,631.0 L426.9,648.2 L415.5,647.2 L403.1,650.7 L396.0,651.2 L399.6,645.7 L402.2,639.6 L404.9,631.0 L410.2,625.4 L417.2,633.5 L419.0,637.5 L421.6,635.0 L421.6,633.5 L433.1,627.9 L451.6,615.8 L456.1,613.7 L461.4,605.6 L465.8,606.6 L464.9,617.8 L466.6,618.3 L468.4,613.2 L468.4,607.2 L473.7,608.7 L475.5,607.2 L468.4,604.1 L471.9,595.0 L471.1,593.0 L464.9,585.9 L460.5,582.3 L457.8,583.9 L447.2,580.3 L442.8,584.4 L440.2,582.8 L438.4,594.0 L434.0,596.0 L434.0,589.9 L430.5,590.4 L426.9,588.4 L421.6,588.4 L417.2,589.4 L413.7,592.0 L410.2,589.4 L404.9,592.0 L396.9,589.9 L386.3,577.3 L381.9,575.2 L382.8,567.6 L388.1,555.5 L387.2,547.9 L384.6,551.4 L381.9,559.5 L377.5,566.6 L375.7,571.2 L374.0,576.8 L371.3,592.5 L376.6,601.1 L382.8,604.6 L385.5,611.2 L385.5,616.3 L379.3,615.3 L371.3,611.7 L357.2,603.1 L354.6,599.1 L353.7,594.5 L356.3,588.9 L357.2,583.3 L359.0,578.8 L359.0,574.2 L357.2,568.1 L353.7,563.6 L350.2,563.6 L348.4,556.5 L348.4,543.3 L351.0,533.2 L362.5,511.9 L364.3,498.2 L360.7,497.2 L355.5,512.9 L353.7,506.9 L353.7,502.3 L350.2,501.3 L352.8,515.5 L346.6,517.0 L345.7,510.4 L343.1,510.4 L343.1,518.0 L337.8,519.0 L331.6,517.0 L329.9,518.0 L324.6,517.0 L314.0,524.6 L308.7,529.6 L306.0,534.2 L306.0,536.2 L304.3,540.8 L305.1,542.3 L309.6,542.8 L305.1,545.9 L306.0,551.4 L303.4,558.5 L298.1,569.2 L277.8,595.5 L274.3,620.8 L277.8,626.9 L281.3,629.4 L279.6,640.1 L282.2,644.6 L286.6,646.2 L297.2,646.2 L302.5,647.7 L313.1,658.8 L331.6,671.0 L344.0,676.6 L346.6,679.1 L349.3,678.1 L352.8,678.1 L356.3,679.1 L359.9,684.7 L361.6,690.7 L363.4,693.8 L366.9,694.8 L371.3,694.8 L374.0,697.8 L372.2,712.0 L368.7,710.5 L366.0,710.5 L363.4,711.5 L361.6,714.0 L364.3,718.1 L370.5,718.6 L366.0,722.1 L363.4,726.7 L366.9,734.8 L367.8,740.4 L366.9,744.9 L364.3,747.0 L351.9,751.0 L342.2,749.0 L336.9,746.5 L336.9,742.9 L340.4,741.9 L345.7,742.9 L353.7,747.0 L351.9,740.9 L355.5,742.9 L357.2,736.8 L354.6,732.8 L350.2,731.3 L344.9,732.8 L345.7,734.8 L344.9,738.9 L336.9,732.8 L332.5,736.3 L325.4,737.9 L319.3,736.3 L324.6,725.7 L320.1,724.7 L306.0,730.8 L310.4,732.3 L310.4,735.8 L307.8,739.4 L299.9,742.4 L296.3,745.4 L291.9,746.0 L287.5,740.9 L286.6,742.9 L284.8,744.4 L284.8,747.0 L277.8,743.4 L275.1,742.9 L274.3,746.5 L270.7,751.0 L273.4,756.1 L270.7,756.1 L262.8,753.6 L252.2,760.6 L249.5,763.7 L241.6,763.7 L229.2,769.8 L220.4,778.9 L219.5,787.5 L224.8,790.5 L225.7,792.6 L223.1,798.1 L216.9,800.7 L214.2,799.1 L210.7,793.6 L209.0,792.6 L207.2,794.1 L203.7,800.2 L201.0,802.7 L201.0,804.7 L204.5,804.7 L207.2,805.7 L209.0,811.8 L216.0,819.9 L214.2,823.0 L214.2,833.6 L210.7,835.1 L208.1,833.6 L203.7,827.0 L197.5,833.6 L197.5,835.6 L202.8,836.6 L204.5,840.7 L202.8,843.7 L199.2,841.7 L197.5,846.8 L195.7,848.8 L186.0,850.8 L182.5,856.9 L180.7,857.9 L172.8,857.4 L163.9,871.1 L151.6,905.0 L144.7,920.0 L-16.0,920.0 L-14.3,916.7 L0.7,914.6 L-2.0,911.1 L-14.3,901.5 L-19.6,898.9 L-21.4,895.4 L-25.8,895.9 L-32.9,890.8 L-40.8,890.3 L-41.7,885.3 L-49.6,880.7 L-55.8,873.6 L-60.2,862.5 L-69.0,856.9 L-70.0,857.1 L-70.0,827.0 L-60.2,821.9 L-58.5,817.4 L-58.5,813.3 L-60.2,810.3 L-70.0,805.6 L-70.0,794.7 L-66.4,792.6 L-66.4,788.5 L-68.2,783.9 L-62.0,783.4 L-52.3,784.5 L-51.4,779.9 L-57.6,768.8 L-62.0,769.3 L-64.6,756.6 L-70.0,751.7 L-70.0,729.0 L-47.0,722.1 L-35.5,712.0 L-19.6,696.3 L-11.7,684.7 L-6.4,679.6 L-6.4,669.5 L-2.0,667.9 L-0.2,664.9 L2.4,662.9 L4.2,642.1 L1.6,634.5 L0.7,627.4 L3.3,617.3 L-4.6,620.8 L-9.0,618.3 L-14.3,612.2 L-27.6,613.2 L-27.6,620.8 L-35.5,621.8 L-35.5,614.8 L-44.3,617.8 L-39.0,630.0 L-46.1,628.4 L-47.9,621.8 L-52.3,622.4 L-53.2,629.4 L-70.0,632.8 Z",
+"M984.7,590.9 L990.0,593.5 L992.6,598.0 L994.4,603.6 L995.3,610.7 L993.5,621.3 L985.6,621.8 L970.6,614.2 L968.8,609.2 L968.8,595.0 L969.7,585.9 L981.2,588.4 Z",
+"M1035.0,859.4 L1036.8,863.5 L1036.8,865.5 L1035.0,868.0 L1032.3,869.1 L1027.9,868.5 L1025.3,866.0 L1024.4,860.9 L1027.9,856.4 L1032.3,855.9 L1034.1,857.9 Z",
+"M948.5,706.4 L951.2,704.4 L953.8,700.9 L956.5,699.9 L955.6,714.5 L952.0,724.2 L948.5,728.2 L945.0,722.7 L945.0,719.1 L947.6,708.5 Z",
+"M365.2,665.4 L366.9,663.4 L370.5,662.9 L368.7,665.4 L368.7,667.4 L365.2,668.5 L361.6,671.0 L357.2,672.0 L355.5,670.5 L359.0,668.5 Z",
+"M1002.3,806.7 L1004.1,797.1 L1011.2,791.0 L1019.1,791.0 L1023.5,798.1 L1020.0,807.8 L1013.8,813.8 L1006.8,814.3 Z",
+"M343.1,562.1 L345.7,562.1 L349.3,566.6 L349.3,570.2 L346.6,571.2 L346.6,573.2 L344.9,573.2 Z",
+"M366.0,676.0 L367.8,674.0 L369.6,674.5 L368.7,679.1 L363.4,682.6 L360.7,677.6 Z",
+"M-47.9,695.8 L-39.0,688.7 L-34.6,694.3 L-43.5,699.9 L-46.1,698.3 Z"
+];
+
+/* ===== 投影：等距圓柱近似，與產生向量圖時完全一致 ===== */
+const X0=135.4,Y0=36.75,SY=300,COS=Math.cos(35.2*Math.PI/180),SX=SY*COS;
+const px=lng=>(lng-X0)*SX, py=lat=>(Y0-lat)*SY;
+
+const BASE={x:-45,y:-35,w:1690,h:880};
+let vb={...BASE};
+let active='koku',svg=null,routeOn=false,photoCache={},heroDone=false;
+const el=id=>document.getElementById(id);
+const byId=Object.fromEntries(events.map(e=>[e.id,e]));
+
+function mapLink(e){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.spot+' '+e.where+' 日本')}
+
+/* ===== 時間軸 ===== */
+function drawTimeline(){
+  let last='';
+  el('timeline').innerHTML=events.map(e=>{
+    let header=e.era!==last?'<div class="period">'+e.era+'</div>':'';
+    last=e.era;
+    return header+'<button class="event '+(active===e.id?'active':'')+'" data-id="'+e.id+'">'+
+      '<span class="year">'+e.year+'</span>'+
+      '<span class="stem"><span class="dot"></span></span>'+
+      '<span class="event-body"><h4>'+e.title+'</h4><span class="sub">'+e.brief+'</span><br><span class="date-pill">📍 '+e.date+'</span></span>'+
+      '</button>';
+  }).join('');
+  document.querySelectorAll('.event').forEach(b=>b.onclick=()=>focus(b.dataset.id,true));
+}
+
+/* ===== 地圖 ===== */
+function buildMap(){
+  const mapEl=el('map');
+  if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖圖資載入失敗';return}
+
+  let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="東日本地圖">';
+  s+='<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#28594a" flood-opacity="0.18"/></filter></defs>';
+  s+='<g id="landlayer" filter="url(#soft)">';
+  LAND.forEach(d=>{s+='<path class="land" d="'+d+'"/>'});
+  s+='</g>';
+
+  // 海域標示
+  const seas=[['東京灣',35.32,139.60,0],['相模灣',34.98,140.02,0],['太平洋',34.55,140.90,-55],['駿河灣',34.72,138.65,-62],['伊勢灣',34.60,136.80,0],['熊野灘',34.15,136.95,-70]];
+  seas.forEach(([n,la,ln,rot])=>{const x=px(ln).toFixed(1),y=py(la).toFixed(1);s+='<text class="sea-label" x="'+x+'" y="'+y+'" text-anchor="middle" transform="rotate('+rot+' '+x+' '+y+')">'+n+'</text>'});
+
+  // 縣名（淡）
+  const pref=[['神奈川',139.30,35.28],['千葉',140.25,35.38],['山梨',138.55,35.62],['靜岡',138.45,34.98],['岐阜',136.72,35.48],['三重',136.50,34.80],['愛知',137.08,35.02],['滋賀',136.05,35.15],['京都',135.82,35.02],['大阪',135.52,34.68],['奈良',135.85,34.60]];
+  pref.forEach(([n,lng,lat])=>{s+='<text class="pref-label" x="'+px(lng).toFixed(1)+'" y="'+py(lat).toFixed(1)+'" text-anchor="middle">'+n+'</text>'});
+
+  // 富士山（裝飾）
+  const fx=px(138.7274),fy=py(35.3606);
+  s+='<g class="fuji" transform="translate('+fx.toFixed(1)+','+fy.toFixed(1)+')"><path d="M0,-11 L9,7 L-9,7 Z" fill="#8aa09b"/><text x="0" y="22" text-anchor="middle">富士山</text></g>';
+
+  // 路線（實際旅程：東京→熱海→下田→靜岡→名古屋→犬山→松阪→伊勢→鳥羽→志摩→博多）
+  const routePts=[[35.69,139.75],[35.09,139.08],[34.67,138.94],[34.99,138.38],[35.17,136.91],[35.39,136.94],[34.73,136.52],[34.46,136.73],[34.46,136.89],[34.32,136.82],[33.59,130.40]];
+  s+='<path id="routeline" class="route" d="M'+routePts.map(([la,ln])=>px(ln).toFixed(1)+','+py(la).toFixed(1)).join(' L')+'" style="display:none"/>';
+
+  // 標記
+  Object.entries(GROUPS).forEach(([k,g])=>{
+    if(g.offmap)return;
+    const x=px(g.lng),y=py(g.lat);
+    const n=g.ids.length;
+    s+='<g class="mk'+(g.ids.includes(active)?' active':'')+'" data-g="'+k+'" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">';
+    s+='<circle class="ring" r="17"/><circle class="core" r="'+(n>1?10:7.5)+'"/>';
+    if(n>1)s+='<text class="count" text-anchor="middle" y="4.2">'+n+'</text>';
+    s+='<text class="mlabel" x="'+g.dx+'" y="'+g.dy+'" text-anchor="'+g.anchor+'">'+g.name+'</text>';
+    s+='</g>';
+  });
+
+  // 指北針
+  s+='<g class="compass" transform="translate(1585,795)"><path d="M0,-26 L7,6 L0,0 L-7,6 Z" fill="#8aa09b"/><text x="0" y="22" text-anchor="middle">N</text></g>';
+  s+='</svg>';
+  mapEl.insertAdjacentHTML('afterbegin',s);
+  svg=el('mapsvg');
+
+  svg.querySelectorAll('.mk').forEach(g=>{
+    g.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const grp=GROUPS[g.dataset.g];
+      if(!grp.ids.includes(active))focus(grp.ids[0]);
+      else focus(active);
+      centerOn(px(grp.lng),py(grp.lat),1.9);
+    });
+  });
+
+  // 拖曳平移
+  let drag=null;
+  svg.addEventListener('pointerdown',ev=>{
+    drag={x:ev.clientX,y:ev.clientY,vx:vb.x,vy:vb.y};
+    svg.classList.add('dragging');svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove',ev=>{
+    if(!drag)return;
+    const r=svg.getBoundingClientRect();
+    const k=vb.w/r.width;
+    vb.x=drag.vx-(ev.clientX-drag.x)*k;
+    vb.y=drag.vy-(ev.clientY-drag.y)*k;
+    applyVB();
+  });
+  const endDrag=ev=>{if(drag){drag=null;svg.classList.remove('dragging')}};
+  svg.addEventListener('pointerup',endDrag);
+  svg.addEventListener('pointercancel',endDrag);
+  svg.addEventListener('wheel',ev=>{
+    ev.preventDefault();
+    const r=svg.getBoundingClientRect();
+    const cx=vb.x+(ev.clientX-r.left)/r.width*vb.w;
+    const cy=vb.y+(ev.clientY-r.top)/r.height*vb.h;
+    zoomBy(ev.deltaY>0?1.16:0.86,cx,cy);
+  },{passive:false});
+}
+
+function clampPan(){
+  const M=90;
+  if(vb.x<BASE.x-M)vb.x=BASE.x-M;
+  if(vb.y<BASE.y-M)vb.y=BASE.y-M;
+  if(vb.x+vb.w>BASE.x+BASE.w+M)vb.x=BASE.x+BASE.w+M-vb.w;
+  if(vb.y+vb.h>BASE.y+BASE.h+M)vb.y=BASE.y+BASE.h+M-vb.h;
+  if(vb.w>BASE.w){vb.x=BASE.x-(vb.w-BASE.w)/2;vb.y=BASE.y-(vb.h-BASE.h)/2}
+}
+
+function applyVB(){
+  if(!svg)return;
+  clampPan();
+  svg.setAttribute('viewBox',vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1));
+  const k=vb.w/BASE.w;
+  svg.querySelectorAll('.mk').forEach(g=>{
+    g.setAttribute('transform','translate('+g.dataset.x+','+g.dataset.y+') scale('+k.toFixed(3)+')');
+  });
+}
+
+function clampVB(){
+  const minW=BASE.w/6,maxW=BASE.w*1.15;
+  if(vb.w<minW){const c=vb.w;vb.w=minW;vb.h=vb.h*minW/c}
+  if(vb.w>maxW){const c=vb.w;vb.w=maxW;vb.h=vb.h*maxW/c}
+  vb.h=vb.w*BASE.h/BASE.w;
+}
+
+function zoomBy(f,cx,cy){
+  if(!svg)return;
+  cx=cx??vb.x+vb.w/2; cy=cy??vb.y+vb.h/2;
+  const nw=vb.w*f;
+  vb.x=cx-(cx-vb.x)*f;
+  vb.y=cy-(cy-vb.y)*f;
+  vb.w=nw;
+  clampVB();
+  applyVB();
+}
+
+function centerOn(x,y,scale){
+  if(!svg)return;
+  vb.w=BASE.w/(scale||1);
+  vb.h=vb.w*BASE.h/BASE.w;
+  vb.x=x-vb.w/2;
+  vb.y=y-vb.h/2;
+  clampVB();
+  applyVB();
+}
+
+function resetView(){vb={...BASE};applyVB()}
+
+/* ===== 互動 ===== */
+function focus(id,scroll=false,zoom=true){
+  active=id;
+  const e=byId[id];
+  drawTimeline();
+  if(svg){
+    svg.querySelectorAll('.mk').forEach(g=>g.classList.toggle('active',GROUPS[g.dataset.g].ids.includes(id)));
+  }
+  const g=GROUPS[e.group];
+  if(svg&&zoom&&g&&!g.offmap)centerOn(px(g.lng),py(g.lat),2.1);
+  const gh=el('gmaps-here');
+  if(gh)gh.href=mapLink(e);
+
+  let chips='';
+  if(g.ids.length>1){
+    chips='<div class="chips">'+g.ids.map(i=>'<button data-id="'+i+'" class="'+(i===id?'on':'')+'">'+byId[i].year+'　'+byId[i].spot+'</button>').join('')+'</div>';
+  }
+  el('detail').innerHTML='<div class="micro">'+e.year+' · '+e.where+' · '+e.date+'</div><h3>'+e.title+'</h3>'+
+    (chips?'<div style="font-size:11px;color:#9aa298;margin-top:2px">同一地點的相關事件：</div>'+chips:'')+
+    '<p>'+e.story+'</p>'+
+    '<div class="linkrow"><a href="'+mapLink(e)+'" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟景點 ↗</a>'+(e.next?'<a href="'+e.next+'">接續：幕末歷史與九州 ↗</a>':'')+'<button id="copylink">分享這段故事</button></div>';
+  const cp=el('copylink');
+  if(cp)cp.onclick=()=>{
+    navigator.clipboard?.writeText(e.title+'｜'+e.story.replace(/<[^>]+>/g,'')+' '+mapLink(e));
+    cp.textContent='已複製';
+  };
+  el('detail').querySelectorAll('.chips button').forEach(b=>b.onclick=()=>focus(b.dataset.id));
+  el('photo').innerHTML='<span>'+e.spot+'</span>';
+  loadPhoto(e);
+  if(scroll){
+    const top=el('map').getBoundingClientRect().top+window.scrollY-70;
+    window.scrollTo({top:top,behavior:'smooth'});
+  }
+}
+
+async function commonsSearch(q,limit){
+  let url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent('filetype:bitmap '+q)+
+    '&gsrnamespace=6&gsrlimit='+limit+'&prop=imageinfo&iiprop=url&iiurlwidth=1400&format=json&origin=*';
+  let data=await(await fetch(url)).json();
+  return Object.values(data.query?.pages||{}).filter(p=>p.imageinfo?.[0]?.thumburl).map(p=>p.imageinfo[0].thumburl);
+}
+
+async function loadHero(){
+  if(heroDone)return;
+  heroDone=true;
+  const img=el('hero-img');
+  if(img.complete&&img.naturalWidth>0)return;
+  const queries=['Commodore Perry black ships 1853 Japan illustration','Edo period ukiyo print Tokyo castle'];
+  for(const q of queries){
+    try{
+      let list=await commonsSearch(q,10);
+      let pick=list.find(u=>!/\.(svg|png)$/i.test(u))||list[0];
+      if(pick){
+        img.onerror=()=>{img.style.display='none';el('hero-credit').style.display='none'};
+        img.onload=()=>{el('hero-credit').style.display='block'};
+        img.src=pick;
+        return;
+      }
+    }catch(err){}
+  }
+}
+
+async function wikiPhoto(title){
+  for(const host of ['en.wikipedia.org','zh.wikipedia.org']){
+    try{
+      const r=await fetch('https://'+host+'/api/rest_v1/page/summary/'+encodeURIComponent(title));
+      if(!r.ok)continue;
+      const j=await r.json();
+      const src=(j.originalimage&&j.originalimage.source)||(j.thumbnail&&j.thumbnail.source)||'';
+      if(src)return src;
+    }catch(err){}
+  }
+  return '';
+}
+
+async function commonsPhoto(q){
+  const words=q.split(/\s+/);
+  const bad=/grave|map|diagram|plan|portrait|plaque|sign|banner|logo|chart/i;
+  for(const t of [q,words.slice(0,2).join(' '),words[0]]){
+    try{
+      const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent('filetype:bitmap '+t)+
+        '&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url&iiurlwidth=1400&format=json&origin=*';
+      const data=await(await fetch(url)).json();
+      const pages=Object.values(data.query?.pages||{}).filter(p=>p.imageinfo&&p.imageinfo[0].thumburl);
+      const good=pages.filter(p=>!bad.test(p.title||''));
+      const pick=(good[0]||pages[0]);
+      if(pick)return pick.imageinfo[0].thumburl;
+    }catch(err){}
+  }
+  return '';
+}
+
+async function loadPhoto(e){
+  const key=e.id;
+  if(photoCache[key]==='-')return;
+  try{
+    if(!photoCache[key]){
+      let url='';
+      if(e.wp){ try{url=await wikiPhoto(e.wp)}catch(err){} }
+      if(!url)url=await commonsPhoto(e.query);
+      photoCache[key]=url||'-';
+    }
+    if(active===e.id&&photoCache[key]&&photoCache[key]!=='-'){
+      const url=photoCache[key];
+      const img=document.createElement('img');
+      img.src=url;
+      img.alt=e.spot+' 歷史景點照片';
+      img.onload=()=>{
+        if(active!==e.id)return;
+        el('photo').innerHTML='';
+        el('photo').appendChild(img);
+        const c=document.createElement('div');
+        c.className='credit';
+        c.textContent='Wikimedia Commons';
+        el('photo').appendChild(c);
+      };
+      img.onerror=()=>{photoCache[key]='-'};
+    }
+  }catch(err){}
+}
+
+/* ===== 按鈕 ===== */
+function setRoute(on){
+  routeOn=on;
+  el('route-map').classList.toggle('active',on);
+  el('all-map').classList.toggle('active',!on);
+  const line=el('routeline');
+  if(line)line.style.display=on?'':'none';
+  if(on)resetView();
+}
+el('route-map').onclick=()=>setRoute(true);
+el('all-map').onclick=()=>setRoute(false);
+el('reset-map').onclick=()=>{setRoute(false);resetView()};
+el('zoom-in').onclick=()=>zoomBy(0.72);
+el('zoom-out').onclick=()=>zoomBy(1.38);
+
+drawTimeline();
+buildMap();
+applyVB();
+focus(active,false,false);
+loadHero();
+</script>
+</body>
+</html>
