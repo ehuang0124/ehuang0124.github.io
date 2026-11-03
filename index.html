@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#DCDEDD">
   <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
   <title>Eva Huang — Public interest technology &amp; AI research</title>
-  <script>document.documentElement.classList.add('js');</script>
   <style>
     :root {
       /* Japanese traditional nezumi (mouse-gray) palette */
@@ -19,17 +18,10 @@
       --beni-nezumi: #524748;  /* 紅消鼠 — muted red-brown accent */
 
       --ink: var(--ben-nezumi);
-      --ink-soft: rgba(78, 72, 75, .68);
-      --lime: var(--ai-nezumi);
-      --orange: var(--beni-nezumi);
-      --accent: var(--beni-nezumi);
-      --cream: var(--shiro-nezumi);
-      --surface: #ECEDEB;
-      --lime-wash: rgba(108, 132, 141, .16);
-      --line: rgba(78, 72, 75, .16);
-      --shadow: 0 14px 32px rgba(78, 72, 75, .1);
-      --radius: 22px;
+      --ink-soft: rgba(78, 72, 75, .72);
+      --line: rgba(78, 72, 75, .22);
       --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     }
 
     * { box-sizing: border-box; }
@@ -37,1081 +29,237 @@
 
     body {
       margin: 0;
-      overflow-x: clip;
       color: var(--ink);
-      background: var(--cream);
+      background: var(--shiro-nezumi);
       font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
       -webkit-font-smoothing: antialiased;
     }
 
-    a { color: inherit; }
-    summary { font: inherit; }
-    h1, h2, h3, p { text-wrap: pretty; }
-
     .shell {
-      width: min(1160px, calc(100% - 48px));
+      width: min(680px, calc(100% - 48px));
       margin-inline: auto;
     }
 
-    .skip-link {
-      position: fixed;
-      left: 16px;
-      top: -64px;
-      z-index: 100;
-      padding: 11px 16px;
-      color: var(--cream);
-      background: var(--ink);
-      border-radius: 9px;
-      transition: top .2s ease;
-    }
+    a { color: var(--ai-nezumi); text-underline-offset: 3px; }
+    a:hover { color: var(--beni-nezumi); }
 
-    .skip-link:focus { top: 16px; }
-
-    .nav {
-      min-height: 78px;
+    header .nav {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: baseline;
       gap: 24px;
+      padding: 28px 0 0;
+      font-size: 14px;
     }
 
     .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 11px;
-      font-size: 15px;
-      font-weight: 900;
-      letter-spacing: -.02em;
-      text-decoration: none;
-    }
-
-    .brand-mark {
-      width: 38px;
-      height: 38px;
-      filter: none;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-      font-size: 13px;
-      font-weight: 850;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      transition: color .2s ease, transform .2s ease;
-    }
-
-    .nav-links a:hover:not(.nav-cta) {
-      text-decoration: underline;
-      text-decoration-color: var(--orange);
-      text-decoration-thickness: 3px;
-      text-underline-offset: 4px;
-    }
-
-    .nav-cta {
-      padding: 10px 16px;
-      color: var(--cream) !important;
-      background: var(--ink);
-      border-radius: 999px;
-      box-shadow: 0 8px 20px rgba(78, 72, 75, .14);
-    }
-
-    .nav-cta:hover {
-      transform: translateY(-2px);
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      align-items: center;
-      column-gap: 28px;
-      row-gap: 42px;
-      padding: 78px 0 92px;
-    }
-
-    .hero-copy {
-      grid-column: span 7;
-      min-width: 0;
-    }
-
-    .name-label,
-    .section-kicker {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 0 18px;
       color: var(--ink);
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .14em;
-      text-transform: uppercase;
+      font-weight: 700;
+      text-decoration: none;
     }
 
-    .name-label::before,
-    .section-kicker::before {
-      content: "";
-      width: 30px;
-      height: 5px;
-      background: var(--orange);
-      border-radius: 99px;
-      box-shadow: none;
-    }
+    .nav-links { display: flex; gap: 20px; }
+    .nav-links a { color: var(--ink-soft); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
-    .section-kicker::before { background: var(--accent); }
+    main { padding: 56px 0 32px; }
 
     h1 {
-      max-width: 720px;
+      margin: 0 0 18px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 6vw, 46px);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -.01em;
+    }
+
+    h2 {
+      margin: 52px 0 14px;
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    h3 {
       margin: 0;
-      font-family: var(--sans);
-      font-size: clamp(65px, 8vw, 112px);
-      font-weight: 750;
-      line-height: .88;
-      letter-spacing: -.07em;
+      font-size: 16px;
+      font-weight: 700;
     }
 
-    h1 .spark {
-      position: relative;
-      display: inline-block;
-      z-index: 0;
+    p { margin: 0 0 14px; text-wrap: pretty; }
+    .lede { color: var(--ink-soft); font-size: 17px; }
+
+    .headshot {
+      margin: 26px 0 8px;
     }
 
-    h1 .spark::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: -.07em;
-      bottom: .045em;
-      z-index: -1;
-      height: .14em;
-      background: rgba(108, 132, 141, .5);
-      transform: rotate(-1deg);
-    }
-
-    .intro {
-      max-width: 650px;
-      margin: 25px 0 0;
-      color: var(--ink-soft);
-      font-size: clamp(17px, 1.6vw, 20px);
-      line-height: 1.58;
-    }
-
-    .intro strong { color: var(--ink); }
-
-    .education-line {
-      margin: 13px 0 0;
-      color: var(--ink);
-      font-size: 14px;
-      font-weight: 800;
-      line-height: 1.5;
-    }
-
-    .education-focus {
-      position: relative;
-      z-index: 0;
-      display: inline-block;
-      padding: 0 .12em;
-    }
-
-    .education-focus::before {
-      content: "";
-      position: absolute;
-      inset: 38% -.08em 1%;
-      z-index: -1;
-      background: repeating-linear-gradient(-5deg, rgba(108, 132, 141, .9) 0 3px, rgba(108, 132, 141, .58) 3px 5px);
-      clip-path: polygon(1% 10%, 98% 0, 100% 88%, 3% 100%);
-      transform: rotate(-.7deg);
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .button,
-    .detail-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      min-height: 47px;
-      padding: 0 19px;
-      border: 1px solid var(--ink);
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 900;
-      text-decoration: none;
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-
-    .button:hover,
-    .detail-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 22px rgba(78, 72, 75, .12);
-    }
-
-    .button.primary,
-    .detail-link {
-      color: var(--cream);
-      background: var(--ink);
-    }
-
-    .button.secondary { background: var(--cream); }
-
-    .hero-visual {
-      position: relative;
-      grid-column: span 5;
-      min-height: 405px;
-      margin: 0;
-      overflow: hidden;
-      color: var(--cream);
-      background: var(--ink);
-      border: 2px solid var(--ink);
-      border-radius: 28px;
-      box-shadow: 10px 10px 0 #524748, var(--shadow);
-    }
-
-    .hero-visual img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+    .headshot img {
+      width: 148px;
+      height: auto;
+      border-radius: 6px;
       display: block;
-      object-fit: cover;
-      object-position: 50% 61%;
     }
 
-    .hero-visual figcaption {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    .focus-grid {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .focus-card {
-      position: relative;
-      min-height: 150px;
-      padding: 22px;
-      overflow: hidden;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-    }
-
-    .focus-card:nth-child(2) { background: var(--surface); }
-
-    .focus-number {
-      color: var(--ink);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .1em;
-    }
-
-    .focus-card h2 {
-      margin: 23px 0 6px;
-      font-family: var(--sans);
-      font-size: 28px;
-      font-weight: 750;
-      line-height: 1;
-      letter-spacing: -.035em;
-    }
-
-    .focus-card p {
-      margin: 0;
+    .headshot figcaption {
+      margin-top: 6px;
       color: var(--ink-soft);
       font-size: 13px;
-      line-height: 1.48;
     }
 
-    .focus-card:nth-child(2) p { color: var(--ink-soft); }
-
-    .focus-glyph {
-      position: absolute;
-      right: 18px;
-      top: 15px;
-      color: var(--ink);
-      font-size: 31px;
-      line-height: 1;
-    }
-
-    .projects { padding: 96px 0 105px; }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 32px;
-      margin-bottom: 34px;
-    }
-
-    .section-kicker { margin-bottom: 12px; }
-
-    .section-head h2 {
-      margin: 0;
-      font-family: var(--sans);
-      font-size: clamp(43px, 5.5vw, 68px);
-      font-weight: 750;
-      line-height: .95;
-      letter-spacing: -.055em;
-    }
-
-    .project-grid {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      align-items: start;
-      gap: 16px;
-    }
-
-    details.project {
-      grid-column: span 6;
-      overflow: clip;
-      background: var(--cream);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
-    }
-
-    details.project:hover {
-      transform: translateY(-4px);
-      border-color: rgba(78, 72, 75, .52);
-      box-shadow: var(--shadow);
-    }
-
-    details.project[open] {
-      grid-column: span 12;
-      transform: none;
-      border-color: var(--lime);
-      box-shadow: var(--shadow);
-    }
-
-    .project summary {
-      position: relative;
-      display: grid;
-      grid-template-rows: auto 145px 1fr;
-      gap: 18px;
-      min-height: 370px;
-      padding: 24px;
-      cursor: pointer;
+    .focus-list {
+      margin: 0 0 14px;
+      padding-left: 0;
       list-style: none;
     }
 
-    .project summary::-webkit-details-marker { display: none; }
-
-    .project-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--ink-soft);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .expand-icon {
+    .focus-list li {
+      margin: 0 0 10px;
+      padding-left: 18px;
       position: relative;
-      flex: 0 0 auto;
-      width: 34px;
-      height: 34px;
-      color: var(--ink);
-      background: var(--cream);
-      border: 1px solid currentColor;
-      border-radius: 50%;
-      transition: transform .25s ease;
     }
 
-    .expand-icon::before,
-    .expand-icon::after {
-      content: "";
+    .focus-list li::before {
+      content: "—";
       position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 12px;
-      height: 2px;
-      background: currentColor;
-      transform: translate(-50%, -50%);
+      left: 0;
+      color: var(--su-nezumi);
     }
 
-    .expand-icon::after { transform: translate(-50%, -50%) rotate(90deg); }
-    details[open] .expand-icon { transform: rotate(45deg); }
-
-    .result-graphic {
-      display: grid;
-      place-items: center;
-      min-width: 0;
-      overflow: hidden;
-      background: var(--lime-wash);
-      border-radius: 15px;
-    }
-
-    .result-graphic svg {
-      width: 100%;
-      height: 145px;
-    }
-
-    .result-graphic img {
-      width: 100%;
-      height: 145px;
-      display: block;
-      object-fit: cover;
-      object-position: 50% 58%;
-    }
-
-    .result-graphic.placeholder-graphic {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: repeating-linear-gradient(-45deg, var(--surface) 0 10px, var(--lime-wash) 10px 20px);
-      border: 1px dashed var(--line);
-    }
-
-    .result-graphic.placeholder-graphic span {
-      padding: 4px 12px;
-      color: var(--ink-soft);
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    .project.is-placeholder > summary { cursor: default; }
-
-    .result-graphic.media-graphic {
-      background: var(--cream);
-      border: 1px solid var(--line);
-    }
-
-    .result-graphic.booking-flow {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-      padding: 6px 12px;
-    }
-
-    .result-graphic.booking-flow img {
-      height: 133px;
-      object-fit: contain;
-      object-position: center;
-    }
-
-    .result-graphic.sf-infrastructure-graphic {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(8px, 2vw, 20px);
-      padding: 14px 20px;
-      background: #032d60;
-    }
-
-    .sf-infrastructure-graphic::after {
-      content: "PUBLIC CLOUD · DATA CENTERS";
-      position: absolute;
-      right: 12px;
-      bottom: 8px;
-      color: rgba(255, 255, 255, .72);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 7px;
-      font-weight: 900;
-      letter-spacing: .1em;
-    }
-
-    .sf-infrastructure-graphic .sf-official-logo {
-      position: relative;
-      z-index: 2;
-      flex: 0 1 132px;
-      width: min(132px, 34%);
-      height: auto;
-      padding: 0;
-      object-fit: contain;
-      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .2));
-    }
-
-    .sf-server-rack {
-      position: relative;
-      flex: 0 1 78px;
-      width: 78px;
-      height: 106px;
-      background: #E9EAE8;
-      border: 3px solid #4E484B;
-      border-radius: 11px;
-      box-shadow: 5px 5px 0 #6C848D;
-    }
-
-    .sf-server-rack::before {
-      content: "";
-      position: absolute;
-      inset: 11px 9px;
-      background: repeating-linear-gradient(to bottom, #4E484B 0 20px, transparent 20px 28px);
-      border-radius: 5px;
-    }
-
-    .sf-server-rack::after {
-      content: "";
-      position: absolute;
-      left: 16px;
-      top: 18px;
-      width: 6px;
-      height: 6px;
-      background: #6C848D;
-      border-radius: 50%;
-      box-shadow: 0 28px 0 #6C848D, 0 56px 0 #6C848D;
-    }
-
-    .sf-infrastructure-link {
-      flex: 0 2 34px;
-      width: 34px;
-      border-top: 3px dashed rgba(255, 255, 255, .78);
-    }
-
-    .result-graphic.community-photo img { object-position: 50% 52%; }
-
-    .project-body { align-self: end; }
-
-    .project-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 12px 0 0;
-    }
-
-    .tag {
-      padding: 6px 8px;
-      color: var(--ink);
-      background: var(--lime-wash);
-      border-radius: 999px;
-      font-size: 9px;
-      font-weight: 900;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-    }
-
-    .project-title {
-      display: flex;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 9px;
-    }
-
-    .project h3 {
-      flex: 1 1 auto;
-      min-width: 0;
+    .work-list {
       margin: 0;
-      font-family: var(--sans);
-      font-size: clamp(27px, 2.7vw, 35px);
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -.04em;
+      padding: 0;
+      list-style: none;
     }
 
-    .role {
-      flex: 0 0 auto;
-      margin-top: 2px;
-      padding: 7px 9px;
-      color: var(--cream);
-      background: var(--ink);
-      border-radius: 999px;
-      font-size: 9px;
-      font-weight: 900;
-      letter-spacing: .06em;
-      line-height: 1;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .role.primary-role {
-      padding: 8px 11px;
-      color: var(--cream);
-      background: var(--orange);
-      border: 1px solid var(--ink);
-      box-shadow: 3px 3px 0 var(--lime);
-      font-size: 10px;
-    }
-
-    .project-brief {
-      margin: 10px 0 0;
-      color: var(--ink-soft);
-      font-size: 16px;
-      line-height: 1.45;
-    }
-
-    .crayon-highlight {
-      position: relative;
-      z-index: 0;
-      display: inline-block;
-      padding: 0 .12em;
-      color: var(--ink);
-      background: transparent;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .crayon-highlight::before {
-      content: "";
-      position: absolute;
-      inset: 13% -.12em 2%;
-      z-index: -1;
-      background: repeating-linear-gradient(-7deg, rgba(230, 126, 34, .8) 0 3px, rgba(230, 126, 34, .5) 3px 5px);
-      clip-path: polygon(2% 12%, 96% 0, 100% 82%, 4% 100%);
-      transform: rotate(-1.5deg);
-    }
-
-    .project-detail {
-      padding: 26px;
-      background: var(--cream);
+    .work-list li {
+      padding: 16px 0;
       border-top: 1px solid var(--line);
     }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .detail-lead {
-      grid-column: 1 / -1;
-      max-width: 760px;
-      margin: 0 0 5px;
-      font-family: var(--sans);
-      font-size: clamp(22px, 3vw, 30px);
-      font-weight: 700;
-      line-height: 1.18;
-      letter-spacing: -.025em;
-    }
-
-    .detail-fact {
-      min-height: 115px;
-      padding: 16px;
-      background: var(--lime-wash);
-      border: 1px solid var(--line);
-      border-radius: 13px;
-    }
-
-    .detail-fact strong {
-      display: block;
-      margin-bottom: 7px;
-      color: var(--ink);
-      font-size: 10px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .detail-fact span {
-      color: var(--ink-soft);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .detail-actions {
-      grid-column: 1 / -1;
+    .work-title {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin-top: 7px;
+      gap: 4px 10px;
+      align-items: baseline;
     }
 
-    .detail-note {
-      grid-column: 1 / -1;
-      margin: 0;
+    .work-title .role {
       color: var(--ink-soft);
-      font-size: 11px;
-      line-height: 1.5;
+      font-size: 13px;
     }
 
-    .detail-graph {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 260px;
-      align-items: stretch;
-      margin: 0 0 4px;
-      overflow: hidden;
-      background: var(--cream);
-      border: 1px solid var(--line);
-      border-radius: 14px;
+    .work-meta {
+      margin: 4px 0 0;
+      color: var(--ink-soft);
+      font-size: 13px;
     }
 
-    .detail-graph img {
-      width: 100%;
-      height: 330px;
-      display: block;
-      object-fit: contain;
-      mix-blend-mode: multiply;
-    }
-
-    .detail-graph figcaption {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 9px;
-      padding: 22px;
-      color: var(--cream);
-      background: var(--ink);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .detail-graph figcaption strong {
-      color: var(--lime);
-      font-size: 10px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
+    .work-list p { margin: 6px 0 0; }
+    .placeholder-note { color: var(--su-nezumi); font-style: italic; }
 
     footer {
-      padding: 34px 0;
-      color: var(--cream);
-      background: var(--ink);
+      padding: 28px 0 44px;
+      border-top: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-size: 13px;
     }
 
     .footer-bottom {
       display: flex;
       justify-content: space-between;
-      gap: 22px;
-      color: rgba(255, 255, 255, .72);
-      font-size: 12px;
+      flex-wrap: wrap;
+      gap: 8px 20px;
     }
 
-    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
-    .footer-links a { font-weight: 900; text-decoration: none; }
-    .footer-links a:hover { color: var(--lime); }
-
-    .js .reveal {
-      opacity: 0;
-      transform: translateY(15px);
-      transition: opacity .6s ease, transform .6s ease;
-    }
-
-    .js .reveal.visible { opacity: 1; transform: none; }
-
-    :focus-visible {
-      outline: 3px solid var(--orange);
-      outline-offset: 4px;
-    }
-
-    @media (max-width: 900px) {
-      .hero {
-        grid-template-columns: minmax(0, 1fr);
-        column-gap: 0;
-        padding-top: 54px;
-      }
-      .hero-copy,
-      .hero-visual,
-      .focus-grid { grid-column: 1; }
-      .hero-visual { width: min(100%, 620px); min-height: 390px; margin-inline: auto; }
-      .focus-grid { grid-template-columns: 1fr; }
-      .focus-card { min-height: 125px; }
-      details.project { grid-column: span 6; }
-      details.project[open] { grid-column: span 12; }
-    }
-
-    @media (max-width: 650px) {
-      .shell { width: min(100% - 28px, 1160px); }
-      .nav { min-height: 70px; }
-      .nav-links a:not(.nav-cta):not(.nav-writing) { display: none; }
-      .hero { padding: 48px 0 72px; row-gap: 30px; }
-      h1 { font-size: clamp(54px, 15vw, 68px); }
-      .intro { font-size: 16px; }
-      .hero-visual { min-height: 330px; box-shadow: 7px 7px 0 #524748, var(--shadow); }
-      .focus-card h2 { margin-top: 18px; }
-      .projects { padding: 72px 0 80px; }
-      .section-head { align-items: flex-start; flex-direction: column; margin-bottom: 27px; }
-      details.project,
-      details.project[open] { grid-column: 1 / -1; }
-      .project summary { min-height: 350px; padding: 20px; }
-      .detail-grid { grid-template-columns: 1fr; }
-      .detail-lead,
-      .detail-actions { grid-column: 1; }
-      .detail-graph { grid-column: 1; grid-template-columns: 1fr; }
-      .detail-graph img { height: 280px; }
-      .detail-note { grid-column: 1; }
-      .detail-fact { min-height: 0; }
-      .footer-bottom { flex-direction: column; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-      }
-      .js .reveal { opacity: 1; transform: none; }
-    }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { color: var(--ink-soft); text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to main content</a>
-
   <header class="shell">
     <nav class="nav" aria-label="Main navigation">
-      <a class="brand" href="#top" aria-label="Eva Huang, home">
-        <svg class="brand-mark" viewBox="0 0 40 40" role="img" aria-label="EH monogram">
-          <rect x="2" y="2" width="36" height="36" rx="10" fill="#E9EAE8" stroke="#4E484B" stroke-width="2"/>
-          <path d="M9 10v20m0-20h10M9 20h8M9 30h10M24 10v20m9-20v20m-9-10h9" fill="none" stroke="#4E484B" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="33" cy="10" r="3" fill="#524748"/>
-        </svg>
-        <span>Eva Huang</span>
-      </a>
+      <a class="brand" href="#top">Eva Huang</a>
       <div class="nav-links">
         <a href="#focus">Focus</a>
-        <a href="#work">Selected work</a>
-        <a class="nav-writing" href="/writing/">Writing</a>
-        <a class="nav-cta" href="mailto:ehuang0124@gmail.com">Let's talk</a>
+        <a href="#work">Work</a>
+        <a href="/writing/">Writing</a>
+        <a href="mailto:ehuang0124@gmail.com">Email</a>
       </div>
     </nav>
   </header>
 
-  <main id="main">
-    <section class="shell hero" id="top">
-      <div class="hero-copy">
-        <p class="name-label">Eva Huang</p>
-        <h1>Technology for the <span class="spark">public interest.</span></h1>
-        <p class="intro">I research how AI systems can align with <strong>human preference and democratic values</strong> — using AI evaluation, mixed methods, and political science.</p>
-        <p class="education-line">Computer Science + <span class="education-focus">Political Science</span></p>
-        <div class="hero-actions">
-          <a class="button primary" href="#work">See the evidence <span aria-hidden="true">↓</span></a>
-          <a class="button secondary" href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-
-      <figure class="hero-visual">
+  <main class="shell" id="main">
+    <section id="top">
+      <h1>Technology for the public interest.</h1>
+      <p class="lede">I research how AI systems can align with human preference and democratic values — using AI evaluation, mixed methods, and political science. Computer Science + Political Science.</p>
+      <figure class="headshot">
         <img src="assets/eva-huang.jpg" alt="Eva Huang sitting in a mountain meadow" width="1350" height="1800">
         <figcaption>Eva Huang outdoors in a mountain meadow.</figcaption>
       </figure>
-
-      <div class="focus-grid" id="focus" aria-label="Eva's three research focus areas">
-        <article class="focus-card reveal">
-          <span class="focus-number">01</span><span class="focus-glyph" aria-hidden="true">◈</span>
-          <h2>Public interest technology</h2>
-          <p>How AI systems can serve the common good and democratic values.</p>
-        </article>
-        <article class="focus-card reveal">
-          <span class="focus-number">02</span><span class="focus-glyph" aria-hidden="true">⚖</span>
-          <h2>AI evaluation + human preference</h2>
-          <p>Measuring whether models behave the way people actually want them to.</p>
-        </article>
-        <article class="focus-card reveal">
-          <span class="focus-number">03</span><span class="focus-glyph" aria-hidden="true">✎</span>
-          <h2>Mixed methods + political science</h2>
-          <p>Combining computational analysis with fieldwork, interviews, and institutional study.</p>
-        </article>
-      </div>
+      <p><a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub</a> · <a href="https://www.linkedin.com/in/ehuang42/" target="_blank" rel="noreferrer">LinkedIn</a> · <a href="mailto:ehuang0124@gmail.com">ehuang0124@gmail.com</a></p>
     </section>
 
-    <section class="projects" id="work">
-      <div class="shell">
-        <div class="section-head reveal">
-          <div>
-            <p class="section-kicker">Selected work</p>
-            <h2>Selected Projects</h2>
-          </div>
-        </div>
+    <section id="focus">
+      <h2>Research focus</h2>
+      <ul class="focus-list">
+        <li><strong>Public interest technology</strong> — how AI systems can serve the common good and democratic values.</li>
+        <li><strong>AI evaluation + human preference</strong> — measuring whether models behave the way people actually want them to.</li>
+        <li><strong>Mixed methods + political science</strong> — combining computational analysis with fieldwork, interviews, and institutional study.</li>
+      </ul>
+    </section>
 
-        <div class="project-grid">
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>01 / Product</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic media-graphic booking-flow">
-                <img src="assets/wishmobile-booking-flow.webp" alt="WishMobile booking link shown in a Google Maps business listing" width="465" height="516">
-                <img src="assets/wishmobile-booking-details.webp" alt="WishMobile mobile reservation screen for a tea experience" width="465" height="516">
-                <img src="assets/wishmobile-booking-confirmation.webp" alt="WishMobile mobile booking confirmation screen" width="465" height="516">
-              </div>
-              <div class="project-body">
-                <div class="project-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role primary-role">Product Manager</span></div>
-                <div class="project-tags"><span class="tag">Agile</span><span class="tag">Miro</span><span class="tag">Figma</span><span class="tag">Market research</span><span class="tag">Google Analytics</span><span class="tag">SQL</span></div>
-                <p class="project-brief"><span class="crayon-highlight">18%</span> of platform revenue in three months.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Led 0→1 from product vision to customer launch.</p>
-                <div class="detail-fact"><strong>Experience</strong><span>Book and pay through Google Maps or the merchant website.</span></div>
-                <div class="detail-fact"><strong>Business result</strong><span><span class="crayon-highlight">18%</span> of platform revenue within three months.</span></div>
-                <div class="detail-fact"><strong>Product reach</strong><span>WishMobile reports 500,000+ users in Taiwan.</span></div>
-                <div class="detail-actions">
-                  <a class="detail-link" href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">See product website <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>02 / AI infrastructure</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic media-graphic sf-infrastructure-graphic" role="img" aria-label="Salesforce cloud connected to public-cloud data centers">
-                <span class="sf-server-rack" aria-hidden="true"></span>
-                <span class="sf-infrastructure-link" aria-hidden="true"></span>
-                <img class="sf-official-logo" src="https://wp.sfdcdigital.com/en-us/wp-content/uploads/sites/4/2024/11/logo-salesforce.svg?w=1024" alt="Salesforce" width="206" height="144">
-                <span class="sf-infrastructure-link" aria-hidden="true"></span>
-                <span class="sf-server-rack" aria-hidden="true"></span>
-              </div>
-              <div class="project-body">
-                <div class="project-title"><h3>Salesforce API platform | Salesforce</h3><span class="role primary-role">Developer</span></div>
-                <div class="project-tags"><span class="tag">Kubernetes</span><span class="tag">AWS</span><span class="tag">GCP</span><span class="tag">Istio/Envoy</span><span class="tag">CI/CD</span><span class="tag">Splunk</span></div>
-                <p class="project-brief">Tenant isolation for critical AI/ML infrastructure.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Founding engineering work where AI scale and tenant isolation meet.</p>
-                <div class="detail-fact"><strong>41B+</strong><span>Daily platform requests.</span></div>
-                <div class="detail-fact"><strong>0→1 × 2</strong><span>Salesforce API platform initiatives.</span></div>
-                <div class="detail-fact"><strong>AI infrastructure</strong><span>Tenant isolation for critical AI/ML workloads.</span></div>
-                <div class="detail-actions">
-                  <a class="detail-link" href="https://www.salesforce.com/platform/infrastructure/" target="_blank" rel="noreferrer">Explore Salesforce infrastructure <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>03 / Policy governance</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic" aria-hidden="true">
-                <svg viewBox="0 0 330 145">
-                  <rect width="330" height="145" fill="#E9EAE8"/>
-                  <g fill="none" stroke="#4E484B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M31 39l44-12 28 30-18 42-45-7zM75 27l43 13 13 44-46 15M103 57l28 27M40 92l-9-53 44-12" opacity=".7"/>
-                    <path d="M44 47l32 20-20 17m20-17 30 7"/>
-                  </g>
-                  <g fill="#6C848D" stroke="#4E484B" stroke-width="2"><circle cx="31" cy="39" r="6"/><circle cx="75" cy="27" r="6"/><circle cx="103" cy="57" r="6"/><circle cx="85" cy="99" r="6"/><circle cx="40" cy="92" r="6"/><circle cx="76" cy="67" r="7"/></g>
-                  <g fill="none" stroke="#4E484B" stroke-width="4" stroke-linecap="round">
-                    <circle cx="74" cy="66" r="42"/>
-                    <path d="M104 96l29 28" stroke-width="8"/>
-                  </g>
-                  <g transform="translate(167 20)" stroke="#4E484B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M63 0c18 13 37 15 50 16v39c0 29-19 47-50 62C32 102 13 84 13 55V16C27 15 46 13 63 0z" fill="#E9EAE8"/>
-                    <path d="M39 58l16 16 32-38" fill="none" stroke="#524748" stroke-width="8"/>
-                    <path d="M28 91c21 9 47 8 69-4" fill="none" opacity=".25"/>
-                  </g>
-                  <text x="230" y="136" fill="#4E484B" font-family="system-ui, sans-serif" font-size="8" font-weight="900" text-anchor="middle" letter-spacing="1.5">GOVERNED POLICY</text>
-                </svg>
-              </div>
-              <div class="project-body">
-                <div class="project-title"><h3>Mesh Analyzer | Salesforce</h3><span class="role">Project Lead</span></div>
-                <div class="project-tags"><span class="tag">Agile</span><span class="tag">Kubernetes</span><span class="tag">Python</span><span class="tag">HTML</span><span class="tag">SQL</span></div>
-                <p class="project-brief">Turned a debugging SOP into reusable policy governance.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Led the shift from one-off customer debugging to governed policy.</p>
-                <div class="detail-fact"><strong>Captured</strong><span>Turned expert debugging knowledge into explicit policy.</span></div>
-                <div class="detail-fact"><strong>Governed</strong><span>Made decisions reviewable and consistent.</span></div>
-                <div class="detail-fact"><strong>Reusable</strong><span>Applied the policy beyond one customer incident.</span></div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal" name="projects">
-            <summary>
-              <div class="project-top"><span>04 / Mixed-methods research</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic media-graphic community-photo">
-                <img src="assets/southeast-asian-community.png" alt="Community bookstore in Taiwan with Southeast Asian flags, books, and cultural materials" width="754" height="412">
-              </div>
-              <div class="project-body">
-                <div class="project-title"><h3>Southeast Asian migrant cultural + spatial analysis in Taiwan</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">GIS / ArcGIS</span></div>
-                <p class="project-brief">Selected for the Geographic Olympiad; combined field visits, GIS, surveys, and user interviews across five community sites.</p>
-              </div>
-            </summary>
-            <div class="project-detail">
-              <div class="detail-grid">
-                <p class="detail-lead">Co-authored research on how community spaces shape cultural identity and belonging.</p>
-                <div class="detail-fact"><strong>Geographic Olympiad</strong><span>Selected research paper on Southeast Asian migrant workers and immigrants in Taiwan.</span></div>
-                <div class="detail-fact"><strong>5 field sites</strong><span>Visited bookstore-alliance and worker-support spaces across New Taipei, Taoyuan, Keelung, and Yilan.</span></div>
-                <div class="detail-fact"><strong>Mixed methods</strong><span>Combined GIS analysis, field observation, questionnaires, and first-person interviews.</span></div>
-                <p class="detail-note">The study found that bookstores and support spaces work at two scales: building everyday belonging for migrants while creating platforms for wider cross-cultural understanding.</p>
-                <div class="detail-actions">
-                  <a class="detail-link" href="https://docs.google.com/presentation/d/0BzW7Mt3pnvR8VnlrOXJBY19FTHc/edit?usp=drive_link&amp;ouid=101359900920162144873&amp;resourcekey=0-9OkbSZs-mfs8n-ovzbCMqw&amp;rtpof=true&amp;sd=true" target="_blank" rel="noreferrer">View the research deck <span aria-hidden="true">↗</span></a>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="project reveal is-placeholder" name="projects">
-            <summary>
-              <div class="project-top"><span>05 / AI evaluation · placeholder</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic placeholder-graphic" aria-hidden="true"><span>Placeholder</span></div>
-              <div class="project-body">
-                <div class="project-title"><h3>AI evaluation research</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">Coming soon</span><span class="tag">Evaluation design</span></div>
-                <p class="project-brief">Placeholder — project details will be published here.</p>
-              </div>
-            </summary>
-          </details>
-
-          <details class="project reveal is-placeholder" name="projects">
-            <summary>
-              <div class="project-top"><span>06 / Human preference · placeholder</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic placeholder-graphic" aria-hidden="true"><span>Placeholder</span></div>
-              <div class="project-body">
-                <div class="project-title"><h3>Human preference alignment</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">Coming soon</span><span class="tag">Preference data</span></div>
-                <p class="project-brief">Placeholder — project details will be published here.</p>
-              </div>
-            </summary>
-          </details>
-
-          <details class="project reveal is-placeholder" name="projects">
-            <summary>
-              <div class="project-top"><span>07 / Mixed methods · placeholder</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic placeholder-graphic" aria-hidden="true"><span>Placeholder</span></div>
-              <div class="project-body">
-                <div class="project-title"><h3>Mixed-methods study</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">Coming soon</span><span class="tag">Qual + quant</span></div>
-                <p class="project-brief">Placeholder — project details will be published here.</p>
-              </div>
-            </summary>
-          </details>
-
-          <details class="project reveal is-placeholder" name="projects">
-            <summary>
-              <div class="project-top"><span>08 / Political science · placeholder</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic placeholder-graphic" aria-hidden="true"><span>Placeholder</span></div>
-              <div class="project-body">
-                <div class="project-title"><h3>Political science research</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">Coming soon</span><span class="tag">Institutions</span></div>
-                <p class="project-brief">Placeholder — project details will be published here.</p>
-              </div>
-            </summary>
-          </details>
-
-          <details class="project reveal is-placeholder" name="projects">
-            <summary>
-              <div class="project-top"><span>09 / Public interest · placeholder</span><i class="expand-icon" aria-hidden="true"></i></div>
-              <div class="result-graphic placeholder-graphic" aria-hidden="true"><span>Placeholder</span></div>
-              <div class="project-body">
-                <div class="project-title"><h3>Public interest technology</h3><span class="role">Researcher</span></div>
-                <div class="project-tags"><span class="tag">Coming soon</span><span class="tag">Civic tech</span></div>
-                <p class="project-brief">Placeholder — project details will be published here.</p>
-              </div>
-            </summary>
-          </details>
-
-        </div>
-      </div>
+    <section id="work">
+      <h2>Selected work</h2>
+      <ul class="work-list">
+        <li>
+          <div class="work-title"><h3>Integrated travel booking CRM | WishMobile</h3><span class="role">Product Manager</span></div>
+          <p class="work-meta">Agile · Miro · Figma · Market research · Google Analytics · SQL</p>
+          <p>Led 0→1 from product vision to customer launch. Book and pay through Google Maps or the merchant website; 18% of platform revenue within three months. WishMobile reports 500,000+ users in Taiwan. <a href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">Product website</a></p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Salesforce API platform | Salesforce</h3><span class="role">Developer</span></div>
+          <p class="work-meta">Kubernetes · AWS · GCP · Istio/Envoy · CI/CD · Splunk</p>
+          <p>Founding engineering where AI scale and tenant isolation meet — 41B+ daily platform requests across two 0→1 initiatives. <a href="https://www.salesforce.com/platform/infrastructure/" target="_blank" rel="noreferrer">Salesforce infrastructure</a></p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Mesh Analyzer | Salesforce</h3><span class="role">Project Lead</span></div>
+          <p class="work-meta">Agile · Kubernetes · Python · HTML · SQL</p>
+          <p>Turned a one-off debugging SOP into reusable, reviewable policy governance. Captured expert debugging knowledge as explicit policy and applied it beyond a single customer incident.</p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Southeast Asian migrant cultural + spatial analysis in Taiwan</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">GIS / ArcGIS · Field visits · Surveys · Interviews</p>
+          <p>Selected for the Geographic Olympiad. Combined GIS, field observation, questionnaires, and first-person interviews across five community sites in New Taipei, Taoyuan, Keelung, and Yilan — finding that bookstores and support spaces build everyday belonging while creating platforms for cross-cultural understanding. <a href="https://docs.google.com/presentation/d/0BzW7Mt3pnvR8VnlrOXJBY19FTHc/edit?usp=drive_link&amp;ouid=101359900920162144873&amp;resourcekey=0-9OkbSZs-mfs8n-ovzbCMqw&amp;rtpof=true&amp;sd=true" target="_blank" rel="noreferrer">Research deck</a></p>
+        </li>
+        <li>
+          <div class="work-title"><h3>AI evaluation research</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">Evaluation design</p>
+          <p class="placeholder-note">Placeholder — details coming soon.</p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Human preference alignment</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">Preference data</p>
+          <p class="placeholder-note">Placeholder — details coming soon.</p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Mixed-methods study</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">Qual + quant</p>
+          <p class="placeholder-note">Placeholder — details coming soon.</p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Political science research</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">Institutions</p>
+          <p class="placeholder-note">Placeholder — details coming soon.</p>
+        </li>
+        <li>
+          <div class="work-title"><h3>Public interest technology</h3><span class="role">Researcher</span></div>
+          <p class="work-meta">Civic tech</p>
+          <p class="placeholder-note">Placeholder — details coming soon.</p>
+        </li>
+      </ul>
     </section>
   </main>
 
@@ -1119,30 +267,15 @@
     <div class="shell footer-bottom">
       <span>© <span id="year"></span> Eva Huang</span>
       <div class="footer-links">
-        <a href="mailto:ehuang0124@gmail.com">ehuang0124@gmail.com ↗</a>
-        <a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub ↗</a>
-        <a href="https://www.linkedin.com/in/ehuang42/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
+        <a href="mailto:ehuang0124@gmail.com">Email</a>
+        <a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/ehuang42/" target="_blank" rel="noreferrer">LinkedIn</a>
       </div>
     </div>
   </footer>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-
-    const revealItems = document.querySelectorAll('.reveal');
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-      revealItems.forEach((element) => observer.observe(element));
-    } else {
-      revealItems.forEach((element) => element.classList.add('visible'));
-    }
   </script>
 </body>
 </html>
