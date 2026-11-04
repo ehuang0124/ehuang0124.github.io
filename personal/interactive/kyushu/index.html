@@ -171,6 +171,11 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
   .map-head{padding:16px}
   .photo{height:200px}
 }
+
+.region-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#58665b}
+.region-control select{max-width:100%;min-height:36px;padding:7px 12px;border:1px solid #d8dbd0;border-radius:18px;background:#fff;color:#26332d;font:inherit}
+.region-control select:focus-visible{outline:2px solid #2c6e63;outline-offset:3px}
+.region-note{flex-basis:100%;font-size:11px;line-height:1.7;color:#68766c;margin:10px 0 0}
 </style>
 </head>
 <body>
@@ -223,11 +228,15 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 
   <aside class="map-panel">
     <div class="map-head">
+      <label class="region-control" for="region-filter">區域
+        <select id="region-filter" aria-controls="timeline mapsvg detail"></select>
+      </label>
       <div class="map-actions">
         <button id="all-map" class="active">全部景點</button>
         <button id="route-map">旅行路線</button>
         <button id="reset-map">重設視角</button>
       </div>
+      <p class="region-note" id="region-status" role="status" aria-live="polite"></p>
     </div>
 
     <div class="map-body">
@@ -325,10 +334,40 @@ function drawRegions(){
   el('region-content').querySelectorAll('.region-story').forEach(button=>button.onclick=()=>focus(button.dataset.story,true));
 }
 
+const MAP_REGIONS={
+  north:{name:'北部九州（福岡・長崎）',groups:['yanagawa','nagasaki']},
+  south:{name:'南部九州（鹿兒島・宮崎）',groups:['kagoshima','miyazaki']}
+};
+let mapRegion='all';
+function regionEvents(){
+  return mapRegion==='all'?events:events.filter(e=>MAP_REGIONS[mapRegion].groups.includes(e.group));
+}
+function buildRegionFilter(){
+  el('region-filter').innerHTML='<option value="all">全部區域</option>'+Object.entries(MAP_REGIONS).map(([k,r])=>'<option value="'+k+'">'+r.name+'</option>').join('');
+  el('region-filter').onchange=()=>setMapRegion(el('region-filter').value);
+}
+function setMapRegion(region){
+  mapRegion=region;
+  if(region!=='all')setRoute(false);
+  el('all-map').classList.toggle('active',region==='all'&&!routeOn);
+  el('region-filter').value=region;
+  const list=regionEvents();
+  const groups=[...new Set(list.map(e=>e.group))].map(k=>GROUPS[k]).filter(g=>!g.offmap);
+  svg.querySelectorAll('.mk').forEach(g=>{g.style.display=region==='all'||MAP_REGIONS[region].groups.includes(g.dataset.g)?'':'none'});
+  if(!list.some(e=>e.id===active))focus(list[0].id,false,false);
+  else drawTimeline();
+  el('region-status').textContent=(region==='all'?'全部區域':MAP_REGIONS[region].name)+' · '+list.length+' 個故事'+(!groups.length?'（此站位於圖外，請接續九州地圖）':'');
+  if(region==='all'||!groups.length){resetView();return;}
+  const xs=groups.map(g=>px(g.lng)),ys=groups.map(g=>py(g.lat));
+  const cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+  const width=Math.max((Math.max(...xs)-Math.min(...xs))*1.6,(Math.max(...ys)-Math.min(...ys))*BASE.w/BASE.h*1.6,BASE.w/3);
+  centerOn(cx,cy,Math.min(BASE.w/width,3));
+}
+
 /* ===== 時間軸 ===== */
 function drawTimeline(){
   let last='';
-  el('timeline').innerHTML=events.map(e=>{
+  el('timeline').innerHTML=regionEvents().map(e=>{
     let header=e.era!==last?'<div class="period">'+e.era+'</div>':'';
     last=e.era;
     return header+'<button class="event '+(active===e.id?'active':'')+'" data-id="'+e.id+'">'+
@@ -468,6 +507,7 @@ function resetView(){vb={...BASE};applyVB()}
 
 /* ===== 互動 ===== */
 function focus(id,scroll=false,zoom=true){
+  if(mapRegion!=='all'&&!MAP_REGIONS[mapRegion].groups.includes(byId[id].group))setMapRegion('all');
   active=id;
   const e=byId[id];
   drawTimeline();
@@ -588,13 +628,13 @@ async function loadPhoto(e){
 function setRoute(on){
   routeOn=on;
   el('route-map').classList.toggle('active',on);
-  el('all-map').classList.toggle('active',!on);
+  el('all-map').classList.toggle('active',!on&&mapRegion==='all');
   const line=el('routeline');
   if(line)line.style.display=on?'':'none';
   if(on)centerOn(430,300,1.06); else resetView();
 }
-el('route-map').onclick=()=>setRoute(true);
-el('all-map').onclick=()=>setRoute(false);
+el('route-map').onclick=()=>{setMapRegion('all');setRoute(true)};
+el('all-map').onclick=()=>{setMapRegion('all');setRoute(false)};
 el('reset-map').onclick=()=>{setRoute(false);resetView()};
 el('zoom-in').onclick=()=>zoomBy(0.72);
 el('zoom-out').onclick=()=>zoomBy(1.38);
@@ -604,6 +644,8 @@ drawTimeline();
 buildMap();
 applyVB();
 focus(active,false,false);
+buildRegionFilter();
+setMapRegion('all');
 loadHero();
 </script>
 </body>
