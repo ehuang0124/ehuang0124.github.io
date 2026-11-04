@@ -1,0 +1,28 @@
+.history-panel{padding:20px 24px;border-top:1px solid #d8d5c7;background:#fffdf6;color:#263b35;font:13px/1.8 Arial,"Noto Sans TC","PingFang TC",sans-serif}
+.history-panel h3{margin:0 0 12px;font-size:18px}
+.history-controls{display:flex;gap:8px;flex-wrap:wrap}
+.history-panel button{font:inherit;cursor:pointer;text-align:left;border:1px solid #c4c6b5;border-radius:8px;padding:7px 12px;background:#fffdf6;color:#30483d}
+.history-controls button[aria-pressed="true"]{background:#30483d;border-color:#30483d;color:#fffdf6}
+.history-panel button:focus-visible{outline:3px solid #aa523e;outline-offset:3px}
+.history-panel p{margin:12px 0;max-width:90ch}
+.history-note{font-size:12px;color:#64756a}
+.gateway-note{border-left:3px solid #487a8a;padding-left:12px}
+.history-list{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.history-list button{font-size:12px;flex:1 1 250px}
+.history-list button[aria-pressed="true"]{border-color:#aa523e;background:#f6eadd}
+.history-detail h4{margin:12px 0 0;font-size:16px}
+.history-detail a{color:#326960;text-underline-offset:3px}
+.history-marker{cursor:pointer;outline:none}
+.history-leader{stroke:#a34432;stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.history-origin{fill:#a34432;stroke:#fffdf6;stroke-width:1;vector-effect:non-scaling-stroke}
+.history-diamond{fill:#a34432;stroke:#fffdf6;stroke-width:1.5}
+.history-number{fill:#fffdf6;font:bold 11px Arial,sans-serif;pointer-events:none}
+.history-marker:hover .history-diamond,.history-marker:focus-visible .history-diamond,.history-marker[aria-pressed="true"] .history-diamond{fill:#663221;stroke:#f2c16b;stroke-width:3}
+.gateway-leader{stroke:#487a8a;stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.gateway-diamond{fill:#fffdf6;stroke:#487a8a;stroke-width:1.5}
+.gateway-label{fill:#285e70;stroke:#fffdf6;stroke-width:3;paint-order:stroke;stroke-linejoin:round;font-family:Arial,"Noto Sans TC",sans-serif;font-weight:700}
+@media(max-width:480px){.history-panel{padding:18px 16px}.history-list button{flex-basis:100%}}
+
+.history-map-label{fill:#7d3628;stroke:#fffdf6;stroke-width:3;paint-order:stroke;stroke-linejoin:round;font:600 10px Arial,"Noto Sans TC",sans-serif;pointer-events:none}
+.gateway-area{letter-spacing:.08em;opacity:.8}
+@media(max-width:600px){.history-map-label{display:none}}
