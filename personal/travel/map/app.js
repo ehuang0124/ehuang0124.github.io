@@ -12,11 +12,11 @@
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
   const CATEGORIES = {
-    countries: { title:'世界國家', subtitle:'世界・國家與地區', map:'01 / THE WHOLE WORLD', description:'在地圖上找一個國家，或在下方搜尋它的名字。', note:'國家與地區依 Natural Earth 示意；小型島嶼也可以從清單選取。', kind:'COUNTRIES & REGIONS', regions:CONTINENTS, initial:'392' },
-    cities: { title:'世界主要城市', subtitle:'世界・城市索引', map:'02 / CITIES OF THE WORLD', description:'從精選的主要城市出發；清單裡沒有的地方，也能自己加入。', note:'城市為代表點；自訂城市如未填座標，會以國家中心標示近似位置。', kind:'WORLD CITIES', regions:CONTINENTS, initial:'tokyo-jp' },
-    us: { title:'美國國家公園', subtitle:'美國・64 座國家公園', map:'03 / THE UNITED STATES', description:'山脈、沙漠、海岸與島嶼；在分區間慢慢收集國家公園。', note:'主圖以美國本土為中心；阿拉斯加及島嶼請切換分區或點清單定位。', kind:'U.S. NATIONAL PARKS', regions:[{id:'all',label:'全部'},{id:'west',label:'西岸'},{id:'mountain',label:'山地・沙漠'},{id:'midwest',label:'中西部'},{id:'east',label:'東岸・南方'},{id:'alaska',label:'阿拉斯加'},{id:'hawaii',label:'夏威夷'},{id:'territories',label:'美國屬地'}], initial:'yell' },
-    ca: { title:'加拿大國家公園', subtitle:'加拿大・國家公園與保護區', map:'04 / CANADA', description:'從太平洋雨林到北極圈，也收錄國家公園保護區。', note:'地圖標記為園區的代表位置，並非公園的完整範圍。', kind:'CANADA / PARKS & RESERVES', regions:[{id:'all',label:'全部'},{id:'pacific',label:'太平洋沿岸'},{id:'rockies',label:'洛磯・草原'},{id:'central',label:'安大略・魁北克'},{id:'atlantic',label:'大西洋沿岸'},{id:'north',label:'北方領地'}], initial:'banff' },
-    jp: { title:'日本國家公園', subtitle:'日本・35 座國家公園', map:'05 / JAPAN', description:'從北海道到沖繩，沿著山與海收集日本的國家公園。', note:'離島分散於海上；從分區或清單選取，可將地圖移至當地。', kind:'JAPAN NATIONAL PARKS', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
+    countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', description:'點選國家，或搜尋名稱。', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
+    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', description:'選城市，或新增清單沒有的城市。', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
+    us: { title:'美國國家公園', map:'03 / THE UNITED STATES', description:'選擇地理分區，篩選國家公園。', note:'州代碼為代表標示，非界線；阿拉斯加及島嶼可由分區定位。', regions:[{id:'all',label:'全部'},{id:'west',label:'西岸'},{id:'mountain',label:'山地・沙漠'},{id:'midwest',label:'中西部'},{id:'east',label:'東岸・南方'},{id:'alaska',label:'阿拉斯加'},{id:'hawaii',label:'夏威夷'},{id:'territories',label:'美國屬地'}], initial:'yell' },
+    ca: { title:'加拿大國家公園', map:'04 / CANADA', description:'選擇省區，篩選國家公園。', note:'省區代碼為代表標示，非界線；園區標記為代表位置。', regions:[{id:'all',label:'全部'},{id:'pacific',label:'太平洋沿岸'},{id:'rockies',label:'洛磯・草原'},{id:'central',label:'安大略・魁北克'},{id:'atlantic',label:'大西洋沿岸'},{id:'north',label:'北方領地'}], initial:'banff' },
+    jp: { title:'日本國家公園', map:'05 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
   };
   const WORLD_AREA = { AS:[24,-15,179,78], EU:[-25,29,50,75], AF:[-25,-37,54,38], NA:[-170,0,-50,83], SA:[-85,-56,-30,14], OC:[94,-52,180,16], AN:[68,-58,82,-49] };
   const collator = new Intl.Collator('zh-Hant', { numeric:true });
@@ -38,14 +38,25 @@
   }
   const today = (() => {
     const d = new Date();
-    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   })();
-  function validDate(date) {
-    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today) return false;
-    const parsed = new Date(`${date}T12:00:00Z`);
-    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date;
+  const todayDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+  function validDate(month) {
+    if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month > today) return false;
+    return true;
   }
-  function printedDate(date) { return date ? date.replaceAll('-', '.') : '────.──.──'; }
+  function normalizedMonth(value) {
+    if (typeof value !== 'string') return null;
+    const match = value.match(/^(\d{4}-(?:0[1-9]|1[0-2]))(?:-(\d{2}))?$/);
+    if (!match || !validDate(match[1])) return null;
+    if (match[2]) {
+      const day = `${match[1]}-${match[2]}`;
+      const parsed = new Date(`${day}T12:00:00Z`);
+      if (day > todayDate || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== day) return null;
+    }
+    return match[1];
+  }
+  function printedDate(month) { return month ? month.replace('-', '.') : '────.──'; }
   function makeElement(tag, className, text) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -99,7 +110,7 @@
     if (raw?.visits && typeof raw.visits === 'object' && !Array.isArray(raw.visits)) {
       for (const [key, dates] of Object.entries(raw.visits)) {
         if (knownKeys.has(key) && Array.isArray(dates)) {
-          const unique = [...new Set(dates.filter(validDate))].sort();
+          const unique = [...new Set(dates.map(normalizedMonth).filter(Boolean))].sort();
           if (unique.length) visits[key] = unique.slice(0, 200);
         }
       }
@@ -114,8 +125,10 @@
   data.customCities.forEach(city => catalogue.cities.push(cityFromCustom(city)));
   function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); return true; }
-    catch { $('#backup-feedback').textContent = '此瀏覽器無法儲存紀錄，請立即匯出備份。'; return false; }
+    catch { $('#backup-feedback').textContent = '無法儲存；請匯出備份。'; return false; }
   }
+  // Persist normalized month-only records on load so day-precision backups migrate once.
+  saveState();
   function visitsOf(place) { return data.visits[place.key] || []; }
   function isStamped(place) { return visitsOf(place).length > 0; }
   function sortedPlaces(cat) { return [...catalogue[cat]].sort((a,b) => collator.compare(a.zh,b.zh) || collator.compare(a.en,b.en)); }
@@ -123,6 +136,7 @@
   const svg = $('#map-svg');
   const surface = $('#map-surface');
   const countryLayer = $('#country-layer');
+  const divisionLayer = $('#division-layer');
   const markerLayer = $('#marker-layer');
   const tooltip = $('#map-tooltip');
   const dateInput = $('#visit-date');
@@ -166,7 +180,6 @@
     });
     $('#atlas-panel').setAttribute('aria-labelledby', `tab-${category}`);
     $('#board-title').textContent = spec.title;
-    $('#board-subtitle').textContent = spec.subtitle;
     $('#map-caption').textContent = spec.map;
     $('#directory-description').textContent = spec.description;
     $('#index-note').textContent = spec.note;
@@ -183,18 +196,18 @@
     const place = selectedPlace();
     if (!place) return;
     const stamps = visitsOf(place);
-    const order = sortedPlaces(category).findIndex(p => p.id === place.id) + 1;
-    $('#place-serial').textContent = `NO. ${String(order).padStart(3, '0')}`;
-    $('#place-kind').textContent = `${CATEGORIES[category].kind} / ${REGION_NAMES[place.region] || place.region.toUpperCase()}`;
     $('#place-name').textContent = place.zh;
-    $('#place-en').textContent = place.en === place.zh ? 'YOUR OWN DESTINATION' : place.en.toUpperCase();
+    const code = category === 'cities' ? (place.code || '') : '';
+    $('#place-code').textContent = code;
+    $('#place-code').setAttribute('aria-label', code ? `城市代碼 ${code}` : '');
+    $('#place-code').hidden = !code;
+    $('#place-en').textContent = place.en === place.zh ? '' : place.en.toUpperCase();
     $('#place-location').textContent = areaLabel(place);
     const face = $('#stamp-face');
     face.classList.toggle('pending', stamps.length === 0);
     face.classList.toggle('long-name', [...place.zh].length > 6);
     $('#stamp-face-name').textContent = place.zh;
     $('#stamp-face-date').textContent = printedDate(stamps.at(-1) || (validDate(dateInput.value) ? dateInput.value : ''));
-    $('#paper-hint').textContent = stamps.length ? '✳ · STAMPED & REMEMBERED' : 'YOUR STAMP GOES HERE ↗';
     const history = $('#stamp-history');
     history.hidden = stamps.length === 0;
     $('#history-count').textContent = `${stamps.length} 枚戳章`;
@@ -215,7 +228,7 @@
     if (currentMessage?.key === place.key) showMessage(currentMessage.message, currentMessage.type);
     else {
       currentMessage = null;
-      showMessage(stamps.length ? '再選一個日期，可以為下一次到訪多蓋一枚。' : '選好日期，再把旅程留在地圖上。');
+      showMessage(stamps.length ? '選擇另一個月份記錄到訪。' : '選月份後蓋章。');
     }
   }
   function renderRegions() {
@@ -236,7 +249,7 @@
   function matchesRegion(place) { return region === 'all' || place.region === region; }
   function visiblePlaces() {
     const term = query.normalize('NFKD').toLocaleLowerCase().trim();
-    return sortedPlaces(category).filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.en} ${place.country || ''} ${place.where || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
+    return sortedPlaces(category).filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.en} ${place.country || ''} ${place.where || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
   }
   function renderDirectory(resetScroll = false) {
     const oldScroll = resetScroll ? 0 : list.scrollTop;
@@ -255,7 +268,13 @@
       if (selectedPlace()?.id === place.id) button.setAttribute('aria-current', 'true');
       button.append(makeElement('span', 'item-index', String(index + 1).padStart(3, '0')));
       const info = makeElement('span', 'item-info');
-      info.append(makeElement('strong', '', place.zh), makeElement('small', '', place.en === place.zh ? place.country : place.en));
+      const name = makeElement('strong', 'item-place-name', place.zh);
+      if (category === 'cities' && place.code) {
+        const code = makeElement('span', 'city-code', place.code);
+        code.setAttribute('aria-label', `城市代碼 ${place.code}`);
+        name.append(code);
+      }
+      info.append(name, makeElement('small', '', place.en === place.zh ? place.country : place.en));
       button.append(info, makeElement('span', 'item-status', isStamped(place) ? '✳' : '·'));
       button.lastElementChild.setAttribute('aria-hidden', 'true');
       fragment.append(button);
@@ -308,7 +327,7 @@
     surface.classList.toggle('zoomed',view.w < 500);
     // A drag changes only the viewBox origin; rebuilding every marker on every
     // pointermove would make the map feel sticky on a phone.
-    if (scaleChanged) renderMarkers();
+    if (scaleChanged) { renderDivisions(); renderMarkers(); }
   }
   function focusPlace(place) {
     if (category === 'countries') {
@@ -381,7 +400,41 @@
     }
     markerLayer.replaceChildren(fragment);
   }
-  function renderMap() { renderCountries(); renderMarkers(); }
+  const DIVISION_LABELS = {
+    countries:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
+    cities:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
+    us:[['西岸',-122,39],['山地・沙漠',-108,39],['中西部',-93,42],['東岸・南方',-79,35],['阿拉斯加',-150,63],['夏威夷',-157,20]],
+    ca:[['太平洋沿岸',-126,53],['洛磯・草原',-112,53],['安大略・魁北克',-82,49],['大西洋沿岸',-62,47],['北方領地',-112,67]],
+    jp:[['北海道',142.8,43.6],['東北',140.8,39.2],['關東・甲信越',138.8,36.1],['中部',137.4,35.7],['近畿・中國・四國',133.7,34.4],['九州',130.7,32.1],['南方離島',127.5,27.2]]
+  };
+  function renderDivisions() {
+    divisionLayer.replaceChildren();
+    const fragment = document.createDocumentFragment();
+    const scale = Math.min((svg.clientWidth || 800) / view.w,(svg.clientHeight || 500) / view.h);
+    for (const [label,lon,lat] of DIVISION_LABELS[category]) {
+      const [x,y] = project(lon,lat);
+      const text = makeSvg('text',{class:'division-label',x,y,'font-size':Math.max(12,12/scale),'text-anchor':'middle','aria-hidden':'true'});
+      text.textContent = label;
+      fragment.append(text);
+    }
+    if (category === 'us' || category === 'ca') {
+      const divisions = new Map();
+      for (const place of catalogue[category]) {
+        const codes = String(place.where || '').split('·').map(code => code.trim()).filter(Boolean);
+        for (const code of codes) {
+          if (!divisions.has(code)) divisions.set(code,{x:0,y:0,count:0});
+          const entry = divisions.get(code); entry.x += place.x; entry.y += place.y; entry.count++;
+        }
+      }
+      for (const [code,entry] of divisions) {
+        const text = makeSvg('text',{class:'admin-label',x:entry.x/entry.count,y:entry.y/entry.count-9/scale,'font-size':Math.max(9,9/scale),'text-anchor':'middle','aria-hidden':'true'});
+        text.textContent = code;
+        fragment.append(text);
+      }
+    }
+    divisionLayer.append(fragment);
+  }
+  function renderMap() { renderCountries(); renderDivisions(); renderMarkers(); }
   function placeTooltip(place) {
     const dates = visitsOf(place);
     return dates.length ? `${place.zh} · ${printedDate(dates.at(-1))}` : place.zh;
@@ -507,14 +560,14 @@
   });
   $('#stamp-button').addEventListener('click',() => {
     const date = dateInput.value;
-    if (!validDate(date) || !dateInput.checkValidity()) {dateInput.setAttribute('aria-invalid','true');showMessage('請選擇有效的到訪日期（不能晚於今天）。','error');dateInput.focus();return;}
+    if (!validDate(date) || !dateInput.checkValidity()) {dateInput.setAttribute('aria-invalid','true');showMessage('請選擇有效月份（不能晚於本月）。','error');dateInput.focus();return;}
     dateInput.setAttribute('aria-invalid','false');
     const place = selectedPlace();
     const stamps = visitsOf(place);
-    if (stamps.includes(date)) {showMessage('這一天已經蓋過章了，換個日期再試試。','error');return;}
+    if (stamps.includes(date)) {showMessage('這個月已蓋過章。','error');return;}
     data.visits[place.key] = [...stamps,date].sort();
     const saved = saveState();
-    refreshAfterStamp(saved ? `已為${place.zh}蓋章，${printedDate(date)} 的旅行收藏好了。` : '已蓋章，但瀏覽器無法儲存，請立即匯出備份。','success');
+    refreshAfterStamp(saved ? `已記錄 ${printedDate(date)}。` : '無法儲存；請匯出備份。','success');
     const face = $('#stamp-face');
     face.classList.remove('fresh');
     void face.offsetWidth;
@@ -529,7 +582,7 @@
     if (remaining.length) data.visits[place.key] = remaining;
     else delete data.visits[place.key];
     const saved = saveState();
-    refreshAfterStamp(saved ? `已移除 ${printedDate(date)} 的戳章。` : '戳章已移除，但瀏覽器無法儲存，請立即匯出備份。');
+    refreshAfterStamp(saved ? `已移除 ${printedDate(date)} 的戳章。` : '無法儲存；請匯出備份。');
   });
 
   // A small, optional supplement to the editorial cities index.
@@ -567,7 +620,7 @@
     region = 'all';query = '';$('#place-search').value = '';
     selectedByCategory.cities = raw.id;
     updateCategoryUI();renderRegions();renderDetail();focusPlace(selectedPlace());renderMap();renderDirectory(true);
-    showMessage('已加入城市清單。選日期，就能為這一站蓋章。','success');
+    showMessage('城市已加入；選月份蓋章。','success');
     $('.stamp-panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'start'});
   });
   $('#delete-city').addEventListener('click',() => {
@@ -604,7 +657,7 @@
       for (const [key,dates] of Object.entries(incoming.visits)) data.visits[key] = [...new Set([...(data.visits[key] || []),...dates])].sort();
       const saved = saveState();
       updateCategoryUI();renderRegions();renderDetail();renderMap();renderDirectory();
-      $('#backup-feedback').textContent = saved ? `備份已匯入並與原有紀錄合併（${Object.values(incoming.visits).reduce((sum,dates)=>sum+dates.length,0)} 枚戳章）。` : '紀錄已匯入，但無法儲存在此瀏覽器；請立即匯出備份。';
+      $('#backup-feedback').textContent = saved ? `備份已匯入並與原有紀錄合併（${Object.values(incoming.visits).reduce((sum,dates)=>sum+dates.length,0)} 枚戳章）。` : '匯入完成，但無法儲存；請另存備份。';
     } catch (error) { $('#backup-feedback').textContent = `匯入失敗：${error.message}`; }
     finally { event.target.value = ''; }
   });
