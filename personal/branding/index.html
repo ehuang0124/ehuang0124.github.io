@@ -1,343 +1,37 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f1f0ec">
-  <meta name="description" content="JKES — coffee, good company, and a little everyday wonder.">
-  <title>JKES — Coffee &amp; old friends</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --paper: #f1f0ec;
-      --white: #faf9f6;
-      --ink: #555958;
-      --soft: #848985;
-      --line: #d9dad5;
-      --silver: #b9c0bf;
-      --silver-hi: #eef1ed;
-      --lilac: #dcd6e8;
-      --lime: #d5e77c;
-      --peach: #e9c5b4;
-      --sans: 'DM Sans', sans-serif;
-      --display: 'Manrope', sans-serif;
-      --mono: 'DM Mono', monospace;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 90px; }
-    body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
-    button, a { font: inherit; }
-    button { color: inherit; }
-    a { color: inherit; text-decoration: none; }
-    button:focus-visible, a:focus-visible { outline: 2px solid #929b96; outline-offset: 4px; }
-    .wrap { width: min(1320px, calc(100% - 88px)); margin: 0 auto; }
-    .eyebrow { font: 10px var(--mono); letter-spacing: .15em; text-transform: uppercase; color: var(--soft); }
-    .topline { min-height: 34px; display: grid; place-items: center; background: var(--lilac); color: #77727f; font: 9px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
-    header { position: sticky; z-index: 10; top: 0; background: rgba(241,240,236,.91); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(204,207,202,.72); }
-    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; }
-    .logo { display: inline-flex; align-items: center; gap: 11px; color: #646a68; }
-    .logo-mark { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 50%; font: 700 12px var(--display); letter-spacing: -.09em; padding-right: 2px; color: #777d7b; background: linear-gradient(145deg,#f9faf7 5%,#aeb7b5 28%,#eef1ee 43%,#909a98 63%,#e4e8e4 79%,#a8b0ae); box-shadow: inset 0 1px 2px #fff, 0 2px 7px #858e8b30; }
-    .logo-word { font: 700 14px var(--display); letter-spacing: .19em; }
-    .nav-links { display: flex; align-items: center; gap: clamp(22px, 4vw, 54px); font-size: 12px; color: #717773; }
-    .nav-links a { transition: color .2s; }
-    .nav-links a:hover { color: #a18294; }
-    .nav-right { display: flex; align-items: center; gap: 14px; }
-    .cart-btn, .menu-toggle { border: 0; background: transparent; cursor: pointer; }
-    .cart-btn { display: flex; align-items: center; gap: 8px; color: #737a76; font: 10px var(--mono); letter-spacing: .08em; }
-    .cart-count { display: inline-grid; width: 21px; height: 21px; place-items: center; border-radius: 50%; background: var(--lime); color: #777d68; font-size: 10px; }
-    .menu-toggle { display: none; font-size: 21px; }
-
-    .hero { padding: 57px 0 89px; overflow: hidden; }
-    .hero-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 33px; }
-    .hero-top .eyebrow:last-child { text-align: right; }
-    .hero-grid { display: grid; grid-template-columns: 1fr 1.02fr; gap: 5.3%; align-items: center; }
-    .hero-copy { padding: 0 0 19px 3.5%; }
-    h1 { margin: 17px 0 20px; font: 500 clamp(53px, 7.4vw, 104px)/.98 var(--display); letter-spacing: -.085em; color: #707674; }
-    h1 .metal-word { display: block; color: transparent; background: linear-gradient(110deg,#89918f 0%,#f7f8f5 18%,#a6aeac 31%,#edf0ed 46%,#8c9492 63%,#f5f6f3 78%,#a1aaa7 95%); background-clip: text; -webkit-background-clip: text; filter: drop-shadow(0 2px 1px #92999533); }
-    .hero-sub { max-width: 360px; font-size: 14px; line-height: 1.85; color: #858b87; }
-    .hero-actions { display: flex; align-items: center; gap: 23px; margin-top: 29px; }
-    .button { display: inline-flex; justify-content: center; align-items: center; gap: 14px; border: 0; border-radius: 2px; padding: 14px 19px; background: #d9e788; color: #747c5e; font-size: 11px; font-weight: 600; letter-spacing: .06em; cursor: pointer; transition: transform .2s, background .2s; }
-    .button:hover { transform: translateY(-2px); background: #cfe078; }
-    .text-link { border: 0; background: none; color: #8a908c; font-size: 11px; cursor: pointer; }
-    .text-link span { padding-left: 6px; }
-    .hero-image { position: relative; min-height: 470px; overflow: hidden; background: #d5d4d0; }
-    .hero-image img { position: absolute; width: 100%; height: 100%; inset: 0; object-fit: cover; object-position: center 55%; mix-blend-mode: multiply; opacity: .9; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
-    .hero-image:hover img { transform: scale(1.035); }
-    .image-tag { position: absolute; left: 18px; bottom: 17px; padding: 9px 12px; background: rgba(248,247,243,.82); color: #818682; backdrop-filter: blur(12px); font: 9px var(--mono); letter-spacing: .1em; }
-    .orbit { position: absolute; top: 17px; right: 17px; width: 78px; height: 78px; display: grid; place-items: center; border: 1px solid #f8f7f2aa; border-radius: 50%; color: #faf9f5; font: 9px var(--mono); letter-spacing: .08em; text-align: center; transform: rotate(12deg); }
-    .hero-caption { display: flex; justify-content: space-between; margin-top: 12px; color: #9a9e99; font: 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-
-    .ticker { overflow: hidden; border-block: 1px solid var(--line); background: #e8e7e2; }
-    .ticker-inner { display: flex; width: max-content; gap: 35px; padding: 14px 0; animation: drift 29s linear infinite; color: #888e89; font: 10px var(--mono); letter-spacing: .15em; text-transform: uppercase; }
-    .ticker-inner span { display: flex; align-items: center; gap: 34px; }
-    .ticker-inner b { color: #c1c5b2; font-size: 15px; font-weight: 400; }
-    @keyframes drift { to { transform: translateX(-50%); } }
-
-    section { scroll-margin-top: 90px; }
-    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 29px; }
-    h2 { margin: 8px 0 0; font: 500 clamp(34px, 4.6vw, 58px)/1.08 var(--display); letter-spacing: -.065em; color: #747b77; }
-    .section-note { max-width: 245px; margin: 0 0 4px; color: #939893; font-size: 12px; line-height: 1.7; }
-    .menu-section { padding: 91px 0 100px; }
-    .menu-bar { display: flex; justify-content: space-between; align-items: center; margin: 34px 0 18px; border-bottom: 1px solid var(--line); }
-    .filters { display: flex; gap: 23px; }
-    .filter { padding: 0 0 12px; border: 0; border-bottom: 1px solid transparent; background: none; color: #9a9e99; font: 10px var(--mono); letter-spacing: .08em; cursor: pointer; }
-    .filter.active { color: #6e7671; border-color: #a3aaa2; }
-    .menu-hint { color: #a2a6a0; font: 9px var(--mono); letter-spacing: .06em; }
-    .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
-    .menu-card { position: relative; min-height: 268px; display: flex; flex-direction: column; justify-content: space-between; padding: 19px; overflow: hidden; background: #e8e7e1; transition: transform .25s, opacity .2s; }
-    .menu-card:hover { transform: translateY(-4px); }
-    .menu-card.hidden { display: none; }
-    .menu-card:nth-child(4n+2) { background: #e6e2ed; }
-    .menu-card:nth-child(4n+3) { background: #e8e7df; }
-    .menu-card:nth-child(4n+4) { background: #e4e9e4; }
-    .card-top, .card-bottom { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; }
-    .item-type { font: 9px var(--mono); letter-spacing: .12em; color: #979c96; text-transform: uppercase; }
-    .item-index { color: #a8aca7; font: 9px var(--mono); }
-    .drink-art { position: absolute; left: 50%; top: 48%; width: 112px; height: 112px; transform: translate(-50%,-50%); display: grid; place-items: center; }
-    .cup { position: relative; width: 75px; height: 60px; margin-top: 9px; border-radius: 8px 8px 22px 22px; background: linear-gradient(110deg,#a6afac,#f7f7f2 30%,#b4bcba 52%,#f1f1ed 65%,#949e9b); box-shadow: 0 13px 15px #6d777326, inset 0 2px 2px #fff; }
-    .cup:before { content: ''; position: absolute; left: -4px; right: -4px; top: -6px; height: 12px; border-radius: 50%; background: linear-gradient(180deg,#e5e8e4,#8d9693 45%,#f0f2ee 70%); }
-    .cup:after { content: ''; position: absolute; right: -19px; top: 12px; width: 24px; height: 25px; border: 7px solid #b6bfbc; border-left: 0; border-radius: 0 14px 14px 0; }
-    .cup.cold { width: 58px; height: 77px; border-radius: 6px 6px 15px 15px; background: linear-gradient(100deg,#c7c9c2,#f5f4ef 34%,#c3c7c0 60%,#ecebe5); }
-    .cup.cold:before { top: -4px; height: 9px; }
-    .cup.cold:after { display: none; }
-    .coffee { position: absolute; top: -2px; left: 3px; width: 68px; height: 8px; border-radius: 50%; background: #a98569; border: 2px solid #f2eee5; }
-    .cold .coffee { width: 52px; height: 28px; top: 4px; left: 3px; background: linear-gradient(180deg,#ac8667 20%,#dbc5a0); }
-    .cup-shadow { position: absolute; bottom: 10px; width: 114px; height: 14px; border-radius: 50%; background: #7d817931; filter: blur(7px); }
-    .sparkle { position: absolute; color: #fff; font: 18px Georgia,serif; }
-    .sparkle.one { top: 5px; right: 9px; }.sparkle.two { bottom: 18px; left: 7px; font-size: 12px; }
-    .card-bottom { align-items: end; }
-    .card-bottom h3 { margin: 0 0 4px; color: #727974; font: 500 16px var(--display); letter-spacing: -.03em; }
-    .card-bottom p { margin: 0; color: #999e98; font-size: 10px; }
-    .price-add { display: flex; align-items: center; gap: 10px; }
-    .price { color: #777f79; font: 11px var(--mono); }
-    .add-btn { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #afb5ae; border-radius: 50%; background: transparent; color: #79817a; font-size: 17px; line-height: 1; cursor: pointer; transition: all .2s; }
-    .add-btn:hover { background: var(--lime); border-color: var(--lime); transform: rotate(90deg); }
-    .menu-foot { display: flex; justify-content: space-between; padding-top: 16px; color: #9a9f99; font: 9px var(--mono); letter-spacing: .06em; }
-
-    .story { padding: 75px 0 84px; background: #e5e4df; }
-    .story-grid { display: grid; grid-template-columns: .93fr 1.07fr; gap: 9%; align-items: center; }
-    .story-visual { position: relative; min-height: 360px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(145deg,#d9d7e2 0%,#e8e7e1 45%,#d8ded8 100%); }
-    .story-visual:before, .story-visual:after { content: ''; position: absolute; border: 1px solid #f9f8f3a8; border-radius: 50%; }
-    .story-visual:before { width: 300px; height: 300px; }
-    .story-visual:after { width: 240px; height: 240px; }
-    .story-monogram { position: relative; z-index: 1; color: transparent; background: linear-gradient(125deg,#89918e,#fff 24%,#9da5a2 40%,#f5f5f1 59%,#929b97 76%,#fff); background-clip: text; -webkit-background-clip: text; font: 700 clamp(66px,10vw,120px)/1 var(--display); letter-spacing: -.13em; padding-right: .13em; filter: drop-shadow(0 5px 4px #60696622); }
-    .story-stamp { position: absolute; right: 17px; bottom: 16px; font: 9px var(--mono); color: #8e938f; letter-spacing: .1em; }
-    .story-copy { max-width: 470px; }
-    .story-copy h2 { margin: 12px 0 22px; font-size: clamp(39px,5vw,65px); }
-    .story-copy p { color: #858b86; font-size: 13px; line-height: 1.9; }
-    .story-sign { display: flex; align-items: center; gap: 13px; margin-top: 28px; color: #8d938e; font: 10px var(--mono); letter-spacing: .08em; }
-    .sign-dots { display: flex; }.sign-dots i { width: 22px; height: 22px; display: block; margin-left: -5px; border: 2px solid #e5e4df; border-radius: 50%; background: linear-gradient(140deg,#c6d3c6,#e6d1c3); }.sign-dots i:nth-child(2){background:linear-gradient(140deg,#dfd7e6,#d5c4b5)}.sign-dots i:nth-child(3){background:linear-gradient(140deg,#e5d9bd,#b9cbc3)}
-
-    .visit { padding: 92px 0 98px; }
-    .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9%; align-items: start; }
-    .visit-copy h2 { max-width: 460px; margin: 9px 0 20px; }
-    .visit-copy > p { max-width: 370px; color: #8b918c; font-size: 13px; line-height: 1.85; }
-    .visit-details { display: grid; grid-template-columns: 1fr 1fr; gap: 27px 22px; margin-top: 34px; padding-top: 23px; border-top: 1px solid var(--line); }
-    .detail-label { margin-bottom: 8px; color: #a0a59f; font: 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
-    .detail-value { color: #737a75; font-size: 12px; line-height: 1.8; }
-    .visit-card { min-height: 320px; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; background: #e4e3dd; }
-    .visit-card-top { display: flex; justify-content: space-between; color: #9ba09a; font: 9px var(--mono); letter-spacing: .08em; }
-    .map-art { position: relative; flex: 1; margin: 19px 0; overflow: hidden; background: #e9e8e2; }
-    .map-art:before { content: ''; position: absolute; inset: -25%; background: repeating-linear-gradient(28deg,transparent 0 44px,#d8d9d2 45px 47px,transparent 48px 92px),repeating-linear-gradient(112deg,transparent 0 63px,#d6d8d1 64px 66px,transparent 67px 124px); transform: rotate(-7deg); }
-    .map-road { position: absolute; width: 130%; height: 16px; left: -10%; top: 48%; background: #d8d6e2; transform: rotate(-24deg); border-block: 1px solid #cbc8d7; }
-    .map-pin { position: absolute; left: 53%; top: 46%; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50% 50% 50% 4px; transform: translate(-50%,-50%) rotate(-45deg); background: linear-gradient(135deg,#f8f8f4,#abb3b0); box-shadow: 0 4px 9px #686f6d33; }
-    .map-pin span { transform: rotate(45deg); color: #818985; font: 700 9px var(--display); }
-    .visit-card-bottom { display: flex; justify-content: space-between; align-items: center; gap: 14px; color: #7f8680; font-size: 11px; }
-    .map-link { padding: 10px 12px; border: 1px solid #bdc1ba; color: #828982; font: 9px var(--mono); letter-spacing: .08em; }
-
-    footer { padding: 26px 0 22px; border-top: 1px solid var(--line); }
-    .footer-top { display: flex; justify-content: space-between; align-items: center; }
-    .footer-note { color: #979c97; font: 9px var(--mono); letter-spacing: .08em; }
-    .footer-links { display: flex; gap: 20px; color: #8c928d; font-size: 10px; }
-    .footer-bottom { display: flex; justify-content: space-between; margin-top: 35px; color: #a1a69f; font: 9px var(--mono); letter-spacing: .06em; }
-
-    .toast { position: fixed; z-index: 30; right: 24px; bottom: 24px; padding: 13px 17px; background: #747c77; color: #f6f5f0; font: 10px var(--mono); letter-spacing: .04em; opacity: 0; transform: translateY(10px); pointer-events: none; transition: .25s; }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .cart-overlay { position: fixed; z-index: 20; inset: 0; background: #5d625e55; opacity: 0; visibility: hidden; transition: .25s; }
-    .cart-overlay.open { opacity: 1; visibility: visible; }
-    .cart-panel { position: absolute; top: 0; right: 0; width: min(420px,100%); height: 100%; display: flex; flex-direction: column; padding: 28px; background: var(--paper); transform: translateX(100%); transition: transform .3s; }
-    .cart-overlay.open .cart-panel { transform: translateX(0); }
-    .cart-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-    .cart-head h3 { margin: 0; font: 500 24px var(--display); color: #777e79; }
-    .close-cart { border: 0; background: none; font-size: 23px; cursor: pointer; color: #929892; }
-    .cart-items { flex: 1; overflow: auto; }
-    .cart-empty { padding-top: 38px; color: #999f99; font-size: 12px; }
-    .cart-row { display: flex; justify-content: space-between; gap: 15px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
-    .cart-row small { display: block; margin-top: 5px; color: #999f99; font: 9px var(--mono); }
-    .cart-row button { border: 0; background: none; color: #9a9f99; cursor: pointer; }
-    .cart-total { padding: 18px 0; border-top: 1px solid var(--line); color: #797f7b; font: 12px var(--mono); }
-    .cart-total div { display: flex; justify-content: space-between; margin-bottom: 15px; }
-    .checkout { width: 100%; }
-    @media(max-width: 850px) {
-      .wrap { width: min(100% - 48px, 680px); }
-      .hero { padding-top: 40px; }
-      .hero-grid { grid-template-columns: 1fr 1fr; gap: 4%; }
-      .hero-image { min-height: 390px; }
-      .hero-copy { padding-left: 0; }
-      .menu-grid { grid-template-columns: repeat(2,1fr); }
-      .menu-card { min-height: 250px; }
-      .story-grid { gap: 6%; }
-    }
-    @media(max-width: 620px) {
-      .wrap { width: calc(100% - 38px); }
-      .topline { font-size: 8px; }
-      .nav { min-height: 65px; }
-      .nav-links { position: absolute; top: 64px; left: 0; right: 0; display: none; flex-direction: column; align-items: stretch; gap: 0; padding: 8px 19px 15px; border-bottom: 1px solid var(--line); background: rgba(241,240,236,.97); }
-      .nav-links.open { display: flex; }
-      .nav-links a { padding: 10px 0; }
-      .menu-toggle { display: block; color: #777e79; }
-      .hero { padding: 31px 0 58px; }
-      .hero-top { margin-bottom: 25px; }
-      .hero-top .eyebrow { font-size: 8px; }
-      .hero-grid { grid-template-columns: 1fr; gap: 26px; }
-      .hero-copy { padding: 0; }
-      h1 { font-size: clamp(64px, 19vw, 93px); margin: 14px 0; }
-      .hero-sub { max-width: 330px; font-size: 13px; }
-      .hero-actions { margin-top: 22px; }
-      .hero-image { min-height: 340px; }
-      .hero-caption { font-size: 8px; }
-      .section-head { align-items: start; flex-direction: column; margin-bottom: 22px; }
-      .section-note { max-width: 320px; }
-      .menu-section { padding: 67px 0 69px; }
-      .menu-bar { margin-top: 27px; }
-      .filters { gap: 16px; }
-      .filter { font-size: 9px; }
-      .menu-hint { display: none; }
-      .menu-grid { gap: 9px; }
-      .menu-card { min-height: 222px; padding: 13px; }
-      .card-bottom h3 { font-size: 14px; }
-      .card-bottom p { max-width: 112px; font-size: 9px; }
-      .price-add { gap: 6px; }
-      .price { font-size: 9px; }
-      .add-btn { width: 25px; height: 25px; }
-      .drink-art { transform: translate(-50%,-50%) scale(.82); }
-      .menu-foot { font-size: 8px; }
-      .story { padding: 58px 0; }
-      .story-grid, .visit-grid { grid-template-columns: 1fr; gap: 33px; }
-      .story-visual { min-height: 275px; }
-      .story-copy h2 { font-size: 47px; }
-      .visit { padding: 66px 0; }
-      .visit-card { min-height: 290px; }
-      .footer-top { align-items: flex-start; gap: 20px; flex-direction: column; }
-      .footer-bottom { gap: 12px; flex-direction: column; margin-top: 26px; }
-    }
-    @media(prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#efeee9"><meta name="description" content="JKES — coffee and good company, made by old friends in New York City."><title>JKES — Meet you here</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#efeee9;--ink:#676c68;--soft:#929891;--line:#d7d8d2;--lime:#d6e77c;--sans:'DM Sans',sans-serif;--display:'Manrope',sans-serif;--mono:'DM Mono',monospace}*{box-sizing:border-box}html,body{width:100%;min-height:100%;margin:0}body{overflow:hidden;color:var(--ink);background:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased}button,a{font:inherit;color:inherit}button{cursor:pointer}a{text-decoration:none}button:focus-visible,a:focus-visible{outline:2px solid #a5ad9e;outline-offset:4px}.app{position:relative;width:100%;height:100svh;min-height:560px;overflow:hidden;isolation:isolate;background:var(--paper);transition:background .7s}.app[data-scene="1"]{background:#e9e7e0}.app[data-scene="2"]{background:#e5e1eb}.grain{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");mix-blend-mode:multiply}
+.topbar{position:absolute;z-index:8;top:0;left:0;right:0;height:82px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(22px,4vw,62px)}.brand{display:flex;align-items:center;gap:11px}.mark{width:35px;height:35px;display:grid;place-items:center;border-radius:50%;padding-right:2px;color:#79817e;font:700 10px var(--display);letter-spacing:-.08em;background:linear-gradient(135deg,#fafbf8 4%,#aab3b0 25%,#f4f6f2 44%,#929c99 61%,#eef0ed 78%,#a4aeaa);box-shadow:inset 0 1px 2px #fff,0 2px 9px #747d7930}.brand-name{font:700 13px var(--display);letter-spacing:.23em;color:#656d69}.top-links{display:flex;align-items:center;gap:clamp(15px,2.7vw,38px);font-size:10px;color:#868d87}.top-links a{padding:8px 0;letter-spacing:.08em;transition:color .2s}.top-links a:hover,.bag-trigger:hover{color:#69716c}.menu-trigger{display:flex;align-items:center;gap:9px}.menu-icon{width:16px;display:grid;gap:4px}.menu-icon i{height:1px;background:#848c85;display:block}.bag-trigger{display:flex;align-items:center;gap:9px;border:0;background:none;color:#808780;font:9px var(--mono);letter-spacing:.1em}.bag-count{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:var(--lime);color:#747b64;font-size:9px}
+.stage{position:absolute;inset:0;display:grid;grid-template-columns:43% 57%;align-items:center;padding:88px clamp(22px,7.4vw,116px) 82px}.big-letters{position:absolute;z-index:-1;left:2.2vw;bottom:1vh;color:transparent;background:linear-gradient(105deg,#aeb7b4 2%,#fafbf8 18%,#a7b0ad 35%,#f7f8f5 52%,#919b98 69%,#f9faf8 83%,#a1aba7);-webkit-background-clip:text;background-clip:text;opacity:.28;font:800 min(34vw,480px)/.8 var(--display);letter-spacing:-.12em;filter:drop-shadow(0 4px 2px #77807b1c);pointer-events:none;user-select:none}.intro{z-index:2;align-self:center;max-width:490px;padding-bottom:9px;animation:enter .55s both}.eyebrow{color:#8e958f;font:9px var(--mono);letter-spacing:.17em;text-transform:uppercase}.intro h1{margin:18px 0 16px;color:#737a75;font:500 clamp(50px,6.7vw,91px)/.94 var(--display);letter-spacing:-.082em}.intro h1 span{display:block;color:transparent;background:linear-gradient(105deg,#8d9692,#fafbf8 19%,#a8b0ae 35%,#f6f7f4 50%,#8e9794 70%,#f7f8f5 83%,#9ea7a4);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 2px 1px #91999525)}.intro-copy{max-width:320px;margin:0;color:#8e948f;font-size:12px;line-height:1.85}.actions{display:flex;align-items:center;gap:20px;margin-top:27px}.pill{display:inline-flex;align-items:center;gap:14px;padding:13px 17px;border:0;border-radius:2px;background:var(--lime);color:#737b61;font-size:10px;font-weight:600;letter-spacing:.06em;transition:transform .2s,background .2s}.pill:hover{transform:translateY(-2px);background:#cfe075}.pill .arrow{font-size:14px}.more-link{border:0;background:none;color:#8c938d;font-size:10px}.more-link:hover{color:#6d746f}.visual{position:relative;justify-self:end;width:min(48vw,610px);height:min(68vh,600px);min-height:350px;margin-right:2vw;animation:enter .65s .08s both}.photo-wrap{position:absolute;inset:2% 2% 4% 7%;overflow:hidden;background:#d9d8d2;border-radius:46% 46% 2px 2px/38% 38% 2px 2px;transform:rotate(2.1deg);box-shadow:0 24px 65px #737a7418;transition:border-radius .6s,transform .6s}.photo-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;mix-blend-mode:multiply;opacity:.93;transition:opacity .4s,transform .8s cubic-bezier(.2,.75,.25,1)}.photo-wrap:hover img{transform:scale(1.035)}.app[data-scene="1"] .photo-wrap{border-radius:2px 48% 2px 48%/2px 39% 2px 39%;transform:rotate(-2deg)}.app[data-scene="2"] .photo-wrap{border-radius:2px;transform:rotate(1.2deg)}.visual-sticker{position:absolute;z-index:2;left:0;top:12%;width:87px;height:87px;display:grid;place-items:center;border:1px solid #f7f7f2b8;border-radius:50%;color:#faf9f4;text-align:center;font:8px/1.5 var(--mono);letter-spacing:.08em;transform:rotate(-12deg);backdrop-filter:blur(3px)}.number-stamp{position:absolute;z-index:2;right:-1%;top:2%;color:#f6f6f0;font:9px var(--mono);letter-spacing:.12em}.side-note{position:absolute;z-index:2;right:-5%;bottom:15%;writing-mode:vertical-rl;color:#858d86;font:8px var(--mono);letter-spacing:.18em}.photo-label{position:absolute;z-index:2;left:8%;bottom:3%;padding:8px 10px;background:#f5f4efe3;color:#858b85;font:8px var(--mono);letter-spacing:.1em;backdrop-filter:blur(7px)}.floating-star{position:absolute;z-index:3;right:-1%;top:-3%;color:#c1cc82;font:54px Georgia,serif;animation:turn 28s linear infinite}@keyframes turn{to{transform:rotate(360deg)}}@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}.scene-nav{position:absolute;z-index:5;left:clamp(22px,7.4vw,116px);bottom:39px;display:flex;align-items:center;gap:17px}.scene-button{position:relative;width:25px;height:25px;display:grid;place-items:center;border:0;background:transparent;color:#a1a69f;font:9px var(--mono)}.scene-button:after{position:absolute;content:'';left:0;right:0;bottom:-5px;height:1px;background:transparent}.scene-button.active{color:#68716b}.scene-button.active:after{background:#929b8f}.scene-name{margin-left:8px;color:#9da29b;font:8px var(--mono);letter-spacing:.14em}.scene-arrows{position:absolute;z-index:5;right:clamp(22px,7.4vw,116px);bottom:37px;display:flex;gap:7px}.arrow-button{width:32px;height:32px;display:grid;place-items:center;border:1px solid #d0d2cb;border-radius:50%;background:transparent;color:#868d86;transition:background .2s,transform .2s}.arrow-button:hover{background:#f9f8f3;transform:translateY(-2px)}.edition{position:absolute;z-index:4;top:50%;left:25px;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;color:#a2a79f;font:8px var(--mono);letter-spacing:.18em}.bottom-note{position:absolute;z-index:4;right:clamp(22px,4vw,62px);bottom:17px;color:#a0a59e;font:8px var(--mono);letter-spacing:.09em}
+.scrim{position:fixed;z-index:20;inset:0;display:flex;justify-content:flex-end;background:#5e635d4d;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}.scrim.open{opacity:1;visibility:visible}.drawer{width:min(520px,100%);height:100%;overflow:auto;padding:clamp(24px,5vw,42px);background:#f0efea;transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.75,.25,1)}.scrim.open .drawer{transform:translateX(0)}.drawer-head{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:24px;border-bottom:1px solid var(--line)}.drawer-head h2{margin:5px 0 0;color:#727974;font:500 38px/.98 var(--display);letter-spacing:-.07em}.close{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:transparent;color:#838b84;font-size:19px}.menu-lede{max-width:300px;margin:17px 0 24px;color:#919790;font-size:11px;line-height:1.8}.drink-list{display:grid;gap:8px}.drink{min-height:73px;display:grid;grid-template-columns:57px 1fr auto;align-items:center;gap:15px;padding:9px 12px 9px 8px;background:#e9e8e2}.drink:nth-child(3n+2){background:#e8e4ee}.drink:nth-child(3n){background:#e7eae2}.drink-thumb{position:relative;width:55px;height:55px;display:grid;place-items:center;overflow:hidden;background:#f2f0e9}.mini-cup{position:relative;width:28px;height:30px;margin-top:4px;border-radius:4px 4px 11px 11px;background:linear-gradient(110deg,#a8b1ae,#f7f8f4 34%,#aeb7b3 58%,#f1f3ef);box-shadow:0 5px 6px #777e772b}.mini-cup:before{content:'';position:absolute;top:-3px;left:-2px;width:32px;height:6px;border-radius:50%;background:#b4bbb6}.mini-cup:after{content:'';position:absolute;top:7px;right:-11px;width:10px;height:11px;border:3px solid #adb5b0;border-left:0;border-radius:0 9px 9px 0}.mini-cup.iced{height:36px;border-radius:3px 3px 7px 7px}.mini-cup.iced:after{display:none}.drink h3{margin:0 0 4px;color:#717973;font:500 12px var(--display)}.drink p{margin:0;color:#9ba098;font-size:9px}.drink-buy{display:flex;align-items:center;gap:10px;color:#7b837b;font:10px var(--mono)}.add{width:27px;height:27px;border:1px solid #b9c0b4;border-radius:50%;background:transparent;color:#758071;font-size:17px;transition:background .2s,transform .2s}.add:hover{background:var(--lime);transform:rotate(90deg)}.drawer-foot{margin-top:21px;padding-top:17px;border-top:1px solid var(--line);color:#9ba098;font:8px var(--mono);letter-spacing:.1em}.bag-items{margin-top:15px}.bag-empty{padding:24px 0;color:#959c94;font-size:11px}.bag-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line);color:#707871;font-size:11px}.bag-row small{display:block;margin-top:5px;color:#9ba098;font:8px var(--mono)}.bag-row button{border:0;background:none;color:#9ba098}.bag-total{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.bag-total-line{display:flex;justify-content:space-between;margin-bottom:15px;color:#788079;font:10px var(--mono)}.checkout{width:100%;justify-content:space-between}.visit-card{margin-top:24px;padding:19px;background:#e6e5df}.visit-card .eyebrow{font-size:8px}.visit-card h3{margin:13px 0 8px;color:#737b74;font:500 22px var(--display);letter-spacing:-.04em}.visit-card p{margin:0;color:#8f968e;font-size:11px;line-height:1.8}.visit-email{display:inline-block;margin-top:14px;color:#737b74;font:9px var(--mono);text-decoration:underline;text-underline-offset:4px}.toast{position:fixed;z-index:40;left:50%;bottom:26px;transform:translate(-50%,12px);padding:12px 17px;background:#747c75;color:#f8f7f2;font:9px var(--mono);letter-spacing:.05em;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){.app{min-height:540px}.topbar{height:68px;padding-inline:20px}.top-links{gap:12px}.top-links a:not(.menu-trigger){display:none}.stage{grid-template-columns:1fr;grid-template-rows:38% 62%;align-items:start;padding:84px 23px 76px}.intro{align-self:end;padding:0 0 0 2px}.intro h1{margin:11px 0 9px;font-size:clamp(43px,12vw,72px)}.intro-copy{max-width:320px;font-size:10px;line-height:1.6}.actions{margin-top:14px;gap:13px}.pill{padding:11px 13px;font-size:9px}.more-link{font-size:9px}.visual{align-self:start;justify-self:center;width:min(81vw,420px);height:100%;min-height:0;max-height:45vh;margin:12px 0 0}.photo-wrap{inset:1% 4% 4% 7%}.visual-sticker{width:64px;height:64px;left:0;top:10%;font-size:7px}.floating-star{font-size:41px}.side-note{right:-2%;bottom:18%;font-size:7px}.photo-label{bottom:4%;font-size:7px}.number-stamp{top:0;right:2%}.big-letters{left:-1vw;bottom:13vh;font-size:50vw}.scene-nav{left:21px;bottom:26px;gap:11px}.scene-arrows{right:20px;bottom:24px}.scene-name{display:none}.edition{left:7px;font-size:7px}.bottom-note{display:none}}@media(max-width:380px){.stage{padding-inline:18px}.intro h1{font-size:43px}.intro-copy{max-width:280px}.top-links .menu-trigger{font-size:9px}.visual{width:85vw}}@media(max-height:620px) and (min-width:761px){.stage{padding-top:74px;padding-bottom:65px}.visual{height:min(66vh,450px)}.intro h1{font-size:clamp(48px,6vw,75px)}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
-  <div class="topline">A little good thing, made fresh every day&nbsp; · &nbsp;New York City</div>
-  <header>
-    <div class="wrap nav">
-      <a class="logo" href="#home" aria-label="JKES home"><span class="logo-mark">JK</span><span class="logo-word">JKES</span></a>
-      <nav class="nav-links" id="navLinks" aria-label="Main navigation">
-        <a href="#menu">The menu</a><a href="#story">Our story</a><a href="#visit">Find us</a>
-      </nav>
-      <div class="nav-right"><button class="cart-btn" id="openCart" aria-label="Open bag">BAG <span class="cart-count" id="cartCount">0</span></button><button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false">☰</button></div>
-    </div>
-  </header>
-
-  <main id="home">
-    <section class="hero wrap">
-      <div class="hero-top"><span class="eyebrow">Independent coffee · Est. together</span><span class="eyebrow">A familiar place for new days&nbsp; ↗</span></div>
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <div class="eyebrow">Good coffee, even better company</div>
-          <h1>Meet you<br><span class="metal-word">at JKES.</span></h1>
-          <p class="hero-sub">A neighborhood coffee spot built by old school friends. Thoughtful cups, unhurried mornings, and room for everyone at the table.</p>
-          <div class="hero-actions"><a class="button" href="#menu">Explore the menu <span>↘</span></a><a class="text-link" href="#story">A little about us <span>↗</span></a></div>
-        </div>
-        <div>
-          <div class="hero-image"><img src="jkes-cafe.jpg" alt="A cappuccino in a sculptural brushed metal cup on a sunlit counter"><div class="orbit">SIP<br>STAY<br>REPEAT</div><div class="image-tag">01 / YOUR NEW REGULAR</div></div>
-          <div class="hero-caption"><span>Made with care, every single cup</span><span>40° 43' N&nbsp; / &nbsp;73° 59' W</span></div>
-        </div>
-      </div>
-    </section>
-
-    <div class="ticker" aria-hidden="true"><div class="ticker-inner"><span>Good coffee <b>✳</b> old friends <b>✳</b> little moments <b>✳</b> good coffee <b>✳</b> old friends <b>✳</b> little moments <b>✳</b></span><span>Good coffee <b>✳</b> old friends <b>✳</b> little moments <b>✳</b> good coffee <b>✳</b> old friends <b>✳</b> little moments <b>✳</b></span></div></div>
-
-    <section class="menu-section wrap" id="menu">
-      <div class="section-head"><div><div class="eyebrow">Poured with a little extra love</div><h2>Something good<br>is brewing.</h2></div><p class="section-note">A short list of daily favorites, made for slow sips and whatever the day brings.</p></div>
-      <div class="menu-bar"><div class="filters" role="group" aria-label="Filter menu"><button class="filter active" data-filter="all">ALL SIPS</button><button class="filter" data-filter="espresso">ESPRESSO</button><button class="filter" data-filter="cold">COLD</button><button class="filter" data-filter="tea">NOT COFFEE</button></div><div class="menu-hint">TAP + TO ADD TO YOUR BAG</div></div>
-      <div class="menu-grid" id="menuGrid">
-        <article class="menu-card" data-category="espresso" data-name="Little Latte" data-price="5.50"><div class="card-top"><span class="item-type">Espresso · 01</span><span class="item-index">01/06</span></div><div class="drink-art"><div class="cup"><span class="coffee"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Little Latte</h3><p>Double espresso, silky milk</p></div><div class="price-add"><span class="price">$5.50</span><button class="add-btn" aria-label="Add Little Latte to bag">+</button></div></div></article>
-        <article class="menu-card" data-category="espresso" data-name="Honey Oat Flat White" data-price="6.00"><div class="card-top"><span class="item-type">Espresso · 02</span><span class="item-index">02/06</span></div><div class="drink-art"><div class="cup"><span class="coffee"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Honey Oat Flat White</h3><p>Local honey, oat milk</p></div><div class="price-add"><span class="price">$6.00</span><button class="add-btn" aria-label="Add Honey Oat Flat White to bag">+</button></div></div></article>
-        <article class="menu-card" data-category="cold" data-name="Cloud Nine Cold Brew" data-price="5.75"><div class="card-top"><span class="item-type">Cold · 03</span><span class="item-index">03/06</span></div><div class="drink-art"><div class="cup cold"><span class="coffee"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Cloud Nine Cold Brew</h3><p>Slow-steeped, extra smooth</p></div><div class="price-add"><span class="price">$5.75</span><button class="add-btn" aria-label="Add Cloud Nine Cold Brew to bag">+</button></div></div></article>
-        <article class="menu-card" data-category="cold" data-name="Rose Matcha Tonic" data-price="6.50"><div class="card-top"><span class="item-type">Cold · 04</span><span class="item-index">04/06</span></div><div class="drink-art"><div class="cup cold"><span class="coffee" style="background:linear-gradient(180deg,#bdd0a0 20%,#e8d4ce)"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Rose Matcha Tonic</h3><p>Bright matcha, a hint of rose</p></div><div class="price-add"><span class="price">$6.50</span><button class="add-btn" aria-label="Add Rose Matcha Tonic to bag">+</button></div></div></article>
-        <article class="menu-card" data-category="tea" data-name="Very Good Chai" data-price="5.50"><div class="card-top"><span class="item-type">Not coffee · 05</span><span class="item-index">05/06</span></div><div class="drink-art"><div class="cup"><span class="coffee" style="background:#c8a789"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Very Good Chai</h3><p>Spiced slow, served cozy</p></div><div class="price-add"><span class="price">$5.50</span><button class="add-btn" aria-label="Add Very Good Chai to bag">+</button></div></div></article>
-        <article class="menu-card" data-category="tea" data-name="Soft Landing Cocoa" data-price="5.00"><div class="card-top"><span class="item-type">Not coffee · 06</span><span class="item-index">06/06</span></div><div class="drink-art"><div class="cup"><span class="coffee" style="background:#9e7f6b"></span></div><i class="cup-shadow"></i><span class="sparkle one">✳</span></div><div class="card-bottom"><div><h3>Soft Landing Cocoa</h3><p>Chocolate, steamed milk</p></div><div class="price-add"><span class="price">$5.00</span><button class="add-btn" aria-label="Add Soft Landing Cocoa to bag">+</button></div></div></article>
-      </div>
-      <div class="menu-foot"><span>PLANT MILK? ALWAYS ON THE HOUSE.</span><span>GOOD THINGS, NO GUESSWORK.</span></div>
-    </section>
-
-    <section class="story" id="story"><div class="wrap story-grid">
-      <div class="story-visual"><div class="story-monogram">JKES</div><div class="story-stamp">FROM OUR CLASSROOM TO YOUR COFFEE BREAK · NYC</div></div>
-      <div class="story-copy"><div class="eyebrow">A friendship that kept growing</div><h2>From schoolyard<br>to coffee bar.</h2><p>We met as kids, stayed friends through every new chapter, and kept coming back to the same idea: what if we made a place that felt like catching up after class?</p><p>JKES is our little corner for good coffee and easy company. Every detail is a nod to the years we've shared—and to all the stories still to come.</p><div class="story-sign"><span class="sign-dots"><i></i><i></i><i></i></span><span>BUILT TOGETHER, BREWED FOR YOU</span></div></div>
-    </div></section>
-
-    <section class="visit wrap" id="visit"><div class="visit-grid">
-      <div class="visit-copy"><div class="eyebrow">There's a seat with your name on it</div><h2>Come as you are.<br>Stay a little.</h2><p>Drop by for your morning ritual, a mid-day reset, or a catch-up that turns into an afternoon.</p><div class="visit-details"><div><div class="detail-label">Find us</div><div class="detail-value">New York City<br>Made for the neighborhood</div></div><div><div class="detail-label">Come through</div><div class="detail-value">Monday – Friday&nbsp; 7–5<br>Weekends&nbsp; 8–4</div></div><div><div class="detail-label">Say hello</div><div class="detail-value"><a href="mailto:hello@jkes.coffee">hello@jkes.coffee</a></div></div><div><div class="detail-label">Around here</div><div class="detail-value">Coffee · pastries · good chats</div></div></div></div>
-      <div class="visit-card"><div class="visit-card-top"><span>YOUR NEIGHBORHOOD CORNER</span><span>NYC / 001</span></div><div class="map-art"><div class="map-road"></div><div class="map-pin"><span>JK</span></div></div><div class="visit-card-bottom"><span>Where the good days start.</span><a class="map-link" href="mailto:hello@jkes.coffee?subject=Finding%20JKES">GET DIRECTIONS ↗</a></div></div>
-    </div></section>
-  </main>
-  <footer><div class="wrap"><div class="footer-top"><a class="logo" href="#home"><span class="logo-mark">JK</span><span class="logo-word">JKES</span></a><span class="footer-note">COFFEE, KINDNESS &amp; A LITTLE BIT OF HISTORY.</span><div class="footer-links"><a href="#menu">Menu</a><a href="#story">Our story</a><a href="mailto:hello@jkes.coffee">Contact</a></div></div><div class="footer-bottom"><span>© 2026 JKES COFFEE CO.</span><span>MADE WITH OLD FRIENDS &amp; FRESH BEANS.</span></div></div></footer>
-
-  <div class="toast" id="toast" role="status" aria-live="polite">Added to your bag</div>
-  <div class="cart-overlay" id="cartOverlay" aria-hidden="true"><aside class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle"><div class="cart-head"><h3 id="cartTitle">Your little bag</h3><button class="close-cart" id="closeCart" aria-label="Close bag">×</button></div><div class="cart-items" id="cartItems"><div class="cart-empty">Your bag is taking a little coffee break.</div></div><div class="cart-total"><div><span>Subtotal</span><span id="cartTotal">$0.00</span></div><button class="button checkout" id="checkout">Place a pickup request&nbsp; ↗</button></div></aside></div>
-  <script>
-    const filters = document.querySelectorAll('.filter');
-    const cards = document.querySelectorAll('.menu-card');
-    filters.forEach(button => button.addEventListener('click', () => {
-      filters.forEach(item => item.classList.remove('active'));
-      button.classList.add('active');
-      const selection = button.dataset.filter;
-      cards.forEach(card => card.classList.toggle('hidden', selection !== 'all' && card.dataset.category !== selection));
-    }));
-
-    const cart = new Map();
-    const count = document.getElementById('cartCount');
-    const toast = document.getElementById('toast');
-    let toastTimer;
-    document.querySelectorAll('.add-btn').forEach(button => button.addEventListener('click', () => {
-      const card = button.closest('.menu-card');
-      const name = card.dataset.name;
-      const item = cart.get(name) || { name, price: Number(card.dataset.price), quantity: 0 };
-      item.quantity++;
-      cart.set(name, item);
-      renderCart();
-      toast.textContent = `${name} added to your bag`;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
-    }));
-    function renderCart() {
-      const totalItems = [...cart.values()].reduce((sum, item) => sum + item.quantity, 0);
-      count.textContent = totalItems;
-      const items = document.getElementById('cartItems');
-      if (!totalItems) { items.innerHTML = '<div class="cart-empty">Your bag is taking a little coffee break.</div>'; }
-      else {
-        items.innerHTML = [...cart.values()].map(item => `<div class="cart-row"><div>${item.name}<small>QUANTITY ${item.quantity}</small></div><div>$${(item.price * item.quantity).toFixed(2)} <button data-remove="${item.name}" aria-label="Remove ${item.name}">×</button></div></div>`).join('');
-        items.querySelectorAll('[data-remove]').forEach(button => button.addEventListener('click', () => { cart.delete(button.dataset.remove); renderCart(); }));
-      }
-      const total = [...cart.values()].reduce((sum, item) => sum + item.price * item.quantity, 0);
-      document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
-    }
-    const overlay = document.getElementById('cartOverlay');
-    const openCart = () => { overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false'); document.getElementById('closeCart').focus(); };
-    const closeCart = () => { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); };
-    document.getElementById('openCart').addEventListener('click', openCart);
-    document.getElementById('closeCart').addEventListener('click', closeCart);
-    overlay.addEventListener('click', event => { if (event.target === overlay) closeCart(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeCart(); });
-    document.getElementById('checkout').addEventListener('click', () => {
-      if (!cart.size) { closeCart(); toast.textContent = 'Add a little something first'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); return; }
-      const body = [...cart.values()].map(item => `${item.quantity} × ${item.name} — $${(item.price * item.quantity).toFixed(2)}`).join('%0D%0A');
-      location.href = `mailto:hello@jkes.coffee?subject=JKES%20pickup%20request&body=${body}`;
-    });
-    const toggle = document.getElementById('menuToggle');
-    toggle.addEventListener('click', () => { const open = document.getElementById('navLinks').classList.toggle('open'); toggle.setAttribute('aria-expanded', open); toggle.textContent = open ? '×' : '☰'; });
-    document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); toggle.setAttribute('aria-expanded','false'); toggle.textContent = '☰'; }));
-  </script>
-</body>
-</html>
+<main class="app" id="app" data-scene="0"><div class="grain" aria-hidden="true"></div>
+<header class="topbar"><a class="brand" href="#home" aria-label="JKES home"><span class="mark">JK</span><span class="brand-name">JKES</span></a><nav class="top-links" aria-label="Main navigation"><a href="#menu" class="menu-trigger" id="menuTrigger"><span class="menu-icon"><i></i><i></i></span>THE MENU</a><a href="#story" id="storyTrigger">OUR LITTLE STORY</a><a href="#visit" id="visitTrigger">FIND US ↗</a></nav><div class="top-right"><button class="bag-trigger" id="bagTrigger" aria-label="Open your bag">BAG <span class="bag-count" id="bagCount">0</span></button></div></header>
+<div class="big-letters" id="bigLetters" aria-hidden="true">JKES</div>
+<section class="stage" id="home" aria-live="polite"><div class="intro"><div class="eyebrow" id="eyebrow">A GOOD PLACE TO BEGIN AGAIN</div><h1 id="headline">Meet you<br><span>at JKES.</span></h1><p class="intro-copy" id="copy">Coffee, good company, and the kind of mornings you want to linger in. Made by old friends, for all of yours.</p><div class="actions"><button class="pill" id="primaryAction"><span id="actionLabel">Pick your happy</span><span class="arrow">↗</span></button><button class="more-link" id="secondaryAction">A little more about us&nbsp; ↗</button></div></div>
+<div class="visual"><div class="photo-wrap"><img id="sceneImage" src="jkes-cafe.jpg" alt="A cappuccino in a brushed metal cup, lit by the morning sun"></div><div class="visual-sticker" id="sticker">SIP<br>STAY<br>REPEAT</div><div class="number-stamp" id="numberStamp">NO. 01 / 03</div><div class="side-note" id="sideNote">A FAMILIAR PLACE FOR NEW DAYS</div><div class="photo-label" id="photoLabel">THE EVERYDAY LATTE · $5.50</div><div class="floating-star" aria-hidden="true">✳</div></div></section>
+<div class="edition">INDEPENDENT COFFEE · NEW YORK CITY</div><nav class="scene-nav" aria-label="Explore JKES stories"><button class="scene-button active" data-index="0" aria-label="Scene one: Coffee" aria-current="true">01</button><button class="scene-button" data-index="1" aria-label="Scene two: Old friends">02</button><button class="scene-button" data-index="2" aria-label="Scene three: Little joys">03</button><span class="scene-name" id="sceneName">COFFEE, IN GOOD COMPANY</span></nav><div class="scene-arrows"><button class="arrow-button" id="prevScene" aria-label="Previous scene">←</button><button class="arrow-button" id="nextScene" aria-label="Next scene">→</button></div><div class="bottom-note">MADE TO BE YOUR NEW REGULAR&nbsp; · &nbsp;© 2026 JKES</div></main>
+<div class="scrim" id="menuPanel" aria-hidden="true"><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"><div class="drawer-head"><div><div class="eyebrow">Little sips, big feelings</div><h2 id="drawerTitle">The good stuff.</h2></div><button class="close" data-close aria-label="Close menu">×</button></div><p class="menu-lede">All the usual comforts, with a JKES kind of twist. Plant milk is always on us.</p><div class="drink-list" id="drinkList"></div><div class="drawer-foot">MADE FRESH, MADE WITH CARE &nbsp; ✳ &nbsp; ASK US ABOUT TODAY'S PASTRY</div></section></div>
+<div class="scrim" id="storyPanel" aria-hidden="true"><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="storyTitle"><div class="drawer-head"><div><div class="eyebrow">Some things just stick</div><h2 id="storyTitle">Still seatmates.</h2></div><button class="close" data-close aria-label="Close story">×</button></div><p class="menu-lede">We met as kids, stayed friends through every new chapter, and kept coming back to the same idea: what if we made a place that felt like catching up after class?</p><div class="visit-card"><div class="eyebrow">FROM OUR CLASSROOM TO YOUR COFFEE BREAK</div><h3>Built together.<br>Brewed for you.</h3><p>JKES is our little corner for good coffee and easy company. Every detail is a nod to the years we've shared—and to all the stories still to come.</p></div><div class="drawer-foot">OLD FRIENDS · NEW ROUTINES · ALWAYS ROOM FOR ONE MORE</div></section></div>
+<div class="scrim" id="visitPanel" aria-hidden="true"><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="visitTitle"><div class="drawer-head"><div><div class="eyebrow">There's a seat with your name on it</div><h2 id="visitTitle">Come on in.</h2></div><button class="close" data-close aria-label="Close visit information">×</button></div><p class="menu-lede">Drop by for your morning ritual, a mid-day reset, or a catch-up that turns into an afternoon.</p><div class="visit-card"><div class="eyebrow">YOUR NEIGHBORHOOD CORNER · NYC</div><h3>Where the good days start.</h3><p>Monday – Friday&nbsp; 7–5<br>Weekends&nbsp; 8–4<br>Coffee · pastries · good chats</p><a class="visit-email" href="mailto:hello@jkes.coffee">SAY HELLO&nbsp; ↗ &nbsp; HELLO@JKES.COFFEE</a></div><div class="drawer-foot">NEW YORK CITY &nbsp; · &nbsp; MADE FOR THE NEIGHBORHOOD</div></section></div>
+<div class="scrim" id="bagPanel" aria-hidden="true"><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="bagTitle"><div class="drawer-head"><div><div class="eyebrow">A little something for later</div><h2 id="bagTitle">Your bag.</h2></div><button class="close" data-close aria-label="Close bag">×</button></div><div class="bag-items" id="bagItems"><p class="bag-empty">Your bag is taking a little coffee break.</p></div><div class="bag-total"><div class="bag-total-line"><span>SUBTOTAL</span><span id="bagTotal">$0.00</span></div><button class="pill checkout" id="checkout"><span>Send a pickup request</span><span class="arrow">↗</span></button></div></section></div><div class="toast" id="toast" role="status" aria-live="polite">Added to your bag</div>
+<script>
+const scenes=[
+{eyebrow:'A GOOD PLACE TO BEGIN AGAIN',title:'Meet you<br><span>at JKES.</span>',copy:'Coffee, good company, and the kind of mornings you want to linger in. Made by old friends, for all of yours.',image:'jkes-cafe.jpg',alt:'A cappuccino in a brushed metal cup, lit by the morning sun',sticker:'SIP<br>STAY<br>REPEAT',side:'A FAMILIAR PLACE FOR NEW DAYS',label:'THE EVERYDAY LATTE · $5.50',name:'COFFEE, IN GOOD COMPANY',action:'Pick your happy',target:'menuPanel'},
+{eyebrow:'SOME THINGS JUST STICK',title:'Old friends.<br><span>New rituals.</span>',copy:'We go way back. Now there is always a table, a fresh pot, and one more story to share.',image:'jkes-friends.jpg',alt:'Friends sharing coffee around a sunlit cafe table',sticker:'THEN<br>NOW<br>ALWAYS',side:'GOOD COMPANY IS OUR SPECIALTY',label:'YOUR TABLE IS WAITING',name:'MADE BY OLD FRIENDS',action:'Our little story',target:'storyPanel'},
+{eyebrow:'A LITTLE EVERYDAY WONDER',title:'Find your<br><span>little joy.</span>',copy:'Something bright, something cozy, something that makes an ordinary Tuesday feel like yours.',image:'jkes-menu.jpg',alt:'A chrome iced matcha, espresso, croissant and lemon on a lavender table',sticker:'SLOW<br>SIP<br>SMILE',side:'FRESHLY MADE, ALWAYS',label:'MATCHA, PASTRIES & GOOD THINGS',name:'THE SMALL THINGS',action:'See what is brewing',target:'menuPanel'}];
+const app=document.getElementById('app');let current=0;
+function showScene(index){current=(index+scenes.length)%scenes.length;const s=scenes[current];app.dataset.scene=current;document.getElementById('eyebrow').textContent=s.eyebrow;document.getElementById('headline').innerHTML=s.title;document.getElementById('copy').textContent=s.copy;const image=document.getElementById('sceneImage');image.style.opacity='0';setTimeout(()=>{image.src=s.image;image.alt=s.alt;image.onload=()=>image.style.opacity='';},170);document.getElementById('sticker').innerHTML=s.sticker;document.getElementById('sideNote').textContent=s.side;document.getElementById('photoLabel').textContent=s.label;document.getElementById('sceneName').textContent=s.name;document.getElementById('actionLabel').textContent=s.action;document.getElementById('numberStamp').textContent=`NO. 0${current+1} / 03`;document.getElementById('bigLetters').textContent=current===1?'J&K':'JKES';document.querySelectorAll('.scene-button').forEach((b,i)=>{b.classList.toggle('active',i===current);if(i===current)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')})}
+document.querySelectorAll('.scene-button').forEach(b=>b.addEventListener('click',()=>showScene(Number(b.dataset.index))));document.getElementById('prevScene').addEventListener('click',()=>showScene(current-1));document.getElementById('nextScene').addEventListener('click',()=>showScene(current+1));
+const panels=['menuPanel','storyPanel','visitPanel','bagPanel'].map(id=>document.getElementById(id));function closePanels(){panels.forEach(p=>{p.classList.remove('open');p.setAttribute('aria-hidden','true')})}function openPanel(id){closePanels();const p=document.getElementById(id);p.classList.add('open');p.setAttribute('aria-hidden','false');p.querySelector('[data-close]').focus()}document.getElementById('menuTrigger').addEventListener('click',e=>{e.preventDefault();openPanel('menuPanel')});document.getElementById('storyTrigger').addEventListener('click',e=>{e.preventDefault();openPanel('storyPanel')});document.getElementById('visitTrigger').addEventListener('click',e=>{e.preventDefault();openPanel('visitPanel')});document.getElementById('bagTrigger').addEventListener('click',()=>openPanel('bagPanel'));document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closePanels));panels.forEach(p=>p.addEventListener('click',e=>{if(e.target===p)closePanels()}));document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')showScene(current+1);if(e.key==='ArrowLeft')showScene(current-1);if(e.key==='Escape')closePanels()});let touchX=0;app.addEventListener('touchstart',e=>touchX=e.changedTouches[0].clientX,{passive:true});app.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-touchX;if(Math.abs(d)>55)showScene(current+(d<0?1:-1))},{passive:true});document.getElementById('primaryAction').addEventListener('click',()=>openPanel(scenes[current].target));document.getElementById('secondaryAction').addEventListener('click',()=>openPanel(current===1?'menuPanel':'storyPanel'));
+const drinks=[['Little Latte','Double espresso, silky milk',5.50,'espresso'],['Honey Oat Flat White','Local honey, oat milk',6,'espresso'],['Cloud Nine Cold Brew','Slow-steeped, extra smooth',5.75,'cold'],['Rose Matcha Tonic','Bright matcha, a hint of rose',6.50,'cold'],['Very Good Chai','Spiced slow, served cozy',5.50,'tea'],['Soft Landing Cocoa','Chocolate, steamed milk',5,'tea']];const list=document.getElementById('drinkList');list.innerHTML=drinks.map((d,i)=>`<article class="drink"><div class="drink-thumb"><span class="mini-cup ${d[3]==='cold'?'iced':''}"></span></div><div><h3>${d[0]}</h3><p>${d[1]}</p></div><div class="drink-buy"><span>$${d[2].toFixed(2)}</span><button class="add" data-index="${i}" aria-label="Add ${d[0]} to bag">+</button></div></article>`).join('');
+const cart=new Map(),toast=document.getElementById('toast');let toastTimer;function say(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),1800)}function renderBag(){const count=[...cart.values()].reduce((a,x)=>a+x.quantity,0);document.getElementById('bagCount').textContent=count;const items=document.getElementById('bagItems');if(!count)items.innerHTML='<p class="bag-empty">Your bag is taking a little coffee break.</p>';else{items.innerHTML=[...cart.values()].map(x=>`<div class="bag-row"><div>${x.name}<small>QUANTITY ${x.quantity}</small></div><div>$${(x.price*x.quantity).toFixed(2)} <button data-remove="${x.name}" aria-label="Remove ${x.name}">×</button></div></div>`).join('');items.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{cart.delete(b.dataset.remove);renderBag()}))}document.getElementById('bagTotal').textContent='$'+[...cart.values()].reduce((a,x)=>a+x.price*x.quantity,0).toFixed(2)}list.addEventListener('click',e=>{const b=e.target.closest('[data-index]');if(!b)return;const d=drinks[Number(b.dataset.index)],x=cart.get(d[0])||{name:d[0],price:d[2],quantity:0};x.quantity++;cart.set(d[0],x);renderBag();say(`${d[0]} added to your bag`)});document.getElementById('checkout').addEventListener('click',()=>{if(!cart.size){say('Pick a little something first');return}const body=[...cart.values()].map(x=>`${x.quantity} × ${x.name} — $${(x.price*x.quantity).toFixed(2)}`).join('%0D%0A');location.href=`mailto:hello@jkes.coffee?subject=JKES%20pickup%20request&body=${body}`});
+</script>
+</body></html>
