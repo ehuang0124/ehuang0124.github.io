@@ -37,7 +37,7 @@ const root = path.resolve(__dirname, '..');
         'east-japan': { kanto: 3, chubu: 7, kinki: 4, kyushu: 1 },
         kyushu: { north: 4, south: 7 }
       })) {
-        await page.goto(`${url}/personal/interactive/${name}/`);
+        await page.goto(`${url}/personal/travel/${name}/`);
         const total = Object.values(regions).reduce((sum, n) => sum + n, 0);
         assert.equal(await page.locator('.event').count(), total);
         const historyCount=name==='east-japan'?5:2;
@@ -86,7 +86,7 @@ const root = path.resolve(__dirname, '..');
         }
         console.log(`PASS ${name} ${viewport.width}px: every region, timeline, markers, reset, route, history/gateway layers`);
       }
-      await page.goto(`${url}/personal/interactive/okinawa/`);
+      await page.goto(`${url}/personal/travel/okinawa/`);
       assert.equal(await page.locator('.history-marker').count(),2);
       const expected = { yanbaru: 3, motobu: 7, onna: 3, central: 11, naha: 8, south: 8, kerama: 2, kume: 1, miyako: 2, yaeyama: 4 };
       // All 49 places stay accounted for; no IDs or storage keys changed.
