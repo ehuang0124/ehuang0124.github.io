@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#162e2a">
 <meta name="description" content="幕末歷史與九州：沿著時間軸與互動地圖，走訪長崎、鹿兒島、宮崎的幕末維新歷史景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+<link rel="stylesheet" href="/personal/interactive/crumbs.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
@@ -25,9 +26,7 @@ button{cursor:pointer}
 .hero-inner{position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto;padding:0 24px 54px}
 .hero h1{font-size:clamp(36px,6vw,74px);line-height:1.24;margin:0 0 14px;font-weight:500;color:#f7f2e3;text-shadow:0 2px 24px rgba(0,0,0,.45)}
 .hero p{font-size:15px;line-height:2;color:#e6ece1;max-width:760px;margin:0;text-shadow:0 1px 12px rgba(0,0,0,.5)}
-.hero .metrics{display:flex;gap:34px;margin-top:28px;flex-wrap:wrap}
-.metric b{font-size:20px;display:block;font-family:'Noto Serif TC',serif;color:#f6efdd}
-.metric span{color:#cdd8ca;font-size:11px}
+.hero-kicker{font-size:11px;letter-spacing:.22em;color:#d8c9a3;margin:0 0 14px;font-weight:700}
 .hero-jump{display:inline-flex;align-items:center;gap:20px;margin-top:26px;padding:11px 17px;border:1px solid rgba(246,239,221,.65);color:#fff9eb;text-decoration:none;font-size:12px;letter-spacing:.1em;transition:background .2s}
 .hero-jump:hover,.hero-jump:focus-visible{background:rgba(255,255,255,.15)}
 .hero-credit{position:absolute;right:12px;bottom:10px;z-index:3;color:#e8e8e8;background:rgba(0,0,0,.42);font-size:10px;padding:3px 7px;border-radius:3px}
@@ -59,6 +58,8 @@ button{cursor:pointer}
 .region-empty{font-size:13px;color:#68786c;line-height:1.8;margin:0}.region-empty a{color:var(--green);font-weight:700;text-underline-offset:3px}
 .region-credits{font-size:10px;line-height:1.9;color:#7b8177;margin:12px 0 0}
 .region-credits a{color:#5c7164;text-underline-offset:2px}
+.region-credits summary{cursor:pointer;font-size:11px;color:#5c7164;letter-spacing:.04em}
+.region-credits summary:hover{color:var(--terra)}
 .region-content{background:var(--paper);border:1px solid #e5e5d9;border-top:0;padding:28px}
 .region-summary{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:20px}
 .region-summary h3{font:500 26px 'Noto Serif TC',serif;margin:0 0 8px}
@@ -97,8 +98,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 .map-actions{display:flex;gap:8px;flex-wrap:wrap}
 .map-actions button{background:#fff;border:1px solid #d8dbd0;color:#58665b;border-radius:100px;padding:8px 12px;font-size:11px}
 .map-actions button.active{background:var(--green);color:white;border-color:var(--green)}
-.map-head a.gbtn{border:1px solid var(--green);background:var(--green);color:#fff;border-radius:100px;padding:9px 14px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap}
-.map-head a.gbtn:hover{background:var(--green2);border-color:var(--green2)}
 .map-hint{font-size:11px;color:#9aa298}
 .map-body{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:0;border-top:1px solid #eceae0}
 .map-side{border-left:1px solid #eceae0;display:flex;flex-direction:column;min-width:0}
@@ -123,7 +122,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 .map-zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
 .map-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid #cfd6c9;background:#fffdf8;color:#3d534a;font-size:16px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .map-zoom button:hover{background:#eef2ea}
-.map-badge{position:absolute;left:14px;bottom:14px;background:rgba(255,253,248,.92);border:1px solid #d9ddcf;border-radius:8px;padding:6px 10px;font-size:10px;color:#6d7a6f;line-height:1.6}
+
 .map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:#5c6f63;font-size:13px;line-height:1.9}
 
 .detail{padding:22px 25px 26px;min-height:180px}
@@ -142,6 +141,9 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 
 .footer{background:#193a33;color:#e6eadf;padding:30px 24px;text-align:center;font-size:12px;margin-top:56px;line-height:1.9}
 .footer a{color:#efdeba}
+.credits{margin-top:10px;font-size:11px;color:#b9c6b6}
+.credits summary{cursor:pointer;color:#d8c9a3;letter-spacing:.06em}
+.credits summary:hover{color:#efdeba}
 
 @media(max-width:980px){
   .map-body{grid-template-columns:1fr}
@@ -168,22 +170,25 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
   .event .year{font-size:13px}
   .map-head{padding:16px}
   .photo{height:200px}
-  .map-badge{display:none}
 }
 </style>
 </head>
 <body>
 
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">Eva Huang</a></li>
+    <li><a href="/personal/interactive/">Interactive</a></li>
+    <li aria-current="page">幕末歷史與九州</li>
+  </ol>
+</nav>
+
 <header class="hero">
   <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末開港時代的九州與長崎港" decoding="async"></div>
   <div class="hero-inner">
+    <p class="hero-kicker">12/18 – 12/27 ・ 柳川 → 宮崎</p>
     <h1 class="serif">幕末歷史與九州</h1>
-    <p>從長崎的開港、薩英戰爭，到鹿兒島的城山之戰 —— 跟著時間軸走進幕末那段風雨年代，地圖會帶你找到每一個故事真正發生的地方。</p>
-    <div class="metrics">
-      <div class="metric"><b>1549–1877</b><span>幕末・維新・明治</span></div>
-      <div class="metric"><b>11 個</b><span>歷史與文化事件</span></div>
-      <div class="metric"><b>九州全區</b><span>地圖互動探索</span></div>
-    </div>
+    <p>從長崎的開港、薩英戰爭，到鹿兒島的城山之戰 —— 地圖帶你找到每個故事真正發生的地方。</p>
     <a class="hero-jump" href="#regions">依縣市探索 <span aria-hidden="true">↓</span></a>
   </div>
   <div class="hero-credit" id="hero-credit" style="display:none">圖片來源：Wikimedia Commons</div>
@@ -191,25 +196,25 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 
 <main class="wrap">
   <div class="intro">
-    <p>先依地區瀏覽旅程中的故事，或沿著下方的時間軸探索歷史。點選故事或事件，地圖就會移動到對應的景點；也可以直接點擊地圖標記，反過來閱讀那段歷史。每個景點都能一鍵在 Google 地圖開啟。</p>
+    <p>依地區或時間軸點選故事，地圖就會帶你到對應的景點；也可以直接點地圖標記。</p>
   </div>
 
   <section class="region-section" id="regions" aria-labelledby="region-title">
     <div class="region-heading">
       <div><p class="eyebrow">EXPLORE BY AREA</p><h2 class="serif" id="region-title">依縣市探索九州</h2></div>
-      <p>不按年代，換個方向認識九州。選擇九州七縣，從各地風景認識九州；已收錄的故事可直接前往互動地圖。</p>
+      <p>選一個縣，從風景走進故事；已收錄的故事可直接前往互動地圖。</p>
     </div>
     <div class="region-tabs" id="region-tabs" role="group" aria-label="選擇瀏覽縣市"></div>
     <div class="region-content" id="region-content" aria-live="polite"></div>
-    <p class="region-credits">地區照片（裁切顯示）：
+    <details class="region-credits"><summary>地區照片來源與授權</summary>
       <a href="https://commons.wikimedia.org/wiki/File:Yanagawa-kawakudari.jpg" target="_blank" rel="noopener noreferrer">柳川／みんと（公有領域）</a> ·
       <a href="https://commons.wikimedia.org/wiki/File:Karatsujo.jpg" target="_blank" rel="noopener noreferrer">佐賀／Fg2（公有領域）</a> ·
       <a href="https://commons.wikimedia.org/wiki/File:Beppu_Bozu-jigoku05n4272.jpg" target="_blank" rel="noopener noreferrer">大分／663highland</a>（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>） ·
       <a href="https://commons.wikimedia.org/wiki/File:20140516%E9%98%BF%E8%98%87%E5%B1%B1%E5%BA%83%E5%9F%9F.jpg" target="_blank" rel="noopener noreferrer">熊本／Sonata</a>（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>） ·
       <a href="https://commons.wikimedia.org/wiki/File:Glover_Garden_01.jpg" target="_blank" rel="noopener noreferrer">長崎／STA3816</a>（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>） ·
       <a href="https://commons.wikimedia.org/wiki/File:Sakurajima55.jpg" target="_blank" rel="noopener noreferrer">鹿兒島／TANAKA Juuyoh</a>（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>） ·
-      <a href="https://commons.wikimedia.org/wiki/File:2021-01-07_Aoshima_Island_(Miyazaki)Aerial_photography%E9%9D%92%E5%B3%B6_(%E5%AE%AE%E5%B4%8E%E7%9C%8C)DJI_0246_(2)%E7%A9%BA%E6%92%AE.jpg" target="_blank" rel="noopener noreferrer">宮崎／松岡明芳</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。
-    </p>
+      <a href="https://commons.wikimedia.org/wiki/File:2021-01-07_Aoshima_Island_(Miyazaki)Aerial_photography%E9%9D%92%E5%B3%B6_(%E5%AE%AE%E5%B4%8E%E7%9C%8C)DJI_0246_(2)%E7%A9%BA%E6%92%AE.jpg" target="_blank" rel="noopener noreferrer">宮崎／松岡明芳</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。照片皆裁切顯示。
+    </details>
   </section>
 
   <section class="timeline-panel" aria-label="九州歷史時間軸">
@@ -223,7 +228,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
         <button id="route-map">旅行路線</button>
         <button id="reset-map">重設視角</button>
       </div>
-      <a class="gbtn" id="gmaps-here" href="#" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟此景點 ↗</a>
     </div>
 
     <div class="map-body">
@@ -233,7 +237,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
           <button id="zoom-in" aria-label="放大">＋</button>
           <button id="zoom-out" aria-label="縮小">－</button>
         </div>
-        <div class="map-badge">內嵌向量圖資 · 離線可顯示 · 可拖曳／縮放<br>景點可連結至 Google 地圖</div>
       </div>
       <div class="map-side">
         <div class="photo" id="photo">歷史景點圖片</div>
@@ -244,8 +247,12 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
 </main>
 
 <footer class="footer" id="sources">
-  歷史資料：<a href="https://www.japan.travel/en/spot/602/" target="_blank" rel="noopener">仙巖園／JNTO</a> · <a href="https://nagasakidejima.jp/english/history/" target="_blank" rel="noopener">出島官方</a> · <a href="https://www.discover-nagasaki.com/en/sightseeing/101" target="_blank" rel="noopener">長崎觀光</a> · <a href="https://www.miyazaki-city.tourism.or.jp/en/see-and-do/10056" target="_blank" rel="noopener">飫肥城／宮崎市觀光</a><br>
-  地圖為內嵌向量圖資，離線也能正常顯示；「在 Google 地圖開啟景點」會另開 Google 地圖頁面。照片由 Wikimedia Commons 自動取得，需連網載入。
+  <a href="/personal/interactive/">← 互動作品索引</a> · <a href="/personal/interactive/east-japan/">前段：幕末歷史與東日本 ↗</a>
+  <details class="credits">
+    <summary>資料與圖片來源</summary>
+    歷史資料：<a href="https://www.japan.travel/en/spot/602/" target="_blank" rel="noopener">仙巖園／JNTO</a> · <a href="https://nagasakidejima.jp/english/history/" target="_blank" rel="noopener">出島官方</a> · <a href="https://www.discover-nagasaki.com/en/sightseeing/101" target="_blank" rel="noopener">長崎觀光</a> · <a href="https://www.miyazaki-city.tourism.or.jp/en/see-and-do/10056" target="_blank" rel="noopener">飫肥城／宮崎市觀光</a><br>
+    地圖：Natural Earth 向量圖資 · 照片：Wikimedia Commons
+  </details>
 </footer>
 
 <script>
@@ -469,9 +476,6 @@ function focus(id,scroll=false,zoom=true){
   }
   const g=GROUPS[e.group];
   if(svg&&zoom)centerOn(px(g.lng),py(g.lat),1.75);
-  const gh=el('gmaps-here');
-  if(gh)gh.href=mapLink(e);
-
   let chips='';
   if(g.ids.length>1){
     chips='<div class="chips">'+g.ids.map(i=>'<button data-id="'+i+'" class="'+(i===id?'on':'')+'">'+byId[i].year+'　'+byId[i].spot+'</button>').join('')+'</div>';

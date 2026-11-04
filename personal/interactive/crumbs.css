@@ -1,0 +1,27 @@
+/* Shared breadcrumb for Eva Huang's interactive pages.
+   Theme via custom properties on the <nav class="crumbs"> element:
+   --crumb-bg, --crumb-ink, --crumb-strong, --crumb-accent, --crumb-line */
+.crumbs {
+  background: var(--crumb-bg, #f6f3ea);
+  color: var(--crumb-ink, #6b7a70);
+  border-bottom: 1px solid var(--crumb-line, rgba(35, 56, 48, .14));
+  font-size: 11.5px;
+  letter-spacing: .05em;
+}
+.crumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 auto;
+  padding: 9px 24px;
+  max-width: 1300px;
+}
+.crumbs li { display: flex; align-items: center; gap: 10px; margin: 0; padding: 0; }
+.crumbs li + li::before { content: "›"; opacity: .5; }
+.crumbs a { color: inherit; text-decoration: none; }
+.crumbs a:hover { color: var(--crumb-accent, #ac6549); text-decoration: underline; text-underline-offset: 3px; }
+.crumbs a:focus-visible { outline: 2px solid var(--crumb-accent, #ac6549); outline-offset: 3px; border-radius: 2px; }
+.crumbs [aria-current="page"] { color: var(--crumb-strong, #233830); font-weight: 700; }
+@media (max-width: 600px) { .crumbs ol { padding: 8px 16px; } }
