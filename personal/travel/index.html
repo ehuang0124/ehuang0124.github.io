@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f2e7">
   <title>Travel Atlas — Eva Huang 的旅行地圖</title>
   <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
-  <link rel="stylesheet" href="/personal/interactive/crumbs.css">
+  <link rel="stylesheet" href="/personal/travel/crumbs.css">
   <style>
     :root {
       --paper:#f7f2e7; --card:#fffdf6; --ink:#26332d; --muted:#7d8677;
@@ -95,10 +95,7 @@
     .stamp small { display:block; font-family:var(--mono); font-size:7px; letter-spacing:.24em; margin-top:3px; }
     .ticket:hover .stamp { transform:rotate(-5deg) scale(1.06); }
 
-    /* also + footer */
-    .also { margin:44px 0 0; font-size:12.5px; color:var(--muted); }
-    .also a { color:var(--teal); font-weight:700; text-decoration:none; border-bottom:1px dashed var(--teal); }
-    .also a:hover { color:var(--red); border-color:var(--red); }
+    /* footer */
     footer { margin-top:88px; border-top:1px solid var(--ink); padding:20px 0 42px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--muted); }
     footer a { text-decoration:none; color:var(--ink); }
     footer a:hover { color:var(--red); }
@@ -119,7 +116,7 @@
   <nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent; --crumb-line:rgba(38,51,45,.14); --crumb-strong:#26332d; --crumb-accent:#c4553d;">
     <ol>
       <li><a href="/">Eva Huang</a></li>
-      <li aria-current="page">Interactive</li>
+      <li aria-current="page">Travel</li>
     </ol>
   </nav>
 
@@ -158,7 +155,7 @@
           <span>03 TRIPS</span>
         </div>
         <div class="grid">
-          <a class="ticket" href="/personal/interactive/east-japan/">
+          <a class="ticket" href="/personal/travel/east-japan/">
             <div class="t-body">
               <div class="t-top"><span>✈ BOARDING PASS</span><span>№ 01</span></div>
               <div class="t-dest"><h3>東日本</h3><small>EAST JAPAN</small></div>
@@ -173,7 +170,7 @@
             <span class="stamp" aria-hidden="true"><span><b>幕末</b><small>BAKUMATSU</small></span></span>
           </a>
 
-          <a class="ticket" href="/personal/interactive/kyushu/">
+          <a class="ticket" href="/personal/travel/kyushu/">
             <div class="t-body">
               <div class="t-top"><span>✈ BOARDING PASS</span><span>№ 02</span></div>
               <div class="t-dest"><h3>九州</h3><small>KYUSHU</small></div>
@@ -188,7 +185,7 @@
             <span class="stamp" aria-hidden="true"><span><b>南國</b><small>KYUSHU</small></span></span>
           </a>
 
-          <a class="ticket" href="/personal/interactive/okinawa/">
+          <a class="ticket" href="/personal/travel/okinawa/">
             <div class="t-body">
               <div class="t-top"><span>✈ BOARDING PASS</span><span>№ 03</span></div>
               <div class="t-dest"><h3>沖繩</h3><small>OKINAWA</small></div>
@@ -203,7 +200,6 @@
             <span class="stamp" aria-hidden="true"><span><b>島旅</b><small>OKINAWA</small></span></span>
           </a>
         </div>
-        <p class="also">✦ 不是旅行・也是互動：<a href="/agile-health-scope-movement/">Why Scope Moved Mid-sprint ↗</a></p>
       </section>
     </main>
 
