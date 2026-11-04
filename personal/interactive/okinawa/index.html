@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#08222a">
 <meta name="description" content="沖繩互動地圖：從那霸的久米村、福州園，到山原的邊戶岬與八重山的離島，把去過與想去的地方一一標記起來。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+<link rel="stylesheet" href="/personal/interactive/crumbs.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet">
@@ -271,6 +272,14 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
 </head>
 <body>
 
+<nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:#07212a; --crumb-ink:#9fb5b2; --crumb-strong:#f3e6c8; --crumb-accent:#e5c07b; --crumb-line:rgba(255,255,255,.12);">
+  <ol>
+    <li><a href="/">Eva Huang</a></li>
+    <li><a href="/personal/interactive/">Interactive</a></li>
+    <li aria-current="page">島與海的標記</li>
+  </ol>
+</nav>
+
 <header class="topbar">
   <div class="wrap topbar-in">
     <a class="brand" href="/personal/interactive/">
@@ -312,7 +321,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
   <div class="hero-in">
     <p class="hero-kicker">OKINAWA ・ 2027 WINTER</p>
     <h1><span class="small">島と海の記録</span>島與海的標記</h1>
-    <p class="hero-lede">從那霸的久米村與福州園，到山原的邊戶岬與八重山的離島。這張地圖收著 49 個地方 —— 走過的，會在紙上留下紅色的章；還沒去的，先靜靜等著。點一個標記，看看它在那裡。</p>
+    <p class="hero-lede">這張地圖收著 49 個地方 —— 走過的，蓋上紅色的章；還沒去的，先留白。點一個標記，看看它在那裡。</p>
     <div class="hero-stats">
       <div><b>49</b><span>個地點</span></div>
       <div><b>4</b><span>個區域</span></div>
@@ -333,9 +342,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
     <div>
       <div class="bar"><i id="bar-fill"></i></div>
       <div class="legend">
-        <span>在地圖或清單點一下就能蓋章</span>
-        <span>·</span>
-        <span>名單已依你的回想預設，隨時可點掉</span>
+        <span>在地圖或清單點一下就能蓋章，隨時可改</span>
       </div>
     </div>
     <div class="actions">
@@ -361,7 +368,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
         <div>
           <p class="eyebrow">Interactive atlas</p>
           <h2 class="section-title">把去過的地方，標在地圖上</h2>
-          <p class="section-lede">拖曳移動、滾輪縮放；點標記看介紹，按「蓋章」記錄。同一個位置聚集多個點時會合成一個數字，點下去就會靠近。</p>
+          <p class="section-lede">點標記看介紹、按「蓋章」記錄；數字是多個地點的聚集，點下去就會靠近。</p>
         </div>
         <div class="chip-row">
           <button class="fchip" data-filter="all" aria-pressed="true">全部</button>
@@ -412,7 +419,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
     <div class="wrap">
       <p class="eyebrow">2027 itinerary</p>
       <h2 class="section-title">1/7 – 1/10，四天三夜</h2>
-      <p class="section-lede">整理自 Notion 的「沖繩 2027」。這次只租中間兩天車，所以行程沿著那霸、中部、沖繩市打轉，南城先留給下一次。地點旁有紅點的是你這趟第一次去的地方。</p>
+      <p class="section-lede">地點旁有紅點的，是這趟第一次去的地方。</p>
       <div class="plan-note-top"><strong>安排備註</strong><span>僅中間兩天（1/8–1/9）租車；斎場御嶽本版先移除，不為此特地南下南城。</span></div>
       <div class="plan-grid" id="plan-grid"></div>
     </div>
@@ -422,7 +429,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
     <div class="wrap">
       <p class="eyebrow">Full list</p>
       <h2 class="section-title">完整清單</h2>
-      <p class="section-lede">照區域與市町村排列，點列就能蓋章；右邊的「地圖」會把地圖帶到那個位置。也可以在這裡搜尋地名。</p>
+      <p class="section-lede">點列蓋章；按「地圖」跳到那個位置。</p>
       <div class="list-tools">
         <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋地名、市町村或關鍵字" aria-label="搜尋地點"></label>
         <span class="legend" id="list-count" style="font-size:11px;color:#8d9890"></span>
@@ -1001,7 +1008,7 @@ function renderDetail(){
   if(!p){
     box.innerHTML = '<div class="kicker">選擇一個標記</div>'
       + '<h3 style="font-size:24px">還沒有選地點</h3>'
-      + '<p class="empty-note">地圖上的白點是還沒去過、紅點是已蓋章。點一個點，這裡會出現它的位置、說明與「蓋章」按鈕。<br>也可以直接從右側清單挑。</p>'
+      + '<p class="empty-note">白點還沒去過，紅點已蓋章。點一個標記，看介紹並蓋章。</p>'
       + '<div class="actions"><a class="gbtn" href="#list">看完整清單 ↓</a><span class="gbtn" style="cursor:default;border-style:dashed">已走過 '+visited.size+' 個</span></div>';
     return;
   }

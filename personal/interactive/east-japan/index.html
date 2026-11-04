@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#162e2a">
 <meta name="description" content="幕末歷史與東日本：沿著 12/6–12/17 的旅程、時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+<link rel="stylesheet" href="/personal/interactive/crumbs.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
@@ -25,9 +26,7 @@ button{cursor:pointer}
 .hero-inner{position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto;padding:0 24px 54px}
 .hero h1{font-size:clamp(36px,6vw,74px);line-height:1.24;margin:0 0 14px;font-weight:500;color:#f7f2e3;text-shadow:0 2px 24px rgba(0,0,0,.45)}
 .hero p{font-size:15px;line-height:2;color:#e6ece1;max-width:780px;margin:0;text-shadow:0 1px 12px rgba(0,0,0,.5)}
-.hero .metrics{display:flex;gap:34px;margin-top:28px;flex-wrap:wrap}
-.metric b{font-size:20px;display:block;font-family:'Noto Serif TC',serif;color:#f6efdd}
-.metric span{color:#cdd8ca;font-size:11px}
+.hero-kicker{font-size:11px;letter-spacing:.22em;color:#d8c9a3;margin:0 0 14px;font-weight:700}
 .hero-credit{position:absolute;right:12px;bottom:10px;z-index:3;color:#e8e8e8;background:rgba(0,0,0,.42);font-size:10px;padding:3px 7px;border-radius:3px}
 
 /* ===== 導覽 ===== */
@@ -60,8 +59,6 @@ button{cursor:pointer}
 .map-actions{display:flex;gap:8px;flex-wrap:wrap}
 .map-actions button{background:#fff;border:1px solid #d8dbd0;color:#58665b;border-radius:100px;padding:8px 12px;font-size:11px}
 .map-actions button.active{background:var(--green);color:white;border-color:var(--green)}
-.map-head a.gbtn{border:1px solid var(--green);background:var(--green);color:#fff;border-radius:100px;padding:9px 14px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap}
-.map-head a.gbtn:hover{background:var(--green2);border-color:var(--green2)}
 .map-hint{font-size:11px;color:#9aa298}
 .map-body{display:grid;grid-template-columns:1fr;border-top:1px solid #eceae0}
 #map{position:relative;height:min(60vh,580px);background:var(--sea);overflow:hidden}
@@ -86,7 +83,6 @@ button{cursor:pointer}
 .map-zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
 .map-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid #cfd6c9;background:#fffdf8;color:#3d534a;font-size:16px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .map-zoom button:hover{background:#eef2ea}
-.map-badge{position:absolute;left:14px;bottom:14px;background:rgba(255,253,248,.92);border:1px solid #d9ddcf;border-radius:8px;padding:6px 10px;font-size:10px;color:#6d7a6f;line-height:1.6}
 .map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:#5c6f63;font-size:13px;line-height:1.9}
 
 .map-side{border-top:1px solid #eceae0;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);min-width:0}
@@ -108,6 +104,9 @@ button{cursor:pointer}
 
 .footer{background:#193a33;color:#e6eadf;padding:30px 24px;text-align:center;font-size:12px;margin-top:56px;line-height:1.9}
 .footer a{color:#efdeba}
+.credits{margin-top:10px;font-size:11px;color:#b9c6b6}
+.credits summary{cursor:pointer;color:#d8c9a3;letter-spacing:.06em}
+.credits summary:hover{color:#efdeba}
 
 @media(max-width:980px){
   .map-side{grid-template-columns:1fr}
@@ -126,29 +125,32 @@ button{cursor:pointer}
   .event .year{font-size:13px}
   .map-head{padding:16px}
   .photo{height:200px}
-  .map-badge{display:none}
 }
 </style>
 </head>
 <body>
 
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">Eva Huang</a></li>
+    <li><a href="/personal/interactive/">Interactive</a></li>
+    <li aria-current="page">幕末歷史與東日本</li>
+  </ol>
+</nav>
+
 <header class="hero">
   <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末時代的江戶與黑船" decoding="async"></div>
   <div class="hero-inner">
+    <p class="hero-kicker">12/6 – 12/17 ・ 東京 → 志摩</p>
     <h1 class="serif">幕末歷史與東日本</h1>
-    <p>從東京江戶城的櫻田門外之變與無血開城，到下田的黑船與神奈川條約、靜岡駿府城的大政奉還——沿著 12/6–12/17 的東日本旅程，跟著時間軸走進幕末那段風雨年代，地圖會帶你找到每一個故事真正發生的地方。</p>
-    <div class="metrics">
-      <div class="metric"><b>12/6 – 12/17</b><span>東日本旅程日期</span></div>
-      <div class="metric"><b>15 個</b><span>歷史與文化事件</span></div>
-      <div class="metric"><b>東京 → 志摩</b><span>地圖互動探索</span></div>
-    </div>
+    <p>沿著旅程走進幕末：黑船、無血開城與大政奉還，地圖帶你找到每個故事真正發生的地方。</p>
   </div>
   <div class="hero-credit" id="hero-credit" style="display:none">圖片來源：Wikimedia Commons</div>
 </header>
 
 <main class="wrap">
   <div class="intro">
-    <p>歷史依年代排序，時間軸在上、地圖在下；每個事件標註了這趟旅程的實際日期（📍 後方）。點選時間軸上的任何事件，地圖就會移動到對應的景點；也可以直接點擊地圖上的標記，反過來閱讀那段歷史。每個景點都能一鍵在 Google 地圖開啟。12/17 抵達博多之後，故事接續到 <a href="/personal/interactive/kyushu/">「幕末歷史與九州」</a>。</p>
+    <p>點時間軸事件或地圖標記，讀故事、看位置。12/17 抵達博多後，接續 <a href="/personal/interactive/kyushu/">「幕末歷史與九州」</a>。</p>
   </div>
 
   <section class="timeline-panel" aria-label="東日本歷史時間軸">
@@ -162,7 +164,6 @@ button{cursor:pointer}
         <button id="route-map">旅行路線</button>
         <button id="reset-map">重設視角</button>
       </div>
-      <a class="gbtn" id="gmaps-here" href="#" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟此景點 ↗</a>
     </div>
 
     <div class="map-body">
@@ -172,7 +173,6 @@ button{cursor:pointer}
           <button id="zoom-in" aria-label="放大">＋</button>
           <button id="zoom-out" aria-label="縮小">－</button>
         </div>
-        <div class="map-badge">內嵌向量圖資（Natural Earth）· 離線可顯示 · 可拖曳／縮放<br>景點可連結至 Google 地圖</div>
       </div>
       <div class="map-side">
         <div class="photo" id="photo">歷史景點圖片</div>
@@ -183,9 +183,12 @@ button{cursor:pointer}
 </main>
 
 <footer class="footer" id="sources">
-  歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
-  地圖為內嵌向量圖資（Natural Earth 10m），離線也能正常顯示；「在 Google 地圖開啟景點」會另開 Google 地圖頁面。照片由 Wikimedia Commons 自動取得，需連網載入。<br>
-  <a href="/personal/interactive/">← 互動作品索引</a> · <a href="/personal/interactive/kyushu/">接續：幕末歷史與九州 ↗</a>
+  <a href="/personal/interactive/">← 互動作品索引</a> · <a href="/personal/interactive/kyushu/">接續：幕末歷史與九州 ↗</a><br>
+  <details class="credits">
+    <summary>資料與圖片來源</summary>
+    歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
+    地圖：Natural Earth 10m 向量圖資 · 照片：Wikimedia Commons
+  </details>
 </footer>
 
 <script>
@@ -399,9 +402,6 @@ function focus(id,scroll=false,zoom=true){
   }
   const g=GROUPS[e.group];
   if(svg&&zoom&&g&&!g.offmap)centerOn(px(g.lng),py(g.lat),2.1);
-  const gh=el('gmaps-here');
-  if(gh)gh.href=mapLink(e);
-
   let chips='';
   if(g.ids.length>1){
     chips='<div class="chips">'+g.ids.map(i=>'<button data-id="'+i+'" class="'+(i===id?'on':'')+'">'+byId[i].year+'　'+byId[i].spot+'</button>').join('')+'</div>';
