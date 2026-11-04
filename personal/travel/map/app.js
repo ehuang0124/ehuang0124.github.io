@@ -90,6 +90,14 @@
     jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) }))
   };
   const countryById = new Map(catalogue.countries.map(place => [place.id,place]));
+  const usStateNames = new Map(stateSource.map(state => [state.abbr,state.zh]));
+  usStateNames.set('AS','美屬薩摩亞');
+  usStateNames.set('VI','美屬維京群島');
+  const canadaAdminNames = {
+    AB:'亞伯達省', BC:'卑詩省', MB:'曼尼托巴省', NB:'新不倫瑞克省', NL:'紐芬蘭與拉布拉多省',
+    NS:'新斯科細亞省', NT:'西北地方', NU:'努納武特地區', ON:'安大略省', PE:'愛德華王子島省',
+    QC:'魁北克省', SK:'薩斯喀徹溫省', YT:'育空地區'
+  };
   function point(lat, lon) { const [x,y] = project(lon,lat); return {x,y}; }
   function normalizedCustom(raw) {
     if (!raw || typeof raw !== 'object' || !/^custom-[a-zA-Z0-9-]{1,90}$/.test(raw.id) || typeof raw.en !== 'string' || !raw.en.trim() || raw.en.length > 80 || !countryByIso.has(raw.iso)) return null;
@@ -144,7 +152,6 @@
   const surface = $('#map-surface');
   const countryLayer = $('#country-layer');
   const stateLayer = $('#state-layer');
-  const divisionLayer = $('#division-layer');
   const markerLayer = $('#marker-layer');
   const tooltip = $('#map-tooltip');
   const dateInput = $('#visit-date');
@@ -201,7 +208,10 @@
     if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
     if (place.category === 'countries') return `${REGION_NAMES[place.region] || '其他地區'} · 國家與地區`;
     if (place.category === 'cities') return `${REGION_NAMES[place.region] || '世界'} · ${place.country}${place.approximate ? ' · 位置近似' : ''}`;
-    if (place.category === 'na') return `${place.nation === 'US' ? '美國國家公園' : '加拿大國家公園'} · ${place.where}`;
+    if (place.category === 'na') {
+      const names = String(place.where || '').split('·').map(code => code.trim()).filter(Boolean).map(code => place.nation === 'US' ? (usStateNames.get(code) || code) : (canadaAdminNames[code] || code));
+      return `${place.nation === 'US' ? '美國國家公園' : '加拿大國家公園'} · ${names.join('、')}`;
+    }
     return `日本國家公園 · ${place.where}`;
   }
   function renderDetail() {
@@ -347,7 +357,7 @@
     surface.classList.toggle('zoomed',view.w < 500);
     // A drag changes only the viewBox origin; rebuilding every marker on every
     // pointermove would make the map feel sticky on a phone.
-    if (scaleChanged) { renderDivisions(); renderMarkers(); }
+    if (scaleChanged) renderMarkers();
   }
   function focusPlace(place) {
     if (category === 'countries') {
@@ -441,56 +451,22 @@
     }
     markerLayer.replaceChildren(fragment);
   }
-  const DIVISION_LABELS = {
-    countries:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
-    cities:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
-    na:[['加拿大',-102,62],['美國',-101,38]],
-    us:[['西岸',-122,39],['山地・沙漠',-108,39],['中西部',-93,42],['東岸・南方',-79,35],['阿拉斯加',-150,63],['夏威夷',-157,20]],
-    ca:[['太平洋沿岸',-126,53],['洛磯・草原',-112,53],['安大略・魁北克',-82,49],['大西洋沿岸',-62,47],['北方領地',-112,67]],
-    jp:[['北海道',142.8,43.6],['東北',140.8,39.2],['關東・甲信越',138.8,36.1],['中部',137.4,35.7],['近畿・中國・四國',133.7,34.4],['九州',130.7,32.1],['南方離島',127.5,27.2]]
-  };
-  function renderDivisions() {
-    divisionLayer.replaceChildren();
-    const fragment = document.createDocumentFragment();
-    const scale = Math.min((svg.clientWidth || 800) / view.w,(svg.clientHeight || 500) / view.h);
-    const divisionSet = category === 'na' ? (region === 'all' ? 'na' : region === 'ca' || region.startsWith('na-ca-') ? 'ca' : 'us') : category;
-    const labels = DIVISION_LABELS[divisionSet] || [];
-    for (const [label,lon,lat] of labels) {
-      const [x,y] = project(lon,lat);
-      const text = makeSvg('text',{class:'division-label',x,y,'font-size':Math.max(12,12/scale),'text-anchor':'middle','aria-hidden':'true'});
-      text.textContent = label;
-      fragment.append(text);
-    }
-    if (category === 'na') {
-      const divisions = new Map();
-      for (const place of catalogue[category]) {
-        if (!matchesRegion(place)) continue;
-        const codes = String(place.where || '').split('·').map(code => code.trim()).filter(Boolean);
-        for (const code of codes) {
-          if (!divisions.has(code)) divisions.set(code,{x:0,y:0,count:0});
-          const entry = divisions.get(code); entry.x += place.x; entry.y += place.y; entry.count++;
-        }
-      }
-      for (const [code,entry] of divisions) {
-        const text = makeSvg('text',{class:'admin-label',x:entry.x/entry.count,y:entry.y/entry.count-9/scale,'font-size':Math.max(9,9/scale),'text-anchor':'middle','aria-hidden':'true'});
-        text.textContent = code;
-        fragment.append(text);
-      }
-    }
-    divisionLayer.append(fragment);
-  }
-  function renderMap() { renderCountries(); renderUSStates(); renderDivisions(); renderMarkers(); }
+  function renderMap() { renderCountries(); renderUSStates(); renderMarkers(); }
+  // Keep the map uncluttered: reveal place and administrative context only on hover.
   function placeTooltip(place) {
     const dates = visitsOf(place);
-    const name = place.isState ? `${place.zh} ${place.abbr}` : place.zh;
-    return dates.length ? `${name} · ${printedDate(dates.at(-1))}` : name;
+    const name = category === 'cities' && place.code ? `${place.zh} · ${place.code}` : place.zh;
+    const details = `${name} · ${areaLabel(place)}`;
+    return dates.length ? `${details} · ${printedDate(dates.at(-1))}` : details;
   }
   function showTooltip(name,event) {
     tooltip.textContent = name;
     tooltip.hidden = false;
     const bounds = surface.getBoundingClientRect();
-    tooltip.style.left = `${Math.min(Math.max(12,event.clientX-bounds.left+12),bounds.width-tooltip.offsetWidth-8)}px`;
-    tooltip.style.top = `${Math.min(Math.max(14,event.clientY-bounds.top-32),bounds.height-42)}px`;
+    const left = Math.min(Math.max(12,event.clientX-bounds.left+12),Math.max(12,bounds.width-tooltip.offsetWidth-8));
+    const top = Math.min(Math.max(12,event.clientY-bounds.top-tooltip.offsetHeight-10),Math.max(12,bounds.height-tooltip.offsetHeight-8));
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
   }
   function hideTooltip() { tooltip.hidden = true; }
   function selectPlace(id,focus = false,fromIndex = false) {
