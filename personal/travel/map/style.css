@@ -215,3 +215,35 @@ a{color:inherit}
   #city-dialog{padding:20px 21px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* Clear, task-led atlas controls */
+.intro{display:block;padding:45px 4px 36px}
+.intro h1{margin:0;font-size:clamp(38px,5vw,64px)}
+.intro-copy,.postcard-art{display:none}
+.section-overline span:last-child{display:none}
+.division-label{font-family:var(--sans);font-weight:700;letter-spacing:.05em;fill:#476b60;paint-order:stroke;stroke:#dce7df;stroke-width:5px;stroke-linejoin:round;opacity:.88;pointer-events:none}
+#place-code{display:inline-flex;align-items:center;margin-left:12px;padding:4px 9px;border:1px solid #b74e38;border-radius:2px;color:#923b2d;font:700 15px/1.2 var(--mono);letter-spacing:.12em;vertical-align:middle}
+#place-code[hidden]{display:none}
+.place-name-line{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:0}
+.item-place-name{display:flex;align-items:center;gap:8px}
+.city-code{display:inline-block;padding:2px 6px;border:1px solid #c8a391;border-radius:2px;color:#923b2d;font:700 11px/1.2 var(--mono);letter-spacing:.08em}
+
+.admin-label{font-family:var(--mono);font-weight:700;letter-spacing:.05em;fill:#8a5948;paint-order:stroke;stroke:#f8f3e8;stroke-width:3px;stroke-linejoin:round;opacity:.9;pointer-events:none}
+.item-place-name{font-size:14px!important}.city-code{font-size:12px}
+
+.tab-number,.tab-label small,#place-en:empty{display:none!important}
+.section-overline{justify-content:flex-start;margin:0;padding:15px 0 12px;font:700 12px/1.4 var(--sans);letter-spacing:.04em;color:#566e5f}
+
+/* Selectable U.S. state boundaries in the combined states + parks layer */
+.map-us-layer{display:none}
+.map-us-layer.active{display:block}
+.map-us-state{fill:#f8f3e8;stroke:#6f8a7d;stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .18s,opacity .18s;pointer-events:none}
+.map-us-state.selectable{pointer-events:all;cursor:pointer}
+.map-us-state.selectable:hover{fill:#e7bea5;stroke:#974c3c;stroke-width:1.5}
+.map-us-state.outside{opacity:.2;pointer-events:none}
+.map-us-state.done{fill:#c4775e;stroke:#f5e9d7}
+.map-us-state.selected{fill:#fff0ce;stroke:#2c6a5c;stroke-width:2}
+.map-us-state.selected.done{fill:#a64532;stroke:#fff2d9}
+
+.legend-state{display:inline-block;width:10px;height:10px;background:#f8f3e8;border:1px solid #6f8a7d;margin-right:5px;vertical-align:-1px}

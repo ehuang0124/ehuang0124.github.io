@@ -1,0 +1,6 @@
+# Agent content and map rules
+
+- Keep page copy concise. A page gets one clear title; every other visible phrase must directly guide a user action, identify content, communicate status, or provide a necessary accessibility/safety/data limitation. Remove decorative slogans, redundant explanatory paragraphs, and filler metadata.
+- For travel visit records, capture and display month and year only (`YYYY-MM`). Do not ask for or show a day. Preserve older saved `YYYY-MM-DD` records by migrating them to their month on read; prevent duplicate stamps within the same place and month.
+- In the major-city layer, show a familiar three-letter city/airport code (for example PDX or NYC) beside the Chinese city name wherever a reliable code exists. Make codes comfortably readable, not tiny metadata. Keep English names searchable and accessible.
+- Maps must visibly identify major administrative divisions and geographic regions where relevant. Keep political/administrative boundaries distinct from travel-region groupings; label and filter the latter, and do not imply approximate travel regions are official borders. Use clear map labels and regional controls, and document when boundaries or locations are approximate.
