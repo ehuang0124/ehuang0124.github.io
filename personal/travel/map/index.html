@@ -44,13 +44,12 @@
         <div class="category-tabs" role="tablist" aria-label="地圖分區">
           <button type="button" class="category-tab" role="tab" id="tab-countries" data-category="countries" aria-controls="atlas-panel" aria-selected="true" tabindex="0"><span class="tab-label"><strong>世界國家</strong></span><span class="tab-count" id="tab-count-countries">0 / 240</span></button>
           <button type="button" class="category-tab" role="tab" id="tab-cities" data-category="cities" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-label"><strong>世界主要城市</strong></span><span class="tab-count" id="tab-count-cities">0 / —</span></button>
-          <button type="button" class="category-tab" role="tab" id="tab-us" data-category="us" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-label"><strong>美國州＋國家公園</strong></span><span class="tab-count" id="tab-count-us">0 / 114</span></button>
-          <button type="button" class="category-tab" role="tab" id="tab-ca" data-category="ca" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-label"><strong>加拿大國家公園</strong></span><span class="tab-count" id="tab-count-ca">0 / 48</span></button>
+          <button type="button" class="category-tab" role="tab" id="tab-na" data-category="na" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-label"><strong>北美區</strong></span><span class="tab-count" id="tab-count-na">0 / 162</span></button>
           <button type="button" class="category-tab" role="tab" id="tab-jp" data-category="jp" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-label"><strong>日本國家公園</strong></span><span class="tab-count" id="tab-count-jp">0 / 35</span></button>
         </div>
 
         <div id="atlas-panel" role="tabpanel" aria-labelledby="tab-countries" tabindex="0" class="atlas-board">
-          <div class="board-heading"><div class="board-heading-left"><span class="live-dot" aria-hidden="true"></span><strong id="board-title">世界國家</strong></div><div class="board-total"><strong id="board-visited">0</strong><span class="board-slash">/</span><span id="board-total">240</span></div></div>
+          <div class="board-heading"><div class="board-heading-left"><span class="live-dot" aria-hidden="true"></span><strong id="board-title">世界國家</strong></div><div class="board-heading-right"><span class="collection-total">已蓋章 <b id="passport-count">0</b> 個地點</span><div class="board-total"><strong id="board-visited">0</strong><span class="board-slash">/</span><span id="board-total">240</span></div></div></div>
 
           <div class="atlas-grid">
             <div class="map-column">
@@ -84,13 +83,13 @@
             </aside>
           </div>
 
-          <div class="directory">
+          <section class="directory" id="destination-index" aria-labelledby="directory-title">
             <div class="directory-head"><div><h2 id="directory-title">地點索引<span class="dot">.</span></h2><p id="directory-description">在地圖上找一個國家，或在下方搜尋它的名字。</p></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文、英文或代號…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
             <div id="region-controls" class="region-controls" aria-label="主要地理分區"></div>
             <div class="directory-results"><span id="result-count" role="status" aria-live="polite"></span></div>
             <div id="place-list" class="place-list" aria-label="可選擇的目的地清單"></div>
             <div class="directory-bottom"><p id="index-note">地圖形狀為地理示意；小型島嶼與地區也可以從清單選取。</p><button type="button" id="add-city" class="add-city" hidden>＋ 新增自己的城市</button></div>
-          </div>
+          </section>
         </div>
       </section>
 

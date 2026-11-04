@@ -9,15 +9,18 @@
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
   const STORAGE_KEY = 'eva.travel.stamp-atlas.v1';
-  const CATEGORY_ORDER = ['countries', 'cities', 'us', 'ca', 'jp'];
+  const CATEGORY_ORDER = ['countries', 'cities', 'na', 'jp'];
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
   const CATEGORIES = {
     countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', description:'點選國家，或搜尋名稱。', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
     cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', description:'選城市，或新增清單沒有的城市。', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
-    us: { title:'美國州＋國家公園', map:'03 / U.S. STATES & PARKS', description:'選州或國家公園；蓋章記錄到訪。', note:'州界依美國人口普查局示意；州內園區標記為代表位置。', regions:[{id:'all',label:'全部'},{id:'west',label:'西岸'},{id:'mountain',label:'山地・沙漠'},{id:'midwest',label:'中西部'},{id:'east',label:'東岸・南方'},{id:'alaska',label:'阿拉斯加'},{id:'hawaii',label:'夏威夷'},{id:'territories',label:'美國屬地'}], initial:'yell' },
-    ca: { title:'加拿大國家公園', map:'04 / CANADA', description:'選擇省區，篩選國家公園。', note:'省區代碼為代表標示，非界線；園區標記為代表位置。', regions:[{id:'all',label:'全部'},{id:'pacific',label:'太平洋沿岸'},{id:'rockies',label:'洛磯・草原'},{id:'central',label:'安大略・魁北克'},{id:'atlantic',label:'大西洋沿岸'},{id:'north',label:'北方領地'}], initial:'banff' },
-    jp: { title:'日本國家公園', map:'05 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
+    na: { title:'北美區', map:'03 / NORTH AMERICA', description:'搜尋美國各州、國家公園與加拿大國家公園。', note:'州界依美國人口普查局示意；公園標記為代表位置。', regions:[
+      {id:'all',label:'全部北美'}, {id:'us',label:'美國'}, {id:'ca',label:'加拿大'},
+      {id:'na-us-west',label:'美國・西岸'}, {id:'na-us-mountain',label:'美國・山地沙漠'}, {id:'na-us-midwest',label:'美國・中西部'}, {id:'na-us-east',label:'美國・東岸南方'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'},
+      {id:'na-ca-pacific',label:'加拿大・太平洋沿岸'}, {id:'na-ca-rockies',label:'加拿大・洛磯草原'}, {id:'na-ca-central',label:'加拿大・安大略魁北克'}, {id:'na-ca-atlantic',label:'加拿大・大西洋沿岸'}, {id:'na-ca-north',label:'加拿大・北方領地'}
+    ], initial:'yell' },
+    jp: { title:'日本國家公園', map:'04 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
   };
   const WORLD_AREA = { AS:[24,-15,179,78], EU:[-25,29,50,75], AF:[-25,-37,54,38], NA:[-170,0,-50,83], SA:[-85,-56,-30,14], OC:[94,-52,180,16], AN:[68,-58,82,-49] };
   const collator = new Intl.Collator('zh-Hant', { numeric:true });
@@ -79,11 +82,11 @@
       const id = `${slug(city.en)}-${city.iso.toLowerCase()}`;
       return { ...city, id, category:'cities', key:`cities:${id}`, region:country.region, country:country.zh, x, y };
     }),
-    us: [
-      ...source.us.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'us',key:`us:${id}`,...point(lat,lon) })),
-      ...stateSource.map(state => ({ ...state, category:'us', key:`us:${state.id}`, where:state.abbr, isState:true }))
+    na: [
+      ...source.us.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region:`na-us-${region}`,where,lat,lon,nation:'US',category:'na',key:`us:${id}`,...point(lat,lon) })),
+      ...stateSource.map(state => ({ ...state, region:`na-us-${state.region}`, nation:'US', category:'na', key:`us:${state.id}`, where:state.abbr, isState:true })),
+      ...source.ca.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region:`na-ca-${region}`,where,lat,lon,nation:'CA',category:'na',key:`ca:${id}`,...point(lat,lon) }))
     ],
-    ca: source.ca.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'ca',key:`ca:${id}`,...point(lat,lon) })),
     jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) }))
   };
   const countryById = new Map(catalogue.countries.map(place => [place.id,place]));
@@ -189,17 +192,17 @@
     $('#directory-description').textContent = spec.description;
     $('#index-note').textContent = spec.note;
     $('#add-city').hidden = category !== 'cities';
-    $('#state-legend').hidden = category !== 'us';
-    const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'us' ? '點選州界或國家公園標記' : '點選國家公園標記';
+    $('#state-legend').hidden = category !== 'na' || region === 'ca' || region.startsWith('na-ca-') || region === 'na-us-territories';
+    const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : '點選國家公園標記';
     svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
   }
   function areaLabel(place) {
-    if (place.isState) return `美國州 · ${place.abbr}`;
+    if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
     if (place.category === 'countries') return `${REGION_NAMES[place.region] || '其他地區'} · 國家與地區`;
     if (place.category === 'cities') return `${REGION_NAMES[place.region] || '世界'} · ${place.country}${place.approximate ? ' · 位置近似' : ''}`;
-    if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
-    return `${place.category === 'us' ? '美國國家公園' : place.category === 'ca' ? '加拿大國家公園' : '日本國家公園'} · ${place.where}`;
+    if (place.category === 'na') return `${place.nation === 'US' ? '美國國家公園' : '加拿大國家公園'} · ${place.where}`;
+    return `日本國家公園 · ${place.where}`;
   }
   function renderDetail() {
     const place = selectedPlace();
@@ -244,7 +247,7 @@
     const container = $('#region-controls');
     const fragment = document.createDocumentFragment();
     CATEGORIES[category].regions.forEach(area => {
-      const count = area.id === 'all' ? catalogue[category].length : catalogue[category].filter(place => place.region === area.id).length;
+      const count = area.id === 'all' ? catalogue[category].length : catalogue[category].filter(place => matchesRegion(place,area.id)).length;
       if (!count && area.id !== 'all') return;
       const button = makeElement('button', '', area.label);
       button.type = 'button';
@@ -255,7 +258,14 @@
     });
     container.replaceChildren(fragment);
   }
-  function matchesRegion(place) { return region === 'all' || place.region === region; }
+  function matchesRegion(place, target = region) {
+    if (target === 'all') return true;
+    if (category === 'na') {
+      if (target === 'us') return place.region.startsWith('na-us-');
+      if (target === 'ca') return place.region.startsWith('na-ca-');
+    }
+    return place.region === target;
+  }
   function visiblePlaces() {
     const term = query.normalize('NFKD').toLocaleLowerCase().trim();
     return sortedPlaces(category).filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.abbr || ''} ${place.en} ${place.country || ''} ${place.where || ''} ${place.capital || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
@@ -321,11 +331,12 @@
   }
   function defaultView() {
     if (category === 'countries' || category === 'cities') return region === 'all' ? {x:0,y:0,w:1000,h:520} : viewFromGeo(WORLD_AREA[region],14,70);
-    if (category === 'us' && region === 'all') return viewFromGeo([-127,23,-66,52],12,190);
-    if (category === 'ca' && region === 'all') return viewFromBounds(countryByIso.get('CA').bbox,13,200);
+    if (category === 'na' && region === 'all') return viewFromGeo([-170,5,-50,83],16,280);
+    if (category === 'na' && region === 'us') return viewFromGeo([-127,23,-66,52],12,190);
+    if (category === 'na' && region === 'ca') return viewFromBounds(countryByIso.get('CA').bbox,13,200);
     if (category === 'jp' && region === 'all') return viewFromPoints(catalogue.jp,11,115);
     const points = catalogue[category].filter(matchesRegion);
-    if (category === 'us' && region === 'territories') return viewAround(selectedPlace().x,selectedPlace().y,100);
+    if (category === 'na' && region === 'na-us-territories') return viewAround(selectedPlace().x,selectedPlace().y,100);
     return points.length ? viewFromPoints(points,category === 'jp' ? 9 : 13,category === 'jp' ? 40 : 75) : {x:0,y:0,w:1000,h:520};
   }
   function setView(next) {
@@ -359,35 +370,29 @@
     });
     path.addEventListener('pointermove', event => { if (path.classList.contains('selectable')) showTooltip(placeTooltip(countryById.get(country.id)),event); });
     path.addEventListener('pointerleave', hideTooltip);
-    path.addEventListener('click', () => {
-      if (path.classList.contains('selectable')) selectPlace(country.id,true);
-    });
     countryPaths.set(country.id,path);
     countryLayer.append(path);
   });
   const statePaths = new Map();
   stateSource.forEach(state => {
     const path = makeSvg('path',{d:state.d,class:'map-us-state','data-id':state.id});
-    path.addEventListener('pointerenter',event => showTooltip(placeTooltip(catalogue.us.find(place => place.id === state.id)),event));
-    path.addEventListener('pointermove',event => showTooltip(placeTooltip(catalogue.us.find(place => place.id === state.id)),event));
+    path.addEventListener('pointerenter',event => showTooltip(placeTooltip(catalogue.na.find(place => place.id === state.id)),event));
+    path.addEventListener('pointermove',event => showTooltip(placeTooltip(catalogue.na.find(place => place.id === state.id)),event));
     path.addEventListener('pointerleave',hideTooltip);
-    path.addEventListener('click',event => {
-      event.stopPropagation();
-      if (path.classList.contains('selectable')) selectPlace(state.id,true);
-    });
     statePaths.set(state.id,path);
     stateLayer.append(path);
   });
   function renderUSStates() {
-    stateLayer.classList.toggle('active',category === 'us');
+    const showStates = category === 'na' && region !== 'ca' && !region.startsWith('na-ca-') && region !== 'na-us-territories';
+    stateLayer.classList.toggle('active',showStates);
     for (const state of stateSource) {
       const path = statePaths.get(state.id);
-      const place = catalogue.us.find(item => item.id === state.id);
-      const allowed = category === 'us' && matchesRegion(place) && (!visitedOnly || isStamped(place));
+      const place = catalogue.na.find(item => item.id === state.id);
+      const allowed = showStates && matchesRegion(place) && (!visitedOnly || isStamped(place));
       path.classList.toggle('selectable',allowed);
-      path.classList.toggle('outside',category === 'us' && !allowed);
-      path.classList.toggle('done',category === 'us' && isStamped(place));
-      path.classList.toggle('selected',category === 'us' && selectedPlace()?.id === state.id);
+      path.classList.toggle('outside',showStates && !allowed);
+      path.classList.toggle('done',showStates && isStamped(place));
+      path.classList.toggle('selected',showStates && selectedPlace()?.id === state.id);
     }
     if (selectedPlace()?.isState) stateLayer.append(statePaths.get(selectedPlace().id));
   }
@@ -400,7 +405,7 @@
       path.classList.toggle('outside', category === 'countries' && !allowed);
       path.classList.toggle('done', category === 'countries' && isStamped(place));
       path.classList.toggle('selected', category === 'countries' && selectedPlace()?.id === country.id);
-      path.classList.toggle('relevant', category === 'us' && country.iso === 'US' || category === 'ca' && country.iso === 'CA' || category === 'jp' && country.iso === 'JP');
+      path.classList.toggle('relevant', category === 'na' && (country.iso === 'US' || country.iso === 'CA') || category === 'jp' && country.iso === 'JP');
     });
   }
   function renderMarkers() {
@@ -431,7 +436,6 @@
         group.addEventListener('pointerenter',event => showTooltip(placeTooltip(place),event));
         group.addEventListener('pointermove',event => showTooltip(placeTooltip(place),event));
         group.addEventListener('pointerleave',hideTooltip);
-        group.addEventListener('click',event => {event.stopPropagation();selectPlace(place.id,true);});
         fragment.append(group);
       }
     }
@@ -440,6 +444,7 @@
   const DIVISION_LABELS = {
     countries:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
     cities:[['北美洲',-104,47],['南美洲',-60,-18],['歐洲',18,51],['非洲',20,3],['亞洲',94,37],['大洋洲',135,-25]],
+    na:[['加拿大',-102,62],['美國',-101,38]],
     us:[['西岸',-122,39],['山地・沙漠',-108,39],['中西部',-93,42],['東岸・南方',-79,35],['阿拉斯加',-150,63],['夏威夷',-157,20]],
     ca:[['太平洋沿岸',-126,53],['洛磯・草原',-112,53],['安大略・魁北克',-82,49],['大西洋沿岸',-62,47],['北方領地',-112,67]],
     jp:[['北海道',142.8,43.6],['東北',140.8,39.2],['關東・甲信越',138.8,36.1],['中部',137.4,35.7],['近畿・中國・四國',133.7,34.4],['九州',130.7,32.1],['南方離島',127.5,27.2]]
@@ -448,15 +453,18 @@
     divisionLayer.replaceChildren();
     const fragment = document.createDocumentFragment();
     const scale = Math.min((svg.clientWidth || 800) / view.w,(svg.clientHeight || 500) / view.h);
-    for (const [label,lon,lat] of DIVISION_LABELS[category]) {
+    const divisionSet = category === 'na' ? (region === 'all' ? 'na' : region === 'ca' || region.startsWith('na-ca-') ? 'ca' : 'us') : category;
+    const labels = DIVISION_LABELS[divisionSet] || [];
+    for (const [label,lon,lat] of labels) {
       const [x,y] = project(lon,lat);
       const text = makeSvg('text',{class:'division-label',x,y,'font-size':Math.max(12,12/scale),'text-anchor':'middle','aria-hidden':'true'});
       text.textContent = label;
       fragment.append(text);
     }
-    if (category === 'us' || category === 'ca') {
+    if (category === 'na') {
       const divisions = new Map();
       for (const place of catalogue[category]) {
+        if (!matchesRegion(place)) continue;
         const codes = String(place.where || '').split('·').map(code => code.trim()).filter(Boolean);
         for (const code of codes) {
           if (!divisions.has(code)) divisions.set(code,{x:0,y:0,count:0});
@@ -520,6 +528,7 @@
   function chooseRegion(next) {
     if (!CATEGORIES[category].regions.some(item => item.id === next)) return;
     region = next;
+    updateCategoryUI();
     const options = sortedPlaces(category).filter(matchesRegion);
     if (options.length && !matchesRegion(selectedPlace())) selectedByCategory[category] = options[0].id;
     currentMessage = null;
@@ -537,6 +546,17 @@
     renderDirectory();
     showMessage(message,type);
   }
+
+  // Delegate all map selection so country paths, state shapes, and marker hits stay clickable.
+  svg.addEventListener('click',event => {
+    const target = event.target.closest('.map-point,.map-country.selectable,.map-us-state.selectable');
+    if (!target) return;
+    const id = target.dataset.id;
+    if (!id) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectPlace(id,true);
+  });
 
   // Pointer drag pans only when begun on the sea; land and markers stay clickable.
   let drag = null;
@@ -573,7 +593,7 @@
     tab.addEventListener('click',() => chooseCategory(tab.dataset.category));
     tab.addEventListener('keydown',event => {
       const index = CATEGORY_ORDER.indexOf(tab.dataset.category);
-      const next = event.key === 'ArrowRight' ? (index+1)%5 : event.key === 'ArrowLeft' ? (index+4)%5 : event.key === 'Home' ? 0 : event.key === 'End' ? 4 : null;
+      const next = event.key === 'ArrowRight' ? (index+1)%CATEGORY_ORDER.length : event.key === 'ArrowLeft' ? (index+CATEGORY_ORDER.length-1)%CATEGORY_ORDER.length : event.key === 'Home' ? 0 : event.key === 'End' ? CATEGORY_ORDER.length-1 : null;
       if (next !== null) {event.preventDefault();chooseCategory(CATEGORY_ORDER[next],true);}
     });
   });

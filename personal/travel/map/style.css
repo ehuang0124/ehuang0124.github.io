@@ -247,3 +247,6 @@ a{color:inherit}
 .map-us-state.selected.done{fill:#a64532;stroke:#fff2d9}
 
 .legend-state{display:inline-block;width:10px;height:10px;background:#f8f3e8;border:1px solid #6f8a7d;margin-right:5px;vertical-align:-1px}
+
+.board-heading-right{display:flex;align-items:center;gap:14px}.collection-total{font-size:10px;color:#738072;white-space:nowrap}.collection-total b{font:700 14px var(--serif);color:var(--rust);margin:0 3px}
+@media(max-width:600px){.board-heading-right{gap:8px}.collection-total{font-size:9px}.collection-total b{font-size:12px}}
