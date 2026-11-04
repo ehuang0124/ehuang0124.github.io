@@ -1,6 +1,8 @@
 # Stamp Atlas · 世界蓋章地圖
 
-Static, dependency-free GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index at `/personal/travel/`.
+GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index at `/personal/travel/`.
+
+The page works with no backend at all (each browser keeps its own stamps). Linking a Supabase project adds Google sign-in, a read-only public map, companions, live sync across devices, and a shared "一起走過" view. Both modes are supported by the same files.
 
 ## What it does
 
@@ -8,8 +10,32 @@ Static, dependency-free GitHub Pages route: `/personal/travel/map/`. Linked from
 - Click a country/marker or use the searchable, keyboard-accessible destination index. Geographic area chips filter the index and reframe the map. Country outlines show admin-0 divisions. The North America layer combines selectable U.S. state boundaries, U.S. national parks, and Canadian national parks. Its filters narrow to the United States, Canada, or subregions; state codes and travel regions remain labelled. These travel groupings are not administrative boundaries. The map can be dragged from the sea, zoomed, and reset. Where parks are far apart (e.g. Alaska, American Samoa, Japan's southern islands), selecting them from the index pans the map to their location.
 - A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
-- All data is private to this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. There is no account, server, cross-device synchronization, or prefilled personal travel history.
+- Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
 - Text is set via `textContent` rather than interpolating user input into markup; imported backups are schema-checked and sanitized.
+
+## Accounts, companions, and sync
+
+Linking a Supabase project turns the atlas into a small multi-traveller atlas. Everything below is off until `config.js` has a project URL and anon key.
+
+- **Visitors see the map, but cannot change it.** Reading is public; every write is checked by Postgres Row Level Security against `auth.uid()`. A visitor's stamp button opens the sign-in dialog instead of writing, and the page never holds a key that could edit someone else's rows.
+- **Google sign-in.** `account.js` uses Supabase Auth (`signInWithOAuth({ provider:'google' })`) with PKCE, returning to the same page. A `profiles` row stores the display name and avatar; travellers can switch off *讓其他旅人標記我為旅伴* to stay untaggable.
+- **Companions.** Any signed-in traveller can be tagged on a trip before or after stamping. A trip is stored per traveller per place per month, so the same place can carry several months and several travellers. Untagging someone keeps your stamp.
+- **一起走過.** Choosing a traveller lists the places you visited together — either because one of you tagged the other, or because you independently stamped the same place and month. Selecting a row jumps to that place on the map.
+- **Live sync.** Writes go to Postgres and the page subscribes to `postgres_changes` for `stamps`, `custom_cities`, and `profiles`, so a stamp on one device appears on every open tab and phone. `syncPull()` refetches on reconnect, on tab focus, and every 20 s while the websocket is down.
+- **Offline first.** A stamp is drawn immediately. Failed writes wait in an outbox (`eva.travel.atlas.outbox.v1`) and retry on reconnect, so nothing is lost when a phone loses signal. A per-user snapshot (`eva.travel.stamp-atlas.v1`) keeps the last known stamps visible while a device is offline.
+- **Old local stamps.** The first sign-in on a browser that already has local stamps offers to upload them once (marker key `eva.travel.atlas.adopted.<user-id>`), then clears the local copy so two devices cannot diverge.
+- Counters describe the signed-in traveller (their own places); visitors see the whole atlas. Everyone's stamps remain on the map.
+- **Demo mode** (`?demo=1`) exercises the whole interface with four seeded travellers, `localStorage`, and `BroadcastChannel` instead of a server. It is opt-in and never touches a real project.
+
+### Setup
+
+1. Create a Supabase project, then run [`supabase/setup.sql`](supabase/setup.sql) in **SQL Editor**. It creates `profiles`, `stamps`, `custom_cities`, their RLS policies, and adds the tables to the realtime publication. The script is idempotent.
+2. In **Authentication → Providers → Google**, add a Google OAuth client ID and secret from the [Google Cloud console](https://console.cloud.google.com/apis/credentials). Authorize the callback Supabase shows (`https://<project>.supabase.co/auth/v1/callback`).
+3. In **Authentication → URL Configuration**, set the Site URL to `https://ehuang0124.github.io` and add `https://ehuang0124.github.io/personal/travel/map/` as a redirect URL.
+4. Copy the **Project URL** and **anon public** key into [`config.js`](config.js). The anon key is public by design; RLS is the access control.
+5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` to check the page against an in-memory double of PostgREST, RLS, Google sessions, and realtime.
+
+The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://github.com/supabase/supabase-js) UMD build (MIT, see `vendor/LICENSE-supabase-js.txt`). It is loaded only to keep the page build-free; when no project is configured the client is never created.
 
 ## Map, name and park data
 
@@ -35,3 +61,16 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-stamp-atlas.cjs
 ```
 
 Or supply `CHROMIUM_PATH` pointing to a working Chromium executable. The browser test covers desktop/mobile, region navigation, map/list selections, zoom, month-only impressions, legacy date migration, duplicate prevention, delete, persistence, custom cities, export/import, navigation and overflow. The existing `scripts/test-interactive-regions.cjs` checks the three Japan itinerary maps independently.
+
+Account behaviour runs headlessly through jsdom (no browser download needed):
+
+```sh
+npm install --prefix /tmp/atlas-test-deps jsdom
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-local-mode.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cjs
+```
+
+- `test-atlas-local-mode.cjs` proves the unconfigured page behaves exactly like the browser-only atlas (and never shows account UI).
+- `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: Google session handling, profile creation, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, and the demo mode.
+- `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
