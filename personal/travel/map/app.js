@@ -3,7 +3,8 @@
 
   const world = window.TravelAtlasWorld;
   const source = window.TravelAtlasPlaces;
-  if (!world || !source) return;
+  const stateSource = window.TravelAtlasStates;
+  if (!world || !source || !stateSource) return;
 
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -14,7 +15,7 @@
   const CATEGORIES = {
     countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', description:'點選國家，或搜尋名稱。', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
     cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', description:'選城市，或新增清單沒有的城市。', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
-    us: { title:'美國國家公園', map:'03 / THE UNITED STATES', description:'選擇地理分區，篩選國家公園。', note:'州代碼為代表標示，非界線；阿拉斯加及島嶼可由分區定位。', regions:[{id:'all',label:'全部'},{id:'west',label:'西岸'},{id:'mountain',label:'山地・沙漠'},{id:'midwest',label:'中西部'},{id:'east',label:'東岸・南方'},{id:'alaska',label:'阿拉斯加'},{id:'hawaii',label:'夏威夷'},{id:'territories',label:'美國屬地'}], initial:'yell' },
+    us: { title:'美國州＋國家公園', map:'03 / U.S. STATES & PARKS', description:'選州或國家公園；蓋章記錄到訪。', note:'州界依美國人口普查局示意；州內園區標記為代表位置。', regions:[{id:'all',label:'全部'},{id:'west',label:'西岸'},{id:'mountain',label:'山地・沙漠'},{id:'midwest',label:'中西部'},{id:'east',label:'東岸・南方'},{id:'alaska',label:'阿拉斯加'},{id:'hawaii',label:'夏威夷'},{id:'territories',label:'美國屬地'}], initial:'yell' },
     ca: { title:'加拿大國家公園', map:'04 / CANADA', description:'選擇省區，篩選國家公園。', note:'省區代碼為代表標示，非界線；園區標記為代表位置。', regions:[{id:'all',label:'全部'},{id:'pacific',label:'太平洋沿岸'},{id:'rockies',label:'洛磯・草原'},{id:'central',label:'安大略・魁北克'},{id:'atlantic',label:'大西洋沿岸'},{id:'north',label:'北方領地'}], initial:'banff' },
     jp: { title:'日本國家公園', map:'05 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
   };
@@ -78,7 +79,10 @@
       const id = `${slug(city.en)}-${city.iso.toLowerCase()}`;
       return { ...city, id, category:'cities', key:`cities:${id}`, region:country.region, country:country.zh, x, y };
     }),
-    us: source.us.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'us',key:`us:${id}`,...point(lat,lon) })),
+    us: [
+      ...source.us.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'us',key:`us:${id}`,...point(lat,lon) })),
+      ...stateSource.map(state => ({ ...state, category:'us', key:`us:${state.id}`, where:state.abbr, isState:true }))
+    ],
     ca: source.ca.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'ca',key:`ca:${id}`,...point(lat,lon) })),
     jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) }))
   };
@@ -136,6 +140,7 @@
   const svg = $('#map-svg');
   const surface = $('#map-surface');
   const countryLayer = $('#country-layer');
+  const stateLayer = $('#state-layer');
   const divisionLayer = $('#division-layer');
   const markerLayer = $('#marker-layer');
   const tooltip = $('#map-tooltip');
@@ -184,13 +189,17 @@
     $('#directory-description').textContent = spec.description;
     $('#index-note').textContent = spec.note;
     $('#add-city').hidden = category !== 'cities';
-    svg.setAttribute('aria-label', `${spec.title}互動地圖。點地圖標記選取地點，也可以使用下方可用鍵盤操作的目的地清單。`);
+    $('#state-legend').hidden = category !== 'us';
+    const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'us' ? '點選州界或國家公園標記' : '點選國家公園標記';
+    svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
   }
   function areaLabel(place) {
+    if (place.isState) return `美國州 · ${place.abbr}`;
     if (place.category === 'countries') return `${REGION_NAMES[place.region] || '其他地區'} · 國家與地區`;
     if (place.category === 'cities') return `${REGION_NAMES[place.region] || '世界'} · ${place.country}${place.approximate ? ' · 位置近似' : ''}`;
-    return `${place.category === 'us' ? '美國' : place.category === 'ca' ? '加拿大' : '日本'} · ${place.where}`;
+    if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
+    return `${place.category === 'us' ? '美國國家公園' : place.category === 'ca' ? '加拿大國家公園' : '日本國家公園'} · ${place.where}`;
   }
   function renderDetail() {
     const place = selectedPlace();
@@ -249,7 +258,7 @@
   function matchesRegion(place) { return region === 'all' || place.region === region; }
   function visiblePlaces() {
     const term = query.normalize('NFKD').toLocaleLowerCase().trim();
-    return sortedPlaces(category).filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.en} ${place.country || ''} ${place.where || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
+    return sortedPlaces(category).filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.abbr || ''} ${place.en} ${place.country || ''} ${place.where || ''} ${place.capital || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
   }
   function renderDirectory(resetScroll = false) {
     const oldScroll = resetScroll ? 0 : list.scrollTop;
@@ -334,7 +343,9 @@
       const [x1,y1,x2,y2] = place.bbox;
       const width = Math.min(270,Math.max(86,x2-x1+22,(y2-y1+20)*mapRatio()));
       setView(viewAround(place.x,place.y,width));
-    } else setView(viewAround(place.x,place.y,category === 'cities' ? 140 : category === 'jp' ? 45 : 83));
+    } else if (place.isState && place.abbr === 'AK') setView(viewAround(place.x,place.y,190));
+    else if (place.isState) setView(viewFromBounds(place.bbox,8,34));
+    else setView(viewAround(place.x,place.y,category === 'cities' ? 140 : category === 'jp' ? 45 : 83));
   }
   function resetView() { setView(defaultView()); }
 
@@ -354,6 +365,32 @@
     countryPaths.set(country.id,path);
     countryLayer.append(path);
   });
+  const statePaths = new Map();
+  stateSource.forEach(state => {
+    const path = makeSvg('path',{d:state.d,class:'map-us-state','data-id':state.id});
+    path.addEventListener('pointerenter',event => showTooltip(placeTooltip(catalogue.us.find(place => place.id === state.id)),event));
+    path.addEventListener('pointermove',event => showTooltip(placeTooltip(catalogue.us.find(place => place.id === state.id)),event));
+    path.addEventListener('pointerleave',hideTooltip);
+    path.addEventListener('click',event => {
+      event.stopPropagation();
+      if (path.classList.contains('selectable')) selectPlace(state.id,true);
+    });
+    statePaths.set(state.id,path);
+    stateLayer.append(path);
+  });
+  function renderUSStates() {
+    stateLayer.classList.toggle('active',category === 'us');
+    for (const state of stateSource) {
+      const path = statePaths.get(state.id);
+      const place = catalogue.us.find(item => item.id === state.id);
+      const allowed = category === 'us' && matchesRegion(place) && (!visitedOnly || isStamped(place));
+      path.classList.toggle('selectable',allowed);
+      path.classList.toggle('outside',category === 'us' && !allowed);
+      path.classList.toggle('done',category === 'us' && isStamped(place));
+      path.classList.toggle('selected',category === 'us' && selectedPlace()?.id === state.id);
+    }
+    if (selectedPlace()?.isState) stateLayer.append(statePaths.get(selectedPlace().id));
+  }
   function renderCountries() {
     world.countries.forEach(country => {
       const path = countryPaths.get(country.id);
@@ -380,7 +417,7 @@
         fragment.append(mark);
       }
     } else {
-      const points = catalogue[category].filter(place => matchesRegion(place) && (!visitedOnly || isStamped(place)));
+      const points = catalogue[category].filter(place => !place.isState && matchesRegion(place) && (!visitedOnly || isStamped(place)));
       points.sort((a,b) => Number(a.id === selectedPlace().id) - Number(b.id === selectedPlace().id));
       const radius = 4.5 / scale;
       for (const place of points) {
@@ -434,10 +471,11 @@
     }
     divisionLayer.append(fragment);
   }
-  function renderMap() { renderCountries(); renderDivisions(); renderMarkers(); }
+  function renderMap() { renderCountries(); renderUSStates(); renderDivisions(); renderMarkers(); }
   function placeTooltip(place) {
     const dates = visitsOf(place);
-    return dates.length ? `${place.zh} · ${printedDate(dates.at(-1))}` : place.zh;
+    const name = place.isState ? `${place.zh} ${place.abbr}` : place.zh;
+    return dates.length ? `${name} · ${printedDate(dates.at(-1))}` : name;
   }
   function showTooltip(name,event) {
     tooltip.textContent = name;
@@ -503,7 +541,7 @@
   // Pointer drag pans only when begun on the sea; land and markers stay clickable.
   let drag = null;
   svg.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || event.target.closest('.map-point,.map-country')) return;
+    if (event.button !== 0 || event.target.closest('.map-point,.map-country,.map-us-state')) return;
     drag = {id:event.pointerId,x:event.clientX,y:event.clientY,origin:{...view}};
     svg.setPointerCapture(event.pointerId);
     svg.classList.add('is-dragging');

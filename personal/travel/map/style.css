@@ -234,3 +234,16 @@ a{color:inherit}
 
 .tab-number,.tab-label small,#place-en:empty{display:none!important}
 .section-overline{justify-content:flex-start;margin:0;padding:15px 0 12px;font:700 12px/1.4 var(--sans);letter-spacing:.04em;color:#566e5f}
+
+/* Selectable U.S. state boundaries in the combined states + parks layer */
+.map-us-layer{display:none}
+.map-us-layer.active{display:block}
+.map-us-state{fill:#f8f3e8;stroke:#6f8a7d;stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .18s,opacity .18s;pointer-events:none}
+.map-us-state.selectable{pointer-events:all;cursor:pointer}
+.map-us-state.selectable:hover{fill:#e7bea5;stroke:#974c3c;stroke-width:1.5}
+.map-us-state.outside{opacity:.2;pointer-events:none}
+.map-us-state.done{fill:#c4775e;stroke:#f5e9d7}
+.map-us-state.selected{fill:#fff0ce;stroke:#2c6a5c;stroke-width:2}
+.map-us-state.selected.done{fill:#a64532;stroke:#fff2d9}
+
+.legend-state{display:inline-block;width:10px;height:10px;background:#f8f3e8;border:1px solid #6f8a7d;margin-right:5px;vertical-align:-1px}
