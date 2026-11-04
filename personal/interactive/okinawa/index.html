@@ -144,8 +144,11 @@ section{padding:clamp(56px,7vw,96px) 0}
 .pin.plan .planring{opacity:.95}
 .cluster .core{fill:#fbf8ef;stroke:#2b5c54;stroke-width:1.7}
 .cluster.has .core{fill:var(--bengara);stroke:#fdf6e6}
+.cluster .mini{fill:none}
+.cluster.part .mini{fill:#b5523c}
 .cluster text{font:700 9px var(--sans);fill:#2b5c54;text-anchor:middle}
 .cluster.has text{fill:#fff8e9}
+.cluster.part text{fill:#8c3a29}
 .clabel{font:500 9.5px var(--sans);fill:#eaf2ec;paint-order:stroke;stroke:rgba(7,33,42,.82);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .clabel.on{fill:#fff3d4;font-weight:700}
 .pin-label{pointer-events:none}
@@ -206,6 +209,7 @@ section{padding:clamp(56px,7vw,96px) 0}
 .day .stops{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:14px}
 .day .stops button{border:1px solid #e1dac8;background:#fffdf6;border-radius:100px;padding:4px 9px;font-size:10.5px;color:#5f6f65}
 .day .stops button:hover{border-color:var(--coral);color:var(--bengara)}
+.day .stops button.nu:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--coral);margin-right:5px;vertical-align:1px}
 
 /* ---------- list ---------- */
 .list-tools{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:30px 0 18px}
@@ -279,7 +283,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
       <a href="#plan">2027 行程</a>
       <a href="#list">清單</a>
     </nav>
-    <div class="counter" id="topbar-count"><span>已走過</span><b id="cnt-top">0</b><span>/ 48</span></div>
+    <div class="counter" id="topbar-count"><span>已走過</span><b id="cnt-top">0</b><span>/ 49</span></div>
   </div>
 </header>
 
@@ -308,9 +312,9 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
   <div class="hero-in">
     <p class="hero-kicker">OKINAWA ・ 2027 WINTER</p>
     <h1><span class="small">島と海の記録</span>島與海的標記</h1>
-    <p class="hero-lede">從那霸的久米村與福州園，到山原的邊戶岬與八重山的離島。這張地圖收著 48 個地方 —— 走過的，會在紙上留下紅色的章；還沒去的，先靜靜等著。點一個標記，看看它在那裡。</p>
+    <p class="hero-lede">從那霸的久米村與福州園，到山原的邊戶岬與八重山的離島。這張地圖收著 49 個地方 —— 走過的，會在紙上留下紅色的章；還沒去的，先靜靜等著。點一個標記，看看它在那裡。</p>
     <div class="hero-stats">
-      <div><b>48</b><span>個地點</span></div>
+      <div><b>49</b><span>個地點</span></div>
       <div><b>4</b><span>個區域</span></div>
       <div><b>4 天 3 夜</b><span>2027 · 1/7–1/10</span></div>
     </div>
@@ -324,14 +328,14 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
 <div class="strip">
   <div class="wrap strip-in">
     <div>
-      <div class="big"><span id="cnt-main">0</span><small> / 48 已走過</small></div>
+      <div class="big"><span id="cnt-main">0</span><small> / 49 已走過</small></div>
     </div>
     <div>
       <div class="bar"><i id="bar-fill"></i></div>
       <div class="legend">
         <span>在地圖或清單點一下就能蓋章</span>
         <span>·</span>
-        <span>紀錄保存在這台裝置的瀏覽器</span>
+        <span>名單已依你的回想預設，隨時可點掉</span>
       </div>
     </div>
     <div class="actions">
@@ -408,7 +412,7 @@ footer b{color:#eef3ec;font-weight:600;letter-spacing:.1em}
     <div class="wrap">
       <p class="eyebrow">2027 itinerary</p>
       <h2 class="section-title">1/7 – 1/10，四天三夜</h2>
-      <p class="section-lede">整理自 Notion 的「沖繩 2027」。這次只租中間兩天車，所以行程沿著那霸、中部、沖繩市打轉，南城先留給下一次。</p>
+      <p class="section-lede">整理自 Notion 的「沖繩 2027」。這次只租中間兩天車，所以行程沿著那霸、中部、沖繩市打轉，南城先留給下一次。地點旁有紅點的是你這趟第一次去的地方。</p>
       <div class="plan-note-top"><strong>安排備註</strong><span>僅中間兩天（1/8–1/9）租車；斎場御嶽本版先移除，不為此特地南下南城。</span></div>
       <div class="plan-grid" id="plan-grid"></div>
     </div>
@@ -556,8 +560,10 @@ const PLACES = [
    note:'日本最大級的鐘乳石洞，全長約 5 公里、開放 890 公尺。出口的琉球王國村有傳統工藝與太鼓表演。'},
 
   /* ---- 離島 ---- */
-  {id:'kerama',zh:'慶良間諸島（渡嘉敷・座間味）',ja:'慶良間諸島',short:'慶良間',city:'座間味村',region:'remote',type:'island',lat:26.2000,lng:127.3300,map:'main',
-   note:'從泊港搭船 35–50 分鐘。海水透明度被稱為「慶良間藍」，冬天正是在海上賞鯨的季節。'},
+  {id:'zamami',zh:'座間味島',ja:'座間味島',short:'座間味',city:'座間味村',region:'remote',type:'island',lat:26.2280,lng:127.3030,map:'main',
+   note:'從泊港搭高速船約 50 分鐘。島上的古座間味海灘透明度極高，冬天（1–3 月）是慶良間賞鯨的主要基地。'},
+  {id:'tokashiki',zh:'渡嘉敷島',ja:'渡嘉敷島',short:'渡嘉敷',city:'渡嘉敷村',region:'remote',type:'island',lat:26.1830,lng:127.3550,map:'main',
+   note:'慶良間群島中最大的一座，泊港搭船 35–70 分鐘。阿波連海灘水淺、珊瑚近岸，島上大半是慶良間諸島國立公園。'},
   {id:'kumejima',zh:'久米島・はての浜',ja:'久米島',short:'久米島',city:'久米島町',region:'remote',type:'island',lat:26.3400,lng:126.7700,map:'main',
    note:'從那霸搭飛機 35 分鐘，或搭船 3.5 小時。はての浜是浮在海上的沙洲，畳石是天然的六角形玄武岩。'},
   {id:'miyako',zh:'宮古島・與那覇前濱',ja:'宮古島',short:'宮古島',city:'宮古島市',region:'remote',type:'island',lat:24.7300,lng:125.2700,map:'islands',
@@ -590,10 +596,19 @@ const PLAN = [
 ];
 
 /* 之後可把確定的名單填在這裡，第一次開啟就會是已蓋章狀態 */
-const DEFAULT_VISITED = [];
+const DEFAULT_VISITED = [
+  /* 北部 */
+  'churaumi','kouri','nakijin','sesoko','manza','ryukyumura','maeda','nedo','ie',
+  /* 中部 */
+  'zanpa','zakimi','yachimun','american','kadena','nakagusuku','katsuren','kaichu','urasoe','nishihara',
+  /* 南部・那霸 */
+  'shuri','kokusai','kencho','airport','senaga','heiwa','himeyuri','sefa','chinen','gyokusendo',
+  /* 離島：只去過座間味 */
+  'zamami'
+];
 
 /* ================= state ================= */
-const KEY='okinawa-visited-v1';
+const KEY='okinawa-visited-v2';
 const byId = {};
 PLACES.forEach(p=>byId[p.id]=p);
 let visited = new Set();
@@ -783,10 +798,12 @@ function renderPins(){
     const n=c.items.length;
     if(c.grp){
       const isVisited = c.visitedCount===n;
-      const cls = 'pin cluster'+(c.hasActive?' active':'')+(c.visitedCount?' has':'');
+      const allVisited = c.visitedCount===n;
+      const cls = 'pin cluster'+(c.hasActive?' active':'')+(allVisited?' has':(c.visitedCount?' part':''));
       pins += '<g class="'+cls+'" data-cluster="1" tabindex="0" role="button" aria-label="'+c.items.length+' 個地點" transform="translate('+c.x.toFixed(1)+','+c.y.toFixed(1)+')">'
         + '<circle class="halo" r="'+(r*2)+'"/>'
-        + '<circle class="core" r="'+(r*1.42)+'"/>'
+        + '<circle class="core" r="'+(r*1.42)+'" style="stroke-width:'+(1.7*upp).toFixed(2)+'"/>'
+        + '<circle class="mini" r="'+(r*0.42)+'"/>'
         + '<text y="'+(3.4*upp)+'" style="font-size:'+(10.5*upp)+'px">'+n+'</text>'
         + '</g>';
       // cluster label
@@ -804,8 +821,8 @@ function renderPins(){
       pins += '<g class="'+cls+'" data-id="'+p.id+'" tabindex="0" role="button" aria-label="'+p.zh+'" transform="translate('+c.x.toFixed(1)+','+c.y.toFixed(1)+')">'
         + '<title>'+p.zh+'</title>'
         + '<circle class="halo" r="'+(r*2)+'"/>'
-        + '<circle class="core" r="'+r+'"/>'
-        + '<circle class="planring" r="'+(r*1.9)+'"/>'
+        + '<circle class="core" r="'+r+'" style="stroke-width:'+(1.6*upp).toFixed(2)+'"/>'
+        + '<circle class="planring" r="'+(r*1.9)+'" style="stroke-width:'+(1.1*upp).toFixed(2)+';stroke-dasharray:'+(2.2*upp).toFixed(2)+' '+(2.8*upp).toFixed(2)+'"/>'
         + '<path class="chk" d="M'+(-r*0.4)+','+(r*0.02)+' L'+(-r*0.06)+','+(r*0.36)+' L'+(r*0.44)+','+(-r*0.32)+'" style="stroke-width:'+(1.7*upp)+'"/>'
         + '</g>';
       placeLabel(p.short, c.x, c.y, r, fontU, p.id===activeId, (t,b)=>{labels+=t;labelBoxes.push(b);});
@@ -840,12 +857,12 @@ function renderPins(){
       }
       if(!hit){
         labelBoxes.push(box);
-        emit('<text class="clabel'+(on?' on':'')+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" style="font-size:'+fs.toFixed(1)+'px">'+text+'</text>', box);
+        emit('<text class="clabel'+(on?' on':'')+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" style="font-size:'+fs.toFixed(1)+'px;stroke-width:'+(3*upp).toFixed(2)+'">'+text+'</text>', box);
         return;
       }
     }
     if(on){
-      emit('<text class="clabel on" x="'+(cx+rad+gap).toFixed(1)+'" y="'+(cy+fs*0.36).toFixed(1)+'" style="font-size:'+fs.toFixed(1)+'px">'+text+'</text>', [0,0,0,0]);
+      emit('<text class="clabel on" x="'+(cx+rad+gap).toFixed(1)+'" y="'+(cy+fs*0.36).toFixed(1)+'" style="font-size:'+fs.toFixed(1)+'px;stroke-width:'+(3*upp).toFixed(2)+'">'+text+'</text>', [0,0,0,0]);
     }
   }
 }
@@ -1079,6 +1096,11 @@ function updateAll(){
     row.querySelector('.state').textContent = on ? '已去過' : '';
   });
   el('list-count').textContent = '已走過 '+n+' / '+total+'（'+(n/total*100).toFixed(0)+'%）';
+  document.querySelectorAll('.day .stops [data-stop]').forEach(b=>{
+    const on = visited.has(b.dataset.stop);
+    b.classList.toggle('nu', !on);
+    b.title = on ? '去過' : '還沒去過';
+  });
   renderPins();
   updateSidenav();
 }
@@ -1135,7 +1157,7 @@ function buildPlan(){
     + '<h4>'+d.title+'</h4>'
     + '<div class="stay">'+d.stay+'</div>'
     + '<ul>'+d.extra.map(t=>'<li>'+t+'</li>').join('')+'</ul>'
-    + '<div class="stops">'+d.stops.map(id=>'<button data-stop="'+id+'">'+byId[id].short+'</button>').join('')+'</div>'
+    + '<div class="stops">'+d.stops.map(id=>'<button data-stop="'+id+'" class="'+(visited.has(id)?'':'nu')+'" title="'+(visited.has(id)?'去過':'還沒去過')+'">'+byId[id].short+'</button>').join('')+'</div>'
     + '</article>').join('');
   el('plan-grid').querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>{
     regionFilter='all';
