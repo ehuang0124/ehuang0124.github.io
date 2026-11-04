@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f2e9">
+  <meta name="description" content="把走過的地方蓋成一張地圖。瀏覽世界國家、主要城市與美國、加拿大、日本的國家公園，選擇到訪日期，留下自己的旅行戳章。">
+  <title>世界蓋章地圖 — Eva Huang Travel Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+  <link rel="stylesheet" href="/personal/travel/crumbs.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./world.js" defer></script>
+  <script src="./places.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="stamp-rough" x="-12%" y="-12%" width="124%" height="124%"><feTurbulence type="fractalNoise" baseFrequency=".028" numOctaves="2" seed="8" result="ink-noise"/><feDisplacementMap in="SourceGraphic" in2="ink-noise" scale="1.7" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
+  <a class="skip-link" href="#main">跳至旅行地圖</a>
+  <nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent;--crumb-line:rgba(38,51,45,.15);--crumb-strong:#26332d;--crumb-accent:#b74e38">
+    <ol>
+      <li><a href="/">Eva Huang</a></li>
+      <li><a href="/personal/travel/">Travel</a></li>
+      <li aria-current="page">Stamp Atlas</li>
+    </ol>
+  </nav>
+
+  <div class="shell">
+    <header class="site-header">
+      <a class="brand" href="/personal/travel/">EVA HUANG <span>✳ TRAVEL ATLAS / 旅行地圖</span></a>
+      <nav class="header-links" aria-label="旅行導覽">
+        <a href="/personal/travel/">← 旅行首頁</a>
+        <a href="/">主站 ↗</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow"><span class="tiny-star" aria-hidden="true">✳</span> THE STAMPED ATLAS <span class="eyebrow-separator">/</span> POSTCARD NO. 004</p>
+          <h1 id="page-title">把走過的地方，<br><em>蓋成一張地圖。</em></h1>
+          <p class="intro-lede">世界是一張還沒寄完的明信片。選一個地方、寫下到訪的日子，再蓋上一枚屬於自己的旅行戳章。</p>
+          <div class="intro-meta"><span><b id="passport-count">0</b> 個已收藏的地方</span><i aria-hidden="true"></i><span>05 個旅行分區</span><i aria-hidden="true"></i><span>你的私人地圖</span></div>
+        </div>
+        <div class="postcard-art" aria-hidden="true">
+          <div class="art-top"><span>PAR AVION&nbsp; / &nbsp;BY AIR MAIL</span><span>EH · 004</span></div>
+          <span class="art-address">FROM EVERYWHERE<br>TO SOMEWHERE NEW</span>
+          <div class="art-postmark"><span class="art-spark">✳</span><strong>TRAVEL<br>ATLAS</strong><small>KEEP GOING · 2026</small></div>
+          <svg class="art-waves" viewBox="0 0 220 85" fill="none" aria-hidden="true"><path d="M4 17c27-12 39 11 68-1s40 10 69-1 42 12 75-2M4 34c27-12 39 11 68-1s40 10 69-1 42 12 75-2M4 51c27-12 39 11 68-1s40 10 69-1 42 12 75-2M4 68c27-12 39 11 68-1s40 10 69-1 42 12 75-2" stroke="currentColor" stroke-width="1.4"/></svg>
+          <div class="art-bottom"><span>PLEASE KEEP THIS MOMENT</span><span>✈</span></div>
+        </div>
+      </section>
+
+      <section class="atlas-section" aria-label="互動式旅行蓋章地圖">
+        <div class="section-overline"><span>01 — 05 &nbsp; / &nbsp; CHOOSE A MAP LAYER</span><span>COLLECT THE PLACES, NOT THE MILES.</span></div>
+        <div class="category-tabs" role="tablist" aria-label="地圖分區">
+          <button type="button" class="category-tab" role="tab" id="tab-countries" data-category="countries" aria-controls="atlas-panel" aria-selected="true" tabindex="0"><span class="tab-number">01 /</span><span class="tab-label"><strong>世界國家</strong><small>COUNTRIES &amp; REGIONS</small></span><span class="tab-count" id="tab-count-countries">0 / 240</span></button>
+          <button type="button" class="category-tab" role="tab" id="tab-cities" data-category="cities" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-number">02 /</span><span class="tab-label"><strong>世界主要城市</strong><small>WORLD CITIES</small></span><span class="tab-count" id="tab-count-cities">0 / —</span></button>
+          <button type="button" class="category-tab" role="tab" id="tab-us" data-category="us" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-number">03 /</span><span class="tab-label"><strong>美國國家公園</strong><small>U.S. NATIONAL PARKS</small></span><span class="tab-count" id="tab-count-us">0 / 64</span></button>
+          <button type="button" class="category-tab" role="tab" id="tab-ca" data-category="ca" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-number">04 /</span><span class="tab-label"><strong>加拿大國家公園</strong><small>CANADIAN PARKS</small></span><span class="tab-count" id="tab-count-ca">0 / 48</span></button>
+          <button type="button" class="category-tab" role="tab" id="tab-jp" data-category="jp" aria-controls="atlas-panel" aria-selected="false" tabindex="-1"><span class="tab-number">05 /</span><span class="tab-label"><strong>日本國家公園</strong><small>JAPAN NATIONAL PARKS</small></span><span class="tab-count" id="tab-count-jp">0 / 35</span></button>
+        </div>
+
+        <div id="atlas-panel" role="tabpanel" aria-labelledby="tab-countries" tabindex="0" class="atlas-board">
+          <div class="board-heading"><div class="board-heading-left"><span class="live-dot" aria-hidden="true"></span><strong id="board-title">世界國家</strong><span class="board-subtitle" id="board-subtitle">世界・國家與地區</span></div><div class="board-total"><strong id="board-visited">0</strong><span class="board-slash">/</span><span id="board-total">240</span><small>PLACES STAMPED</small></div></div>
+
+          <div class="atlas-grid">
+            <div class="map-column">
+              <div class="map-surface" id="map-surface">
+                <div class="map-topline"><span id="map-caption">01 / THE WHOLE WORLD</span><span class="map-topline-right">EVA HUANG · FIELD MAP</span></div>
+                <svg id="map-svg" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="互動地圖。點地圖標記選取地點；也可以使用下方可用鍵盤操作的目的地清單。">
+                  <path id="graticule" class="graticule"></path>
+                  <g id="country-layer"></g>
+                  <g id="marker-layer"></g>
+                </svg>
+                <span class="ocean-label ocean-label-one" aria-hidden="true">P A C I F I C &nbsp; O C E A N</span>
+                <span class="ocean-label ocean-label-two" aria-hidden="true">A T L A N T I C</span>
+                <div class="map-zoom" aria-label="地圖縮放控制"><button type="button" id="zoom-in" aria-label="放大地圖" title="放大">+</button><button type="button" id="zoom-out" aria-label="縮小地圖" title="縮小">−</button><button type="button" id="zoom-reset" aria-label="重設地圖視角" title="回到分區視角">全</button></div>
+                <div class="map-tooltip" id="map-tooltip" hidden></div>
+                <div class="map-legend"><span><i class="legend-pin" aria-hidden="true"></i>尚未蓋章</span><span><i class="legend-pin done" aria-hidden="true"></i>已蓋章</span><span class="map-instruction">拖曳移動地圖</span></div>
+              </div>
+              <div class="map-caption-line"><span>✳ <span id="map-note">點選地圖或下方清單，開始收藏旅程。</span></span><span>MAP / NATURAL EARTH</span></div>
+            </div>
+
+            <aside class="stamp-panel" aria-label="目的地與蓋章台">
+              <div class="stamp-panel-top"><span>✳ &nbsp; STAMP COUNTER</span><span id="place-serial">NO. 001</span></div>
+              <div class="stamp-panel-inner">
+                <div class="place-heading"><p id="place-kind" class="place-kind">COUNTRIES / ASIA</p><h2 id="place-name">日本</h2><p id="place-en">JAPAN</p><p id="place-location">亞洲 · 國家與地區</p></div>
+                <div class="impression-paper" aria-label="紀念戳章預覽"><span class="paper-corner">POSTMARK / 004</span><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><span class="stamp-star">✳</span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──.──</time><small>TRAVEL ATLAS</small></div><span class="paper-hint" id="paper-hint">YOUR STAMP GOES HERE ↗</span></div>
+                <div class="stamp-fields"><label for="visit-date">到訪日期 <span>DATE OF VISIT</span></label><input type="date" id="visit-date" required><button type="button" id="stamp-button" class="stamp-button"><span aria-hidden="true">✳</span> 蓋下這一章 <span aria-hidden="true">↗</span></button><p id="stamp-feedback" class="stamp-feedback" role="status" aria-live="polite">選好日期，再把旅程留在地圖上。</p></div>
+                <div class="stamp-history" id="stamp-history" hidden><div class="history-title"><strong>到訪紀錄</strong><span id="history-count"></span></div><ul id="history-list"></ul></div>
+                <button type="button" id="delete-city" class="delete-city" hidden>移除這座自訂城市</button>
+              </div>
+              <div class="stamp-panel-foot"><span>EV · TRAVEL ATLAS</span><span>✈ &nbsp; GOOD TO BE HERE</span></div>
+            </aside>
+          </div>
+
+          <div class="directory">
+            <div class="directory-head"><div><p class="eyebrow">DESTINATION INDEX &nbsp; / &nbsp; 尋找下一站</p><h2 id="directory-title">地點索引<span class="dot">.</span></h2><p id="directory-description">在地圖上找一個國家，或在下方搜尋它的名字。</p></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文或英文地名…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
+            <div id="region-controls" class="region-controls" aria-label="地理分區"></div>
+            <div class="directory-results"><span id="result-count" role="status" aria-live="polite"></span><span>CHOOSE A PLACE &nbsp; → &nbsp; PICK A DATE &nbsp; → &nbsp; STAMP IT</span></div>
+            <div id="place-list" class="place-list" aria-label="可選擇的目的地清單"></div>
+            <div class="directory-bottom"><p id="index-note">地圖形狀為地理示意；小型島嶼與地區也可以從清單選取。</p><button type="button" id="add-city" class="add-city" hidden>＋ 新增自己的城市</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="backup" aria-labelledby="backup-title"><div class="backup-icon" aria-hidden="true">✉</div><div class="backup-copy"><p class="eyebrow">A NOTE FROM THE POST OFFICE</p><h2 id="backup-title">把這張明信片，留一份給自己。</h2><p>戳章只保存在目前瀏覽器，不會自動同步到其他裝置。定期匯出備份；換瀏覽器時可匯入，原有紀錄會保留並合併。</p></div><div class="backup-actions"><button type="button" id="export-stamps">↓ 匯出戳章</button><label for="import-stamps" class="import-label">↑ 匯入備份</label><input id="import-stamps" class="sr-only" type="file" accept=".json,application/json" aria-label="選擇戳章備份 JSON 檔案"></div></section>
+      <p id="backup-feedback" class="backup-feedback" role="status" aria-live="polite"></p>
+    </main>
+    <footer class="footer"><span>© 2026 EVA HUANG &nbsp; · &nbsp; MAPS, DATA &amp; STORIES</span><a href="/personal/travel/">← 回旅行地圖首頁</a><span>MADE TO REMEMBER WHERE WE'VE BEEN.</span></footer>
+  </div>
+
+  <dialog id="city-dialog" aria-labelledby="city-dialog-title"><form id="city-form"><div class="dialog-top"><span>PERSONAL DESTINATION / +01</span><button type="button" id="city-cancel" aria-label="關閉新增城市視窗">×</button></div><h2 id="city-dialog-title">把一座城市加進地圖。</h2><p>清單沒有你去過的地方？自己補上一站。座標可以留空，地圖會以所選國家的中心作近似標記。</p><label for="city-name">城市名稱 <input id="city-name" name="name" type="text" maxlength="80" placeholder="例如：臺南" required></label><label for="city-country">所屬國家或地區 <select id="city-country" name="country" required></select></label><div class="coordinate-fields"><label for="city-lat">緯度 <small>選填</small><input id="city-lat" type="number" min="-90" max="90" step="any" placeholder="例如 22.99"></label><label for="city-lon">經度 <small>選填</small><input id="city-lon" type="number" min="-180" max="180" step="any" placeholder="例如 120.20"></label></div><p id="city-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">加入城市清單 <span>↗</span></button></form></dialog>
+  <noscript><p class="noscript">要使用互動地圖與蓋章功能，請啟用 JavaScript。</p></noscript>
+</body>
+</html>

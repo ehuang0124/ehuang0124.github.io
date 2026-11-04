@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Eva Huang 的旅行地圖：三張互動登機證，飛往東日本、九州與沖繩。選一張，出發。">
+  <meta name="description" content="Eva Huang 的旅行地圖：三張互動登機證飛往日本，還有一張能選日期、為世界各地蓋章的明信片地圖。">
   <meta name="theme-color" content="#f7f2e7">
   <title>Travel Atlas — Eva Huang 的旅行地圖</title>
   <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
   <link rel="stylesheet" href="/personal/travel/crumbs.css">
   <style>
+    @font-face { font-family:"Travel Atlas Sans TC";src:url("/personal/travel/map/fonts/atlas-sans-tc.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap; }
+    @font-face { font-family:"Travel Atlas Serif TC";src:url("/personal/travel/map/fonts/atlas-serif-tc.woff2") format("woff2");font-weight:200 900;font-style:normal;font-display:swap; }
     :root {
       --paper:#f7f2e7; --card:#fffdf6; --ink:#26332d; --muted:#7d8677;
       --red:#c4553d; --teal:#2c6e63; --gold:#c9a15f; --line:#ddd3bd;
-      --serif:"Songti TC","Noto Serif TC",Georgia,serif;
-      --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+      --serif:"Songti TC","Travel Atlas Serif TC","Noto Serif TC",Georgia,serif;
+      --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New","Travel Atlas Sans TC",monospace;
     }
     * { box-sizing:border-box; }
     html { scroll-behavior:smooth; }
@@ -21,7 +23,7 @@
       margin:0; color:var(--ink); background:var(--paper);
       background-image:radial-gradient(rgba(38,51,45,.055) 1px, transparent 1px);
       background-size:22px 22px;
-      font-family:Arial,"Helvetica Neue","Noto Sans TC","PingFang TC",sans-serif;
+      font-family:Arial,"Helvetica Neue","Travel Atlas Sans TC","Noto Sans TC","PingFang TC",sans-serif;
     }
     a { color:inherit; }
     a:focus-visible { outline:3px solid var(--red); outline-offset:4px; border-radius:4px; }
@@ -95,6 +97,29 @@
     .stamp small { display:block; font-family:var(--mono); font-size:7px; letter-spacing:.24em; margin-top:3px; }
     .ticket:hover .stamp { transform:rotate(-5deg) scale(1.06); }
 
+    /* world stamp atlas: a fourth, postcard-shaped entry after the Japan tickets */
+    .atlas-feature { margin-top:70px; }
+    .atlas-feature .tickets-head { margin-top:0; }
+    .atlas-postcard { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(230px,.6fr); min-height:224px; position:relative; overflow:hidden; background:#fffdf6; border:1px solid var(--line); text-decoration:none; box-shadow:0 2px 0 rgba(38,51,45,.05); transition:transform .25s ease,box-shadow .25s ease; }
+    .atlas-postcard:before { content:""; position:absolute; top:0; right:0; left:0; height:5px; background:repeating-linear-gradient(90deg,var(--red) 0 28px,var(--card) 28px 56px,var(--teal) 56px 84px,var(--card) 84px 112px); opacity:.7; }
+    .atlas-postcard:hover { transform:translateY(-4px); box-shadow:0 20px 32px -23px rgba(38,51,45,.42); }
+    .atlas-postcard .copy { padding:30px 34px 31px; }
+    .atlas-postcard .number { font:700 10px var(--mono); letter-spacing:.2em; color:var(--teal); }
+    .atlas-postcard h3 { margin:12px 0 8px; font:700 clamp(26px,3.5vw,41px)/1.25 var(--serif); letter-spacing:.02em; }
+    .atlas-postcard h3 em { font-style:normal; color:var(--red); }
+    .atlas-postcard p { margin:0; color:var(--muted); font-size:12px; line-height:1.9; max-width:520px; }
+    .atlas-postcard .go { display:inline-block; margin-top:19px; font-weight:800; color:var(--red); font-size:12px; letter-spacing:.08em; }
+    .atlas-postcard .go i { font-style:normal; display:inline-block; transition:transform .25s; }
+    .atlas-postcard:hover .go i { transform:translateX(5px); }
+    .atlas-postcard .art { border-left:2px dashed var(--line); display:grid; place-items:center; position:relative; min-height:210px; background:radial-gradient(rgba(38,51,45,.045) .8px,transparent 1px) 0 0/17px 17px; }
+    .atlas-postcard .art:before,.atlas-postcard .art:after { content:""; position:absolute; left:-11px; width:20px; height:20px; border:1px solid var(--line); border-radius:50%; background:var(--paper); }
+    .atlas-postcard .art:before { top:-11px; }.atlas-postcard .art:after { bottom:-11px; }
+    .atlas-postcard .art-stamp { display:flex; flex-direction:column; align-items:center; justify-content:center; width:138px; height:138px; border:3px solid var(--red); border-radius:50%; color:var(--red); transform:rotate(-12deg); text-align:center; opacity:.78; position:relative; mix-blend-mode:multiply; }
+    .atlas-postcard .art-stamp:before { content:""; position:absolute; inset:7px; border:1.5px dashed currentColor; border-radius:50%; }
+    .atlas-postcard .art-stamp b { font:700 27px/1.2 var(--serif); letter-spacing:.13em; }
+    .atlas-postcard .art-stamp small { margin-top:7px; font:700 8px var(--mono); letter-spacing:.16em; }
+    @media(max-width:600px) { .atlas-postcard { grid-template-columns:1fr; }.atlas-postcard .copy { padding:26px; }.atlas-postcard h3 em { display:block; }.atlas-postcard .art { display:none; }.atlas-feature { margin-top:54px; } }
+
     /* footer */
     footer { margin-top:88px; border-top:1px solid var(--ink); padding:20px 0 42px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--muted); }
     footer a { text-decoration:none; color:var(--ink); }
@@ -105,6 +130,12 @@
       .ticket { max-width:520px; }
       .hero { padding:56px 0 6px; }
       .t-route { min-height:0; }
+    }
+    @media (max-width: 600px) {
+      .shell { width:min(100% - 32px,1080px); }
+      .top { align-items:flex-start; flex-wrap:wrap; }
+      .top nav { flex-wrap:wrap; gap:8px 16px; }
+      .tickets-head { flex-wrap:wrap; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior:auto; }
@@ -124,6 +155,7 @@
     <header class="top">
       <a class="brand" href="/">EVA HUANG<small>TRAVEL ATLAS ✈ 旅行地圖</small></a>
       <nav aria-label="主要導覽">
+        <a href="/personal/travel/map/">世界蓋章地圖 ✳</a>
         <a href="/writing/">Writing ↗</a>
         <a href="/">About ↗</a>
       </nav>
@@ -200,6 +232,22 @@
             <span class="stamp" aria-hidden="true"><span><b>島旅</b><small>OKINAWA</small></span></span>
           </a>
         </div>
+      </section>
+
+      <section class="atlas-feature" aria-labelledby="atlas-feature-title">
+        <div class="tickets-head">
+          <h2 id="atlas-feature-title">POSTCARD ATLAS ・ 世界蓋章地圖</h2>
+          <span>NO. 04 / THE WORLD</span>
+        </div>
+        <a class="atlas-postcard" href="/personal/travel/map/">
+          <div class="copy">
+            <span class="number">✳ A MAP TO REMEMBER WHERE YOU'VE BEEN</span>
+            <h3>把世界，<em>蓋成一張明信片。</em></h3>
+            <p>世界國家、主要城市，還有美國、加拿大與日本的國家公園。選一個到訪日期，為每一段旅程蓋上紀念戳章。</p>
+            <span class="go">打開蓋章地圖 <i>→</i></span>
+          </div>
+          <div class="art" aria-hidden="true"><span class="art-stamp"><b>世界</b><small>STAMP ATLAS · 05</small></span></div>
+        </a>
       </section>
     </main>
 
