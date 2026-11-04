@@ -214,6 +214,33 @@
     }
     return `日本國家公園 · ${place.where}`;
   }
+  // Engraved, one-ink landmark vignettes for the postcard impression. The motifs are
+  // editorial shorthand, not a claim that every destination has only one identity.
+  function renderStampArt(place) {
+    const key = `${place.en || ''} ${place.zh || ''}`.toLowerCase();
+    const motifs = [
+      [/kyoto|京都/, 'pagoda', '古都・五重塔'], [/tokyo|東京/, 'tower', '東京鐵塔'], [/paris|巴黎/, 'tower', '艾菲爾鐵塔'],
+      [/new york|紐約/, 'skyline', '城市天際線'], [/fuji|富士|hakone|箱根/, 'fuji', '富士山'],
+      [/taipei|臺北|台北/, 'tower', '城市地標'], [/hawai|夏威夷|okinawa|沖繩/, 'wave', '島嶼海岸'],
+      [/yosemite|優勝美地/, 'mountain', '山谷與群峰'], [/banff|班夫|rocky|洛磯/, 'mountain', '山岳風景'],
+      [/sakura|cherry|櫻/, 'flower', '花枝'], [/national park|國家公園/, 'mountain', '山野風景']
+    ];
+    const found = motifs.find(([pattern]) => pattern.test(key));
+    const type = found?.[1] || (place.category === 'jp' || place.category === 'na' ? 'mountain' : 'sun');
+    const drawings = {
+      fuji:'<path d="M8 45 38 9l12 15 8-10 34 31Z"/><path d="m30 19 8-10 9 11-7-3-5 4-4-3Zm29 4 4-5 5 7-5-2-3 2Z"/><path d="M5 47h90M12 51h76"/>',
+      pagoda:'<path d="M50 7v39M31 14h38L50 7Zm-7 12h52L50 14Zm-6 12h64L50 26Zm-6 12h76L50 38Zm29-34v-5"/><path d="M39 46v-9h22v9M34 52h32"/>',
+      tower:'<path d="M50 7 43 45h14L50 7Zm-8 13h16M45 34h10M39 45h22M46 26h8M36 52h28"/><circle cx="50" cy="8" r="2"/>',
+      skyline:'<path d="M9 48V28h12v20m4 0V17h17v31m4 0V9h14v39m4 0V25h13v23m4 0V33h14v15M6 51h88"/><path d="M31 22v3m8-3v3m-8 5v3m8-3v3m13-17v3m0 6v3"/>',
+      wave:'<path d="M6 35q13-13 26 0t26 0 26 0 12 0M6 44q13-13 26 0t26 0 26 0 12 0"/><path d="M35 29q-4-14 13-22 17 9 12 22M50 9v20M12 25q8-11 16-1M73 20q8-11 16-1"/>',
+      flower:'<path d="M50 29q-2 11 0 22m0-12q-12-12-20-2 8 12 20 8m0-2q12-13 20-2-8 12-20 8"/><path d="M50 27c-8-5-5-13 0-15 5 2 8 10 0 15Zm-2-7c-10 1-12-7-8-12 6 0 11 5 8 12Zm4 0c10 1 12-7 8-12-6 0-11 5-8 12Z"/><path d="M10 52h80"/>',
+      mountain:'<path d="m7 48 25-31 14 18 12-15 35 28H7Z"/><path d="m25 26 7-9 7 9-7-3Zm27 0 6-6 7 8-7-3-3 3ZM6 51h88"/>',
+      sun:'<circle cx="50" cy="25" r="12"/><path d="M50 5v6m0 28v6M30 25h-6m52 0h-6M36 11l5 5m18 18 5 5m0-28-5 5M41 34l-5 5M8 49q12-9 24 0t24 0 24 0 12 0M8 53h84"/>'
+    };
+    const svg = document.getElementById('stamp-art');
+    svg.innerHTML = drawings[type];
+    svg.setAttribute('aria-label', found?.[2] || '旅行地景插畫');
+  }
   function renderDetail() {
     const place = selectedPlace();
     if (!place) return;
@@ -229,6 +256,7 @@
     face.classList.toggle('pending', stamps.length === 0);
     face.classList.toggle('long-name', [...place.zh].length > 6);
     $('#stamp-face-name').textContent = place.zh;
+    renderStampArt(place);
     $('#stamp-face-date').textContent = printedDate(stamps.at(-1) || (validDate(dateInput.value) ? dateInput.value : ''));
     const history = $('#stamp-history');
     history.hidden = stamps.length === 0;
