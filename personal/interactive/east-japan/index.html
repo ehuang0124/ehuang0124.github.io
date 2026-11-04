@@ -8,6 +8,7 @@
 <meta name="description" content="幕末歷史與東日本：沿著 12/6–12/17 的旅程、時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
 <link rel="stylesheet" href="/personal/interactive/crumbs.css">
+<link rel="stylesheet" href="/personal/interactive/history-context.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
@@ -200,6 +201,7 @@ button{cursor:pointer}
   </details>
 </footer>
 
+<script src="/personal/interactive/history-context.js"></script>
 <script>
 const events=[
 {id:'ise',year:'神話時代',era:'神話與信仰',title:'伊勢神宮：天照大神的居所',where:'伊勢・三重',date:'12/15 · 上勢（伊勢神宮）',spot:'伊勢神宮・內宮',lat:34.4551,lng:136.6979,brief:'日本信仰的中心，也是幕末群眾狂熱的發源地。',story:'伊勢神宮祭祀天照大神，長久以來被視為日本精神文化的中心。到了幕末慶應3年（1867年），「御札從伊勢神宮從天而降」的傳說引發全國性的歌舞狂熱——這股民眾能量，正是幕府統治走向終結的徵兆之一。12/15 的行程安排在上勢參拜伊勢神宮，正好站在這個故事的原點。',query:'Ise Grand Shrine Naiku inner shrine torii',wp:'Ise Grand Shrine'},
@@ -308,7 +310,7 @@ function buildMap(){
   const mapEl=el('map');
   if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖圖資載入失敗';return}
 
-  let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="東日本地圖">';
+  let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="group" aria-label="東日本地圖">';
   s+='<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#28594a" flood-opacity="0.18"/></filter></defs>';
   s+='<g id="landlayer" filter="url(#soft)">';
   LAND.forEach(d=>{s+='<path class="land" d="'+d+'"/>'});
@@ -401,6 +403,7 @@ function applyVB(){
   svg.querySelectorAll('.mk').forEach(g=>{
     g.setAttribute('transform','translate('+g.dataset.x+','+g.dataset.y+') scale('+k.toFixed(3)+')');
   });
+  window.historyContext?.update();
 }
 
 function clampVB(){
@@ -574,6 +577,11 @@ focus(active,false,false);
 buildRegionFilter();
 setMapRegion('all');
 loadHero();
+window.historyContext=AtlasHistory.mount({
+  svg, map:'east-japan', host:document.querySelector('.map-panel'),
+  project:p=>[px(p.lng),py(p.lat)], region:()=>mapRegion, view:()=>null,
+  frame:p=>centerOn(px(p.lng),py(p.lat),2.1)
+});
 </script>
 </body>
 </html>

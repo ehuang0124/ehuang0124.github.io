@@ -39,3 +39,23 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules CHROMIUM_PATH=/path/to/chromium \
 ```
 
 Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. They cover all regions at desktop/mobile widths, timeline/marker filtering, cards/projection synchronization, reset/route behavior, visited intersections, empty states, saved stamps, itinerary jumps and keyboard focus.
+
+## Historical context and the Kanto/Kansai question
+
+`history-context.js` / `history-context.css` provide one shared, optional SVG context layer, separate from itinerary stories and stamp storage. The East Japan map labels **Kansai (Kinki) ← Chubu (Tokai) → Kanto**. Kanto and Kansai do not share a border. Open-diamond markers identify **Hakone Pass**, **Fuwa Barrier / Sekigahara**, and **Suzuka Pass** as travel gateways / transition references, not a surveyed regional boundary. The region grouping remains Kinki including Mie; Kansai's cultural extent varies by definition.
+
+Closed, numbered diamonds identify exactly **nine** selected historical locations across the three maps:
+
+1. 1582 本能寺之變 — Kyoto, the original temple site (not the relocated modern temple).
+2. 1600 關原之戰 — a representative point in the Sekigahara battlefield.
+3. 1615 大坂夏之陣 — Osaka Castle, a representative site, not all battlefields.
+4. 1853 黑船來航 — Kurihama, Perry's landing site near Uraga, not Shimoda.
+5. 1868 江戶城無血開城 — Edo Castle, not the negotiation location.
+6. 1877 城山之戰 — Shiroyama, Kagoshima.
+7. 1945 長崎原爆 — the hypocenter park in Nagasaki, not Dejima.
+8. 1945 沖繩戰役・首里戰線 — Shuri Castle / the 32nd Army headquarters area.
+9. 1945 沖繩戰役・摩文仁 — Mabuni Hill in southern Okinawa. June 23 commemoration is not presented as the end of all fighting.
+
+Locations are approximate representative points, never battle extents. Each item has explanatory text and an external reading link. Markers and the corresponding accessible button list respect the region and map projection, but intentionally ignore stamp status so an important event doesn't disappear just because the user hasn't visited. Both the historical layer and East Japan's gateway layer have independent toggles. Marker selection works by pointer, Enter, or Space; list selection frames the site. The layer keeps callout sizes consistent on zoom and preserves keyboard focus during redraws. On narrow screens the numbered map badges use the full-text list as their legend.
+
+The regression suite also covers the nine-item cap, historical marker filtering/toggles, gateway controls and boundary disclaimer, keyboard marker activation, focus retention, and independence from stamp filtering. No historical marker adds a stamp or changes the existing 49-place dataset.

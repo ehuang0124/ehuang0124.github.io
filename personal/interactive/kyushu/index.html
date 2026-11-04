@@ -8,6 +8,7 @@
 <meta name="description" content="幕末歷史與九州：沿著時間軸與互動地圖，走訪長崎、鹿兒島、宮崎的幕末維新歷史景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
 <link rel="stylesheet" href="/personal/interactive/crumbs.css">
+<link rel="stylesheet" href="/personal/interactive/history-context.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
@@ -264,6 +265,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #b77b57;outline-offset:3p
   </details>
 </footer>
 
+<script src="/personal/interactive/history-context.js"></script>
 <script>
 const events=[
 {id:'christian',year:'1549',era:'日本與世界的接觸',title:'西方宗教抵達薩摩',where:'鹿兒島',date:'12/22–24 · 鹿兒島',spot:'鹿兒島市區（歷史背景）',lat:31.5966,lng:130.5571,brief:'方濟・沙勿略來到鹿兒島，基督教與歐洲資訊進入日本。',story:'1549 年，耶穌會傳教士方濟・沙勿略在鹿兒島登陸。九州是日本與外界接觸的重要入口；之後長崎成為更關鍵的國際貿易港。這個故事讓鹿兒島和長崎不只是兩座不同城市，而是一條向外看世界的歷史路線。',query:'Francis Xavier Kagoshima monument',wp:'Francis Xavier'},
@@ -385,7 +387,7 @@ function buildMap(){
   if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖圖資載入失敗';return}
 
   const W=780,H=1000;
-  let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="九州地圖">';
+  let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="group" aria-label="九州地圖">';
   s+='<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#28594a" flood-opacity="0.18"/></filter></defs>';
   s+='<g id="landlayer" filter="url(#soft)">';
   LAND.forEach(d=>{s+='<path class="land" d="'+d+'"/>'});
@@ -473,6 +475,7 @@ function applyVB(){
   svg.querySelectorAll('.mk').forEach(g=>{
     g.setAttribute('transform','translate('+g.dataset.x+','+g.dataset.y+') scale('+k.toFixed(3)+')');
   });
+  window.historyContext?.update();
 }
 
 function clampVB(){
@@ -647,6 +650,11 @@ focus(active,false,false);
 buildRegionFilter();
 setMapRegion('all');
 loadHero();
+window.historyContext=AtlasHistory.mount({
+  svg, map:'kyushu', host:document.querySelector('.map-panel'),
+  project:p=>[px(p.lng),py(p.lat)], region:()=>mapRegion, view:()=>null,
+  frame:p=>centerOn(px(p.lng),py(p.lat),2.1)
+});
 </script>
 </body>
 </html>
