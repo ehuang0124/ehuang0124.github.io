@@ -1,17 +1,35 @@
--- Stamp Atlas · Supabase setup
+-- Stamp Atlas · Supabase setup (access-code sign-in)
 --
 -- Paste this whole file into Supabase → SQL Editor → New query → Run.
 -- It is safe to run again: every statement is idempotent.
 --
 -- Model
---   profiles       one row per traveller (name + avatar from Google)
---   stamps         one row per traveller / place / month
---   custom_cities  traveller-added cities (same ids the page already uses)
+--   profiles              one row per traveller, created only by a correct code
+--   stamps                one row per traveller / place / month
+--   custom_cities         traveller-added cities (same ids the page already uses)
+--   atlas_access          the one shared sign-in code (bcrypt hash, never plain)
+--   atlas_logins          who signed in, when, from which browser/address
+--   atlas_login_attempts  failed guesses, used to slow brute force down
+--
+-- Sign-in
+--   1. The page signs in anonymously with Supabase Auth, so Postgres knows the
+--      browser (`auth.uid()`), but that alone grants nothing.
+--   2. `atlas_redeem_code(code, name)` checks the bcrypt hash. Only a match
+--      writes the traveller's `profiles` row, records `atlas_logins`, and lets
+--      Row Level Security accept that user's stamps.
+--   3. Rotate the code any time with:
+--        select public.atlas_rotate_code('your new code');
+--      The plain code is never stored: the table only holds a bcrypt hash.
 --
 -- Security
 --   Anyone (including signed-out visitors) may read stamps, so the public map
---   shows the collection. Only the owner may insert, change, or delete a row:
---   `auth.uid() = user_id` is enforced by Postgres, not by the page.
+--   shows the collection. Only a code-approved traveller may insert, change, or
+--   delete their own row; `auth.uid() = user_id` is enforced by Postgres.
+--   The code, the login log, and the attempt log are not readable through the
+--   public API at all — only the dashboard (and these SECURITY DEFINER
+--   functions) can see them.
+
+create extension if not exists pgcrypto with schema extensions;
 
 -- ---------------------------------------------------------------- tables -----
 create table if not exists public.profiles (
@@ -44,9 +62,184 @@ create table if not exists public.custom_cities (
   updated_at timestamptz not null default now()
 );
 
+-- One row holds the current sign-in code.
+create table if not exists public.atlas_access (
+  id         smallint primary key default 1 check (id = 1),
+  code_hash  text not null,
+  label      text,
+  rotated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+-- Who signed in. Readable only in the dashboard (Table Editor → atlas_logins).
+create table if not exists public.atlas_logins (
+  id           bigserial primary key,
+  user_id      uuid not null,
+  display_name text not null,
+  user_agent   text not null default '',
+  ip           text,
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists public.atlas_login_attempts (
+  id         bigserial primary key,
+  ip         text not null default '',
+  ok         boolean not null,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists stamps_place_idx on public.stamps (place_key, visit_month);
 create index if not exists stamps_user_idx on public.stamps (user_id);
 create index if not exists custom_cities_user_idx on public.custom_cities (user_id);
+create index if not exists atlas_logins_user_idx on public.atlas_logins (user_id, created_at desc);
+create index if not exists atlas_attempts_ip_idx on public.atlas_login_attempts (ip, created_at desc);
+
+-- ------------------------------------------------------- access code plumbing -
+-- A traveller is somebody whose profile row exists, and a profile row only
+-- exists after `atlas_redeem_code` accepted the shared code.
+create or replace function public.atlas_is_traveller()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+  select exists (select 1 from public.profiles where id = auth.uid());
+$$;
+
+grant execute on function public.atlas_is_traveller() to anon, authenticated;
+
+-- Rotate the shared code. Call it from the SQL Editor (postgres only):
+--   select public.atlas_rotate_code('a new code');
+create or replace function public.atlas_rotate_code(p_code text, p_label text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_code text := btrim(coalesce(p_code, ''));
+begin
+  if char_length(v_code) < 6 then
+    raise exception '通行碼至少要 6 個字元。';
+  end if;
+  insert into public.atlas_access (id, code_hash, label, rotated_at)
+  values (1, crypt(v_code, gen_salt('bf', 11)), nullif(btrim(coalesce(p_label, '')), ''), now())
+  on conflict (id) do update
+    set code_hash  = excluded.code_hash,
+        label      = coalesce(excluded.label, public.atlas_access.label),
+        rotated_at = now();
+  return jsonb_build_object('ok', true, 'rotated_at', now());
+end;
+$$;
+
+revoke all on function public.atlas_rotate_code(text, text) from public, anon, authenticated;
+
+-- Whether a code exists, without exposing the hash. Safe to call from the page
+-- and from scripts/connect-supabase.cjs --check.
+create or replace function public.atlas_access_status()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+  select coalesce(
+    (select jsonb_build_object(
+              'configured', code_hash is not null and code_hash <> '',
+              'rotated_at', rotated_at,
+              'label', label)
+       from public.atlas_access where id = 1),
+    jsonb_build_object('configured', false, 'rotated_at', null, 'label', null));
+$$;
+
+grant execute on function public.atlas_access_status() to anon, authenticated;
+
+-- Trade the shared code for a traveller identity.
+-- Never raises: a wrong guess must still be recorded, so the caller gets
+-- { "ok": false, "reason": … } instead of a rolled-back exception.
+create or replace function public.atlas_redeem_code(
+  p_code text,
+  p_name text default '',
+  p_user_agent text default ''
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_uid        uuid := auth.uid();
+  v_code       text := btrim(coalesce(p_code, ''));
+  v_hash       text;
+  v_name       text;
+  v_headers    jsonb := '{}'::jsonb;
+  v_ip         text;
+  v_failures   integer;
+  v_profile    public.profiles;
+  v_max_fails  constant integer := 8;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'reason', 'no_session');
+  end if;
+
+  begin
+    v_headers := nullif(current_setting('request.headers', true), '')::jsonb;
+  exception when others then
+    v_headers := '{}'::jsonb;
+  end;
+  v_ip := btrim(split_part(coalesce(v_headers ->> 'x-forwarded-for', ''), ',', 1));
+  v_ip := left(coalesce(v_ip, ''), 45);
+
+  -- Failed guesses per address, last 15 minutes.
+  delete from public.atlas_login_attempts where created_at < now() - interval '7 days';
+  select count(*) into v_failures
+    from public.atlas_login_attempts
+   where ip = v_ip and ok = false and created_at > now() - interval '15 minutes';
+  if v_failures >= v_max_fails then
+    return jsonb_build_object('ok', false, 'reason', 'throttled');
+  end if;
+
+  if v_code = '' then
+    return jsonb_build_object('ok', false, 'reason', 'missing_code');
+  end if;
+
+  select code_hash into v_hash from public.atlas_access where id = 1;
+  if v_hash is null or v_hash = '' then
+    return jsonb_build_object('ok', false, 'reason', 'no_code_set');
+  end if;
+
+  if crypt(v_code, v_hash) <> v_hash then
+    insert into public.atlas_login_attempts (ip, ok) values (v_ip, false);
+    return jsonb_build_object('ok', false, 'reason', 'invalid_code');
+  end if;
+
+  v_name := nullif(btrim(regexp_replace(coalesce(p_name, ''), '[[:cntrl:]]', '', 'g')), '');
+  if v_name is null then v_name := '旅人'; end if;
+  v_name := left(v_name, 40);
+
+  insert into public.profiles (id, display_name, avatar_url, discoverable)
+  values (v_uid, v_name, '', true)
+  on conflict (id) do update
+    set display_name = excluded.display_name,
+        updated_at   = now()
+  returning * into v_profile;
+
+  insert into public.atlas_logins (user_id, display_name, user_agent, ip)
+  values (v_uid, v_profile.display_name, left(coalesce(p_user_agent, ''), 300), nullif(v_ip, ''));
+
+  insert into public.atlas_login_attempts (ip, ok) values (v_ip, true);
+
+  return jsonb_build_object(
+    'ok', true,
+    'user_id', v_profile.id,
+    'display_name', v_profile.display_name,
+    'avatar_url', v_profile.avatar_url,
+    'discoverable', v_profile.discoverable);
+end;
+$$;
+
+grant execute on function public.atlas_redeem_code(text, text, text) to anon, authenticated;
 
 -- ---------------------------------------------------------------- profiles ---
 alter table public.profiles enable row level security;
@@ -57,11 +250,10 @@ create policy "profiles are readable"
   to anon, authenticated
   using (true);
 
+-- No insert or delete policy on purpose: a profile row is created only by
+-- atlas_redeem_code(), i.e. only by somebody who knew the shared code.
 drop policy if exists "own profile insert" on public.profiles;
-create policy "own profile insert"
-  on public.profiles for insert
-  to authenticated
-  with check (auth.uid() = id);
+drop policy if exists "own profile delete" on public.profiles;
 
 drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update"
@@ -84,20 +276,20 @@ drop policy if exists "own stamps insert" on public.stamps;
 create policy "own stamps insert"
   on public.stamps for insert
   to authenticated
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = user_id and public.atlas_is_traveller());
 
 drop policy if exists "own stamps update" on public.stamps;
 create policy "own stamps update"
   on public.stamps for update
   to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id and public.atlas_is_traveller())
+  with check (auth.uid() = user_id and public.atlas_is_traveller());
 
 drop policy if exists "own stamps delete" on public.stamps;
 create policy "own stamps delete"
   on public.stamps for delete
   to authenticated
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id and public.atlas_is_traveller());
 
 -- ---------------------------------------------------------------- cities -----
 alter table public.custom_cities enable row level security;
@@ -112,20 +304,32 @@ drop policy if exists "own cities insert" on public.custom_cities;
 create policy "own cities insert"
   on public.custom_cities for insert
   to authenticated
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = user_id and public.atlas_is_traveller());
 
 drop policy if exists "own cities update" on public.custom_cities;
 create policy "own cities update"
   on public.custom_cities for update
   to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id and public.atlas_is_traveller())
+  with check (auth.uid() = user_id and public.atlas_is_traveller());
 
 drop policy if exists "own cities delete" on public.custom_cities;
 create policy "own cities delete"
   on public.custom_cities for delete
   to authenticated
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id and public.atlas_is_traveller());
+
+-- ------------------------------------------------- access code + login log --
+-- Row Level Security on, no policies: the public API cannot read or write these
+-- tables at all. The dashboard (Table Editor) still can, and so can the
+-- SECURITY DEFINER functions above.
+alter table public.atlas_access enable row level security;
+alter table public.atlas_logins enable row level security;
+alter table public.atlas_login_attempts enable row level security;
+
+revoke all on table public.atlas_access from anon, authenticated;
+revoke all on table public.atlas_logins from anon, authenticated;
+revoke all on table public.atlas_login_attempts from anon, authenticated;
 
 -- ---------------------------------------------------------------- realtime ----
 -- Live updates for every open tab and device.

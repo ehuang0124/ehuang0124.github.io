@@ -4,8 +4,8 @@ GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index
 
 The atlas is read-only until someone signs in: **no sign-in, no stamps.** Sign-in itself has two modes in the same files.
 
-- **No Supabase project (default today).** The top bar offers a passphrase sign-in stored in `config.js` (`localGate`). Stamps then live in that browser's `localStorage`; nothing is uploaded and nothing syncs between devices. The passphrase check runs in the page, so it keeps out visitors, but it is not a security boundary — a static page cannot enforce one.
-- **With a Supabase project.** The top bar offers Google sign-in, stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control.
+- **With a Supabase project (the live site).** The top bar offers access-code sign-in: a person types a display name and the shared code, Postgres checks the code against a bcrypt hash, and only then is that browser's traveller profile created. Stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control. Every accepted code also writes a row to `atlas_logins`, so the owner can see who signed in, when, and from which browser and address.
+- **No Supabase project.** The top bar falls back to a passphrase stored in `config.js` (`localGate`). Stamps then live in that browser's `localStorage`; nothing is uploaded and nothing syncs between devices. The passphrase check runs in the page, so it keeps out visitors, but it is not a security boundary — a static page cannot enforce one.
 
 The account control and the backend status line sit in the sticky top bar on every screen; the footer repeats where the records actually live.
 
@@ -30,18 +30,21 @@ The account control and the backend status line sit in the sticky top bar on eve
 
 GitHub Pages only serves files: there is no server process in this repository, so the page's "backend" is whatever `config.js` points at.
 
-- **Follow [`SETUP-SUPABASE.md`](SETUP-SUPABASE.md)** to create the project, the Google OAuth client, and the two config values.
+- **Follow [`SETUP-SUPABASE.md`](SETUP-SUPABASE.md)** to create the project, run the schema, set the access code, and write the two config values.
 - **`config.js` is the switch.** `supabaseUrl` + `supabaseAnonKey` → Supabase mode. Empty strings → browser-only mode with the `localGate` passphrase.
 - **You can see which one is live in three places:** the account menu (*已同步 / 本機通行碼*), the account dialog's 後端 line, and the footer's `資料來源:` line. In Supabase mode the footer prints the project host, e.g. `資料來源：Supabase（abcdefgh.supabase.co）`.
-- **The data itself** is in the Supabase dashboard → **Table Editor** → `stamps`, `custom_cities`, `profiles`; requests appear in the browser's Network panel as `https://<project>.supabase.co/rest/v1/...`, and Google sign-ins under **Authentication → Users**.
-- **If those two config lines stay empty, no backend exists yet**: stamps are only in `localStorage` (`eva.travel.stamp-atlas.v1`), the site cannot enforce "only I can stamp", and nothing syncs. That is the state the site shipped in.
+- **The data itself** is in the Supabase dashboard → **Table Editor** → `stamps`, `custom_cities`, `profiles`, and `atlas_logins` (one row per sign-in). Requests appear in the browser's Network panel as `https://<project>.supabase.co/rest/v1/...`.
+- **The access code** is never in this repository. `atlas_access` holds one bcrypt hash; rotate it with `select public.atlas_rotate_code('a new code');` in the SQL Editor. `atlas_access`, `atlas_logins`, and `atlas_login_attempts` have RLS on and no policies, so the public API cannot read them.
+- **If those two config lines are empty, no backend exists**: stamps are only in `localStorage` (`eva.travel.stamp-atlas.v1`), the site cannot enforce "only someone with the code can stamp", and nothing syncs.
 
 ## Accounts, companions, and sync
 
 Linking a Supabase project turns the atlas into a small multi-traveller atlas. The account features below are off until `config.js` has a project URL and anon key; until then the `localGate` passphrase is the only sign-in.
 
 - **Visitors see the map, but cannot change it.** Reading is public; every write is checked by Postgres Row Level Security against `auth.uid()`. A visitor's stamp button opens the sign-in dialog instead of writing, and the page never holds a key that could edit someone else's rows.
-- **Google sign-in.** With a project configured, `account.js` uses Supabase Auth (`signInWithOAuth({ provider:'google' })`) with PKCE, returning to the same page. A `profiles` row stores the display name and avatar; travellers can switch off *讓其他旅人標記我為旅伴* to stay untaggable.
+- **Access-code sign-in.** The dialog takes two fields: a display name for the atlas and the shared code. `account.js` first gets a Supabase session for that browser (it creates and keeps a per-browser account, so no e-mail is ever sent), then calls `atlas_redeem_code(code, name, userAgent)`. Wrong guesses are counted per address and paused after 8 in 15 minutes. Only a correct code creates the `profiles` row, and that row is what RLS checks before any write.
+- **Login log.** Each successful redemption appends to `atlas_logins` (time, name, browser string, IP, user id). The page never reads it; it is for the owner in the dashboard.
+- **Sign-in persistence.** A traveller stays signed in on that browser. Signing out and in again with the code returns to the same traveller because the browser keeps its own account; clearing site data starts a new one.
 - **Companions.** Any signed-in traveller can be tagged on a trip before or after stamping. A trip is stored per traveller per place per month, so the same place can carry several months and several travellers. Untagging someone keeps your stamp.
 - **一起走過.** Choosing a traveller lists the places you visited together — either because one of you tagged the other, or because you independently stamped the same place and month. Selecting a row jumps to that place on the map.
 - **Live sync.** Writes go to Postgres and the page subscribes to `postgres_changes` for `stamps`, `custom_cities`, and `profiles`, so a stamp on one device appears on every open tab and phone. `syncPull()` refetches on reconnect, on tab focus, and every 20 s while the websocket is down.
@@ -66,18 +69,18 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
 **[`SETUP-SUPABASE.md`](SETUP-SUPABASE.md) is the click-by-click guide (Chinese) for the whole thing.** The short version:
 
 1. Create a Supabase project, then run [`supabase/setup.sql`](supabase/setup.sql) in **SQL Editor**. It creates `profiles`, `stamps`, `custom_cities`, their RLS policies, and adds the tables to the realtime publication. The script is idempotent.
-2. In **Authentication → Providers → Google**, add a Google OAuth client ID and secret from the [Google Cloud console](https://console.cloud.google.com/apis/credentials). Authorize the callback Supabase shows (`https://<project>.supabase.co/auth/v1/callback`).
-3. In **Authentication → URL Configuration**, set the Site URL to `https://ehuang0124.github.io` and add `https://ehuang0124.github.io/personal/travel/map/` as a redirect URL.
+2. In **Authentication → Sign In / Providers**, enable **Email** and turn **Confirm email** off. Each browser creates its own account there through the email provider; no mail is sent, and the access code is what actually admits a traveller.
+3. Set the shared code in **SQL Editor**: `select public.atlas_rotate_code('your code');` (at least 6 characters; only a bcrypt hash is stored). Repeat this line any time to rotate it.
 4. Connect the project and check it in one command:
 
    ```sh
    node scripts/connect-supabase.cjs --url https://<project>.supabase.co --key <anon key> --check
    ```
 
-   It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, the Google provider is enabled, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
-5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` to check the page against an in-memory double of PostgREST, RLS, Google sessions, and realtime.
+   It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, email sign-up is open with confirmation off, a code is set, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
+5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` and `node scripts/test-atlas-auth-errors.cjs` to check the page against an in-memory double of PostgREST, RLS, Supabase sessions, and realtime.
 
-Misconfiguration is surfaced in the page rather than the console: Supabase/Fetch errors are mapped to the exact dashboard step (provider not enabled, redirect URL not allowed, missing tables, wrong key, RLS denial, offline), and OAuth failures returned as `?error=…` / `#error=…` reopen the sign-in dialog with that message and are stripped from the address bar (`scripts/test-atlas-auth-errors.cjs`).
+Misconfiguration is surfaced in the page rather than the console: a wrong code, a throttled address, a project with no code set, missing tables or functions, a project that still demands e-mail confirmation, a wrong key, and being offline each get their own sentence naming the next dashboard step (`scripts/test-atlas-auth-errors.cjs`).
 
 The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://github.com/supabase/supabase-js) UMD build (MIT, see `vendor/LICENSE-supabase-js.txt`). It is loaded only to keep the page build-free; when no project is configured the client is never created.
 
@@ -127,6 +130,6 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cj
 
 - `test-atlas-local-mode.cjs` proves the unconfigured page keeps its records in the browser, refuses to stamp without the passphrase, rejects a wrong passphrase, shows country flags, and prints the data source in the footer.
 - `test-atlas-auth-errors.cjs` loads the page with the `?error=` / `#error=` URLs Supabase redirects back with, and checks the message names the right dashboard step and is cleaned from the address bar.
-- `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: Google session handling, profile creation, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, and the demo mode.
+- `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: the access code, the login log, per-browser identity, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, sessions that never redeemed the code, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
 
