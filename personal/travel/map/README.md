@@ -8,10 +8,17 @@ The page works with no backend at all (each browser keeps its own stamps). Linki
 
 - Four map layers: **240 countries and regions**, **171 editorially selected major cities**, **North America: 50 U.S. states, 64 U.S. national parks, and 48 Canadian national parks / national park reserves**, and **35 Japanese national parks**. U.S. parks include Chiricahua (redesignated October 2026); Canadian parks include Pituamkek (established 2024).
 - Click a country/marker or use the searchable, keyboard-accessible destination index. Geographic area chips filter the index and reframe the map. Country and U.S. state outlines remain selectable; place and administrative names appear in hover tooltips instead of persistent map text. The North America layer combines selectable U.S. state boundaries, U.S. national parks, and Canadian national parks. Its filters narrow to the United States, Canada, or subregions. These travel groupings are not administrative boundaries. The map can be dragged from the sea, zoomed, and reset. Where parks are far apart (e.g. Alaska, American Samoa, Japan's southern islands), selecting them from the index pans the map to their location.
-- A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Each catalogue entry gets its own deterministic engraved scene: a destination-specific landmark motif where curated, a generated terrain/contour composition, and a unique catalogue serial (including every U.S., Canadian and Japanese park). Returning to a place reproduces the same artwork. Landmark matches are editorial illustrations, not exhaustive claims; unmatched locations still have their own distinct terrain plate. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
+- A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Every catalogue entry has a **destination-specific postcard plate**: a well-known local landscape, flower, figure or building drawn as a single-ink engraving. Each plate also carries its own deterministic contour lines and a unique catalogue serial (including every U.S., Canadian and Japanese park), so returning to a place reproduces exactly the same artwork. The plate caption names the motif and its family (風景 / 花草 / 人文 / 建築) and shows the four-step ink scale. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
 - Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
 - Text is set via `textContent` rather than interpolating user input into markup; imported backups are schema-checked and sanitized.
+
+## Postcard plates
+
+- `stamp-art.js` holds the plate library: 104 hand-drawn SVG engravings and 110 named motifs. Every motif belongs to one of four families: **風景** (scenery and landforms), **花草** (flowers, trees and crops), **人文** (people, cultural figures and animals), **建築** (landmarks and architecture). Motifs are editorial shorthand for a widely recognised local image, **not** a claim about official national symbols, flags or an exhaustive list of what a place is known for.
+- Every drawing is built from the same monochrome ink (`--stamp-ink`) in four tonal steps (`.t-1` darkest to `.t-4` lightest). The unstamped preview uses the same ink at reduced opacity, so the whole collection stays in one colour scale rather than mixing destination colours. `app.js` adds a faint, place-specific contour plate behind each motif plus the catalogue serial; the small caption under the stamp identifies the motif and its family.
+- Assignment is hierarchical and deterministic: an exact curated destination (country ISO, city id, U.S. state abbreviation, U.S./Canadian/Japanese park id) → the country's motif for unlisted cities → a broad geographic-region motif for the few remaining territories. Regional fallbacks are captioned `地區意象 · …` rather than implying a destination-specific landmark. All 608 catalogue entries resolve to a plate; 570 have their own curated assignment.
+- [`specimen.html`](specimen.html) is the plate index, grouped by family, with example destinations for each motif. It is linked from the atlas footer and adds no data or runtime dependency.
 
 ## Accounts, companions, and sync
 
@@ -49,7 +56,7 @@ The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://g
 
 ## Fonts
 
-The local `fonts/` files are site-character subsets of the variable Google Fonts **Noto Sans TC** and **Noto Serif TC**, redistributed under the SIL Open Font License 1.1 (full notices in `fonts/`). They let Traditional Chinese names render in offline/headless previews; browsers can still fall back to their installed Chinese fonts for characters in user-entered custom city names that are not in these subsets. Neither the full fonts nor a remote font CDN are needed at runtime.
+The local `fonts/` files are site-character subsets of the variable Google Fonts **Noto Sans TC** and **Noto Serif TC**, redistributed under the SIL Open Font License 1.1 (full notices in `fonts/`). They let Traditional Chinese names render in offline/headless previews. `atlas-sans-extra.woff2` and `atlas-serif-extra.woff2` are additional OFL-licensed subsets covering only the caption characters introduced with the postcard plates; their `unicode-range` keeps them from overriding the main fonts. Browsers can still fall back to installed Chinese fonts for characters in user-entered custom city names that are outside every subset. Neither the full fonts nor a remote font CDN are needed at runtime.
 
 ## Tests
 
@@ -60,7 +67,15 @@ npm install --prefix /tmp/atlas-test-deps playwright-core @sparticuz/chromium
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-stamp-atlas.cjs
 ```
 
-Or supply `CHROMIUM_PATH` pointing to a working Chromium executable. The browser test covers desktop/mobile, hover-only map labels, region navigation, map/list selections, zoom, month-only impressions, legacy date migration, duplicate prevention, delete, persistence, custom cities, export/import, navigation and overflow. The existing `scripts/test-interactive-regions.cjs` checks the three Japan itinerary maps independently.
+Or supply `CHROMIUM_PATH` pointing to a working Chromium executable. The browser test covers desktop/mobile, hover-only map labels, region navigation, map/list selections, zoom, month-only impressions, legacy date migration, duplicate prevention, delete, persistence, custom cities, export/import, navigation, overflow, the plate caption/tone groups and the specimen index. The existing `scripts/test-interactive-regions.cjs` checks the three Japan itinerary maps independently.
+
+The plate library also has a dependency-free Node test:
+
+```sh
+node scripts/test-stamp-art.cjs
+```
+
+It checks that all 608 destinations resolve to a stable plate, that every motif has a real three-layer drawing in a valid family, and that the famous-destination assignments and regional fallback captions stay intact.
 
 Account behaviour runs headlessly through jsdom (no browser download needed):
 
@@ -74,3 +89,4 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cj
 - `test-atlas-local-mode.cjs` proves the unconfigured page behaves exactly like the browser-only atlas (and never shows account UI).
 - `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: Google session handling, profile creation, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
+
