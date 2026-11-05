@@ -72,6 +72,33 @@
     return match[1];
   }
   function printedDate(month) { return month ? month.replace('-', '.') : '────.──'; }
+  // Country flags. A place inherits the flag of the country it belongs to, so
+  // cities, parks and U.S. states show the same flag as their country.
+  const ISO_OVERRIDES = { xk:'XK', 'indian-ocean-ter':'IO', 'ashmore-cartier':'AU' };
+  function placeIso(place) {
+    if (!place) return '';
+    if (place.iso) return String(place.iso).toUpperCase();
+    if (place.nation) return String(place.nation).toUpperCase();
+    if (place.isState) return 'US';
+    if (ISO_OVERRIDES[place.id]) return ISO_OVERRIDES[place.id];
+    if (place.category === 'jp') return 'JP';
+    return '';
+  }
+  function flagImage(place, className = 'flag') {
+    const iso = placeIso(place);
+    if (!/^[A-Z]{2}$/.test(iso)) return null;
+    const image = document.createElement('img');
+    image.className = className;
+    image.src = `./flags/${iso.toLowerCase()}.svg`;
+    image.alt = '';
+    image.width = 20;
+    image.height = 14;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.setAttribute('aria-hidden', 'true');
+    image.addEventListener('error', () => image.remove());
+    return image;
+  }
   function makeElement(tag, className, text) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -166,7 +193,8 @@
   saveState();
   function cloudMode() { return atlasAccount.mode !== 'local'; }
   function signedIn() { return atlasAccount.signedIn && Boolean(atlasAccount.user); }
-  function editable() { return !cloudMode() || signedIn(); }
+  // Stamps require a signed-in traveller in every mode: no account, no ink.
+  function editable() { return signedIn(); }
   function ownVisits(place) {
     if (!cloudMode()) return data.visits[place.key] || [];
     if (!signedIn()) return [];
@@ -315,6 +343,12 @@
     if (!place) return;
     const stamps = visitsOf(place);
     $('#place-name').textContent = place.zh;
+    const flagSlot = $('#place-flag');
+    if (flagSlot) {
+      flagSlot.replaceChildren();
+      const flag = flagImage(place, 'flag');
+      if (flag) flagSlot.append(flag);
+    }
     const code = category === 'cities' ? (place.code || '') : '';
     $('#place-code').textContent = code;
     $('#place-code').setAttribute('aria-label', code ? `城市代碼 ${code}` : '');
@@ -474,7 +508,10 @@
       if (selectedPlace()?.id === place.id) button.setAttribute('aria-current', 'true');
       button.append(makeElement('span', 'item-index', String(index + 1).padStart(3, '0')));
       const info = makeElement('span', 'item-info');
-      const name = makeElement('strong', 'item-place-name', place.zh);
+      const name = makeElement('strong', 'item-place-name');
+      const flag = flagImage(place);
+      if (flag) name.append(flag);
+      name.append(document.createTextNode(place.zh));
       if (category === 'cities' && place.code) {
         const code = makeElement('span', 'city-code', place.code);
         code.setAttribute('aria-label', `城市代碼 ${place.code}`);
@@ -553,9 +590,9 @@
     const path = makeSvg('path', { d:country.d, class:'map-country', 'data-id':country.id });
     path.addEventListener('pointerenter', event => {
       if (!path.classList.contains('selectable')) return;
-      showTooltip(placeTooltip(countryById.get(country.id)), event);
+      showTooltip(countryById.get(country.id), event);
     });
-    path.addEventListener('pointermove', event => { if (path.classList.contains('selectable')) showTooltip(placeTooltip(countryById.get(country.id)),event); });
+    path.addEventListener('pointermove', event => { if (path.classList.contains('selectable')) showTooltip(countryById.get(country.id),event); });
     path.addEventListener('pointerleave', hideTooltip);
     countryPaths.set(country.id,path);
     countryLayer.append(path);
@@ -563,8 +600,8 @@
   const statePaths = new Map();
   stateSource.forEach(state => {
     const path = makeSvg('path',{d:state.d,class:'map-us-state','data-id':state.id});
-    path.addEventListener('pointerenter',event => showTooltip(placeTooltip(catalogue.na.find(place => place.id === state.id)),event));
-    path.addEventListener('pointermove',event => showTooltip(placeTooltip(catalogue.na.find(place => place.id === state.id)),event));
+    path.addEventListener('pointerenter',event => showTooltip(catalogue.na.find(place => place.id === state.id),event));
+    path.addEventListener('pointermove',event => showTooltip(catalogue.na.find(place => place.id === state.id),event));
     path.addEventListener('pointerleave',hideTooltip);
     statePaths.set(state.id,path);
     stateLayer.append(path);
@@ -620,8 +657,8 @@
         group.append(makeSvg('circle',{class:'point-stamp',cx:place.x,cy:place.y,r:radius*1.65}));
         group.append(makeSvg('circle',{class:'point-outer',cx:place.x,cy:place.y,r:radius}));
         group.append(makeSvg('circle',{class:'point-center',cx:place.x,cy:place.y,r:Math.max(radius*.21,.2)}));
-        group.addEventListener('pointerenter',event => showTooltip(placeTooltip(place),event));
-        group.addEventListener('pointermove',event => showTooltip(placeTooltip(place),event));
+        group.addEventListener('pointerenter',event => showTooltip(place,event));
+        group.addEventListener('pointermove',event => showTooltip(place,event));
         group.addEventListener('pointerleave',hideTooltip);
         fragment.append(group);
       }
@@ -636,8 +673,12 @@
     const details = `${name} · ${areaLabel(place)}`;
     return dates.length ? `${details} · ${printedDate(dates.at(-1))}` : details;
   }
-  function showTooltip(name,event) {
-    tooltip.textContent = name;
+  function showTooltip(place,event) {
+    if (!place) return;
+    const flag = flagImage(place, 'flag tooltip-flag');
+    tooltip.replaceChildren();
+    if (flag) tooltip.append(flag);
+    tooltip.append(document.createTextNode(placeTooltip(place)));
     tooltip.hidden = false;
     const bounds = surface.getBoundingClientRect();
     const left = Math.min(Math.max(12,event.clientX-bounds.left+12),Math.max(12,bounds.width-tooltip.offsetWidth-8));
@@ -927,15 +968,41 @@
   const accountMenuButton = $('#account-menu-button');
 
   function openAccountDialog(message = '') {
+    const local = atlasAccount.mode === 'local';
+    const gate = Boolean(account?.localGateAvailable?.());
+    const localBlock = $('#local-signin');
+    if (localBlock) localBlock.hidden = !(local && gate);
+    if ($('#account-google')) $('#account-google').hidden = local || atlasAccount.mode === 'demo';
+    if ($('#account-demo')) $('#account-demo').hidden = atlasAccount.mode !== 'demo';
+    if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
+    // What signing in actually buys you depends on whether a backend exists.
+    const signInNote = atlasAccount.mode === 'cloud'
+      ? '用 Google 登入，戳章自動跨裝置同步。'
+      : atlasAccount.mode === 'demo'
+        ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
+        : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
+    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = atlasAccount.mode === 'cloud' ? '登入後，走到哪裡都同步。' : '登入後才能蓋章。';
+    if ($('#account-sync-note')) $('#account-sync-note').textContent = signInNote;
     $('#account-error').textContent = message;
+    if (local && !gate) {
+      $('#account-error').textContent = '這個頁面還沒有設定登入方式。請在 config.js 填入 Supabase 專案，或設定 localGate 通行碼。';
+    }
     if (!accountDialog.open) accountDialog.showModal();
+    if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 60);
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
     accountMenuButton.setAttribute('aria-expanded', 'false');
   }
   function statusText() {
-    if (!cloudMode()) return '本機模式：資料存在這個瀏覽器。';
+    if (atlasAccount.mode === 'demo') {
+      return signedIn() ? '示範模式：資料存在這個瀏覽器，不會上傳。' : '訪客模式：登入後才能蓋章。';
+    }
+    if (!cloudMode()) {
+      return signedIn()
+        ? '已登入（本機通行碼）：戳章存在這個瀏覽器。'
+        : '訪客模式：可以瀏覽戳章，登入後才能蓋章。';
+    }
     if (!signedIn()) return '訪客模式：可以瀏覽所有戳章，登入後才能蓋章。';
     const parts = [];
     const pending = atlasAccount.pending || 0;
@@ -949,6 +1016,21 @@
       parts.push(`${String(at.getHours()).padStart(2,'0')}:${String(at.getMinutes()).padStart(2,'0')} 更新`);
     }
     return parts.join(' · ');
+  }
+  function backendHost() {
+    try { return new URL(window.TravelAtlasConfig?.supabaseUrl || '').host; } catch { return ''; }
+  }
+  // Where the records actually live. Shown in the account dialog and the footer
+  // so it is never a guess whether this page has a backend or not.
+  function backendLabel() {
+    if (atlasAccount.mode === 'cloud') return `後端：Supabase${backendHost() ? ` · ${backendHost()}` : ''}。戳章存在專案資料庫，登入與權限由 Postgres RLS 管理。`;
+    if (atlasAccount.mode === 'demo') return '後端：示範資料。只用這個瀏覽器，不會上傳。';
+    return '後端：尚未連接。戳章存在這個瀏覽器；連接 Supabase 後才會跨裝置同步。';
+  }
+  function dataSourceLabel() {
+    if (atlasAccount.mode === 'cloud') return `資料來源：Supabase${backendHost() ? `（${backendHost()}）` : ''}`;
+    if (atlasAccount.mode === 'demo') return '資料來源：示範資料';
+    return '資料來源：此瀏覽器（未連接後端）';
   }
   const STAMP_BUTTON_MARKUP = '<span aria-hidden="true">✳</span> 蓋下這一章 <span aria-hidden="true">↗</span>';
   function applyPermission() {
@@ -966,8 +1048,7 @@
   function renderAccount() {
     const signin = $('#sign-in');
     const card = $('#account-card');
-    const action = $('#account-action');
-    const demo = atlasAccount.mode === 'demo';
+    const cloud = atlasAccount.mode === 'cloud';
     if (signedIn()) {
       signin.hidden = true;
       card.hidden = false;
@@ -982,33 +1063,32 @@
       }
       else avatar.hidden = true;
       $('#account-name').textContent = user.name;
-      action.hidden = false;
-      action.textContent = demo ? '示範模式 · 切換旅人' : '登出';
       const profile = atlasAccount.profiles.get(user.id);
       $('#discoverable-toggle').checked = profile ? profile.discoverable !== false : true;
+      if ($('#discoverable-row')) $('#discoverable-row').hidden = !cloud && atlasAccount.mode !== 'demo';
       $('#account-menu-status').textContent = statusText();
     } else {
-      signin.hidden = !cloudMode();
+      signin.hidden = false;
+      signin.textContent = cloud ? '使用 Google 登入' : '登入';
       card.hidden = true;
       closeAccountMenu();
-      action.hidden = !cloudMode();
-      action.textContent = '登入';
     }
+    if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
+    if ($('#data-source')) $('#data-source').textContent = dataSourceLabel();
+    // Sync settings only mean something once a Supabase project is connected.
+    if ($('#sync-now')) $('#sync-now').hidden = !cloud;
     if ($('#backup-hint')) {
       $('#backup-hint').textContent = cloudMode()
         ? (signedIn() ? '匯出的備份只含你自己的戳章；匯入會與雲端紀錄合併。' : '訪客只能瀏覽。登入後可匯出、匯入與同步戳章。')
-        : '資料只存在此瀏覽器；匯出備份可轉移或還原。';
+        : (signedIn() ? '資料只存在此瀏覽器；匯出備份可轉移或還原。' : '登入後才能匯出或匯入戳章。');
     }
     $('#account-demo').hidden = atlasAccount.mode !== 'demo';
     renderDemoSwitch();
     applyPermission();
   }
   function refreshStatus() {
-    if (signedIn()) {
-      $('#account-menu-status').textContent = statusText();
-      const chip = $('#account-action');
-      if (chip && !chip.hidden) chip.textContent = atlasAccount.mode === 'demo' ? '示範模式 · 切換旅人' : '登出';
-    }
+    if (signedIn()) $('#account-menu-status').textContent = statusText();
+    if ($('#data-source')) $('#data-source').textContent = dataSourceLabel();
     if ($('#export-stamps')) $('#export-stamps').disabled = !editable();
     if ($('#import-stamps')) $('#import-stamps').disabled = !editable();
   }
@@ -1160,12 +1240,24 @@
   }
 
   $('#sign-in').addEventListener('click', () => openAccountDialog());
-  $('#account-action').addEventListener('click', () => {
-    if (!signedIn()) { openAccountDialog(); return; }
-    if (atlasAccount.mode === 'demo') { openAccountDialog(); return; }
-    if (confirm('要登出嗎？戳章會保留在雲端，下次登入後同步回來。')) account?.signOut();
-  });
   $('#account-dialog-close').addEventListener('click', () => accountDialog.close());
+  // Browser-only sign-in: the passphrase is checked against localGate in config.js.
+  async function submitLocalPassphrase() {
+    const input = $('#passphrase');
+    $('#account-error').textContent = '';
+    const result = await account?.localSignIn?.(input ? input.value : '');
+    if (!result || result.ok !== true) {
+      $('#account-error').textContent = result?.reason || '無法登入。';
+      if (input) { input.focus(); input.select?.(); }
+      return;
+    }
+    if (input) input.value = '';
+    accountDialog.close();
+  }
+  if ($('#local-signin-submit')) $('#local-signin-submit').addEventListener('click', submitLocalPassphrase);
+  if ($('#passphrase')) $('#passphrase').addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); submitLocalPassphrase(); }
+  });
   accountDialog.addEventListener('click', event => { if (event.target === accountDialog) accountDialog.close(); });
   $('#account-google').addEventListener('click', () => {
     if (atlasAccount.mode === 'local') {

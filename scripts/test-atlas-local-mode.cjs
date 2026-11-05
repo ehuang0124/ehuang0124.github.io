@@ -1,12 +1,15 @@
-// Local-mode regression: with no Supabase project configured the atlas must
-// behave exactly like the original browser-only page.
-//
+// Local-mode regression: with no Supabase project configured the atlas stores
+// records in this browser only, and still requires the local traveller
+// passphrase (`config.localGate`) before anything can be stamped.
+
 // The full Chromium suite (scripts/test-stamp-atlas.cjs) covers layout and
 // rendering. This file covers the same data behaviour in jsdom, plus the
-// guarantee that no account UI appears and no network client is created.
+// guarantee that a signed-out visitor cannot stamp and that no network client
+// is created.
 //
 // Run: NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-local-mode.cjs
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs'), path = require('node:path');
 const { JSDOM } = require('jsdom');
 const mapDir = path.join(__dirname, '..', 'personal/travel/map');
@@ -29,7 +32,9 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   Object.defineProperty(window,'localStorage',{value:{getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k),clear:()=>store.clear(),key:i=>[...store.keys()][i]??null,get length(){return store.size}},configurable:true});
   // CONFIG_OVERRIDE: this test supplies its own config so it never depends on
   // the checked-in demoMode flag.
-  const configSource = window => window.eval('window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:false};');
+  const passphrase = 'local-test-passphrase';
+  const passphraseHash = crypto.createHash('sha256').update(passphrase).digest('hex');
+  const configSource = window => window.eval(`window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:false,localGate:{name:"Eva Huang",passphraseHash:"${passphraseHash}"}};`);
   const inject = f => f === 'config.js' ? configSource(window) : window.eval(fs.readFileSync(path.join(mapDir,f),'utf8'));
   for (const f of ['vendor/supabase.js','config.js','account.js','world.js','places.js','us-states.js','app.js']) inject(f);
   await wait();
@@ -50,14 +55,39 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assert.equal($('#state-legend').hidden, true);
   assertCount('.map-country.selected.done', 0);
   assert.equal($('#board-total').textContent, '240');
-  assert.equal($('#sign-in').hidden, true, 'no sign-in button without an account project');
-  assert.equal($('#stamp-button').classList.contains('locked'), false, 'local mode can stamp');
-
+  assert.equal($('#sign-in').hidden, false, 'the sign-in control sits in the top bar in every mode');
+  assert.equal($('#stamp-button').classList.contains('locked'), true, 'a signed-out visitor cannot stamp');
+  assert.equal($('#stamp-button').textContent.trim(), '登入後蓋章');
+  assertCount('.place-item .flag', 237, 'countries with an ISO code carry a flag (three disputed entries have no ISO code)');
+  assertCount('.place-item[data-place="somaliland"] .flag', 0, 'no flag where there is no ISO code');
+  assert.equal($('#place-flag img').getAttribute('src'), './flags/jp.svg', 'the selected country shows its flag');
   assert.equal($('#passport-count').textContent, '2', 'legacy us:/ca: stamp keys still load');
 
-  // stamping, duplicates, delete, persistence
+  // A visitor may read the atlas but a stamp click only opens the sign-in dialog.
   $('.map-country[data-id="158"]').dispatchEvent(new window.MouseEvent('click',{bubbles:true}));
   assert.equal($('#place-name').textContent, '台灣');
+  click($('#stamp-button')); await wait();
+  assert.equal($('#account-dialog').open, true, 'stamping without sign-in asks for the passphrase');
+  assert.equal($('#local-signin').hidden, false, 'the local passphrase field is offered');
+  assert($('#account-error').textContent.includes('登入後才能蓋章'));
+  assert.equal($('#passport-count').textContent, '2', 'nothing was written');
+  assert.equal(JSON.parse(window.localStorage.getItem('eva.travel.stamp-atlas.v1')).visits['countries:158'], undefined);
+
+  // Wrong passphrase is rejected.
+  $('#passphrase').value = 'nope';
+  click($('#local-signin-submit')); await wait();
+  assert($('#account-error').textContent.includes('不正確'));
+  assert.equal($('#account-dialog').open, true);
+  // Right passphrase signs the traveller in.
+  $('#passphrase').value = passphrase;
+  click($('#local-signin-submit')); await wait();
+  assert.equal($('#account-dialog').open, false, 'the dialog closes after signing in');
+  assert.equal($('#account-card').hidden, false);
+  assert.equal($('#account-name').textContent, 'Eva Huang');
+  assert.equal($('#stamp-button').classList.contains('locked'), false, 'signed-in travellers may stamp');
+  assert($('#data-source').textContent.includes('此瀏覽器'), 'the footer names where the data lives');
+
+  // stamping, duplicates, delete, persistence
   $('#visit-date').value = '2023-03'; change($('#visit-date'));
   click($('#stamp-button')); await wait();
   assert.equal($('#passport-count').textContent, '3', 'local stamps load from storage and add up');
@@ -95,7 +125,12 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   $('#visit-date').value = '2099-01'; change($('#visit-date'));
   click($('#stamp-button')); await wait();
   assert($('#stamp-feedback').textContent.includes('不能晚於本月'));
+  // Signing out locks the atlas again.
+  click($('#account-menu-button')); await wait();
+  click($('#sign-out')); await wait();
+  assert.equal($('#stamp-button').classList.contains('locked'), true);
+  assert.equal($('#account-card').hidden, true);
   assert.deepEqual(errors, []);
-  console.log('PASS local mode: identical atlas behaviour with no account configured');
+  console.log('PASS local mode: browser-only records, passphrase gate, flags, no network client');
   process.exit(0);
 })().catch(e => { console.error(e); process.exit(1); });

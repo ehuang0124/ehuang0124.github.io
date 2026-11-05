@@ -11,6 +11,9 @@
   const OUTBOX_KEY = 'eva.travel.atlas.outbox.v1';
   const DEMO_KEY = 'eva.travel.atlas.demo.v1';
   const DEMO_SESSION_KEY = 'eva.travel.atlas.demo.session';
+  // Without a Supabase project the page still needs a way to tell the owner
+  // from a visitor. This key holds the local (browser-only) traveller session.
+  const LOCAL_SESSION_KEY = 'eva.travel.atlas.session.v1';
   const DEMO_USERS = [
     { id:'demo-eva', name:'Eva Huang' },
     { id:'demo-lin', name:'林宜臻' },
@@ -54,6 +57,88 @@
     catch { return false; }
   }
   function isConfigured() { return Boolean(config.supabaseUrl && config.supabaseAnonKey); }
+
+  // ---------- local traveller gate (no backend) ----------
+  // SHA-256, so the passphrase itself never appears in the page source. This is
+  // a soft gate for a personal site, not an access-control boundary: the page
+  // is static, so a determined visitor can still edit their own browser state.
+  // Real enforcement (Postgres RLS) needs the Supabase project.
+  function sha256Hex(text) {
+    const rightRotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
+    const bytes = [];
+    const encoded = unescape(encodeURIComponent(String(text)));
+    for (let i = 0; i < encoded.length; i++) bytes.push(encoded.charCodeAt(i));
+    const bitLength = encoded.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (let i = 7; i >= 0; i--) bytes.push(Math.floor(bitLength / Math.pow(2, i * 8)) & 0xff);
+    let hash = [1779033703, -1150833019, 1013904242, -1521486534, 1359893119, -1694144372, 528734635, 1541459225];
+    const k = [1116352408, 1899447441, -1245643825, -373957723, 961987163, 1508970993, -1841331548, -1424204075, -670586216, 310598401, 607225278, 1426881987, 1925078388, -2132889090, -1680079193, -1046744716, -459576895, -272742522, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, -1740746414, -1473132947, -1341970488, -1084653625, -958395405, -710438585, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, -2117940946, -1838011259, -1564481375, -1474664885, -1035236496, -949202525, -778901479, -694614492, -200395387, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, -2067236844, -1933114872, -1866530822, -1538233109, -1090935817, -965641998];
+    for (let offset = 0; offset < bytes.length; offset += 64) {
+      const words = new Array(64);
+      for (let i = 0; i < 16; i++) {
+        const j = offset + i * 4;
+        words[i] = (bytes[j] << 24) | (bytes[j + 1] << 16) | (bytes[j + 2] << 8) | bytes[j + 3];
+      }
+      for (let i = 16; i < 64; i++) {
+        const w15 = words[i - 15], w2 = words[i - 2];
+        const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+        const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+        words[i] = (words[i - 16] + s0 + words[i - 7] + s1) | 0;
+      }
+      let [a, b, c, d, e, f, g, h] = hash;
+      for (let i = 0; i < 64; i++) {
+        const S1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+        const ch = (e & f) ^ (~e & g);
+        const temp1 = (h + S1 + ch + k[i] + words[i]) | 0;
+        const S0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const temp2 = (S0 + maj) | 0;
+        h = g; g = f; f = e; e = (d + temp1) | 0;
+        d = c; c = b; b = a; a = (temp1 + temp2) | 0;
+      }
+      hash = [ (hash[0] + a) | 0, (hash[1] + b) | 0, (hash[2] + c) | 0, (hash[3] + d) | 0,
+        (hash[4] + e) | 0, (hash[5] + f) | 0, (hash[6] + g) | 0, (hash[7] + h) | 0 ];
+    }
+    return hash.map(word => ((word >>> 0).toString(16).padStart(8, '0'))).join('');
+  }
+  function localGate() {
+    const gate = config.localGate;
+    if (!gate || typeof gate.passphraseHash !== 'string' || !/^[0-9a-f]{64}$/i.test(gate.passphraseHash)) return null;
+    const name = typeof gate.name === 'string' && gate.name.trim() ? gate.name.trim() : '旅人';
+    return {
+      name,
+      id: `local-${name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'traveller'}`,
+      hash: gate.passphraseHash.toLowerCase(),
+      hint: typeof gate.hint === 'string' ? gate.hint : ''
+    };
+  }
+  function restoreLocalSession() {
+    const gate = localGate();
+    if (!gate) return;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY)); } catch { saved = null; }
+    if (!saved || saved.hash !== gate.hash) return;
+    setUser({ id: gate.id, name: gate.name, avatar: '', email: '', local: true });
+  }
+  async function localSignIn(passphrase) {
+    const gate = localGate();
+    if (!gate) return { ok: false, reason: '這個頁面還沒有設定登入方式。' };
+    const value = typeof passphrase === 'string' ? passphrase.trim() : '';
+    if (!value) return { ok: false, reason: '請輸入通行碼。' };
+    if (sha256Hex(value) !== gate.hash) return { ok: false, reason: '通行碼不正確。' };
+    try {
+      localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ hash: gate.hash, at: new Date().toISOString() }));
+    } catch { return { ok: false, reason: '這個瀏覽器不允許儲存登入狀態。' }; }
+    setUser({ id: gate.id, name: gate.name, avatar: '', email: '', local: true });
+    emit('status', status());
+    return { ok: true };
+  }
+  function localSignOut() {
+    try { localStorage.removeItem(LOCAL_SESSION_KEY); } catch { /* ignore */ }
+    setUser(null);
+    emit('status', status());
+  }
   function pickAvatar(meta) { return typeof meta?.avatar_url === 'string' ? meta.avatar_url : (typeof meta?.picture === 'string' ? meta.picture : ''); }
   function displayName(meta, email) {
     const name = meta?.full_name || meta?.name || meta?.user_name;
@@ -223,7 +308,8 @@
     emit('auth', user);
     emit('status', status());
   }
-  function canEdit() { return state.mode === 'local' || Boolean(state.user); }
+  // Every mode now requires a signed-in traveller before anything can change.
+  function canEdit() { return Boolean(state.user); }
 
   function sortRows() {
     return [...rowsById.values()].sort((a, b) => a.month.localeCompare(b.month) || a.placeKey.localeCompare(b.placeKey));
@@ -252,6 +338,10 @@
     pendingOps: outboxForCurrentUser,
     demoUsers: () => DEMO_USERS.slice(),
     demoAvailable: () => state.mode === 'demo',
+    localGateAvailable: () => Boolean(localGate()),
+    localGateHint: () => localGate()?.hint || '',
+    localSignIn,
+    localSignOut,
     async refresh() { return syncPull(); },
     signIn,
     signOut,
@@ -313,6 +403,7 @@
         return;
       }
       state.mode = 'local';
+      restoreLocalSession();
       emit('ready', status());
     }
   };
@@ -354,6 +445,8 @@
   // ---------- auth ----------
   async function signIn() {
     if (state.mode === 'demo') { enterDemo('demo-eva'); return; }
+    // No backend: the dialog collects the traveller passphrase instead.
+    if (state.mode === 'local') return { ok:false, reason:'local' };
     if (!client) return;
     setConnection('connecting');
     const redirectTo = `${location.origin}${location.pathname}`;
@@ -362,6 +455,7 @@
   }
   async function signOut() {
     if (state.mode === 'demo') { exitDemo(); return; }
+    if (state.mode === 'local') { localSignOut(); return; }
     if (!client) return;
     stopSubscription();
     setUser(null);

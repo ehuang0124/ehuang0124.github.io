@@ -8,13 +8,24 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright-core');
+const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
+// The page requires a signed-in traveller before stamping. Browser tests use a
+// disposable passphrase served in place of config.js, so the real one never
+// appears in this file.
+const TEST_PASSPHRASE = 'browser-test-passphrase';
+const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:'',demoMode:false,localGate:{name:'Test Traveller',passphraseHash:'${crypto.createHash('sha256').update(TEST_PASSPHRASE).digest('hex')}'}};`;
 
 (async () => {
   const server = http.createServer((req,res) => {
     let file = path.join(root,decodeURIComponent(req.url.split('?')[0]));
     if (!file.startsWith(root + path.sep)) {res.writeHead(403).end();return;}
     if (file.endsWith(path.sep)) file += 'index.html';
+    if (file === path.join(root,'personal/travel/map/config.js')) {
+      res.setHeader('Content-Type','text/javascript; charset=utf-8');
+      res.end(TEST_CONFIG);
+      return;
+    }
     fs.readFile(file,(error,body) => {
       if (error) {res.writeHead(404).end();return;}
       res.setHeader('Content-Type',file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : file.endsWith('.woff2') ? 'font/woff2' : 'text/html; charset=utf-8');
@@ -31,6 +42,14 @@ const root = path.resolve(__dirname, '..');
       const context = await browser.newContext({viewport,reducedMotion:'reduce',acceptDownloads:true});
       await context.route('**/*',route => route.request().url().startsWith(url) ? route.continue() : route.abort());
       const page = await context.newPage(), errors = [];
+      // Sign in with the browser-only passphrase; harmless when already signed in.
+      const ensureSignedIn = async () => {
+        if (await page.locator('#account-card').isVisible()) return;
+        await page.locator('#sign-in').click();
+        await page.locator('#passphrase').fill(TEST_PASSPHRASE);
+        await page.locator('#local-signin-submit').click();
+        await page.locator('#account-card').waitFor({state:'visible'});
+      };
       page.on('pageerror',error => errors.push(error.message));
       await page.goto(`${url}/personal/travel/map/`);
       await page.evaluate(() => document.fonts.ready);
@@ -81,6 +100,15 @@ const root = path.resolve(__dirname, '..');
       await page.locator('.map-country[data-id="158"]').click();
       assert.equal(await page.locator('#place-name').textContent(),'台灣');
       assert(await page.locator('#map-svg').getAttribute('viewBox').then(box => Number(box.split(' ')[2]) < 1000));
+      // No sign-in, no ink: the stamp button is locked for a fresh visitor.
+      assert.equal(await page.locator('#sign-in').isVisible(),true,'the sign-in control lives in the top bar');
+      assert.equal(await page.locator('#stamp-button').getAttribute('aria-disabled'),'true');
+      await page.locator('#stamp-button').click();
+      assert.equal(await page.locator('#account-dialog').evaluate(el => el.open),true);
+      assert.equal(await page.locator('#passport-count').textContent(),'0');
+      await page.locator('#account-dialog-close').click();
+      await ensureSignedIn();
+      assert.equal(await page.locator('#stamp-button').getAttribute('aria-disabled'),'false');
       await page.locator('#visit-date').fill('2023-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'1');
@@ -217,6 +245,7 @@ const root = path.resolve(__dirname, '..');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       assert.equal(await page.locator('#passport-count').textContent(),'0');
+      await ensureSignedIn();
       await page.locator('#import-stamps').setInputFiles(backupPath);
       await page.waitForFunction(() => document.querySelector('#passport-count').textContent === '3');
       assert.equal(await page.locator('#passport-count').textContent(),'3');
