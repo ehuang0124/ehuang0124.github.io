@@ -1,6 +1,6 @@
-// Regression: a failed Google round-trip must explain the next click, not show
-// Supabase's raw error. Supabase returns failures as ?error=… / #error=… on the
-// page it redirected back to; this file loads the page with those URLs.
+// Regression: a failed sign-in must explain the next click, not show a raw
+// Supabase string. Every case below drives the real page against a stub client
+// and checks what a person actually sees.
 //
 // Run: NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-auth-errors.cjs
 const assert = require('node:assert/strict');
@@ -10,16 +10,56 @@ const { JSDOM } = require('jsdom');
 
 const mapDir = path.join(__dirname, '..', 'personal/travel/map');
 const html = fs.readFileSync(path.join(mapDir, 'index.html'), 'utf8');
-const wait = async (n = 10) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
+const CLOUD = 'window.TravelAtlasConfig={supabaseUrl:"https://example.supabase.co",supabaseAnonKey:"test-anon-key",demoMode:false};';
+const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:false};';
+const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
-async function load(url) {
+// Minimal stand-in for supabase-js: just the calls the page makes.
+function makeClient({ signedUp = true, rpc = { data:null, error:null } } = {}) {
+  const state = { session: null, rpcCalls: [] };
+  const chain = () => {
+    const builder = {
+      select() { return builder; }, order() { return builder; }, limit() { return builder; },
+      eq() { return builder; }, in() { return builder; }, update() { return builder; },
+      delete() { return builder; }, upsert() { return builder; },
+      maybeSingle() { return Promise.resolve({ data:null, error:null }); },
+      single() { return Promise.resolve({ data:null, error:null }); },
+      then(resolveFn, rejectFn) { return Promise.resolve({ data:[], error:null }).then(resolveFn, rejectFn); }
+    };
+    return builder;
+  };
+  const client = {
+    auth: {
+      onAuthStateChange() { return { data:{ subscription:{ unsubscribe(){} } } }; },
+      async getSession() { return { data:{ session: state.session }, error:null }; },
+      async signUp() {
+        if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the device account' } };
+        state.session = { access_token:'token', user:{ id:'user-device' } };
+        return { data:{ user:state.session.user, session:state.session }, error:null };
+      },
+      async signInWithPassword() { return { data:{ session:null, user:null }, error:{ message:'Invalid login credentials' } }; },
+      async signOut() { state.session = null; return { error:null }; }
+    },
+    from: chain,
+    rpc(name, args) { state.rpcCalls.push({ name, args }); return Promise.resolve(rpc); },
+    channel() {
+      const realtime = { on() { return realtime; }, subscribe(handler) { handler?.('SUBSCRIBED'); return realtime; } };
+      return realtime;
+    },
+    removeChannel() {}
+  };
+  return { client, state };
+}
+
+async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/personal/travel/map/' } = {}) {
   const dom = new JSDOM(html, { url, runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   const errors = [];
   window.addEventListener('error', error => errors.push(error.message));
-  window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
-  window.Element.prototype.scrollIntoView = () => {};
-  window.HTMLElement.prototype.scrollIntoView = () => {};
+  window.matchMedia ||= () => ({ matches:false, media:'', addEventListener(){}, removeEventListener(){}, addListener(){}, removeListener(){} });
+  window.Element.prototype.scrollIntoView ||= function () {};
+  window.HTMLElement.prototype.scrollIntoView ||= function () {};
+  window.HTMLDialogElement ||= window.HTMLElement;
   const proto = window.HTMLDialogElement.prototype;
   if (!proto.showModal) {
     proto.showModal = function () { this.open = true; };
@@ -37,58 +77,84 @@ async function load(url) {
     },
     configurable: true
   });
-  // Local config: the redirect-error handling must work with no project too.
-  const config = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:false};';
+  const fake = makeClient(clientOptions);
+  window.supabase = { createClient: () => fake.client };
   for (const file of ['config.js', 'account.js', 'world.js', 'places.js', 'us-states.js', 'app.js']) {
     window.eval(file === 'config.js' ? config : fs.readFileSync(path.join(mapDir, file), 'utf8'));
   }
-  await wait(14);
-  return { window, document: window.document, errors };
+  await wait();
+  const $ = selector => window.document.querySelector(selector);
+  const click = node => node.dispatchEvent(new window.MouseEvent('click', { bubbles:true, cancelable:true }));
+  async function signIn({ name = 'Eva Huang', code = 'travel2n' } = {}) {
+    click($('#sign-in'));
+    await wait();
+    $('#traveller-name').value = name;
+    $('#access-code').value = code;
+    click($('#code-signin-submit'));
+    await wait(20);
+  }
+  return { window, $, click, signIn, errors, fake };
 }
 
 (async () => {
-  // 1. Provider not enabled: the classic "I set up Google but forgot the switch".
+  // 1. A wrong code is refused by Postgres; the page says so in Chinese.
   {
-    const url = 'http://localhost/personal/travel/map/?error=server_error&error_description=Unsupported+provider%3A+provider+is+not+enabled';
-    const page = await load(url);
-    const $ = selector => page.document.querySelector(selector);
-    assert.equal($('#account-dialog').open, true, 'the sign-in dialog explains the failure');
-    assert($('#account-error').textContent.includes('Authentication → Providers → Google'), 'it names the exact dashboard step');
-    assert.equal(new URL(page.window.location.href).search.includes('error='), false, 'the error is cleared from the address bar');
+    const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'invalid_code' }, error:null } } });
+    await page.signIn({ code:'nope' });
+    assert.equal(page.$('#account-dialog').open, true, 'the dialog stays open');
+    assert(page.$('#account-error').textContent.includes('通行碼不正確'), 'the reason is translated');
+    assert.equal(page.$('#account-card').hidden, true, 'a refused code does not sign anybody in');
+    assert.equal(page.fake.state.rpcCalls.at(-1).args.p_code, 'nope', 'the code is checked in Postgres, not in the page');
     assert.deepEqual(page.errors, []);
   }
 
-  // 2. Redirect URL not allowed (error arrives in the hash for implicit flow).
+  // 2. Too many guesses is its own message, not a raw database error.
   {
-    const url = 'http://localhost/personal/travel/map/#error=access_denied&error_description=redirect_uri_mismatch';
-    const page = await load(url);
-    const $ = selector => page.document.querySelector(selector);
-    assert.equal($('#account-dialog').open, true);
-    assert($('#account-error').textContent.includes('URL Configuration'), 'it names the redirect configuration step');
-    assert.equal(new URL(page.window.location.href).hash, '', 'the hash is cleared');
+    const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'throttled' }, error:null } } });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('15 分鐘'), 'throttling explains the wait');
     assert.deepEqual(page.errors, []);
   }
 
-  // 3. Cancelled consent is not a setup problem.
+  // 3. No code set yet names the exact SQL to run.
   {
-    const url = 'http://localhost/personal/travel/map/?error=access_denied';
-    const page = await load(url);
-    const $ = selector => page.document.querySelector(selector);
-    assert($('#account-error').textContent.includes('取消了 Google 授權'));
+    const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'no_code_set' }, error:null } } });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('atlas_rotate_code'), 'the missing code names the rotation call');
     assert.deepEqual(page.errors, []);
   }
 
-  // 4. A page with no error keeps the dialog closed and the URL untouched.
+  // 4. Missing tables/functions point at setup.sql.
   {
-    const page = await load('http://localhost/personal/travel/map/?demo=0');
-    const $ = selector => page.document.querySelector(selector);
-    assert.equal($('#account-dialog').open, false);
-    assert.equal($('#account-error').textContent, '');
-    assert(page.window.location.href.endsWith('?demo=0'), 'unrelated query parameters survive');
+    const page = await load({
+      clientOptions:{ rpc:{ data:null, error:{ message:'Could not find the function public.atlas_redeem_code', code:'PGRST202' } } }
+    });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('setup.sql'), 'a missing function names setup.sql');
     assert.deepEqual(page.errors, []);
   }
 
-  console.log('PASS auth errors: OAuth failures are translated and cleaned from the URL');
+  // 5. A network failure is not a wrong code.
+  {
+    const page = await load({ clientOptions:{ signedUp:false } });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.length > 0, 'the failure is reported');
+    assert.equal(page.$('#account-card').hidden, true);
+    assert.deepEqual(page.errors, []);
+  }
+
+  // 6. Without a project the code form never appears and nothing is called.
+  {
+    const page = await load({ config: LOCAL });
+    page.click(page.$('#sign-in'));
+    await wait();
+    assert.equal(page.$('#code-signin').hidden, true, 'no Supabase project, no access-code form');
+    assert.equal(page.$('#account-dialog').open, true);
+    assert.equal(page.fake.state.rpcCalls.length, 0, 'no backend calls in local mode');
+    assert.deepEqual(page.errors, []);
+  }
+
+  console.log('PASS sign-in errors: wrong code, throttling, missing code, missing setup, offline');
   process.exit(0);
 })().catch(error => {
   console.error(error);

@@ -968,20 +968,26 @@
   const accountMenuButton = $('#account-menu-button');
 
   function openAccountDialog(message = '') {
+    const cloud = atlasAccount.mode === 'cloud';
     const local = atlasAccount.mode === 'local';
     const gate = Boolean(account?.localGateAvailable?.());
     const localBlock = $('#local-signin');
     if (localBlock) localBlock.hidden = !(local && gate);
-    if ($('#account-google')) $('#account-google').hidden = local || atlasAccount.mode === 'demo';
+    // Cloud sign-in asks for the shared access code (checked by Postgres).
+    const codeBlock = $('#code-signin');
+    if (codeBlock) codeBlock.hidden = !cloud;
+    if (cloud && $('#traveller-name') && !$('#traveller-name').value) {
+      $('#traveller-name').value = account?.lastTravellerName?.() || '';
+    }
     if ($('#account-demo')) $('#account-demo').hidden = atlasAccount.mode !== 'demo';
     if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
     // What signing in actually buys you depends on whether a backend exists.
-    const signInNote = atlasAccount.mode === 'cloud'
-      ? '用 Google 登入，戳章自動跨裝置同步。'
+    const signInNote = cloud
+      ? '用通行碼登入，戳章存進 Supabase 並跨裝置同步；訪客只能瀏覽。'
       : atlasAccount.mode === 'demo'
         ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
         : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
-    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = atlasAccount.mode === 'cloud' ? '登入後，走到哪裡都同步。' : '登入後才能蓋章。';
+    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = cloud ? '輸入通行碼登入。' : '登入後才能蓋章。';
     if ($('#account-sync-note')) $('#account-sync-note').textContent = signInNote;
     $('#account-error').textContent = message;
     // Only explain the missing sign-in method when nothing more specific happened.
@@ -989,7 +995,8 @@
       $('#account-error').textContent = '這個頁面還沒有設定登入方式。請在 config.js 填入 Supabase 專案，或設定 localGate 通行碼。';
     }
     if (!accountDialog.open) accountDialog.showModal();
-    if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 60);
+    if (cloud) setTimeout(() => ($('#traveller-name')?.value ? $('#access-code') : $('#traveller-name'))?.focus(), 60);
+    else if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 60);
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
@@ -1021,20 +1028,14 @@
   // Supabase errors are terse and English. Turn the ones that always mean
   // "one more click in the dashboard" into that click.
   const AUTH_ERROR_HINTS = [
-    { test:/provider is not enabled|unsupported provider/i,
-      hint:'Supabase 還沒開啟 Google 登入：Authentication → Providers → Google → Enable，填入 Google 的 Client ID 與 Client secret。' },
-    { test:/redirect_uri_mismatch|redirect.*not allowed|url not allowed|invalid redirect/i,
-      hint:'回跳網址沒有被授權：Supabase → Authentication → URL Configuration 加入 https://ehuang0124.github.io/personal/travel/map/；Google Cloud 的「已授權的重新導向 URI」要填 https://<專案>.supabase.co/auth/v1/callback。' },
     { test:/invalid api key|no api key|invalid jwt|jwt expired/i,
-      hint:'anon key 不正確或已失效：請貼 Project Settings → API 的 anon public key，再跑 scripts/connect-supabase.cjs。' },
-    { test:/does not exist|42P01|schema cache/i,
-      hint:'資料表還沒建立：到 Supabase SQL Editor 執行 personal/travel/map/supabase/setup.sql。' },
+      hint:'anon key 不正確或已失效：請貼 Project Settings → API 的 anon public key，或重跑 scripts/connect-supabase.cjs。' },
+    { test:/does not exist|42P01|schema cache|PGRST202|function.*not found/i,
+      hint:'資料表或函式還沒建立：到 Supabase SQL Editor 執行 personal/travel/map/supabase/setup.sql。' },
     { test:/permission denied|42501|row-level security|violates row-level/i,
-      hint:'RLS 擋下了這次寫入：確認 setup.sql 已完整執行，而且登入的是自己的帳號。' },
+      hint:'RLS 擋下了這次寫入：確認 setup.sql 已完整執行，而且已用通行碼登入。' },
     { test:/failed to fetch|networkerror|load failed|err_name_not_resolved/i,
-      hint:'連不到 Supabase：確認 supabaseUrl 正確、網路可用，稍後再試。' },
-    { test:/access_denied|user denied/i,
-      hint:'你取消了 Google 授權；再按一次登入即可。' }
+      hint:'連不到 Supabase：確認 supabaseUrl 正確、網路可用，稍後再試。' }
   ];
   function friendlyAuthError(raw) {
     const text = String(raw || '').trim();
@@ -1043,34 +1044,13 @@
     if (!match) return text;
     return text.length <= 140 ? `${match.hint}（${text}）` : match.hint;
   }
-  // Supabase sends OAuth failures back as ?error=… or #error=… on this page.
-  function reportAuthRedirectError() {
-    if (typeof location === 'undefined') return;
-    const hashParams = new URLSearchParams(location.hash.startsWith('#') ? location.hash.slice(1) : '');
-    const searchParams = new URLSearchParams(location.search);
-    const error = hashParams.get('error') || searchParams.get('error');
-    if (!error) return;
-    const description = hashParams.get('error_description') || searchParams.get('error_description') || '';
-    openAccountDialog(friendlyAuthError(`${error} ${description}`.trim()));
-    try {
-      const url = new URL(location.href);
-      const search = new URLSearchParams(url.search);
-      const hash = new URLSearchParams(url.hash.slice(1));
-      for (const key of ['error','error_description','error_code','error_code_description','access_token','refresh_token','expires_in','token_type','provider_token','state','type']) {
-        search.delete(key); hash.delete(key);
-      }
-      url.search = search.toString();
-      url.hash = hash.toString();
-      history.replaceState(null, '', url.toString());
-    } catch { /* the address bar keeps the message; nothing breaks */ }
-  }
   function backendHost() {
     try { return new URL(window.TravelAtlasConfig?.supabaseUrl || '').host; } catch { return ''; }
   }
   // Where the records actually live. Shown in the account dialog and the footer
   // so it is never a guess whether this page has a backend or not.
   function backendLabel() {
-    if (atlasAccount.mode === 'cloud') return `後端：Supabase${backendHost() ? ` · ${backendHost()}` : ''}。戳章存在專案資料庫，登入與權限由 Postgres RLS 管理。`;
+    if (atlasAccount.mode === 'cloud') return `後端：Supabase${backendHost() ? ` · ${backendHost()}` : ''}。戳章存在專案資料庫；通行碼與寫入權限由 Postgres RLS 管理。`;
     if (atlasAccount.mode === 'demo') return '後端：示範資料。只用這個瀏覽器，不會上傳。';
     return '後端：尚未連接。戳章存在這個瀏覽器；連接 Supabase 後才會跨裝置同步。';
   }
@@ -1116,7 +1096,7 @@
       $('#account-menu-status').textContent = statusText();
     } else {
       signin.hidden = false;
-      signin.textContent = cloud ? '使用 Google 登入' : '登入';
+      signin.textContent = cloud ? '通行碼登入' : '登入';
       card.hidden = true;
       closeAccountMenu();
     }
@@ -1307,13 +1287,33 @@
     if (event.key === 'Enter') { event.preventDefault(); submitLocalPassphrase(); }
   });
   accountDialog.addEventListener('click', event => { if (event.target === accountDialog) accountDialog.close(); });
-  $('#account-google').addEventListener('click', () => {
-    if (atlasAccount.mode === 'local') {
-      $('#account-error').textContent = '這個頁面還沒有連結雲端專案；請先依 README 設定 config.js。';
+  // Cloud sign-in: the name that will appear in the atlas, plus the shared code.
+  async function submitAccessCode() {
+    if (atlasAccount.mode !== 'cloud') return;
+    $('#account-error').textContent = '';
+    const submit = $('#code-signin-submit');
+    if (submit) submit.disabled = true;
+    const result = await account?.signIn?.({
+      code: $('#access-code') ? $('#access-code').value : '',
+      name: $('#traveller-name') ? $('#traveller-name').value : ''
+    });
+    if (submit) submit.disabled = false;
+    if (!result || result.ok !== true) {
+      $('#account-error').textContent = result?.reason || '無法登入。';
+      const codeInput = $('#access-code');
+      if (codeInput) { codeInput.focus(); codeInput.select?.(); }
       return;
     }
-    account?.signIn();
-  });
+    if ($('#access-code')) $('#access-code').value = '';
+    accountDialog.close();
+  }
+  if ($('#code-signin-submit')) $('#code-signin-submit').addEventListener('click', submitAccessCode);
+  for (const selector of ['#access-code', '#traveller-name']) {
+    if (!$(selector)) continue;
+    $(selector).addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); submitAccessCode(); }
+    });
+  }
   $('#account-demo').addEventListener('click', () => {
     account?.enterDemo('demo-eva');
     accountDialog.close();
@@ -1556,7 +1556,5 @@
   if (account) account.init().then(() => {
     if (!signedIn()) { atlasAccount.mode = account.mode; refreshAll(); }
     else { applyAccount(); refreshAll(); writeCache(); }
-    // A failed Google round-trip comes back as an error in the URL.
-    reportAuthRedirectError();
   });
 })();

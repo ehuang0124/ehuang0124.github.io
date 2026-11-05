@@ -1,4 +1,4 @@
-// Connect /personal/travel/map/ to a Supabase project (Google sign-in, sync).
+// Connect /personal/travel/map/ to a Supabase project (access-code sign-in, sync).
 //
 //   node scripts/connect-supabase.cjs --url https://abcdefgh.supabase.co --key eyJhbGciOi...
 //   node scripts/connect-supabase.cjs --url ... --key ... --check
@@ -61,11 +61,29 @@ async function check(url, key) {
     else {
       const body = await settings.json();
       report.push(['auth', 'OK', '']);
-      report.push(['Google 登入', body?.external?.google ? '已開啟' : '未開啟', body?.external?.google ? '' : '到 Authentication → Providers → Google 開啟。']);
-      report.push(['Email 登入', body?.external?.email ? '已開啟' : '未開啟', '']);
+      // Each browser signs in with a generated account, so email sign-up has to
+      // be open and must not wait for a confirmation mail.
+      report.push(['Email 登入', body?.external?.email ? '已開啟' : '未開啟', body?.external?.email ? '' : '到 Authentication → Sign In / Providers → Email 開啟。']);
+      report.push(['確認信', body?.mailer_autoconfirm ? '已關閉' : '仍要確認', body?.mailer_autoconfirm ? '' : '同頁關閉「Confirm email」，否則登入只能停在等信。']);
     }
   } catch (error) {
     report.push(['auth', '連不上', `${error.message}（請確認網路與專案網址）`]);
+  }
+  try {
+    const response = await fetch(`${url}/rest/v1/rpc/atlas_access_status`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    if (response.ok) {
+      const body = await response.json();
+      const configured = Boolean(body?.configured);
+      report.push(['通行碼', configured ? '已設定' : '還沒設定', configured ? '' : "到 SQL Editor 執行 select public.atlas_rotate_code('新的通行碼');"]);
+    } else {
+      report.push(['通行碼', `HTTP ${response.status}`, '先在 SQL Editor 執行 setup.sql（它會建立 atlas_access 與相關函式）。']);
+    }
+  } catch (error) {
+    report.push(['通行碼', '連不上', error.message]);
   }
   try {
     const response = await fetch(`${url}/rest/v1/stamps?select=id&limit=1`, { headers });
@@ -124,21 +142,13 @@ async function check(url, key) {
   console.log(`  supabaseUrl:     ${url}`);
   console.log(`  supabaseAnonKey: ${rawKey.slice(0, 12)}…${rawKey.slice(-6)}（公開金鑰，權限由 RLS 控管）`);
   console.log(`
-接著確認這三件事（都只要做一次）：
-
-  1. 資料表    https://supabase.com/dashboard/project/${ref}/sql/new
-     貼上 personal/travel/map/supabase/setup.sql 全文並 Run。
-
-  2. Google    Authentication → Providers → Google → Enable
-     Authorized redirect URI（貼到 Google Cloud，不是 Supabase）：
-       ${url}/auth/v1/callback
-
-  3. 回跳網址  Authentication → URL Configuration
-     Site URL:      https://ehuang0124.github.io
-     Redirect URLs: ${SITE_URL}
-
-設定完成後：${SITE_URL} 右上角會從「登入」變成「使用 Google 登入」；
-第一次登入會把這個瀏覽器原有的本機戳章上傳到你的帳號。
+接著確認這三件事（都只要做一次）：\n\n  1. 資料表    https://supabase.com/dashboard/project/${ref}/sql/new
+     貼上 personal/travel/map/supabase/setup.sql 全文並 Run。\n\n  2. 帳號服務  Authentication → Sign In / Providers
+     Email: 開啟；同頁關閉「Confirm email」。
+     （每個瀏覽器會自動建立一個帳號，人只需要輸入通行碼。）\n\n  3. 通行碼    同一頁的 SQL Editor：
+       select public.atlas_rotate_code('你的通行碼');
+     之後要換碼，重跑這一行就好。\n\n設定完成後：${SITE_URL} 右上角會出現「通行碼登入」；
+每次登入都寫進 Supabase 的 atlas_logins（Table Editor 就看得到）。
 要檢查設定是否正確，再跑一次並加上 --check。
 `);
 })().catch(error => fail(error.message));

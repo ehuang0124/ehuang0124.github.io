@@ -2,7 +2,7 @@
 //
 // jsdom has no <dialog> implementation and no network, so this file provides
 // small stand-ins for dialog.showModal/close and an in-memory Supabase double
-// that mimics PostgREST, Google OAuth sessions, Row Level Security, and realtime.
+// that mimics PostgREST, Supabase Auth sessions, Row Level Security, and realtime.
 //
 // Run: NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs
 const assert = require('node:assert/strict');
@@ -22,9 +22,11 @@ const CONFIG_SNIPPET = `window.TravelAtlasConfig = { supabaseUrl:'https://exampl
 function createServer() {
   const users = new Map();
   const sessions = new Map();
-  const tables = { stamps:[], custom_cities:[], profiles:[] };
+  const tables = { stamps:[], custom_cities:[], profiles:[], logins:[] };
   const channels = new Set();
   const calls = [];
+  const accounts = new Map(); // email -> { email, password, user }
+  const ACCESS_CODE = 'travel2n';
   let nextId = 1;
 
   const uuid = prefix => `${prefix}-${String(nextId++).padStart(4, '0')}`;
@@ -103,42 +105,83 @@ function createServer() {
         if (builder._result) return Promise.resolve(builder._result).catch(rejectFn);
         return resolve('many').catch(rejectFn);
       },
+      // `update()` and `delete()` arrive before their `.eq()` filters, so the
+      // work has to wait until the builder is awaited with the filters in hand.
       update(patch) {
         calls.push({ op:'update', table, payload:patch });
-        let owner;
-        try { owner = ownerForWrite(); }
-        catch (error) { builder._result = { data:null, error:{ message:error.message } }; return builder; }
-        const rows = rowsOf(table).filter(row => matches(row, query));
-        const forbidden = rows.find(row => row.user_id && row.user_id !== owner);
-        if (forbidden) {
-          builder._result = { data:null, error:{ message:'new row violates row-level security policy' } };
-          return builder;
-        }
-        rows.forEach(row => { Object.assign(row, patch); publish(table, 'UPDATE', row); });
-        builder._result = { data:rows.map(row => ({ ...row })), error:null };
+        builder._update = patch;
         return builder;
       },
       delete() {
-        calls.push({ op:'delete', table, query:[...query] });
-        const owner = ownerForWrite();
-        const doomed = rowsOf(table).filter(row => matches(row, query));
-        const forbidden = doomed.find(row => row.user_id && row.user_id !== owner);
-        if (forbidden) { builder._result = { data:null, error:{ message:'permission denied' } }; return builder; }
-        doomed.forEach(row => {
-          const index = rowsOf(table).indexOf(row);
-          if (index >= 0) rowsOf(table).splice(index, 1);
-          publish(table, 'DELETE', row);
-        });
-        builder._result = { data:doomed, error:null };
+        calls.push({ op:'delete', table });
+        builder._delete = true;
         return builder;
       }
     };
+    function runUpdate() {
+      let owner;
+      try { owner = ownerForWrite(); }
+      catch (error) { return { data:null, error:{ message:error.message } }; }
+      const rows = rowsOf(table).filter(row => matches(row, query));
+      const forbidden = rows.find(row => row.user_id && row.user_id !== owner);
+      if (forbidden) return { data:null, error:{ message:'new row violates row-level security policy' } };
+      rows.forEach(row => { Object.assign(row, builder._update); publish(table, 'UPDATE', row); });
+      return { data:rows.map(row => ({ ...row })), error:null };
+    }
+    function runDelete() {
+      let owner;
+      try { owner = ownerForWrite(); }
+      catch (error) { return { data:null, error:{ message:error.message } }; }
+      const doomed = rowsOf(table).filter(row => matches(row, query));
+      const forbidden = doomed.find(row => row.user_id && row.user_id !== owner);
+      if (forbidden) return { data:null, error:{ message:'permission denied' } };
+      doomed.forEach(row => {
+        const index = rowsOf(table).indexOf(row);
+        if (index >= 0) rowsOf(table).splice(index, 1);
+        publish(table, 'DELETE', row);
+      });
+      return { data:doomed, error:null };
+    }
     async function resolve(kind) {
+      if (builder._update) return runUpdate();
+      if (builder._delete) return runDelete();
       const rows = visible(table).filter(row => matches(row, query));
       const data = kind === 'single' ? (rows[0] || null) : rows;
       return { data, error:null };
     }
     return builder;
+  }
+
+  // The database half of sign-in: only the shared code creates a traveller
+  // profile, and every accepted code appends to atlas_logins.
+  async function rpc(name, args, who) {
+    calls.push({ op:'rpc', name, payload:args });
+    if (name !== 'atlas_redeem_code') {
+      return { data:null, error:{ message:`Could not find the function public.${name}`, code:'PGRST202' } };
+    }
+    const current = who();
+    if (!current?.user) return { data:{ ok:false, reason:'no_session' }, error:null };
+    if (String(args?.p_code || '').trim() !== ACCESS_CODE) {
+      return { data:{ ok:false, reason:'invalid_code' }, error:null };
+    }
+    const display = String(args?.p_name || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40) || '旅人';
+    let profile = tables.profiles.find(row => row.id === current.user.id);
+    if (!profile) {
+      profile = {
+        id:current.user.id, user_id:current.user.id, display_name:display,
+        avatar_url:'', discoverable:true, updated_at:new Date().toISOString()
+      };
+      tables.profiles.push(profile);
+      publish('profiles', 'INSERT', profile);
+    } else profile.display_name = display;
+    tables.logins.push({
+      user_id:current.user.id, display_name:display,
+      user_agent:String(args?.p_user_agent || ''), ip:'test', created_at:new Date().toISOString()
+    });
+    return {
+      data:{ ok:true, user_id:current.user.id, display_name:display, avatar_url:'', discoverable:true },
+      error:null
+    };
   }
 
   // Each page is its own tab: its own session, auth callbacks, and channel.
@@ -149,13 +192,35 @@ function createServer() {
       auth: {
         onAuthStateChange(handler) { handlers.push(handler); return { data:{ subscription:{ unsubscribe(){} } } }; },
         async getSession() { return { data:{ session }, error:null }; },
-        async signInWithOAuth(options) {
-          calls.push({ op:'signInWithOAuth', payload:options });
-          return { data:{ provider:'google' }, error:null };
+        // A browser-created traveller account: random address, random password.
+        async signUp({ email, password }) {
+          calls.push({ op:'signUp', payload:{ email } });
+          if (accounts.has(email)) return { data:{ user:null, session:null }, error:null };
+          const user = addUser({ name:'旅人', email });
+          accounts.set(email, { email, password, user });
+          const next = { access_token:uuid('token'), user };
+          fireAuth(next);
+          return { data:{ user, session:next }, error:null };
         },
-        async signOut() { session = null; return { error:null }; }
+        async signInWithPassword({ email, password }) {
+          calls.push({ op:'signInWithPassword', payload:{ email } });
+          const record = accounts.get(email);
+          if (!record || record.password !== password) {
+            return { data:{ user:null, session:null }, error:{ message:'Invalid login credentials' } };
+          }
+          const next = { access_token:uuid('token'), user:record.user };
+          fireAuth(next);
+          return { data:{ user:record.user, session:next }, error:null };
+        },
+        async signOut() {
+          calls.push({ op:'signOut' });
+          session = null;
+          handlers.forEach(handler => handler('SIGNED_OUT', null));
+          return { error:null };
+        }
       },
       from(table) { return makeQuery(table, () => session); },
+      async rpc(name, args) { return rpc(name, args, () => session); },
       channel() {
         const realtime = {
           listeners:[],
@@ -199,7 +264,7 @@ function createServer() {
   }
 
   function notifyLive(payload) { channels.forEach(realtime => realtime.notify('postgres_changes', payload)); }
-  return { users, tables, calls, addUser, connect, uuid, notifyLive };
+  return { users, tables, calls, accounts, addUser, connect, uuid, notifyLive, accessCode:ACCESS_CODE };
 }
 
 // ---------------------------------------------------------------- page harness
@@ -265,14 +330,13 @@ function choosePlace(page, name) {
 
 async function main() {
   const server = sharedServer;
-  const eva = server.addUser({ name:'Eva Huang', email:'eva@example.com', sub:'user-eva' });
   const lin = server.addUser({ name:'林宜臻', email:'lin@example.com', sub:'user-lin' });
-  const stranger = server.addUser({ name:'路人甲', email:'stranger@example.com', sub:'user-stranger' });
-  // Lin and Hana have signed in before, so their discoverable profiles exist.
   const hana = server.addUser({ name:'田中雅子', email:'hana@example.com', sub:'user-hana' });
-  for (const person of [lin, hana, eva]) {
+  const stranger = server.addUser({ name:'路人甲', email:'stranger@example.com', sub:'user-stranger' });
+  // Lin and Hana redeemed the code before, so their traveller profiles exist.
+  for (const person of [lin, hana]) {
     server.tables.profiles.push({
-      id:person.id, user_id:person.id, display_name:person.user_email_name || person.user_metadata.full_name,
+      id:person.id, user_id:person.id, display_name:person.user_metadata.full_name,
       avatar_url:person.user_metadata.avatar_url, discoverable:true, updated_at:new Date().toISOString()
     });
   }
@@ -280,12 +344,13 @@ async function main() {
   // ---------------------------------------------------------------- 1. visitor mode
   {
     server.tables.stamps.push({
-      id:'stamp-seed-1', user_id:eva.id, place_key:'countries:158', visit_month:'2023-03-01',
-      companions:[lin.id], created_at:'2023-03-01T00:00:00Z', updated_at:'2023-03-01T00:00:00Z'
+      id:'stamp-seed-1', user_id:hana.id, place_key:'countries:158', visit_month:'2023-03-01',
+      companions:[], created_at:'2023-03-01T00:00:00Z', updated_at:'2023-03-01T00:00:00Z'
     });
     const page = await boot();
     assert.deepEqual(page.errors, [], 'visitor page should load without errors');
-    assert.equal(page.$('#sign-in').hidden, false, 'visitors get a Google sign-in button');
+    assert.equal(page.$('#sign-in').hidden, false, 'visitors get a code sign-in button');
+    assert.equal(page.$('#sign-in').textContent, '通行碼登入');
     assert.equal(page.$('#account-card').hidden, true);
     assert.equal(page.$('#passport-count').textContent, '1', 'visitors see the published collection');
     assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
@@ -296,6 +361,8 @@ async function main() {
     click(page.window, page.$('#stamp-button'));
     await page.settle();
     assert.equal(page.$('#account-dialog').open, true, 'locked action asks for sign-in');
+    assert.equal(page.$('#code-signin').hidden, false, 'the access-code field is offered');
+    assert.equal(page.$('#local-signin').hidden, true, 'the browser-only passphrase is not offered in cloud mode');
     assert.equal(server.tables.stamps.length, 1, 'a visitor cannot create stamps');
     // Custom city creation is also blocked.
     click(page.window, page.$$('.category-tab')[1]);
@@ -308,31 +375,51 @@ async function main() {
     console.log('PASS visitor: read-only stamps, locked actions, no writes');
   }
 
-  // ---------------------------------------------------------------- 2. Google sign-in and stamping
+  // ---------------------------------------------------------------- 2. code sign-in
+  let traveller = null;
   {
     const page = await boot();
     click(page.window, page.$('#sign-in'));
     await page.settle();
     assert.equal(page.$('#account-dialog').open, true);
-    click(page.window, page.$('#account-google'));
-    await page.settle();
-    const oauth = server.calls.find(call => call.op === 'signInWithOAuth');
-    assert(oauth, 'Google OAuth should be requested');
-    assert.equal(oauth.payload.provider, 'google');
-    assert(oauth.payload.options.redirectTo.endsWith('/personal/travel/map/'), 'OAuth returns to the atlas');
-    // Supabase completes the redirect and reports the session.
-    page.connection.fireAuth({ access_token:'token-1', user:eva });
+    assert.equal(page.$('#code-signin').hidden, false, 'cloud sign-in asks for the access code');
+
+    // A wrong code is refused by Postgres, and the page translates the reason.
+    page.$('#traveller-name').value = 'Eva Huang';
+    page.$('#access-code').value = 'not-the-code';
+    click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
+    assert(page.$('#account-error').textContent.includes('通行碼不正確'), 'a wrong code is rejected');
+    assert.equal(page.$('#account-card').hidden, true, 'the visitor stays signed out');
+    assert.equal(server.tables.profiles.length, 2, 'a wrong code creates no traveller');
+    assert.equal(server.tables.logins.length, 0, 'a wrong code is not a login');
+
+    // The right code creates this browser's traveller and logs the sign-in.
+    page.$('#access-code').value = 'travel2n';
+    click(page.window, page.$('#code-signin-submit'));
+    await page.settle(); await page.settle();
+    assert.equal(page.$('#account-dialog').open, false, 'the dialog closes on success');
     assert.equal(page.$('#account-card').hidden, false, 'signed-in chip appears');
     assert.equal(page.$('#account-name').textContent, 'Eva Huang');
     assert.equal(page.$('#stamp-button').classList.contains('locked'), false, 'signed-in travellers may stamp');
-    const profile = server.tables.profiles.find(row => row.id === eva.id);
-    assert(profile, 'a profile row is created for companion discovery');
-    // Stamp Taiwan (country 158) with a companion.
-    page.$('#place-search').value = '台灣';
+    const redemption = server.calls.filter(call => call.op === 'rpc').at(-1);
+    assert.equal(redemption.name, 'atlas_redeem_code');
+    assert.equal(redemption.payload.p_code, 'travel2n', 'the page sends the typed code to Postgres');
+    assert.equal(redemption.payload.p_name, 'Eva Huang');
+    assert(redemption.payload.p_user_agent.length > 0, 'the browser name is sent with the login');
+    const login = server.tables.logins.at(-1);
+    assert.equal(login.display_name, 'Eva Huang', 'the login log names the traveller');
+    assert(login.user_agent, 'the login log records the browser');
+    const device = JSON.parse(page.window.localStorage.getItem('eva.travel.atlas.device.v1'));
+    assert(device.email && device.password, 'this browser keeps its own Supabase account');
+    traveller = page.window.TravelAtlasAccount.user;
+    assert.equal(server.tables.profiles.filter(row => row.id === traveller.id).length, 1, 'the code created one profile');
+
+    // Stamp Japan with a companion.
+    page.$('#place-search').value = '日本';
     input(page.window, page.$('#place-search'));
     await page.settle();
-    choosePlace(page, '台灣');
+    choosePlace(page, '日本');
     await page.settle();
     page.$('#visit-date').value = '2024-05';
     change(page.window, page.$('#visit-date'));
@@ -347,17 +434,32 @@ async function main() {
     assert(page.$('#companion-chips').textContent.includes('林宜臻'), 'the chosen companion is shown before stamping');
     click(page.window, page.$('#stamp-button'));
     await page.settle(); await page.settle();
-    const saved = server.tables.stamps.find(row => row.user_id === eva.id && row.place_key === 'countries:158' && row.visit_month.startsWith('2024-05'));
+    const saved = server.tables.stamps.find(row => row.user_id === traveller.id && row.place_key === 'countries:392' && row.visit_month.startsWith('2024-05'));
     assert(saved, 'the stamp reaches the cloud');
     assert.deepEqual([...saved.companions], [lin.id], 'the companion is stored on the stamp');
     assert.equal(page.$('#passport-count').textContent, '1', 'a place counts once across months');
-    assert.equal(page.$$('#history-list li').length, 2, 'both months are listed for the place');
+    assert.equal(page.$$('#history-list li').length, 1, 'the month is listed for the place');
     // Removing your own stamp deletes the cloud row.
     const historyRow = page.$$('#history-list li').find(row => row.textContent.includes('2024.05'));
     click(page.window, historyRow.querySelector('button[data-date]'));
     await page.settle(); await page.settle();
-    assert.equal(server.tables.stamps.some(row => row.visit_month.startsWith('2024-05')), false, 'delete reaches the cloud');
-    console.log('PASS sign-in: Google OAuth, profile, companion stamping, cloud delete');
+    assert.equal(server.tables.stamps.some(row => row.user_id === traveller.id && row.visit_month.startsWith('2024-05')), false, 'delete reaches the cloud');
+
+    // Signing out and back in on this browser returns to the same traveller.
+    click(page.window, page.$('#account-menu-button'));
+    await page.settle();
+    click(page.window, page.$('#sign-out'));
+    await page.settle(); await page.settle();
+    assert.equal(page.$('#account-card').hidden, true, 'signing out returns to the visitor view');
+    click(page.window, page.$('#sign-in'));
+    await page.settle();
+    assert.equal(page.$('#traveller-name').value, 'Eva Huang', 'the last name is prefilled');
+    page.$('#access-code').value = 'travel2n';
+    click(page.window, page.$('#code-signin-submit'));
+    await page.settle(); await page.settle();
+    assert.equal(page.window.TravelAtlasAccount.user.id, traveller.id, 'the same browser keeps the same traveller');
+    assert.equal(server.tables.logins.length, 2, 'each sign-in is logged');
+    console.log('PASS sign-in: access code, login log, device identity, companion stamping, cloud delete');
   }
 
   // ---------------------------------------------------------------- 3. companion view + live updates
@@ -366,16 +468,16 @@ async function main() {
     page.connection.fireAuth({ access_token:'token-lin', user:lin });
     await page.settle(); await page.settle();
     assert.equal(page.$('#account-name').textContent, '林宜臻');
-    // Live update: Eva stamps Japan while Lin has the page open.
+    // Live update: the other traveller stamps Japan while Lin has the page open.
     server.tables.stamps.push({
-      id:'stamp-live-1', user_id:eva.id, place_key:'countries:392', visit_month:'2025-02-01',
+      id:'stamp-live-1', user_id:traveller.id, place_key:'countries:392', visit_month:'2025-02-01',
       companions:[lin.id], created_at:'2025-02-01T00:00:00Z', updated_at:'2025-02-01T00:00:00Z'
     });
     server.notifyLive({ eventType:'INSERT', table:'stamps', schema:'public', new:{ ...server.tables.stamps.at(-1) }, old:{} });
     await page.settle();
-    // Lin sees only her own collection total; Eva's live Japan row is on the map.
+    // Lin sees only her own collection total; everyone's stamps mark the map.
     assert.equal(page.$('#passport-count').textContent, '0', 'a traveller counts only their own stamps');
-    assert.equal(page.$$('.map-country.done').length, 1, 'everyone\'s stamps still mark the shared map');
+    assert.equal(page.$$('.map-country.done').length, 2, 'everyone\'s stamps still mark the shared map');
     // The live row appears on the map and in the history without a reload.
     page.$('#place-search').value = '日本';
     input(page.window, page.$('#place-search'));
@@ -385,10 +487,10 @@ async function main() {
     assert(page.$('#history-list').textContent.includes('2025.02'), 'the other traveller month is visible');
     assert(page.$('#history-list').textContent.includes('他人'), 'the row is labelled as someone else\'s stamp');
     assert.equal(page.$('#history-list button[data-date]'), null, 'visitors of a row cannot delete another person stamp');
-    // The shared-trips panel lists places Eva and Lin visited together.
+    // The shared-trips panel lists places both travellers visited together.
     const friendsText = page.$('#friends-list').textContent;
     assert(page.$('#friends-tabs').textContent.includes('Eva Huang'), 'friends tab lists the other traveller');
-    assert.equal(page.$('#friends-tabs [aria-selected="true"]').textContent, 'Eva Huang', 'the traveller with shared trips is selected');
+    assert(page.$('#friends-tabs [aria-selected="true"]').textContent.includes('Eva Huang'), 'the traveller with shared trips is selected');
     assert(friendsText.includes('日本'), 'shared trip months appear in 一起走過');
     assert.equal(page.$('#friends-shared').textContent, '1');
     console.log('PASS companions: live insert, shared trips, per-user views');
@@ -396,10 +498,11 @@ async function main() {
 
   // ---------------------------------------------------------------- 4. cross-device sync
   {
+    const user = server.users.get(traveller.id);
     const pageA = await boot();
     const pageB = await boot();
-    pageA.connection.fireAuth({ access_token:'token-eva-a', user:eva });
-    pageB.connection.fireAuth({ access_token:'token-eva-b', user:eva });
+    pageA.connection.fireAuth({ access_token:'token-eva-a', user });
+    pageB.connection.fireAuth({ access_token:'token-eva-b', user });
     await pageA.settle();
     await pageB.settle();
     pageA.$('#place-search').value = '泰國';
@@ -410,30 +513,33 @@ async function main() {
     pageA.$('#visit-date').value = '2025-01';
     click(pageA.window, pageA.$('#stamp-button'));
     await pageA.settle(); await pageA.settle();
-    const created = server.tables.stamps.find(row => row.place_key === 'countries:764' && row.user_id === eva.id);
+    const created = server.tables.stamps.find(row => row.place_key === 'countries:764' && row.user_id === traveller.id);
     assert(created, 'device A writes to the cloud');
     server.notifyLive({ eventType:'INSERT', table:'stamps', schema:'public', new:{ ...created }, old:{} });
     await pageB.settle();
-    assert(pageB.$('#passport-count').textContent === pageA.$('#passport-count').textContent, 'both devices show the same total');
     assert.equal(pageB.$('#passport-count').textContent, pageA.$('#passport-count').textContent, 'device B counts the new country');
     console.log('PASS sync: a stamp on one device appears on another through realtime');
   }
 
   // ---------------------------------------------------------------- 5. RLS
   {
-    // Even a crafted request cannot edit another traveller's row: the database
-    // double enforces the same owner check as the SQL policies in the README.
+    // The stranger redeemed the code elsewhere, so they have a profile row but
+    // still cannot touch anybody else's stamps.
+    server.tables.profiles.push({
+      id:stranger.id, user_id:stranger.id, display_name:'路人甲', avatar_url:'', discoverable:true,
+      updated_at:new Date().toISOString()
+    });
     const strangerPage = await boot();
     strangerPage.connection.fireAuth({ access_token:'token-stranger-rls', user:stranger });
-    await strangerPage.settle();
-    const evaRow = server.tables.stamps.find(row => row.user_id === eva.id);
-    assert(evaRow, 'Eva has a cloud row from the earlier sections');
-    const blocked = await strangerPage.connection.client.from('stamps').update({ companions:[stranger.id] }).eq('id', evaRow.id);
+    await strangerPage.settle(); await strangerPage.settle();
+    const otherRow = server.tables.stamps.find(row => row.user_id === traveller.id);
+    assert(otherRow, 'the other traveller has a cloud row from the earlier sections');
+    const blocked = await strangerPage.connection.client.from('stamps').update({ companions:[stranger.id] }).eq('id', otherRow.id);
     assert(blocked.error, 'updating another user row is rejected by row level security');
-    assert.deepEqual([...server.tables.stamps.find(row => row.id === evaRow.id).companions], [...evaRow.companions], 'the other row is unchanged');
+    assert.deepEqual([...server.tables.stamps.find(row => row.id === otherRow.id).companions], [...otherRow.companions], 'the other row is unchanged');
     const page = await boot();
     page.connection.fireAuth({ access_token:'token-stranger', user:stranger });
-    await page.settle();
+    await page.settle(); await page.settle();
     page.$('#place-search').value = '日本';
     input(page.window, page.$('#place-search'));
     await page.settle();
@@ -445,6 +551,23 @@ async function main() {
     const own = server.tables.stamps.filter(row => row.user_id === stranger.id);
     assert.equal(own.length, 1, 'the stranger can still save their own stamp');
     console.log('PASS security: other travellers read-only, own rows writable');
+  }
+
+  // ---------------------------------------------------------------- 5b. session without a code
+  {
+    // A Supabase session on its own (no redeemed code, no profile row) is still
+    // a visitor: the page must not let it write, and Postgres would refuse too.
+    const uninvited = server.addUser({ name:'未登入者', email:'nobody@example.com' });
+    const page = await boot();
+    page.connection.fireAuth({ access_token:'token-nobody', user:uninvited });
+    await page.settle(); await page.settle();
+    assert.equal(page.$('#account-card').hidden, true, 'a session without the code is only a visitor');
+    assert.equal(page.$('#stamp-button').classList.contains('locked'), true, 'stamping stays locked');
+    click(page.window, page.$('#stamp-button'));
+    await page.settle();
+    assert.equal(page.$('#account-dialog').open, true, 'the page asks for the code instead of writing');
+    assert.equal(server.tables.stamps.some(row => row.user_id === uninvited.id), false, 'nothing was written');
+    console.log('PASS gate: a Supabase session alone cannot write');
   }
 
   // ---------------------------------------------------------------- 6. demo mode
