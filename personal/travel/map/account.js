@@ -561,6 +561,10 @@
   }
 
   // ---------- sync ----------
+  function isSetupError(error) {
+    const text = `${error?.message || error || ''} ${error?.code || ''} ${error?.details || ''}`;
+    return /42P01|does not exist|schema cache|invalid api key|no api key|invalid jwt|permission denied|42501|row-level security|violates row-level/i.test(text);
+  }
   async function syncPull() {
     if (state.mode === 'demo') {
       rowsById.clear();
@@ -603,6 +607,9 @@
     } catch (error) {
       console.warn('sync failed', error);
       setConnection(navigator.onLine ? 'error' : 'offline');
+      // A missing table, a wrong key or a blocked policy is a setup problem,
+      // not a transient one: tell the page so it can name the next click.
+      if (isSetupError(error)) emit('error', error.message);
       return { ok:false, reason:error.message };
     }
   }
