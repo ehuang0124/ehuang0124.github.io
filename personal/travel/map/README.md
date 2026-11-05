@@ -2,7 +2,12 @@
 
 GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index at `/personal/travel/`.
 
-The page works with no backend at all (each browser keeps its own stamps). Linking a Supabase project adds Google sign-in, a read-only public map, companions, live sync across devices, and a shared "一起走過" view. Both modes are supported by the same files.
+The atlas is read-only until someone signs in: **no sign-in, no stamps.** Sign-in itself has two modes in the same files.
+
+- **No Supabase project (default today).** The top bar offers a passphrase sign-in stored in `config.js` (`localGate`). Stamps then live in that browser's `localStorage`; nothing is uploaded and nothing syncs between devices. The passphrase check runs in the page, so it keeps out visitors, but it is not a security boundary — a static page cannot enforce one.
+- **With a Supabase project.** The top bar offers Google sign-in, stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control.
+
+The account control and the backend status line sit in the sticky top bar on every screen; the footer repeats where the records actually live.
 
 ## What it does
 
@@ -10,7 +15,8 @@ The page works with no backend at all (each browser keeps its own stamps). Linki
 - Click a country/marker or use the searchable, keyboard-accessible destination index. Geographic area chips filter the index and reframe the map. Country and U.S. state outlines remain selectable; place and administrative names appear in hover tooltips instead of persistent map text. The North America layer combines selectable U.S. state boundaries, U.S. national parks, and Canadian national parks. Its filters narrow to the United States, Canada, or subregions. These travel groupings are not administrative boundaries. The map can be dragged from the sea, zoomed, and reset. Where parks are far apart (e.g. Alaska, American Samoa, Japan's southern islands), selecting them from the index pans the map to their location.
 - A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Every catalogue entry has a **destination-specific postcard plate**: a well-known local landscape, flower, figure or building drawn as a single-ink engraving. Each plate also carries its own deterministic contour lines and a unique catalogue serial (including every U.S., Canadian and Japanese park), so returning to a place reproduces exactly the same artwork. The plate caption names the motif and its family (風景 / 花草 / 人文 / 建築) and shows the four-step ink scale. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
-- Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
+- Every layer shows the **country flag** of each destination: countries, cities, U.S. states, and U.S./Canadian/Japanese parks inherit the flag of their country. Flags are bundled local SVGs (`flags/`, from `country-flag-icons`, MIT), so they render the same on every platform and need no network. The five disputed or unassigned catalogue entries with no ISO 3166-1 code (Somaliland, Northern Cyprus, Siachen Glacier) deliberately show no flag.
+- Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Signing in with the local passphrase is what unlocks stamping, custom cities, import and export. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
 - Text is set via `textContent` rather than interpolating user input into markup; imported backups are schema-checked and sanitized.
 
 ## Postcard plates
@@ -20,12 +26,21 @@ The page works with no backend at all (each browser keeps its own stamps). Linki
 - Assignment is hierarchical and deterministic: an exact curated destination (country ISO, city id, U.S. state abbreviation, U.S./Canadian/Japanese park id) → the country's motif for unlisted cities → a broad geographic-region motif for the few remaining territories. Regional fallbacks are captioned `地區意象 · …` rather than implying a destination-specific landmark. All 608 catalogue entries resolve to a plate; 570 have their own curated assignment.
 - [`specimen.html`](specimen.html) is the plate index, grouped by family, with example destinations for each motif. It is linked from the atlas footer and adds no data or runtime dependency.
 
+## Where the backend lives
+
+GitHub Pages only serves files: there is no server process in this repository, so the page's "backend" is whatever `config.js` points at.
+
+- **`config.js` is the switch.** `supabaseUrl` + `supabaseAnonKey` → Supabase mode. Empty strings → browser-only mode with the `localGate` passphrase.
+- **You can see which one is live in three places:** the account menu (*已同步 / 本機通行碼*), the account dialog's 後端 line, and the footer's `資料來源:` line. In Supabase mode the footer prints the project host, e.g. `資料來源：Supabase（abcdefgh.supabase.co）`.
+- **The data itself** is in the Supabase dashboard → **Table Editor** → `stamps`, `custom_cities`, `profiles`; requests appear in the browser's Network panel as `https://<project>.supabase.co/rest/v1/...`, and Google sign-ins under **Authentication → Users**.
+- **If those two config lines stay empty, no backend exists yet**: stamps are only in `localStorage` (`eva.travel.stamp-atlas.v1`), the site cannot enforce "only I can stamp", and nothing syncs. That is the state the site shipped in.
+
 ## Accounts, companions, and sync
 
-Linking a Supabase project turns the atlas into a small multi-traveller atlas. Everything below is off until `config.js` has a project URL and anon key.
+Linking a Supabase project turns the atlas into a small multi-traveller atlas. The account features below are off until `config.js` has a project URL and anon key; until then the `localGate` passphrase is the only sign-in.
 
 - **Visitors see the map, but cannot change it.** Reading is public; every write is checked by Postgres Row Level Security against `auth.uid()`. A visitor's stamp button opens the sign-in dialog instead of writing, and the page never holds a key that could edit someone else's rows.
-- **Google sign-in.** `account.js` uses Supabase Auth (`signInWithOAuth({ provider:'google' })`) with PKCE, returning to the same page. A `profiles` row stores the display name and avatar; travellers can switch off *讓其他旅人標記我為旅伴* to stay untaggable.
+- **Google sign-in.** With a project configured, `account.js` uses Supabase Auth (`signInWithOAuth({ provider:'google' })`) with PKCE, returning to the same page. A `profiles` row stores the display name and avatar; travellers can switch off *讓其他旅人標記我為旅伴* to stay untaggable.
 - **Companions.** Any signed-in traveller can be tagged on a trip before or after stamping. A trip is stored per traveller per place per month, so the same place can carry several months and several travellers. Untagging someone keeps your stamp.
 - **一起走過.** Choosing a traveller lists the places you visited together — either because one of you tagged the other, or because you independently stamped the same place and month. Selecting a row jumps to that place on the map.
 - **Live sync.** Writes go to Postgres and the page subscribes to `postgres_changes` for `stamps`, `custom_cities`, and `profiles`, so a stamp on one device appears on every open tab and phone. `syncPull()` refetches on reconnect, on tab focus, and every 20 s while the websocket is down.
@@ -33,6 +48,17 @@ Linking a Supabase project turns the atlas into a small multi-traveller atlas. E
 - **Old local stamps.** The first sign-in on a browser that already has local stamps offers to upload them once (marker key `eva.travel.atlas.adopted.<user-id>`), then clears the local copy so two devices cannot diverge.
 - Counters describe the signed-in traveller (their own places); visitors see the whole atlas. Everyone's stamps remain on the map.
 - **Demo mode** (`?demo=1`) exercises the whole interface with four seeded travellers, `localStorage`, and `BroadcastChannel` instead of a server. It is opt-in and never touches a real project.
+
+### Local passphrase (no backend)
+
+`config.js` → `localGate` holds a display name and the **SHA-256 hash** of a passphrase; the passphrase itself is never written to the repository. Change it in one step:
+
+```sh
+node scripts/set-atlas-passphrase.cjs "a new passphrase"
+node scripts/set-atlas-passphrase.cjs "a new passphrase" --name "Eva Huang"
+```
+
+Anyone who knows the passphrase can stamp **in their own browser**; their stamps stay on that device. Delete `localGate` from `config.js` and the dialog explains that no sign-in method is configured. Switch to Supabase for shared, enforceable records.
 
 ### Setup
 
@@ -52,6 +78,7 @@ The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://g
 - **U.S.:** the [National Park Service's list](https://www.nps.gov/aboutus/national-park-system.htm) (64 as of November 2026). Approximate map points originated from the [National Parks GeoJSON index](https://github.com/kwab7777/National_Parks.Geo.JSON); White Sands, New River Gorge and the newly designated Chiricahua were added separately. Wolf Trap National Park for the Performing Arts is not one of the numbered 64 national parks.
 - **Canada:** [Parks Canada's 2026 park counts](https://parks.canada.ca/agence-agency/accessibilite-accessibility/plan-action-accessibilite-accessibility-action-plan-2026-2028) (37 parks + 11 reserves), including [Pituamkek](https://parks.canada.ca/pn-np/cnpn-cnnp/pituamkek). Representative coordinates started with the same world parks GeoJSON index; Thaidene Nëné and Pituamkek have approximate representative points.
 - **Japan:** [Ministry of the Environment park list](https://www.env.go.jp/park/parks/) and [35-park research index](https://github.com/isewasabi/japan-park-env-similarity/blob/main/notebooks/config.py). Most representative points use the center of the park bounding rectangles from [this Japan national park map](https://github.com/kamataryo/nationalpark-map/blob/master/topojson/abstract.json); four newer parks are plotted by hand.
+- **Flags:** `flags/` contains the 235 SVGs actually used, copied from [`country-flag-icons@1.6.20`](https://github.com/catamphetamine/country-flag-icons) at 3:2. Territory and disputed-area entries follow the map index's ISO codes (`XK` for Kosovo, `IO` for the Indian Ocean Territory); entries without an ISO code show no flag. The MIT notice is in `licenses/LICENSE-country-flag-icons.txt`.
 - Major cities display recognizable IATA city/airport codes beside Chinese names when a reliable code exists. City names and points are a **curated, non-exhaustive travel index**, not a comprehensive city directory. Park markers are **representative locations, not park outlines**. Several parks consist of multiple separated areas or islands; use the index for their names rather than reading a pin as an exact boundary or entrance.
 
 ## Fonts
@@ -77,7 +104,7 @@ node scripts/test-stamp-art.cjs
 
 It checks that all 608 destinations resolve to a stable plate, that every motif has a real three-layer drawing in a valid family, and that the famous-destination assignments and regional fallback captions stay intact.
 
-Account behaviour runs headlessly through jsdom (no browser download needed):
+The local sign-in gate, flags, and the read-only visitor state are covered by `scripts/test-atlas-local-mode.cjs` (jsdom). Account behaviour runs headlessly through jsdom (no browser download needed):
 
 ```sh
 npm install --prefix /tmp/atlas-test-deps jsdom
@@ -86,7 +113,7 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cjs
 ```
 
-- `test-atlas-local-mode.cjs` proves the unconfigured page behaves exactly like the browser-only atlas (and never shows account UI).
+- `test-atlas-local-mode.cjs` proves the unconfigured page keeps its records in the browser, refuses to stamp without the passphrase, rejects a wrong passphrase, shows country flags, and prints the data source in the footer.
 - `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: Google session handling, profile creation, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
 
