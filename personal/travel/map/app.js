@@ -217,61 +217,23 @@
     }
     return `日本國家公園 · ${place.where}`;
   }
-  // Engraved, one-ink landmark vignettes for the postcard impression. The motifs are
-  // editorial shorthand, not a claim that every destination has only one identity.
+  // Destination-specific postcard plates. stamp-art.js supplies an editorial
+  // one-ink vignette (landscape, flower, figure or building) for every catalogue
+  // entry; the deterministic terrain below keeps each plate unique.
   function renderStampArt(place) {
-    const key = `${place.en || ''} ${place.zh || ''}`.toLowerCase();
-    const motifs = [
-      [/kyoto|京都/, 'pagoda', '古都・五重塔'], [/tokyo|東京/, 'tower', '東京鐵塔'], [/paris|巴黎/, 'tower', '艾菲爾鐵塔'],
-      [/new york|紐約/, 'skyline', '城市天際線'], [/fuji|富士|hakone|箱根/, 'fuji', '富士山'],
-      [/taipei|臺北|台北/, 'tower', '城市地標'], [/hawai|夏威夷|okinawa|沖繩/, 'wave', '島嶼海岸'],
-      [/yellowstone|黃石/, 'geyser', '黃石間歇泉'], [/grand canyon|大峽谷/, 'canyon', '大峽谷岩層'],
-      [/yosemite|優勝美地/, 'waterfall', '優勝美地瀑布與山谷'], [/joshua tree|約書亞樹/, 'cactus', '沙漠植物'],
-      [/arches|拱門/, 'arch', '天然岩拱'], [/bryce|布萊斯/, 'hoodoos', '石柱群'],
-      [/zion|錫安/, 'canyon', '峽谷岩壁'], [/glacier|冰河/, 'glacier', '冰河山景'],
-      [/everglades|大沼澤/, 'wetland', '濕地草澤'], [/denali|迪納利/, 'mountain', '迪納利山峰'],
-      [/redwood|紅木|sequoia|巨杉/, 'tree', '巨木林'], [/volcano|火山|lassen|haleakala/, 'volcano', '火山地景'],
-      [/sakura|cherry|櫻/, 'flower', '花枝'], [/national park|國家公園/, 'mountain', '山野風景']
-    ];
-    const found = motifs.find(([pattern]) => pattern.test(key));
-    const type = found?.[1] || (place.category === 'jp' || place.category === 'na' ? 'mountain' : 'sun');
-    const drawings = {
-      fuji:'<path d="M8 45 38 9l12 15 8-10 34 31Z"/><path d="m30 19 8-10 9 11-7-3-5 4-4-3Zm29 4 4-5 5 7-5-2-3 2Z"/><path d="M5 47h90M12 51h76"/>',
-      pagoda:'<path d="M50 7v39M31 14h38L50 7Zm-7 12h52L50 14Zm-6 12h64L50 26Zm-6 12h76L50 38Zm29-34v-5"/><path d="M39 46v-9h22v9M34 52h32"/>',
-      tower:'<path d="M50 7 43 45h14L50 7Zm-8 13h16M45 34h10M39 45h22M46 26h8M36 52h28"/><circle cx="50" cy="8" r="2"/>',
-      skyline:'<path d="M9 48V28h12v20m4 0V17h17v31m4 0V9h14v39m4 0V25h13v23m4 0V33h14v15M6 51h88"/><path d="M31 22v3m8-3v3m-8 5v3m8-3v3m13-17v3m0 6v3"/>',
-      wave:'<path d="M6 35q13-13 26 0t26 0 26 0 12 0M6 44q13-13 26 0t26 0 26 0 12 0"/><path d="M35 29q-4-14 13-22 17 9 12 22M50 9v20M12 25q8-11 16-1M73 20q8-11 16-1"/>',
-      flower:'<path d="M50 29q-2 11 0 22m0-12q-12-12-20-2 8 12 20 8m0-2q12-13 20-2-8 12-20 8"/><path d="M50 27c-8-5-5-13 0-15 5 2 8 10 0 15Zm-2-7c-10 1-12-7-8-12 6 0 11 5 8 12Zm4 0c10 1 12-7 8-12-6 0-11 5-8 12Z"/><path d="M10 52h80"/>',
-      geyser:'<path d="M50 48q-8-9 0-17 8 8 0 17Zm0-18q-6-12 2-21 8 12 1 21m-8 0q-7-8-5-15m17 15q8-8 6-15M29 49q-8-8 0-15m42 15q8-8 0-15M13 51h74"/>',
-      canyon:'<path d="M8 12v37l12-8V22l11 8v17l10-9V13l9 8 9-9v28l10 7V24l10 8v17h13V11M7 51h87"/>',
-      waterfall:'<path d="M8 17 28 9l13 9 9-7 20 8 22-6M39 18v13l-5 7 7 5-3 8m13-32v13l-5 5 6 5-2 9m13-29v12l-4 5 6 5-2 7M8 51h84"/>',
-      cactus:'<path d="M48 50V18q0-8 6-8t6 8v8h9v-7q0-6 5-6t5 6v16q0 6-7 6h-7v9M48 30H35v-9q0-6-5-6t-5 6v17q0 6 7 6h16M10 51h80"/>',
-      arch:'<path d="M8 50Q10 13 28 11q14 0 22 25 9-25 22-25 18 2 20 39M8 50h84M32 50q1-16 9-18 7 0 9 8m0 10q3-13 9-13 7 0 9 13"/>',
-      hoodoos:'<path d="m16 50 2-22 5-5-3-5 8-6 8 6-3 5 5 27m5 0 2-30 6-5-3-5 8-5 8 5-3 5 5 35m4 0 2-20 5-5-3-5 7-5 7 5-3 5 4 25M8 51h84"/>',
-      glacier:'<path d="m8 23 15-10 13 13 10-9 12 15 12-9 22 16-13 1-8-5-9 8-13-6-11 8-12-7-10 4Zm7 25h70M23 54h55"/>',
-      wetland:'<path d="M8 50q11-7 22 0t22 0 22 0 18 0M22 49q-2-18 3-28m-3 14-7-8m8 2 8-9m15 29V11m0 17-7-8m7 16 7-10m12 23V20m0 10-6-8m6 18 6-8M8 53h84"/>',
-      tree:'<path d="M48 49V34m0 0Q24 31 30 15q8-13 18 2 7-18 19-8 12 16-8 25m-11-5q-17-8-23-1m20-5q12-13 20-10M10 51h80"/>',
-      volcano:'<path d="m9 49 23-31 8 7 10-12 10 13 9-7 22 30H9Zm38-37q-7-8 1-11 8 4 2 11m-8 4q-4-6 1-8m9 8q5-5 2-9M9 52h82"/>',
-      mountain:'<path d="m7 48 25-31 14 18 12-15 35 28H7Z"/><path d="m25 26 7-9 7 9-7-3Zm27 0 6-6 7 8-7-3-3 3ZM6 51h88"/>',
-      sun:'<circle cx="50" cy="25" r="12"/><path d="M50 5v6m0 28v6M30 25h-6m52 0h-6M36 11l5 5m18 18 5 5m0-28-5 5M41 34l-5 5M8 49q12-9 24 0t24 0 24 0 12 0M8 53h84"/>'
-    };
-    // Give every catalogue entry its own engraved signature, even when two places
-    // share a broad motif. The deterministic variation is tied to the place ID,
-    // so a destination always keeps the same postcard design across visits.
+    const atlas = window.TravelAtlasStampArt;
+    const svg = document.getElementById('stamp-art');
+    if (!atlas) return;
+    const motif = atlas.find(place);
     let seed = 2166136261;
     for (const char of String(place.id || place.key || place.en || place.zh)) {
       seed ^= char.codePointAt(0);
       seed = Math.imul(seed, 16777619) >>> 0;
     }
-    // Build a little landscape plate, not just a recycled icon: each place gets
-    // its own ridge profile, contour lines, sky marks and serial cartouche.
-    const peaks = Array.from({length:7}, (_, i) => {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-      return {x: i * 17 - 5, y: 26 + seed % 19};
-    });
-    const ridge = peaks.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
+    // A faint, place-specific ridge and contour set sits behind every motif, so
+    // two destinations sharing an icon still keep their own engraved signature.
     const contours = Array.from({length:3}, (_, row) => {
-      const y = 37 + row * 5;
+      const y = 34 + row * 7;
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
       const bend = 2 + seed % 8;
       return `<path d="M2 ${y}q18 ${bend} 34 0t32 0 30 0"/>`;
@@ -281,10 +243,13 @@
       placeSerial.set(place.key, next);
       return next;
     })();
-    const scene = `<path class="art-ridge" d="${ridge}M0 51h100"/>${contours}<text class="art-serial" x="97" y="53">${String(serial).padStart(3,'0')}</text>`;
-    const svg = document.getElementById('stamp-art');
-    svg.innerHTML = `${scene}${drawings[type]}`;
-    svg.setAttribute('aria-label', `${found?.[2] || '專屬地形景觀'}・${place.zh}專屬圖稿，圖稿編號 ${serial}`);
+    const plate = `<g class="t-4">${contours}</g>`;
+    svg.innerHTML = `${plate}${atlas.render(motif)}<text class="art-serial" x="97" y="57">${String(serial).padStart(3,'0')}</text>`;
+    svg.setAttribute('aria-label', `${motif.label}，${motif.kind}圖稿，${place.zh}專屬構圖，圖稿編號 ${serial}`);
+    const caption = $('#plate-motif');
+    if (caption) caption.textContent = atlas.label(place, motif);
+    const kind = $('#plate-kind');
+    if (kind) kind.textContent = motif.kind;
   }
   function renderDetail() {
     const place = selectedPlace();

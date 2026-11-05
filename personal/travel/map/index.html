@@ -12,6 +12,7 @@
   <script src="./world.js" defer></script>
   <script src="./places.js" defer></script>
   <script src="./us-states.js" defer></script>
+  <script src="./stamp-art.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -72,7 +73,7 @@
               <div class="stamp-panel-top"><span>目的地</span></div>
               <div class="stamp-panel-inner">
                 <div class="place-heading"><h2 class="place-name-line"><span id="place-name">日本</span><span id="place-code" hidden></span></h2><p id="place-en">JAPAN</p><p id="place-location">亞洲 · 國家與地區</p></div>
-                <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 54" aria-hidden="true"></svg><span class="stamp-star">✳</span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div></div>
+                <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 58" aria-hidden="true"></svg><span class="stamp-star">✳</span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div><div class="plate-caption"><span id="plate-motif" class="plate-motif">日本 · 富士山</span><span class="plate-scale" role="img" aria-label="單色墨色四階"><i></i><i></i><i></i><i></i></span><span id="plate-kind" class="plate-kind">風景</span></div></div>
                 <div class="stamp-fields"><label for="visit-date">到訪月份</label><input type="month" id="visit-date" required><button type="button" id="stamp-button" class="stamp-button"><span aria-hidden="true">✳</span> 蓋下這一章 <span aria-hidden="true">↗</span></button><p id="stamp-feedback" class="stamp-feedback" role="status" aria-live="polite"></p></div>
                 <div class="stamp-history" id="stamp-history" hidden><div class="history-title"><strong>到訪紀錄</strong><span id="history-count"></span></div><ul id="history-list"></ul></div>
                 <button type="button" id="delete-city" class="delete-city" hidden>移除這座自訂城市</button>
@@ -93,7 +94,7 @@
       <section class="backup" aria-labelledby="backup-title"><div class="backup-copy"><h2 id="backup-title">旅行紀錄備份</h2><p>資料只存在此瀏覽器；匯出備份可轉移或還原。</p></div><div class="backup-actions"><button type="button" id="export-stamps">↓ 匯出戳章</button><label for="import-stamps" class="import-label">↑ 匯入備份</label><input id="import-stamps" class="sr-only" type="file" accept=".json,application/json" aria-label="選擇戳章備份 JSON 檔案"></div></section>
       <p id="backup-feedback" class="backup-feedback" role="status" aria-live="polite"></p>
     </main>
-    <footer class="footer"><span>© 2026 EVA HUANG</span><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
+    <footer class="footer"><span>© 2026 EVA HUANG</span><a href="./specimen.html">戳章圖稿索引 ↗</a><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
   </div>
 
   <dialog id="city-dialog" aria-labelledby="city-dialog-title"><form id="city-form"><div class="dialog-top"><span>PERSONAL DESTINATION / +01</span><button type="button" id="city-cancel" aria-label="關閉新增城市視窗">×</button></div><h2 id="city-dialog-title">把一座城市加進地圖。</h2><p>座標選填；留空時以國家中心標示。</p><label for="city-name">城市名稱 <input id="city-name" name="name" type="text" maxlength="80" placeholder="例如：臺南" required></label><label for="city-country">所屬國家或地區 <select id="city-country" name="country" required></select></label><div class="coordinate-fields"><label for="city-lat">緯度 <small>選填</small><input id="city-lat" type="number" min="-90" max="90" step="any" placeholder="例如 22.99"></label><label for="city-lon">經度 <small>選填</small><input id="city-lon" type="number" min="-180" max="180" step="any" placeholder="例如 120.20"></label></div><p id="city-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">加入城市清單 <span>↗</span></button></form></dialog>
