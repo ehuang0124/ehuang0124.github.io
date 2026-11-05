@@ -1,0 +1,144 @@
+// Connect /personal/travel/map/ to a Supabase project (Google sign-in, sync).
+//
+//   node scripts/connect-supabase.cjs --url https://abcdefgh.supabase.co --key eyJhbGciOi...
+//   node scripts/connect-supabase.cjs --url ... --key ... --check
+//   node scripts/connect-supabase.cjs --disconnect
+//
+// The anon (publishable) key is designed to be public: it is shipped in the
+// browser and Row Level Security is what protects the rows. A service_role key
+// must NEVER be used here and the script refuses it.
+const fs = require('node:fs');
+const path = require('node:path');
+
+const configPath = path.join(__dirname, '..', 'personal/travel/map/config.js');
+const SITE_URL = 'https://ehuang0124.github.io/personal/travel/map/';
+
+function fail(message) {
+  console.error(`\n✗ ${message}\n`);
+  process.exit(1);
+}
+function arg(name) {
+  const index = process.argv.indexOf(`--${name}`);
+  return index >= 0 ? process.argv[index + 1] : null;
+}
+function readJwtPayload(key) {
+  const parts = key.split('.');
+  if (parts.length !== 3) return null;
+  try { return JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); }
+  catch { return null; }
+}
+function validateUrl(raw) {
+  let url;
+  try { url = new URL(raw); } catch { fail(`--url 不是有效網址：${raw}`); }
+  if (url.protocol !== 'https:') fail('--url 必須是 https:// 開頭。');
+  if (url.pathname !== '/' || url.search || url.hash) fail('--url 只要專案根網址，例如 https://abcdefgh.supabase.co（不要帶路徑）。');
+  if (!/(^|\.)supabase\.co$/.test(url.hostname)) {
+    console.warn(`! ${url.hostname} 看起來不是 Supabase 官方網域；若是自架實例請自行確認。`);
+  }
+  return url.origin;
+}
+function validateKey(key) {
+  if (typeof key !== 'string' || key.length < 20) fail('--key 看起來不是 Supabase 的 anon key。');
+  if (key.startsWith('sb_publishable_')) return { kind: 'publishable' };
+  const payload = readJwtPayload(key);
+  if (!payload) fail('--key 不是 JWT 格式，也不是 sb_publishable_ 開頭的 publishable key。');
+  if (payload.role === 'service_role') {
+    fail('這是 service_role（伺服器專用）金鑰，會繞過所有權限。請改用 Project Settings → API 的 anon / publishable key。');
+  }
+  if (payload.role !== 'anon') fail(`--key 的 role 是「${payload.role || '未知'}」，這個頁面需要 anon key。`);
+  return { kind: 'jwt', role: payload.role };
+}
+function projectRef(url) {
+  return new URL(url).hostname.split('.')[0];
+}
+
+async function check(url, key) {
+  const headers = { apikey: key, Authorization: `Bearer ${key}` };
+  const report = [];
+  try {
+    const settings = await fetch(`${url}/auth/v1/settings`, { headers });
+    if (!settings.ok) report.push(['auth', `HTTP ${settings.status}`, 'anon key 可能不正確。']);
+    else {
+      const body = await settings.json();
+      report.push(['auth', 'OK', '']);
+      report.push(['Google 登入', body?.external?.google ? '已開啟' : '未開啟', body?.external?.google ? '' : '到 Authentication → Providers → Google 開啟。']);
+      report.push(['Email 登入', body?.external?.email ? '已開啟' : '未開啟', '']);
+    }
+  } catch (error) {
+    report.push(['auth', '連不上', `${error.message}（請確認網路與專案網址）`]);
+  }
+  try {
+    const response = await fetch(`${url}/rest/v1/stamps?select=id&limit=1`, { headers });
+    if (response.ok) report.push(['資料表 stamps', 'OK', '']);
+    else {
+      const text = await response.text();
+      const missing = /does not exist|42P01/i.test(text) || response.status === 404;
+      report.push(['資料表 stamps', missing ? '不存在' : `HTTP ${response.status}`, missing ? '到 SQL Editor 執行 personal/travel/map/supabase/setup.sql。' : '請確認金鑰與 RLS 設定。']);
+    }
+  } catch (error) {
+    report.push(['資料表 stamps', '連不上', error.message]);
+  }
+  const width = Math.max(...report.map(([label]) => [...label].length)) + 2;
+  console.log('\n連線檢查');
+  for (const [label, status, hint] of report) {
+    const pad = ' '.repeat(Math.max(1, width - [...label].length));
+    console.log(`  ${label}${pad}${status}${hint ? `  → ${hint}` : ''}`);
+  }
+  console.log('');
+}
+
+(async () => {
+  if (process.argv.includes('--disconnect')) {
+    const source = fs.readFileSync(configPath, 'utf8');
+    const next = source
+      .replace(/supabaseUrl:\s*'[^']*'/, "supabaseUrl: ''")
+      .replace(/supabaseAnonKey:\s*'[^']*'/, "supabaseAnonKey: ''");
+    fs.writeFileSync(configPath, next);
+    console.log('已移除 Supabase 設定；頁面回到「本機通行碼 + 這個瀏覽器」模式。');
+    return;
+  }
+
+  const rawUrl = arg('url');
+  const rawKey = arg('key');
+  if (!rawUrl || !rawKey) {
+    console.error('用法：node scripts/connect-supabase.cjs --url https://<專案>.supabase.co --key <anon key> [--check]');
+    console.error('      node scripts/connect-supabase.cjs --disconnect');
+    process.exit(1);
+  }
+  const url = validateUrl(rawUrl);
+  validateKey(rawKey);
+  const ref = projectRef(url);
+
+  if (process.argv.includes('--check')) await check(url, rawKey);
+
+  const source = fs.readFileSync(configPath, 'utf8');
+  if (!/supabaseUrl:\s*'[^']*'/.test(source) || !/supabaseAnonKey:\s*'[^']*'/.test(source)) {
+    fail('config.js 找不到 supabaseUrl / supabaseAnonKey 欄位。');
+  }
+  const next = source
+    .replace(/supabaseUrl:\s*'[^']*'/, `supabaseUrl: '${url}'`)
+    .replace(/supabaseAnonKey:\s*'[^']*'/, `supabaseAnonKey: '${rawKey}'`);
+  fs.writeFileSync(configPath, next);
+
+  console.log(`\n✓ 已寫入 ${path.relative(process.cwd(), configPath)}`);
+  console.log(`  supabaseUrl:     ${url}`);
+  console.log(`  supabaseAnonKey: ${rawKey.slice(0, 12)}…${rawKey.slice(-6)}（公開金鑰，權限由 RLS 控管）`);
+  console.log(`
+接著確認這三件事（都只要做一次）：
+
+  1. 資料表    https://supabase.com/dashboard/project/${ref}/sql/new
+     貼上 personal/travel/map/supabase/setup.sql 全文並 Run。
+
+  2. Google    Authentication → Providers → Google → Enable
+     Authorized redirect URI（貼到 Google Cloud，不是 Supabase）：
+       ${url}/auth/v1/callback
+
+  3. 回跳網址  Authentication → URL Configuration
+     Site URL:      https://ehuang0124.github.io
+     Redirect URLs: ${SITE_URL}
+
+設定完成後：${SITE_URL} 右上角會從「登入」變成「使用 Google 登入」；
+第一次登入會把這個瀏覽器原有的本機戳章上傳到你的帳號。
+要檢查設定是否正確，再跑一次並加上 --check。
+`);
+})().catch(error => fail(error.message));

@@ -30,6 +30,7 @@ The account control and the backend status line sit in the sticky top bar on eve
 
 GitHub Pages only serves files: there is no server process in this repository, so the page's "backend" is whatever `config.js` points at.
 
+- **Follow [`SETUP-SUPABASE.md`](SETUP-SUPABASE.md)** to create the project, the Google OAuth client, and the two config values.
 - **`config.js` is the switch.** `supabaseUrl` + `supabaseAnonKey` → Supabase mode. Empty strings → browser-only mode with the `localGate` passphrase.
 - **You can see which one is live in three places:** the account menu (*已同步 / 本機通行碼*), the account dialog's 後端 line, and the footer's `資料來源:` line. In Supabase mode the footer prints the project host, e.g. `資料來源：Supabase（abcdefgh.supabase.co）`.
 - **The data itself** is in the Supabase dashboard → **Table Editor** → `stamps`, `custom_cities`, `profiles`; requests appear in the browser's Network panel as `https://<project>.supabase.co/rest/v1/...`, and Google sign-ins under **Authentication → Users**.
@@ -62,11 +63,21 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
 
 ### Setup
 
+**[`SETUP-SUPABASE.md`](SETUP-SUPABASE.md) is the click-by-click guide (Chinese) for the whole thing.** The short version:
+
 1. Create a Supabase project, then run [`supabase/setup.sql`](supabase/setup.sql) in **SQL Editor**. It creates `profiles`, `stamps`, `custom_cities`, their RLS policies, and adds the tables to the realtime publication. The script is idempotent.
 2. In **Authentication → Providers → Google**, add a Google OAuth client ID and secret from the [Google Cloud console](https://console.cloud.google.com/apis/credentials). Authorize the callback Supabase shows (`https://<project>.supabase.co/auth/v1/callback`).
 3. In **Authentication → URL Configuration**, set the Site URL to `https://ehuang0124.github.io` and add `https://ehuang0124.github.io/personal/travel/map/` as a redirect URL.
-4. Copy the **Project URL** and **anon public** key into [`config.js`](config.js). The anon key is public by design; RLS is the access control.
+4. Connect the project and check it in one command:
+
+   ```sh
+   node scripts/connect-supabase.cjs --url https://<project>.supabase.co --key <anon key> --check
+   ```
+
+   It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, the Google provider is enabled, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
 5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` to check the page against an in-memory double of PostgREST, RLS, Google sessions, and realtime.
+
+Misconfiguration is surfaced in the page rather than the console: Supabase/Fetch errors are mapped to the exact dashboard step (provider not enabled, redirect URL not allowed, missing tables, wrong key, RLS denial, offline), and OAuth failures returned as `?error=…` / `#error=…` reopen the sign-in dialog with that message and are stripped from the address bar (`scripts/test-atlas-auth-errors.cjs`).
 
 The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://github.com/supabase/supabase-js) UMD build (MIT, see `vendor/LICENSE-supabase-js.txt`). It is loaded only to keep the page build-free; when no project is configured the client is never created.
 
@@ -109,11 +120,13 @@ The local sign-in gate, flags, and the read-only visitor state are covered by `s
 ```sh
 npm install --prefix /tmp/atlas-test-deps jsdom
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-local-mode.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-auth-errors.cjs
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cjs
 ```
 
 - `test-atlas-local-mode.cjs` proves the unconfigured page keeps its records in the browser, refuses to stamp without the passphrase, rejects a wrong passphrase, shows country flags, and prints the data source in the footer.
+- `test-atlas-auth-errors.cjs` loads the page with the `?error=` / `#error=` URLs Supabase redirects back with, and checks the message names the right dashboard step and is cleaned from the address bar.
 - `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: Google session handling, profile creation, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
 
