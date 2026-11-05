@@ -9,6 +9,17 @@
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
   const STORAGE_KEY = 'eva.travel.stamp-atlas.v1';
+  // Accounts are optional. Without a configured project (or in the local demo)
+  // `atlasAccount.mode` stays 'local' and every code path below behaves exactly
+  // like the original browser-only atlas.
+  const account = window.TravelAtlasAccount || null;
+  const atlasAccount = {
+    mode:'local', signedIn:false, user:null, connection:'local', pending:0,
+    realtime:false, rows:[], cities:[], profiles:new Map(), ready:false, demo:false
+  };
+  const ADOPTED_KEY = userId => `eva.travel.atlas.adopted.${userId}`;
+  let friendSelection = null;
+  let companionDraft = new Map();
   const CATEGORY_ORDER = ['countries', 'cities', 'na', 'jp'];
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
@@ -139,6 +150,12 @@
     try { return cleanState(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
     catch { return cleanState(null); }
   }
+  const BASE_CATALOGUE = Object.freeze({
+    countries:catalogue.countries,
+    cities:catalogue.cities.slice(),
+    na:catalogue.na,
+    jp:catalogue.jp
+  });
   let data = loadState();
   data.customCities.forEach(city => catalogue.cities.push(cityFromCustom(city)));
   function saveState() {
@@ -147,7 +164,39 @@
   }
   // Persist normalized month-only records on load so day-precision backups migrate once.
   saveState();
-  function visitsOf(place) { return data.visits[place.key] || []; }
+  function cloudMode() { return atlasAccount.mode !== 'local'; }
+  function signedIn() { return atlasAccount.signedIn && Boolean(atlasAccount.user); }
+  function editable() { return !cloudMode() || signedIn(); }
+  function ownVisits(place) {
+    if (!cloudMode()) return data.visits[place.key] || [];
+    if (!signedIn()) return [];
+    return [...new Set(atlasAccount.rows.filter(row => row.userId === atlasAccount.user.id && row.placeKey === place.key).map(row => row.month))].sort();
+  }
+  function visitsOf(place) {
+    if (!cloudMode()) return data.visits[place.key] || [];
+    return [...new Set(atlasAccount.rows.filter(row => row.placeKey === place.key).map(row => row.month))].sort();
+  }
+  // Every stamp of one place, grouped by the month it happened, with who was there.
+  function stampDetails(place) {
+    if (!cloudMode()) return (data.visits[place.key] || []).map(month => ({ month, mine:true, companions:[] }));
+    const byMonth = new Map();
+    for (const row of atlasAccount.rows) {
+      if (row.placeKey !== place.key) continue;
+      if (!byMonth.has(row.month)) byMonth.set(row.month, { month:row.month, mine:false, companions:new Set() });
+      const entry = byMonth.get(row.month);
+      if (row.userId === atlasAccount.user?.id) entry.mine = true;
+      (row.companions || []).forEach(id => entry.companions.add(id));
+    }
+    return [...byMonth.values()].sort((a,b) => a.month.localeCompare(b.month))
+      .map(entry => ({ month:entry.month, mine:entry.mine, companions:[...entry.companions] }));
+  }
+  function myStampId(place, month) {
+    return atlasAccount.rows.find(row => row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === month)?.id || null;
+  }
+  function companionsFor(place, month) {
+    if (!cloudMode()) return [];
+    return [...new Set(atlasAccount.rows.filter(row => row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === month).flatMap(row => row.companions || []))];
+  }
   function isStamped(place) { return visitsOf(place).length > 0; }
   function sortedPlaces(cat) { return [...catalogue[cat]].sort((a,b) => collator.compare(a.zh,b.zh) || collator.compare(a.en,b.en)); }
 
@@ -177,15 +226,25 @@
     feedback.textContent = message;
     feedback.className = `stamp-feedback ${type}`;
   }
-  function stampCount(cat) { return catalogue[cat].filter(isStamped).length; }
+  // Visitors count the whole atlas; signed-in travellers count their own places.
+  function visitorView() { return !signedIn(); }
+  function stampCount(cat) {
+    return catalogue[cat].filter(visitorView() ? isStamped : ownStamped).length;
+  }
+  function ownStamped(place) { return ownVisits(place).length > 0; }
   function updateCounters() {
     let total = 0;
+    const counted = new Set();
     CATEGORY_ORDER.forEach(cat => {
       const stamped = stampCount(cat);
-      total += stamped;
+      // The collection total counts each place once; tab counts describe layers.
+      catalogue[cat].forEach(place => { if (visitorView() ? isStamped(place) : ownStamped(place)) counted.add(place.key); });
       $(`#tab-count-${cat}`).textContent = `${stamped} / ${catalogue[cat].length}`;
     });
+    total = counted.size;
     $('#passport-count').textContent = total;
+    const label = $('#collection-label');
+    if (label) label.textContent = signedIn() ? '已蓋章' : (cloudMode() ? '旅人共蓋章' : '已蓋章');
     $('#board-visited').textContent = stampCount(category);
     $('#board-total').textContent = catalogue[category].length;
   }
@@ -270,27 +329,107 @@
     $('#stamp-face-date').textContent = printedDate(stamps.at(-1) || (validDate(dateInput.value) ? dateInput.value : ''));
     const history = $('#stamp-history');
     history.hidden = stamps.length === 0;
-    $('#history-count').textContent = `${stamps.length} 枚戳章`;
+    $('#history-count').textContent = cloudMode() ? `${stamps.length} 個月份 · ${atlasAccount.rows.filter(row => row.placeKey === place.key).length} 枚戳章` : `${stamps.length} 枚戳章`;
     const historyList = $('#history-list');
     historyList.replaceChildren();
-    [...stamps].reverse().forEach(date => {
+    [...stampDetails(place)].reverse().forEach(detail => {
       const row = makeElement('li');
-      const time = makeElement('time', '', printedDate(date));
-      time.dateTime = date;
-      const remove = makeElement('button', '', '×');
-      remove.type = 'button';
-      remove.dataset.date = date;
-      remove.setAttribute('aria-label', `移除${place.zh} ${printedDate(date)} 的戳章`);
-      row.append(time, remove);
+      const time = makeElement('time', '', printedDate(detail.month));
+      time.dateTime = detail.month;
+      row.append(time);
+      if (cloudMode()) {
+        row.classList.toggle('not-mine', !detail.mine);
+        const names = companionNames(detail.companions);
+        const who = makeElement('span', 'history-who', names.length ? `與 ${names.join('、')}` : (detail.mine ? '獨自旅行' : ''));
+        row.append(who);
+        if (!detail.mine) {
+          const mine = makeElement('span', 'history-mine-mark', '他人');
+          mine.title = '這枚戳章來自其他旅人';
+          row.append(mine);
+        }
+      }
+      const removable = !cloudMode() || (detail.mine && signedIn());
+      if (removable) {
+        const remove = makeElement('button', '', '×');
+        remove.type = 'button';
+        remove.dataset.date = detail.month;
+        remove.setAttribute('aria-label', `移除${place.zh} ${printedDate(detail.month)} 的戳章`);
+        row.append(remove);
+      }
       historyList.append(row);
     });
-    $('#delete-city').hidden = !place.custom;
+    renderCompanionControls(place);
+    applyPermission();
+    $('#delete-city').hidden = !place.custom || !editable() || (cloudMode() && !isMineCustom(place));
     if (currentMessage?.key === place.key) showMessage(currentMessage.message, currentMessage.type);
     else {
       currentMessage = null;
       showMessage(stamps.length ? '選擇另一個月份記錄到訪。' : '選月份後蓋章。');
     }
   }
+  function isMineCustom(place) {
+    return !cloudMode() ? true : atlasAccount.cities.some(city => city.id === place.id && city.userId === atlasAccount.user?.id);
+  }
+  function personName(id) {
+    return atlasAccount.profiles.get(id)?.name || '已移除的旅人';
+  }
+  function companionNames(ids) { return [...new Set(ids)].filter(Boolean).map(personName); }
+  function activeCompanionIds() {
+    if (!cloudMode() || !signedIn()) return [];
+    const place = selectedPlace();
+    if (!place) return [];
+    const month = dateInput.value;
+    const stored = companionsFor(place, month);
+    return stored.length ? stored : [...companionDraft.keys()];
+  }
+  function renderCompanionChips(ids) {
+    const container = $('#companion-chips');
+    container.replaceChildren();
+    ids.forEach(id => {
+      const profile = atlasAccount.profiles.get(id);
+      const chip = makeElement('span', 'companion-chip');
+      if (profile?.avatar) {
+        const image = makeElement('img');
+        image.src = profile.avatar; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+        chip.append(image);
+      } else chip.append(makeElement('span', 'companion-initial', [...personName(id)][0] || '旅'));
+      chip.append(makeElement('span', '', personName(id)));
+      const remove = makeElement('button', '', '×');
+      remove.type = 'button';
+      remove.dataset.removeCompanion = id;
+      remove.setAttribute('aria-label', `移除同行旅伴 ${personName(id)}`);
+      chip.append(remove);
+      container.append(chip);
+    });
+  }
+  function renderCompanionControls(place) {
+    const block = $('#companion-block');
+    const chips = $('#companion-chips');
+    const manage = $('#companion-manage');
+    const note = $('#companion-note');
+    const others = cloudMode() ? [...new Set(atlasAccount.profiles.keys())].filter(id => id !== atlasAccount.user?.id) : [];
+    if (!cloudMode()) {
+      chips.replaceChildren();
+      manage.hidden = true;
+      note.textContent = '登入後可以標記一起旅行的朋友。';
+      if (signedIn()) note.textContent = '';
+      return;
+    }
+    if (!signedIn()) {
+      chips.replaceChildren();
+      manage.hidden = true;
+      note.textContent = '登入後可以標記一起旅行的朋友。';
+      return;
+    }
+    manage.hidden = false;
+    manage.disabled = !editable();
+    const ids = activeCompanionIds();
+    renderCompanionChips(ids);
+    if (!others.length) note.textContent = '目前還沒有其他旅人登入過這個地圖；他們登入後就能一起標記。';
+    else if (!ids.length) note.textContent = '你可以標記這趟旅程的同行者，蓋章後會一起顯示在共同旅程裡。';
+    else note.textContent = '';
+  }
+
   function renderRegions() {
     const container = $('#region-controls');
     const fragment = document.createDocumentFragment();
@@ -628,28 +767,55 @@
   dateInput.addEventListener('change',() => {
     const valid = validDate(dateInput.value) && dateInput.checkValidity();
     dateInput.setAttribute('aria-invalid',String(!valid));
+    companionDraft.clear();
     if (!visitsOf(selectedPlace()).length) $('#stamp-face-date').textContent = printedDate(valid ? dateInput.value : '');
+    // A stored month carries its own companions; a new month starts empty.
+    if (cloudMode() && signedIn()) renderCompanionControls(selectedPlace());
   });
-  $('#stamp-button').addEventListener('click',() => {
-    const date = dateInput.value;
-    if (!validDate(date) || !dateInput.checkValidity()) {dateInput.setAttribute('aria-invalid','true');showMessage('請選擇有效月份（不能晚於本月）。','error');dateInput.focus();return;}
-    dateInput.setAttribute('aria-invalid','false');
-    const place = selectedPlace();
-    const stamps = visitsOf(place);
-    if (stamps.includes(date)) {showMessage('這個月已蓋過章。','error');return;}
-    data.visits[place.key] = [...stamps,date].sort();
-    const saved = saveState();
-    refreshAfterStamp(saved ? `已記錄 ${printedDate(date)}。` : '無法儲存；請匯出備份。','success');
+  function stampSucceeded() {
     const face = $('#stamp-face');
     face.classList.remove('fresh');
     void face.offsetWidth;
     face.classList.add('fresh');
-    face.addEventListener('animationend',() => face.classList.remove('fresh'),{once:true});
+    face.addEventListener('animationend', () => face.classList.remove('fresh'),{once:true});
+  }
+  $('#stamp-button').addEventListener('click',() => {
+    const date = dateInput.value;
+    if (!validDate(date) || !dateInput.checkValidity()) {dateInput.setAttribute('aria-invalid','true');showMessage('請選擇有效月份（不能晚於本月）。','error');dateInput.focus();return;}
+    if (!editable()) {openAccountDialog('登入後才能蓋章。');return;}
+    dateInput.setAttribute('aria-invalid','false');
+    const place = selectedPlace();
+    const stamps = ownVisits(place);
+    if (stamps.includes(date)) {showMessage('這個月已蓋過章。','error');return;}
+    const companions = activeCompanionIds();
+    if (!cloudMode()) {
+      data.visits[place.key] = [...stamps,date].sort();
+      const saved = saveState();
+      refreshAfterStamp(saved ? `已記錄 ${printedDate(date)}。` : '無法儲存；請匯出備份。','success');
+      stampSucceeded();
+      return;
+    }
+    const pending = { id:`pending-${Date.now()}`, userId:atlasAccount.user.id, placeKey:place.key, month:date, companions, pending:true };
+    atlasAccount.rows.push(pending);
+    optimisticRows.set(`${pending.userId}|${pending.placeKey}|${pending.month}`, pending);
+    companionDraft.clear();
+    refreshAfterStamp(companions.length ? `已記錄 ${printedDate(date)}，與 ${companionNames(companions).join('、')} 同行。` : `已記錄 ${printedDate(date)}。`,'success');
+    stampSucceeded();
+    account?.upsertStamp({ placeKey:place.key, month:date, companions });
   });
   $('#history-list').addEventListener('click',event => {
     const button = event.target.closest('button[data-date]');
     if (!button) return;
     const place = selectedPlace(), date = button.dataset.date;
+    if (!editable()) {openAccountDialog('登入後才能修改戳章。');return;}
+    if (cloudMode()) {
+      const id = myStampId(place, date);
+      atlasAccount.rows = atlasAccount.rows.filter(row => !(row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === date));
+      optimisticRows.delete(`${atlasAccount.user?.id}|${place.key}|${date}`);
+      refreshAfterStamp(`已移除 ${printedDate(date)} 的戳章。`);
+      account?.deleteStamp({ id, placeKey:place.key, month:date });
+      return;
+    }
     const remaining = visitsOf(place).filter(d => d !== date);
     if (remaining.length) data.visits[place.key] = remaining;
     else delete data.visits[place.key];
@@ -666,6 +832,7 @@
     countrySelect.append(option);
   });
   $('#add-city').addEventListener('click',() => {
+    if (!editable()) { openAccountDialog('登入後才能新增城市。'); return; }
     $('#city-form').reset();
     $('#city-error').textContent = '';
     countrySelect.value = 'TW';
@@ -688,6 +855,10 @@
     data.customCities.push(raw);
     catalogue.cities.push(cityFromCustom(raw));
     saveState();
+    if (cloudMode() && signedIn()) {
+      atlasAccount.cities.push({ id:raw.id, userId:atlasAccount.user.id, en:raw.en, iso:raw.iso, lat:raw.lat, lon:raw.lon });
+      account?.upsertCity(raw);
+    }
     cityDialog.close();
     region = 'all';query = '';$('#place-search').value = '';
     selectedByCategory.cities = raw.id;
@@ -719,6 +890,7 @@
   $('#import-stamps').addEventListener('change',async event => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!editable()) {event.target.value='';openAccountDialog('登入後才能匯入備份。');return;}
     try {
       if (file.size > 2_000_000) throw new Error('備份檔案過大（上限 2 MB）。');
       const raw = JSON.parse(await file.text());
@@ -728,11 +900,521 @@
       incoming.customCities.forEach(city => {if (!existingIds.has(city.id)) {data.customCities.push(city);catalogue.cities.push(cityFromCustom(city));}});
       for (const [key,dates] of Object.entries(incoming.visits)) data.visits[key] = [...new Set([...(data.visits[key] || []),...dates])].sort();
       const saved = saveState();
+      const imported = Object.values(incoming.visits).reduce((sum,dates)=>sum+dates.length,0);
+      if (cloudMode() && signedIn()) {
+        for (const city of incoming.customCities) {
+          if (atlasAccount.cities.some(existing => existing.id === city.id)) continue;
+          atlasAccount.cities.push({ id:city.id, userId:atlasAccount.user.id, ...city });
+          account?.upsertCity(city);
+        }
+        for (const [placeKey, months] of Object.entries(incoming.visits)) for (const month of months) {
+          if (atlasAccount.rows.some(row => row.userId === atlasAccount.user.id && row.placeKey === placeKey && row.month === month)) continue;
+          atlasAccount.rows.push({ id:`pending-${month}-${placeKey}`, userId:atlasAccount.user.id, placeKey, month, companions:[], pending:true });
+          account?.upsertStamp({ placeKey, month, companions:[] });
+        }
+      }
       updateCategoryUI();renderRegions();renderDetail();renderMap();renderDirectory();
-      $('#backup-feedback').textContent = saved ? `備份已匯入並與原有紀錄合併（${Object.values(incoming.visits).reduce((sum,dates)=>sum+dates.length,0)} 枚戳章）。` : '匯入完成，但無法儲存；請另存備份。';
+      const savedNote = cloudMode() ? `備份已匯入並與雲端紀錄合併（${imported} 枚戳章）。` : (saved ? `備份已匯入並與原有紀錄合併（${imported} 枚戳章）。` : '匯入完成，但無法儲存；請另存備份。');
+      $('#backup-feedback').textContent = savedNote;
     } catch (error) { $('#backup-feedback').textContent = `匯入失敗：${error.message}`; }
     finally { event.target.value = ''; }
   });
 
+  // ---------- accounts, companions, and cross-device sync ----------
+  const accountDialog = $('#account-dialog');
+  const companionDialog = $('#companion-dialog');
+  const accountMenu = $('#account-menu');
+  const accountMenuButton = $('#account-menu-button');
+
+  function openAccountDialog(message = '') {
+    $('#account-error').textContent = message;
+    if (!accountDialog.open) accountDialog.showModal();
+  }
+  function closeAccountMenu() {
+    accountMenu.hidden = true;
+    accountMenuButton.setAttribute('aria-expanded', 'false');
+  }
+  function statusText() {
+    if (!cloudMode()) return '本機模式：資料存在這個瀏覽器。';
+    if (!signedIn()) return '訪客模式：可以瀏覽所有戳章，登入後才能蓋章。';
+    const parts = [];
+    const pending = atlasAccount.pending || 0;
+    if (atlasAccount.connection === 'offline') parts.push('離線');
+    else if (atlasAccount.connection === 'error') parts.push('連線異常，將自動重試');
+    else if (pending) parts.push(`同步中（${pending} 筆待上傳）`);
+    else parts.push('已同步');
+    if (atlasAccount.realtime && atlasAccount.connection === 'online') parts.push('即時');
+    if (atlasAccount.lastSyncAt && !pending) {
+      const at = new Date(atlasAccount.lastSyncAt);
+      parts.push(`${String(at.getHours()).padStart(2,'0')}:${String(at.getMinutes()).padStart(2,'0')} 更新`);
+    }
+    return parts.join(' · ');
+  }
+  const STAMP_BUTTON_MARKUP = '<span aria-hidden="true">✳</span> 蓋下這一章 <span aria-hidden="true">↗</span>';
+  function applyPermission() {
+    const locked = !editable();
+    const button = $('#stamp-button');
+    button.classList.toggle('locked', locked);
+    button.setAttribute('aria-disabled', String(locked));
+    button.title = locked ? '登入後才能蓋章' : '';
+    // eslint-disable-next-line no-unsafe-innerhtml -- static markup, no user input
+    if (locked) button.textContent = '登入後蓋章';
+    else if (button.dataset.locked === 'true') button.innerHTML = STAMP_BUTTON_MARKUP;
+    button.dataset.locked = String(locked);
+    $('#stamp-feedback').classList.toggle('locked', locked);
+  }
+  function renderAccount() {
+    const signin = $('#sign-in');
+    const card = $('#account-card');
+    const action = $('#account-action');
+    const demo = atlasAccount.mode === 'demo';
+    if (signedIn()) {
+      signin.hidden = true;
+      card.hidden = false;
+      const user = atlasAccount.user;
+      const avatar = $('#account-avatar');
+      if (user.avatar) {
+        avatar.src = user.avatar;
+        avatar.alt = '';
+        avatar.hidden = false;
+        avatar.referrerPolicy = 'no-referrer';
+        avatar.onerror = () => { avatar.hidden = true; };
+      }
+      else avatar.hidden = true;
+      $('#account-name').textContent = user.name;
+      action.hidden = false;
+      action.textContent = demo ? '示範模式 · 切換旅人' : '登出';
+      const profile = atlasAccount.profiles.get(user.id);
+      $('#discoverable-toggle').checked = profile ? profile.discoverable !== false : true;
+      $('#account-menu-status').textContent = statusText();
+    } else {
+      signin.hidden = !cloudMode();
+      card.hidden = true;
+      closeAccountMenu();
+      action.hidden = !cloudMode();
+      action.textContent = '登入';
+    }
+    if ($('#backup-hint')) {
+      $('#backup-hint').textContent = cloudMode()
+        ? (signedIn() ? '匯出的備份只含你自己的戳章；匯入會與雲端紀錄合併。' : '訪客只能瀏覽。登入後可匯出、匯入與同步戳章。')
+        : '資料只存在此瀏覽器；匯出備份可轉移或還原。';
+    }
+    $('#account-demo').hidden = atlasAccount.mode !== 'demo';
+    renderDemoSwitch();
+    applyPermission();
+  }
+  function refreshStatus() {
+    if (signedIn()) {
+      $('#account-menu-status').textContent = statusText();
+      const chip = $('#account-action');
+      if (chip && !chip.hidden) chip.textContent = atlasAccount.mode === 'demo' ? '示範模式 · 切換旅人' : '登出';
+    }
+    if ($('#export-stamps')) $('#export-stamps').disabled = !editable();
+    if ($('#import-stamps')) $('#import-stamps').disabled = !editable();
+  }
+
+  function refreshAll(message, type) {
+    updateCategoryUI();
+    renderRegions();
+    renderDetail();
+    renderMap();
+    renderDirectory();
+    renderFriends();
+    renderAccount();
+    refreshStatus();
+    if (message) showMessage(message, type);
+  }
+
+  // Rebuild the visible model from the account transport. Any number of patches
+  // may be replayed; the result is identical because the store is a full snapshot.
+  // Rows the page has drawn but the transport has not confirmed yet. They are
+  // always this user's own, so folding them back in cannot leak anyone else's.
+  const optimisticRows = new Map();
+  function foldOptimistic(rows) {
+    if (!signedIn()) { optimisticRows.clear(); return rows; }
+    const seen = new Map(rows.map(row => [`${row.userId}|${row.placeKey}|${row.month}`, row]));
+    for (const [key, row] of optimisticRows) {
+      const actual = seen.get(key);
+      if (actual && actual.id && !String(actual.id).startsWith('pending-')) optimisticRows.delete(key);
+      else if (!actual) seen.set(key, row);
+    }
+    return [...seen.values()].sort((a,b) => a.month.localeCompare(b.month));
+  }
+  function applyAccount() {
+    if (!account) return;
+    atlasAccount.mode = account.mode;
+    atlasAccount.rows = foldOptimistic(account.rows());
+    atlasAccount.cities = account.cities();
+    atlasAccount.profiles = account.profiles();
+    // Custom cities are rebuilt from the editorial list every time, so a
+    // transient empty snapshot can never erase the editorial index.
+    const cities = BASE_CATALOGUE.cities.slice();
+    const seen = new Set(cities.map(place => place.id));
+    atlasAccount.cities.forEach(city => {
+      if (seen.has(city.id)) return;
+      seen.add(city.id);
+      cities.push(cityFromCustom(city));
+    });
+    if (!cloudMode()) {
+      data.customCities.forEach(city => {
+        if (seen.has(city.id)) return;
+        seen.add(city.id);
+        cities.push(cityFromCustom(city));
+      });
+    }
+    catalogue.cities = cities;
+  }
+  // Local records from before sign-in are uploaded once, then merged by month.
+  function adoptLocalOnce() {
+    if (!cloudMode() || !signedIn() || atlasAccount.mode !== 'cloud' || !account?.adoptLocal) return;
+    const marker = ADOPTED_KEY(atlasAccount.user.id);
+    try { if (localStorage.getItem(marker)) return; } catch { return; }
+    const hasLocal = Object.keys(data.visits).length > 0 || data.customCities.length > 0;
+    try { localStorage.setItem(marker, new Date().toISOString()); } catch { /* ignore */ }
+    if (!hasLocal) return;
+    account.adoptLocal({ visits:data.visits, customCities:data.customCities }).then(() => {
+      data.visits = {};
+      data.customCities = [];
+      catalogue.cities = catalogue.cities.filter(place => !place.custom);
+      saveState();
+      $('#backup-feedback').textContent = '已把這個瀏覽器的舊戳章上傳到你的帳號。';
+      applyAccount();
+      refreshAll();
+    });
+  }
+  // Remember a per-user snapshot so a phone reload without a network still shows stamps.
+  function writeCache() {
+    if (!cloudMode() || !signedIn() || !account?.writeCache) return;
+    const visits = {};
+    for (const row of atlasAccount.rows) {
+      if (row.userId !== atlasAccount.user.id) continue;
+      (visits[row.placeKey] ||= []).push(row.month);
+    }
+    for (const key of Object.keys(visits)) visits[key] = [...new Set(visits[key])].sort();
+    const customCities = atlasAccount.cities.filter(city => city.userId === atlasAccount.user.id)
+      .map(city => ({ id:city.id, en:city.en, iso:city.iso, lat:city.lat, lon:city.lon }));
+    account.writeCache({ version:1, userId:atlasAccount.user.id, visits, customCities });
+  }
+
+  if (account) {
+    atlasAccount.mode = account.mode;
+    account.on('ready', () => {
+      atlasAccount.ready = true;
+      if (account.cachedVisits?.()) {
+        const cached = account.cachedVisits();
+        for (const [key, months] of Object.entries(cached)) {
+          if (!Array.isArray(months)) continue;
+          data.visits[key] = [...new Set([...(data.visits[key] || []), ...months])].sort();
+        }
+      }
+      applyAccount();
+      refreshAll();
+    });
+    account.on('auth', user => {
+      const was = signedIn();
+      // Sync the transport's identity first: every helper below reads these.
+      atlasAccount.mode = account.mode;
+      atlasAccount.signedIn = Boolean(user);
+      atlasAccount.user = user;
+      atlasAccount.rows = account.rows();
+      atlasAccount.cities = account.cities();
+      atlasAccount.profiles = account.profiles();
+      companionDraft.clear();
+      if (!user) { friendSelection = null; closeAccountMenu(); if (accountDialog.open) accountDialog.close(); }
+      if (was && !user) { atlasAccount.rows = []; atlasAccount.connection = 'online'; }
+      applyAccount();
+      refreshAll();
+      if (user) {
+        adoptLocalOnce();
+        writeCache();
+      }
+    });
+    account.on('rows', () => {
+      atlasAccount.mode = account.mode;
+      atlasAccount.signedIn = Boolean(account.user);
+      atlasAccount.user = account.user || null;
+      atlasAccount.rows = account.rows();
+      atlasAccount.cities = account.cities();
+      atlasAccount.profiles = account.profiles();
+      applyAccount();
+      refreshAll();
+      writeCache();
+    });
+    account.on('cities', () => { applyAccount(); refreshAll(); });
+    account.on('profiles', () => {
+      atlasAccount.profiles = account.profiles();
+      if (signedIn()) { renderCompanionControls(selectedPlace()); renderFriends(); }
+      renderAccount();
+    });
+    account.on('status', status => {
+      atlasAccount.connection = status.connection;
+      atlasAccount.pending = status.pending;
+      atlasAccount.realtime = status.realtime;
+      atlasAccount.lastSyncAt = status.lastSyncAt;
+      refreshStatus();
+    });
+    account.on('error', message => {
+      $('#account-error').textContent = message;
+      $('#backup-feedback').textContent = `登入失敗：${message}`;
+    });
+  }
+
+  $('#sign-in').addEventListener('click', () => openAccountDialog());
+  $('#account-action').addEventListener('click', () => {
+    if (!signedIn()) { openAccountDialog(); return; }
+    if (atlasAccount.mode === 'demo') { openAccountDialog(); return; }
+    if (confirm('要登出嗎？戳章會保留在雲端，下次登入後同步回來。')) account?.signOut();
+  });
+  $('#account-dialog-close').addEventListener('click', () => accountDialog.close());
+  accountDialog.addEventListener('click', event => { if (event.target === accountDialog) accountDialog.close(); });
+  $('#account-google').addEventListener('click', () => {
+    if (atlasAccount.mode === 'local') {
+      $('#account-error').textContent = '這個頁面還沒有連結雲端專案；請先依 README 設定 config.js。';
+      return;
+    }
+    account?.signIn();
+  });
+  $('#account-demo').addEventListener('click', () => {
+    account?.enterDemo('demo-eva');
+    accountDialog.close();
+  });
+  // Only the local demo can pretend to be another person's account.
+  function renderDemoSwitch() {
+    const wrap = $('#demo-switch');
+    const select = $('#demo-user');
+    if (!wrap || !select) return;
+    const isDemo = atlasAccount.mode === 'demo' && signedIn();
+    wrap.hidden = !isDemo;
+    if (!isDemo) return;
+    const users = account?.demoUsers?.() || [];
+    if (select.options.length !== users.length) {
+      select.replaceChildren();
+      users.forEach(user => {
+        const option = makeElement('option', '', user.name);
+        option.value = user.id;
+        select.append(option);
+      });
+    }
+    select.value = atlasAccount.user.id;
+  }
+  accountMenuButton.addEventListener('click', () => {
+    const open = accountMenu.hidden;
+    accountMenu.hidden = !open;
+    accountMenuButton.setAttribute('aria-expanded', String(open));
+    if (open) $('#account-menu-status').textContent = statusText();
+  });
+  document.addEventListener('click', event => {
+    if (accountMenu.hidden) return;
+    if (!event.target.closest('#account-card')) closeAccountMenu();
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeAccountMenu(); });
+  $('#sync-now').addEventListener('click', async () => {
+    $('#account-menu-status').textContent = '同步中…';
+    await account?.refresh();
+    await account?.flush();
+    $('#account-menu-status').textContent = statusText();
+  });
+  $('#sign-out').addEventListener('click', () => {
+    closeAccountMenu();
+    account?.signOut();
+  });
+  $('#demo-user').addEventListener('change', event => {
+    account?.setDemoUser(event.target.value);
+    friendSelection = null;
+    closeAccountMenu();
+  });
+  $('#discoverable-toggle').addEventListener('change', async event => {
+    const ok = await account?.setDiscoverable(event.target.checked);
+    if (!ok) event.target.checked = !event.target.checked;
+    $('#account-menu-status').textContent = event.target.checked ? '其他旅人可以標記你。' : '其他旅人不能標記你。';
+  });
+
+  // Companion picker: any signed-in traveller can be tagged.
+  function openCompanionDialog() {
+    if (!signedIn()) { openAccountDialog('登入後才能標記旅伴。'); return; }
+    const container = $('#companion-options');
+    container.replaceChildren();
+    const place = selectedPlace();
+    const ids = new Set(activeCompanionIds());
+    const others = [...atlasAccount.profiles.values()].filter(profile => profile.id !== atlasAccount.user?.id && profile.discoverable !== false);
+    if (!others.length) {
+      const empty = makeElement('p', 'companion-empty', '還沒有其他旅人登入過。把這個頁面分享給他們，登入後就能一起標記。');
+      container.append(empty);
+    }
+    others.sort((a,b) => collator.compare(a.name, b.name)).forEach(profile => {
+      const label = makeElement('label', 'companion-option');
+      const input = makeElement('input');
+      input.type = 'checkbox';
+      input.value = profile.id;
+      input.checked = ids.has(profile.id);
+      if (profile.avatar) {
+        const image = makeElement('img');
+        image.src = profile.avatar; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+        label.append(input, image);
+      } else label.append(input, makeElement('span', 'companion-initial', [...profile.name][0] || '旅'));
+      label.append(makeElement('span', '', profile.name));
+      container.append(label);
+    });
+    $('#companion-error').textContent = '';
+    companionDialog.dataset.placeKey = place?.key || '';
+    if (!companionDialog.open) companionDialog.showModal();
+  }
+  $('#companion-manage').addEventListener('click', openCompanionDialog);
+  $('#companion-cancel').addEventListener('click', () => companionDialog.close());
+  companionDialog.addEventListener('click', event => { if (event.target === companionDialog) companionDialog.close(); });
+  $('#companion-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const place = selectedPlace();
+    if (!place) return;
+    const checked = [...$('#companion-options').querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value);
+    const month = dateInput.value;
+    const stored = companionsFor(place, month);
+    const recordId = myStampId(place, month);
+    companionDraft.clear();
+    companionDialog.close();
+    if (recordId) {
+      atlasAccount.rows = atlasAccount.rows.map(row => row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === month ? { ...row, companions:checked } : row);
+      account?.upsertStamp({ placeKey:place.key, month, companions:checked });
+      refreshAfterStamp(checked.length ? `這趟旅程標記了 ${companionNames(checked).join('、')}。` : '已清除這趟旅程的旅伴。', 'success');
+      return;
+    }
+    checked.forEach(id => companionDraft.set(id, true));
+    renderCompanionControls(place);
+    showMessage(checked.length ? `將與 ${companionNames(checked).join('、')} 同行；選好月份後蓋章。` : '選月份後蓋章。', 'success');
+  });
+  $('#companion-chips').addEventListener('click', event => {
+    const button = event.target.closest('button[data-remove-companion]');
+    if (!button) return;
+    const place = selectedPlace();
+    if (!place) return;
+    const id = button.dataset.removeCompanion, month = dateInput.value;
+    const recordId = myStampId(place, month);
+    if (recordId) {
+      const next = companionsFor(place, month).filter(person => person !== id);
+      atlasAccount.rows = atlasAccount.rows.map(row => row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === month ? { ...row, companions:next } : row);
+      account?.upsertStamp({ placeKey:place.key, month, companions:next });
+      refreshAfterStamp(`已從這趟旅程移除 ${personName(id)}。`);
+      return;
+    }
+    companionDraft.delete(id);
+    renderCompanionControls(place);
+  });
+
+  // Shared trips: places stamped in the same month by you and the chosen traveller.
+  function friendCandidates() {
+    const ids = new Set([...atlasAccount.profiles.keys()]);
+    atlasAccount.rows.forEach(row => { ids.add(row.userId); (row.companions || []).forEach(id => ids.add(id)); });
+    ids.delete(atlasAccount.user?.id);
+    return [...ids].map(id => ({ id, name:personName(id), avatar:atlasAccount.profiles.get(id)?.avatar || '' }))
+      .sort((a,b) => collator.compare(a.name, b.name));
+  }
+  function sharedMoments(friendId) {
+    if (!friendId || !signedIn()) return [];
+    const me = atlasAccount.user.id;
+    const mine = atlasAccount.rows.filter(row => row.userId === me);
+    const theirs = atlasAccount.rows.filter(row => row.userId === friendId);
+    const myKey = new Set(mine.map(row => `${row.placeKey}|${row.month}`));
+    const theirKey = new Set(theirs.map(row => `${row.placeKey}|${row.month}`));
+    const moments = new Map();
+    const add = (row, byMe) => {
+      const key = `${row.placeKey}|${row.month}`;
+      const entry = moments.get(key) || { placeKey:row.placeKey, month:row.month, byMe:false, byThem:false };
+      entry[byMe ? 'byMe' : 'byThem'] = true;
+      moments.set(key, entry);
+    };
+    // A trip counts as shared when either traveller tagged the other, or when
+    // both independently stamped the same place in the same month.
+    mine.forEach(row => {
+      if ((row.companions || []).includes(friendId) || theirKey.has(`${row.placeKey}|${row.month}`)) add(row, true);
+    });
+    theirs.forEach(row => {
+      if ((row.companions || []).includes(me) || myKey.has(`${row.placeKey}|${row.month}`)) add(row, false);
+    });
+    const places = new Map();
+    CATEGORY_ORDER.forEach(cat => catalogue[cat].forEach(place => places.set(place.key, place)));
+    return [...moments.values()]
+      .map(entry => ({ ...entry, name:places.get(entry.placeKey)?.zh || entry.placeKey, place:places.get(entry.placeKey) }))
+      .sort((a,b) => b.month.localeCompare(a.month) || collator.compare(a.name, b.name));
+  }
+  function renderFriends() {
+    const section = $('#friends-section');
+    if (!section) return;
+    const tabs = $('#friends-tabs');
+    const listEl = $('#friends-list');
+    const empty = $('#friends-empty');
+    const candidates = friendCandidates();
+    if (!signedIn() || atlasAccount.mode === 'local') {
+      tabs.replaceChildren();
+      listEl.replaceChildren();
+      $('#friends-shared').textContent = '0';
+      empty.hidden = false;
+      empty.textContent = atlasAccount.mode === 'local'
+        ? '登入並連結雲端後，這裡會顯示你和朋友一起走過的地方。'
+        : '登入後，標記過旅伴的旅程會出現在這裡。';
+      return;
+    }
+    // Until you pick a tab, show whoever shares the most stamps with you.
+    const chosen = candidates.some(person => person.id === friendSelection) ? friendSelection : (() => {
+      const ranked = candidates.map(person => ({ id:person.id, shared:sharedMoments(person.id).length }))
+        .sort((a,b) => b.shared - a.shared);
+      return ranked[0]?.shared ? ranked[0].id : (candidates[0]?.id || null);
+    })();
+    tabs.replaceChildren();
+    candidates.forEach(person => {
+      const tab = makeElement('button');
+      tab.type = 'button';
+      tab.dataset.friend = person.id;
+      tab.setAttribute('aria-selected', String(person.id === chosen));
+      tab.setAttribute('role', 'tab');
+      if (person.avatar) {
+        const image = makeElement('img');
+        image.src = person.avatar; image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+        tab.append(image);
+      } else tab.append(makeElement('span', 'companion-initial', [...person.name][0] || '旅'));
+      tab.append(makeElement('span', '', person.name));
+      tabs.append(tab);
+    });
+    const moments = sharedMoments(chosen);
+    $('#friends-shared').textContent = String(moments.length);
+    listEl.replaceChildren();
+    moments.forEach(moment => {
+      const item = makeElement('li');
+      const button = makeElement('button', 'friends-place');
+      button.type = 'button';
+      button.append(makeElement('span', 'friends-place-name', moment.name));
+      button.dataset.placeName = moment.name;
+      if (moment.place) {
+        button.addEventListener('click', () => {
+          const cat = moment.place.category;
+          if (cat && cat !== category) { chooseCategory(cat); }
+          selectPlace(moment.place.id, true, true);
+        });
+      }
+      if (moment.byThem && !moment.byMe) item.append(makeElement('span', 'friends-who', '對方紀錄'));
+      const time = makeElement('time', '', printedDate(moment.month));
+      time.dateTime = moment.month;
+      item.append(button, time);
+      listEl.append(item);
+    });
+    empty.hidden = moments.length > 0;
+    if (!moments.length) {
+      empty.textContent = candidates.length
+        ? '還沒有共同去過的地方。蓋章時標記旅伴，或等對方也蓋下同一個月份。'
+        : '還沒有其他旅人。把這個頁面分享給朋友，登入後就能一起蓋章。';
+    }
+  }
+  $('#friends-tabs').addEventListener('click', event => {
+    const button = event.target.closest('button[data-friend]');
+    if (!button) return;
+    friendSelection = button.dataset.friend;
+    renderFriends();
+  });
+
   chooseCategory('countries');
+  renderAccount();
+  // On a signed-out visit, show the browser's own records while the cloud loads.
+  if (account) account.init().then(() => {
+    if (!signedIn()) { atlasAccount.mode = account.mode; refreshAll(); }
+    else { applyAccount(); refreshAll(); writeCache(); }
+  });
 })();
