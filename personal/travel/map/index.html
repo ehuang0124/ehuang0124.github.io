@@ -3,11 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f2e9">
+  <meta name="theme-color" content="#f7f4ec">
   <meta name="description" content="把走過的地方蓋成一張地圖。瀏覽世界國家、主要城市、美國各州與國家公園，以及加拿大、日本的國家公園，選擇到訪月份，蓋下旅行戳章。">
   <title>世界蓋章地圖 — Eva Huang Travel Atlas</title>
   <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap">
   <link rel="stylesheet" href="/personal/travel/crumbs.css">
+  <link rel="stylesheet" href="/personal/travel/magazine.css">
   <link rel="stylesheet" href="./style.css">
   <script src="./vendor/supabase.js" defer></script>
   <script src="./config.js" defer></script>
@@ -21,7 +25,7 @@
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="stamp-rough" x="-12%" y="-12%" width="124%" height="124%"><feTurbulence type="fractalNoise" baseFrequency=".028" numOctaves="2" seed="8" result="ink-noise"/><feDisplacementMap in="SourceGraphic" in2="ink-noise" scale="1.7" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
   <a class="skip-link" href="#main">跳至旅行地圖</a>
-  <nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent;--crumb-line:rgba(38,51,45,.15);--crumb-strong:#26332d;--crumb-accent:#b74e38">
+  <nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent;--crumb-line:#d9d2c3;--crumb-ink:#8b8478;--crumb-strong:#1d1c19;--crumb-accent:#b3402c;font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase">
     <ol>
       <li><a href="/">Eva Huang</a></li>
       <li><a href="/personal/travel/">Travel</a></li>
@@ -31,7 +35,7 @@
 
   <div class="shell">
     <header class="site-header">
-      <a class="brand" href="/personal/travel/">EVA HUANG <span>✳ TRAVEL ATLAS / 旅行地圖</span></a>
+      <a class="brand" href="/personal/travel/"><b>世界蓋章地圖</b><span>Eva Huang · Travel Atlas</span></a>
       <div class="header-end">
         <nav class="header-links" aria-label="旅行導覽">
           <a href="/personal/travel/">← 旅行首頁</a>
@@ -46,7 +50,12 @@
 
     <main id="main">
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">世界旅行地圖</h1>
+        <div class="intro-copy">
+          <p class="eyebrow">STAMP ATLAS ・ 世界蓋章地圖</p>
+          <h1 id="page-title">世界旅行地圖</h1>
+          <p class="intro-lede">選一個到訪月份，為去過的國家、城市與國家公園蓋上紀念戳章。</p>
+        </div>
+        <div class="intro-rail" aria-hidden="true"><span class="mag-tate">旅の記録・世界を歩く</span></div>
       </section>
 
       <section class="atlas-section" aria-label="互動式旅行蓋章地圖">
