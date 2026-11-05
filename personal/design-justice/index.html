@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f1f0eb">
+  <meta name="description" content="Four products assessed through design justice: community-led tools, participatory democracy, and systems that reproduce unequal outcomes.">
+  <title>Design Justice — Eva Huang</title>
+  <style>
+    :root {
+      --paper: #f1f0eb;
+      --surface: #faf9f5;
+      --ink: #263438;
+      --muted: #5c6969;
+      --line: #cbd1cb;
+      --blue: #506d74;
+      --fame: #285746;
+      --fame-soft: #e6eee7;
+      --shame: #783b3d;
+      --shame-soft: #f1e7e4;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --page-width: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:hover { color: var(--ink); }
+    a:focus-visible { outline: 3px solid #718d79; outline-offset: 4px; border-radius: 2px; }
+    .skip-link {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 5;
+      padding: 8px 12px;
+      color: #fff;
+      background: var(--ink);
+      transform: translateY(-150%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .shell { width: min(var(--page-width), calc(100% - 48px)); margin-inline: auto; }
+
+    .site-header { border-bottom: 1px solid var(--line); }
+    .top-nav {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px 32px;
+    }
+    .brand { color: var(--ink); font-size: 14px; font-weight: 750; text-decoration: none; }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 13px; text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+
+    main { padding-bottom: 72px; }
+    .hero { padding: clamp(52px, 8vw, 96px) 0 40px; }
+    .eyebrow, .section-index, .case-kind, .case-number, .lens-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+    .eyebrow { margin: 0 0 19px; color: var(--blue); }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr);
+      gap: clamp(32px, 7vw, 94px);
+      align-items: end;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 770px;
+      margin-bottom: 0;
+      font-family: var(--serif);
+      font-size: clamp(42px, 7.4vw, 82px);
+      font-weight: 500;
+      letter-spacing: -.045em;
+      line-height: .99;
+      text-wrap: balance;
+    }
+    .hero-copy { max-width: 390px; padding-bottom: 5px; }
+    .hero-copy p { margin-bottom: 17px; color: var(--muted); font-size: 16px; }
+    .hero-copy p:last-child { margin-bottom: 0; }
+    .jump-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
+    .jump-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 42px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 650;
+      text-decoration: none;
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .jump-links a:hover { transform: translateY(-2px); border-color: var(--blue); }
+    .jump-links .fame-count { color: var(--fame); }
+    .jump-links .shame-count { color: var(--shame); }
+
+    .lens {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin-top: 48px;
+    }
+    .lens-item { min-height: 104px; padding: 19px 20px 18px 0; }
+    .lens-item + .lens-item { padding-left: 22px; border-left: 1px solid var(--line); }
+    .lens-label { display: block; margin-bottom: 7px; color: var(--blue); }
+    .lens-item p { max-width: 280px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .hall { padding-top: clamp(60px, 8vw, 96px); scroll-margin-top: 24px; }
+    .hall-heading {
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(250px, .65fr);
+      gap: 24px 52px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .section-index { display: block; margin-bottom: 9px; }
+    .hall-fame .section-index { color: var(--fame); }
+    .hall-shame .section-index { color: var(--shame); }
+    .hall-heading h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(35px, 5vw, 54px);
+      font-weight: 500;
+      letter-spacing: -.035em;
+      line-height: 1.05;
+    }
+    .hall-heading > p { max-width: 390px; margin: 0 0 4px; color: var(--muted); font-size: 14px; }
+    .case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .case-card {
+      min-width: 0;
+      padding: clamp(22px, 3vw, 34px);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--fame);
+      background: var(--surface);
+    }
+    .hall-shame .case-card { border-top-color: var(--shame); }
+    .case-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-bottom: 26px; }
+    .case-number { color: var(--fame); }
+    .hall-shame .case-number { color: var(--shame); }
+    .case-kind { color: var(--muted); font-size: 10px; }
+    .case-card h3 {
+      margin: 0 0 6px;
+      font-family: var(--serif);
+      font-size: clamp(28px, 3vw, 37px);
+      font-weight: 500;
+      letter-spacing: -.025em;
+      line-height: 1.1;
+    }
+    .case-subtitle { margin-bottom: 23px; color: var(--muted); font-size: 13px; }
+    .case-card dl { margin: 0; }
+    .case-card dl > div { padding: 16px 0; border-top: 1px solid var(--line); }
+    .case-card dt { margin-bottom: 6px; font-size: 12px; font-weight: 750; }
+    .hall-fame dt { color: var(--fame); }
+    .hall-shame dt { color: var(--shame); }
+    .case-card dd { margin: 0; color: #39484b; font-size: 14px; line-height: 1.7; }
+    .scope-note { padding: 13px 15px; background: var(--shame-soft); }
+    .scope-note p { margin: 0; color: #543b3b; font-size: 12px; line-height: 1.6; }
+    .source-line { margin: 16px 0 0; color: var(--muted); font-size: 11px; }
+    .source-line a { display: inline-block; margin-left: 5px; font-weight: 700; }
+
+    .sources {
+      margin-top: clamp(68px, 9vw, 108px);
+      padding-top: 27px;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 24px;
+    }
+    .sources-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px 30px; margin-bottom: 16px; }
+    .sources h2 { margin: 0; font-family: var(--serif); font-size: 27px; font-weight: 500; }
+    .sources-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .source-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 34px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: source;
+    }
+    .source-list li {
+      counter-increment: source;
+      position: relative;
+      padding: 12px 0 12px 35px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .source-list li::before {
+      content: "[" counter(source) "]";
+      position: absolute;
+      left: 0;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .source-list li:target { background: #e8ece7; }
+    .source-list a { font-weight: 650; }
+    .site-footer { padding: 22px 0 34px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .footer-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+    .site-footer a { color: inherit; }
+
+    @media (max-width: 760px) {
+      .hero-grid, .hall-heading { grid-template-columns: 1fr; gap: 20px; }
+      .hero-copy { max-width: 560px; }
+      .hall-heading > p { max-width: 580px; }
+      .case-grid { gap: 12px; }
+      .case-card { padding: 22px; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(var(--page-width), calc(100% - 32px)); }
+      .top-nav { align-items: flex-start; flex-direction: column; justify-content: center; padding: 17px 0; gap: 10px; }
+      .nav-links { gap: 7px 16px; }
+      .nav-links a { font-size: 12px; }
+      .hero { padding-top: 47px; }
+      .hero-grid { gap: 18px; }
+      h1 { font-size: clamp(40px, 12vw, 58px); }
+      .hero-copy p { font-size: 15px; }
+      .lens { grid-template-columns: 1fr; margin-top: 35px; }
+      .lens-item, .lens-item + .lens-item { min-height: 0; padding: 13px 0; border-left: 0; }
+      .lens-item + .lens-item { border-top: 1px solid var(--line); }
+      .hall { padding-top: 60px; }
+      .case-grid, .source-list { grid-template-columns: 1fr; }
+      .case-card { padding: 21px; }
+      .case-meta { margin-bottom: 21px; }
+      .source-list { gap: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header" id="top">
+    <div class="shell top-nav">
+      <a class="brand" href="/">Eva Huang</a>
+      <nav class="nav-links" aria-label="Page navigation">
+        <a href="#fame">Hall of Fame</a>
+        <a href="#shame">Hall of Shame</a>
+        <a href="#sources">Sources</a>
+        <a href="/">Portfolio ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell" id="main-content">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Design justice · Case notes</p>
+      <div class="hero-grid">
+        <h1 id="page-title">Who shapes the system—and who bears its cost?</h1>
+        <div class="hero-copy">
+          <p>I assess four products through the <a href="https://designjustice.org/read-the-principles" target="_blank" rel="noreferrer">Design Justice Network principles</a>: center people most affected, prioritize community impact, and work toward accountable, community-controlled outcomes.</p>
+          <div class="jump-links" aria-label="Jump to case studies">
+            <a href="#fame">Hall of Fame <span class="fame-count">02</span></a>
+            <a href="#shame">Hall of Shame <span class="shame-count">02</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="lens" aria-label="Questions used to assess each example">
+        <div class="lens-item"><span class="lens-label">Voice</span><p>Can affected people shape the design?</p></div>
+        <div class="lens-item"><span class="lens-label">Control</span><p>Who owns the data and decisions?</p></div>
+        <div class="lens-item"><span class="lens-label">Recourse</span><p>Can people inspect and challenge harm?</p></div>
+      </div>
+    </section>
+
+    <section class="hall hall-fame" id="fame" aria-labelledby="fame-title">
+      <div class="hall-heading">
+        <div>
+          <span class="section-index">01 / Hall of Fame</span>
+          <h2 id="fame-title">Designs that share power</h2>
+        </div>
+        <p>Promising examples—not perfect solutions—where community knowledge and participation shape how the tool works.</p>
+      </div>
+      <div class="case-grid">
+        <article class="case-card">
+          <div class="case-meta"><span class="case-number">Fame / 01</span><span class="case-kind">Offline mapping · App</span></div>
+          <h3>Mapeo</h3>
+          <p class="case-subtitle">Local-first mapping for Indigenous land defenders</p>
+          <dl>
+            <div>
+              <dt>Why it earns a place</dt>
+              <dd>Digital Democracy developed Mapeo with Indigenous partners, including Waorani communities, who wanted tools for making and managing their own maps. Its offline, local-first approach helps communities document territory and environmental threats on their terms, rather than depending on an outside platform to define what matters.</dd>
+            </div>
+            <div>
+              <dt>Justice check</dt>
+              <dd>Maps can expose sacred or vulnerable places. Community consent, secure storage, and the right to keep information private must remain in community hands; offline access alone does not guarantee data sovereignty.</dd>
+            </div>
+          </dl>
+          <p class="source-line">Evidence<a href="#source-2" aria-label="Source 2">[2]</a></p>
+        </article>
+
+        <article class="case-card">
+          <div class="case-meta"><span class="case-number">Fame / 02</span><span class="case-kind">Civic participation · Platform</span></div>
+          <h3>Decidim</h3>
+          <p class="case-subtitle">Barcelona’s open-source platform for public participation</p>
+          <dl>
+            <div>
+              <dt>Why it earns a place</dt>
+              <dd>Residents and community groups can propose ideas, debate public plans, take part in participatory budgets, and follow proposals. The platform connects online and face-to-face participation; its reusable open-source code and collaborative development make the infrastructure more inspectable and adaptable than a closed vendor product.</dd>
+            </div>
+            <div>
+              <dt>Justice check</dt>
+              <dd>A participation portal does not guarantee representative influence. Language access, disability access, offline options, fair moderation, and visible follow-through from public officials determine whose input changes an outcome.</dd>
+            </div>
+          </dl>
+          <p class="source-line">Evidence<a href="#source-3" aria-label="Source 3">[3]</a><a href="#source-4" aria-label="Source 4">[4]</a></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="hall hall-shame" id="shame" aria-labelledby="shame-title">
+      <div class="hall-heading">
+        <div>
+          <span class="section-index">02 / Hall of Shame</span>
+          <h2 id="shame-title">Designs that reproduce harm</h2>
+        </div>
+        <p>These cases show what happens when historical inequality is treated as neutral data or when people subject to a system have little say in it.</p>
+      </div>
+      <div class="case-grid">
+        <article class="case-card">
+          <div class="case-meta"><span class="case-number">Shame / 01</span><span class="case-kind">Risk assessment · Criminal justice</span></div>
+          <h3>COMPAS</h3>
+          <p class="case-subtitle">A proprietary recidivism risk score used in U.S. courts</p>
+          <dl>
+            <div>
+              <dt>Why it fails the test</dt>
+              <dd>In a Broward County sample, ProPublica found that among defendants not arrested for a new crime within two years, COMPAS classified 44.9% of Black defendants as higher risk, compared with 23.5% of White defendants. The vendor disputed ProPublica’s analysis and emphasized similar predictive accuracy across racial groups; later research showed that accuracy and error-rate parity can conflict. Those choices matter when scores inform decisions about liberty.</dd>
+            </div>
+            <div>
+              <dt>Design justice concern</dt>
+              <dd>ProPublica reported that the score calculations were proprietary, limiting public scrutiny. When a score can inform decisions about someone’s liberty, the person affected needs a way to understand, challenge, and appeal it—and the system must account for the unequal institutions its data reflects.</dd>
+            </div>
+          </dl>
+          <p class="source-line">Evidence<a href="#source-5" aria-label="Source 5">[5]</a><a href="#source-6" aria-label="Source 6">[6]</a></p>
+        </article>
+
+        <article class="case-card">
+          <div class="case-meta"><span class="case-number">Shame / 02</span><span class="case-kind">Hiring · Experimental AI tool</span></div>
+          <h3>Amazon’s résumé-ranking prototype</h3>
+          <p class="case-subtitle">A hiring tool trained on the company’s past applications</p>
+          <dl>
+            <div>
+              <dt>Why it fails the test</dt>
+              <dd>Reuters reported that the model learned from a decade of mostly male résumés and downgraded applications mentioning “women’s” and graduates of two all-women’s colleges. Treating past hiring patterns as a proxy for merit turned existing gender imbalance into a filter for future candidates.</dd>
+            </div>
+            <div>
+              <dt>Design justice concern</dt>
+              <dd>As designed, candidates would have had little ability to inspect or challenge a hidden ranking; Reuters reported that removing a few gendered terms did not guarantee other discriminatory patterns were gone. Fairer design would define criteria with affected candidates, test for disparate outcomes before deployment, and provide a transparent human review and appeal path.</dd>
+            </div>
+          </dl>
+          <aside class="scope-note"><p><strong>Scope:</strong> Amazon said the prototype was never used by recruiters to evaluate candidates; Reuters sources said recruiters reviewed its recommendations but did not rely on them alone. This is a design failure in an experiment, not a claim that the tool made final hiring decisions.</p></aside>
+          <p class="source-line">Evidence<a href="#source-7" aria-label="Source 7">[7]</a></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sources" id="sources" aria-labelledby="sources-title">
+      <div class="sources-head">
+        <h2 id="sources-title">Sources &amp; scope</h2>
+        <p>The Hall of Fame recognizes promising practices, not perfect products. Critiques focus on systems and design choices.</p>
+      </div>
+      <ol class="source-list">
+        <li id="source-1"><a href="https://designjustice.org/read-the-principles" target="_blank" rel="noreferrer">Design Justice Network, “Read the Principles.”</a> Framework for community-led, accountable design.</li>
+        <li id="source-2"><a href="https://wp.digital-democracy.org/indigenous-cartography-decolonizing-mapmaking/" target="_blank" rel="noreferrer">Digital Democracy, “Indigenous Cartography &amp; Decolonizing Mapmaking.”</a> Mapeo’s local-first and co-design approach.</li>
+        <li id="source-3"><a href="https://ajuntament.barcelona.cat/innovaciodemocratica/en/decidimbarcelona" target="_blank" rel="noreferrer">Barcelona City Council, “decidim.barcelona.”</a> City description of participation features and open-source development.</li>
+        <li id="source-4"><a href="https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/news/participatory-democracy" target="_blank" rel="noreferrer">European Commission Open Source Observatory, “The City of Barcelona’s participatory democracy open source platform.”</a> Decidim’s collaborative governance and reuse.</li>
+        <li id="source-5"><a href="https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing" target="_blank" rel="noreferrer">ProPublica, “Machine Bias” (2016).</a> Broward County analysis, reported disparities, and limits on public scrutiny.</li>
+        <li id="source-6"><a href="https://www.propublica.org/article/bias-in-criminal-risk-scores-is-mathematically-inevitable-researchers-say" target="_blank" rel="noreferrer">ProPublica, “Bias in Criminal Risk Scores Is Mathematically Inevitable, Researchers Say” (2016).</a> Discussion of competing fairness measures.</li>
+        <li id="source-7"><a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/amazon-scraps-secret-ai-recruiting-tool-that-showed-bias-against-women-idUSKCN1MK08G/" target="_blank" rel="noreferrer">Jeffrey Dastin, Reuters, “Amazon scraps secret AI recruiting tool that showed bias against women” (2018).</a> Reporting on the experimental model and its scope.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-row">
+      <span>© <span id="year">2026</span> Eva Huang</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+</body>
+</html>
