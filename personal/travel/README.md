@@ -1,3 +1,19 @@
+# Travel pages
+
+## Magazine styling
+
+Every page under `personal/travel/` is laid out like a Japanese travel magazine (warm washi paper, 明朝 serif headlines, hairline rules, small tracked-out Latin labels, a vertical 縦書き rail on the cover). The shared layer is:
+
+| File | Scope |
+| --- | --- |
+| `magazine.css` | Design tokens (`--mag-*`), base paper texture, masthead, cover, section heads, 基本情報 tables, 目次 list, footer. Linked by every page. |
+| `itinerary.css` | Layout for the two 幕末 itinerary maps (East Japan, Kyushu): cover, prefecture cards, chronology, map panel, place panel. |
+| `okinawa/okinawa.css` | 沖繩 page layout only; tokens and shared pieces come from `magazine.css`. |
+| `map/style.css` | Stamp Atlas application CSS. Its `:root` aliases the old palette names to the `--mag-*` tokens, and a marked "magazine pass" block at the end keeps the atlas on the same paper. |
+| `crumbs.css` | Shared breadcrumb, themed per page through `--crumb-*` custom properties. |
+
+Rules for future edits: page CSS consumes tokens instead of new hex values, headings stay `font-weight:500` serif, corners stay square, and decorative shadows are not reintroduced. Copy stays minimal — one page title, plus labels that identify content, report status, or explain a limitation. Every page keeps its own `hero-credit` / credits block for the Wikimedia Commons photo attributions that already ship with it.
+
 # Interactive map regions
 
 The postcard-style [world stamp atlas](map/) is a fourth, independent map at `/personal/travel/map/`. Its four layers, country flags, month-precision stamps, sign-in (Google via Supabase, or a browser-only passphrase when no project is configured), local backup format, data provenance and browser tests are documented in [`map/README.md`](map/README.md). The atlas is read-only until someone signs in. The three Japan itinerary maps described below retain their existing stamps and storage keys.

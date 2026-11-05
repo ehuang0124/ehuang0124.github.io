@@ -1,28 +1,113 @@
-.history-panel{padding:20px 24px;border-top:1px solid #d8d5c7;background:#fffdf6;color:#263b35;font:13px/1.8 Arial,"Noto Sans TC","PingFang TC",sans-serif}
-.history-panel h3{margin:0 0 12px;font-size:18px}
-.history-controls{display:flex;gap:8px;flex-wrap:wrap}
-.history-panel button{font:inherit;cursor:pointer;text-align:left;border:1px solid #c4c6b5;border-radius:8px;padding:7px 12px;background:#fffdf6;color:#30483d}
-.history-controls button[aria-pressed="true"]{background:#30483d;border-color:#30483d;color:#fffdf6}
-.history-panel button:focus-visible{outline:3px solid #aa523e;outline-offset:3px}
-.history-panel p{margin:12px 0;max-width:90ch}
-.history-note{font-size:12px;color:#64756a}
-.gateway-note{border-left:3px solid #487a8a;padding-left:12px}
-.history-list{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
-.history-list button{font-size:12px;flex:1 1 250px}
-.history-list button[aria-pressed="true"]{border-color:#aa523e;background:#f6eadd}
-.history-detail h4{margin:12px 0 0;font-size:16px}
-.history-detail a{color:#326960;text-underline-offset:3px}
+/* Historical context layer, styled as a magazine sidebar note.
+   Consumes magazine.css tokens; falls back to warm paper/ink values. */
+.history-panel{
+  padding:20px clamp(16px,2.4vw,26px) 24px;
+  border-top:1px solid var(--mag-line,#d9d2c3);
+  background:var(--mag-card,#fffdf8);
+  color:var(--mag-ink,#1d1c19);
+  font:12px/1.95 var(--mag-sans,"Noto Sans TC","PingFang TC",Arial,sans-serif);
+}
+.history-panel h3{
+  margin:0 0 12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--mag-line-soft,#e9e3d6);
+  font-family:var(--mag-serif,"Noto Serif TC",serif);
+  font-weight:500;
+  font-size:18px;
+  letter-spacing:.1em;
+}
+.history-controls{display:flex;gap:6px;flex-wrap:wrap}
+.history-panel button{
+  font:inherit;
+  cursor:pointer;
+  text-align:left;
+  border:1px solid var(--mag-line,#d9d2c3);
+  border-radius:0;
+  padding:6px 11px;
+  background:transparent;
+  color:var(--mag-ink-soft,#453f38);
+  font-size:11px;
+  letter-spacing:.04em;
+  transition:background .18s,color .18s,border-color .18s;
+}
+.history-panel button:hover{border-color:var(--mag-ink,#1d1c19);color:var(--mag-ink,#1d1c19)}
+.history-controls button[aria-pressed="true"]{
+  background:var(--mag-ink,#1d1c19);
+  border-color:var(--mag-ink,#1d1c19);
+  color:var(--mag-card,#fffdf8);
+}
+.history-panel button:focus-visible{outline:2px solid var(--mag-shu,#b3402c);outline-offset:3px}
+.history-panel p{margin:12px 0;max-width:92ch;font-size:11px;line-height:1.95;color:var(--mag-muted,#8b8478)}
+.history-note{font-size:10.5px}
+.gateway-note{
+  border-left:2px solid var(--mag-ai,#27475c);
+  padding:2px 0 2px 12px;
+  color:var(--mag-ink-soft,#453f38) !important;
+}
+.history-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+  gap:5px;
+  margin:14px 0;
+  padding-top:12px;
+  border-top:1px solid var(--mag-line-soft,#e9e3d6);
+}
+.history-list button{font-size:10.5px;line-height:1.7;width:100%}
+.history-list button[aria-pressed="true"]{
+  border-color:var(--mag-shu,#b3402c);
+  background:rgba(179,64,44,.06);
+  color:var(--mag-shu-dark,#8e3121);
+}
+.history-detail h4{
+  margin:14px 0 4px;
+  font-family:var(--mag-serif,"Noto Serif TC",serif);
+  font-weight:500;
+  font-size:15px;
+  letter-spacing:.05em;
+}
+.history-detail p{margin:0 0 8px;font-size:11.5px;color:var(--mag-ink-soft,#453f38)}
+.history-detail a{
+  color:var(--mag-shu,#b3402c);
+  font-size:10.5px;
+  text-decoration:none;
+  border-bottom:1px solid rgba(179,64,44,.35);
+  text-underline-offset:3px;
+}
+.history-detail a:hover{border-bottom-color:var(--mag-shu,#b3402c)}
 .history-marker{cursor:pointer;outline:none}
-.history-leader{stroke:#a34432;stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}
-.history-origin{fill:#a34432;stroke:#fffdf6;stroke-width:1;vector-effect:non-scaling-stroke}
-.history-diamond{fill:#a34432;stroke:#fffdf6;stroke-width:1.5}
-.history-number{fill:#fffdf6;font:bold 11px Arial,sans-serif;pointer-events:none}
-.history-marker:hover .history-diamond,.history-marker:focus-visible .history-diamond,.history-marker[aria-pressed="true"] .history-diamond{fill:#663221;stroke:#f2c16b;stroke-width:3}
-.gateway-leader{stroke:#487a8a;stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-.gateway-diamond{fill:#fffdf6;stroke:#487a8a;stroke-width:1.5}
-.gateway-label{fill:#285e70;stroke:#fffdf6;stroke-width:3;paint-order:stroke;stroke-linejoin:round;font-family:Arial,"Noto Sans TC",sans-serif;font-weight:700}
-@media(max-width:480px){.history-panel{padding:18px 16px}.history-list button{flex-basis:100%}}
-
-.history-map-label{fill:#7d3628;stroke:#fffdf6;stroke-width:3;paint-order:stroke;stroke-linejoin:round;font:600 10px Arial,"Noto Sans TC",sans-serif;pointer-events:none}
-.gateway-area{letter-spacing:.08em;opacity:.8}
+.history-leader{stroke:#b3402c;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.75}
+.history-origin{fill:#b3402c;stroke:#fffdf8;stroke-width:1;vector-effect:non-scaling-stroke}
+.history-diamond{fill:#b3402c;stroke:#fffdf8;stroke-width:1.2}
+.history-number{fill:#fffdf8;font:600 10px "Mag Sans TC","Noto Sans TC",Arial,sans-serif;pointer-events:none}
+.history-marker:hover .history-diamond,
+.history-marker:focus-visible .history-diamond,
+.history-marker[aria-pressed="true"] .history-diamond{
+  fill:#8e3121;
+  stroke:#a98a4e;
+  stroke-width:2.4;
+}
+.gateway-leader{stroke:#27475c;stroke-width:.9;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.gateway-diamond{fill:#fffdf8;stroke:#27475c;stroke-width:1.2}
+.gateway-label{
+  fill:#27475c;
+  stroke:#f7f4ec;
+  stroke-width:2.6;
+  paint-order:stroke;
+  stroke-linejoin:round;
+  font-family:"Mag Sans TC","Noto Sans TC",Arial,sans-serif;
+  font-weight:600;
+  letter-spacing:.06em;
+}
+.history-map-label{
+  fill:#8e3121;
+  stroke:#f7f4ec;
+  stroke-width:2.8;
+  paint-order:stroke;
+  stroke-linejoin:round;
+  font:500 10px "Mag Serif TC","Noto Serif TC",serif;
+  letter-spacing:.04em;
+  pointer-events:none;
+}
+.gateway-area{letter-spacing:.14em;opacity:.62}
+@media(max-width:480px){.history-panel{padding:18px 16px}}
 @media(max-width:600px){.history-map-label{display:none}}

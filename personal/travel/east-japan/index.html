@@ -4,135 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>幕末歷史與東日本</title>
-<meta name="theme-color" content="#162e2a">
-<meta name="description" content="幕末歷史與東日本：沿著 12/6–12/17 的旅程、時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新景點。">
+<meta name="theme-color" content="#f7f4ec">
+<meta name="description" content="幕末歷史與東日本：沿著時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新歷史景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap">
 <link rel="stylesheet" href="/personal/travel/crumbs.css">
+<link rel="stylesheet" href="/personal/travel/magazine.css">
+<link rel="stylesheet" href="/personal/travel/itinerary.css">
 <link rel="stylesheet" href="/personal/travel/history-context.css">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{--green:#193a33;--green2:#28594a;--cream:#f6f3ea;--paper:#fffdf8;--text:#233830;--muted:#7b8177;--line:#deddd1;--terra:#ac6549;--gold:#c4a579;--sea:#dfeae8}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;color:var(--text);background:var(--cream);font-family:'Noto Sans TC',"PingFang TC","Microsoft JhengHei",sans-serif}
-button,a{font:inherit}
-button{cursor:pointer}
-.serif{font-family:'Noto Serif TC',"Songti TC",serif}
-
-/* ===== 頂部幕末歷史圖片 ===== */
-.hero{position:relative;background:#183a34;min-height:min(72vh,620px);display:flex;align-items:flex-end;overflow:hidden}
-.hero-photo{position:absolute;inset:0}
-.hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.hero-photo:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,28,24,.30) 0%,rgba(14,28,24,.12) 34%,rgba(10,22,19,.90) 100%)}
-.hero-inner{position:relative;z-index:2;width:100%;max-width:1300px;margin:0 auto;padding:0 24px 54px}
-.hero h1{font-size:clamp(36px,6vw,74px);line-height:1.24;margin:0 0 14px;font-weight:500;color:#f7f2e3;text-shadow:0 2px 24px rgba(0,0,0,.45)}
-.hero p{font-size:15px;line-height:2;color:#e6ece1;max-width:780px;margin:0;text-shadow:0 1px 12px rgba(0,0,0,.5)}
-.hero-kicker{font-size:11px;letter-spacing:.22em;color:#d8c9a3;margin:0 0 14px;font-weight:700}
-.hero-credit{position:absolute;right:12px;bottom:10px;z-index:3;color:#e8e8e8;background:rgba(0,0,0,.42);font-size:10px;padding:3px 7px;border-radius:3px}
-
-/* ===== 導覽 ===== */
-.wrap{max-width:1300px;margin:auto;padding:0 24px}
-.intro{padding:40px 0 22px}
-.intro p{color:#667369;font-size:13px;line-height:1.9;margin:0;max-width:860px}
-.intro a{color:var(--green);font-weight:600}
-
-/* ===== 時間軸（在地圖上方） ===== */
-.timeline-panel{background:var(--paper);border:1px solid #e8e4d9;border-radius:12px;overflow:hidden;margin-bottom:24px}
-.timeline-scroll{padding:8px 20px 22px}
-.period{font-size:11px;letter-spacing:.12em;color:#9b8d73;margin:20px 10px 12px;font-weight:700}
-.event{width:100%;background:transparent;border:0;display:grid;grid-template-columns:104px 26px 1fr;text-align:left;padding:0;position:relative;color:inherit}
-.event .year{font-family:'Noto Serif TC',serif;color:#8a826e;padding-top:21px;text-align:right;padding-right:16px;font-size:15px}
-.event .stem{position:relative;display:flex;justify-content:center}
-.event .stem:before{content:'';position:absolute;top:0;bottom:0;width:1px;background:#d9d9ce}
-.event:first-of-type .stem:before{top:30px}
-.event .dot{background:#fefcf6;border:2px solid var(--gold);width:12px;height:12px;border-radius:50%;margin-top:26px;z-index:1}
-.event .event-body{margin:5px 5px 6px;padding:13px 16px;border-radius:9px;transition:.2s;border:1px solid transparent}
-.event:hover .event-body{background:#f7f2e6}
-.event.active .event-body{background:#eef3eb;border-color:#bacdbd}
-.event.active .dot{background:var(--green2);border-color:var(--green2);box-shadow:0 0 0 4px #d9e5d9}
-.event h4{font-size:16px;margin:0 0 5px;font-weight:600}
-.event .sub{font-size:12px;line-height:1.8;color:#7b8176}
-.date-pill{color:#99694c;font-size:11px;font-weight:700;margin-top:8px;display:inline-block}
-
-/* ===== 地圖 ===== */
-.map-panel{background:var(--paper);border:1px solid #e8e4d9;border-radius:12px;overflow:hidden}
-.map-head{display:flex;align-items:center;justify-content:space-between;padding:18px 23px 13px;gap:12px;flex-wrap:wrap}
-.map-actions{display:flex;gap:8px;flex-wrap:wrap}
-.map-actions button{background:#fff;border:1px solid #d8dbd0;color:#58665b;border-radius:100px;padding:8px 12px;font-size:11px}
-.map-actions button.active{background:var(--green);color:white;border-color:var(--green)}
-.map-hint{font-size:11px;color:#9aa298}
-.map-body{display:grid;grid-template-columns:1fr;border-top:1px solid #eceae0}
-#map{position:relative;height:min(60vh,580px);background:var(--sea);overflow:hidden}
-#map svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
-#map svg.dragging{cursor:grabbing}
-.land{fill:#f2eddf;stroke:#bcc7b4;stroke-width:1.1}
-.land-shadow{fill:none;stroke:rgba(90,120,105,.18);stroke-width:7}
-.sea-label{fill:#93aaa8;font-size:19px;letter-spacing:.42em;font-family:'Noto Serif TC',serif}
-.pref-label{fill:#b0a897;font-size:17px;letter-spacing:.18em;font-family:'Noto Serif TC',serif}
-.route{fill:none;stroke:#ae7655;stroke-width:2.6;stroke-dasharray:7 8;stroke-linecap:round;opacity:.85}
-.mk{cursor:pointer}
-.mk .ring{fill:rgba(25,58,51,.12);stroke:rgba(25,58,51,.35);stroke-width:1.4;transition:.25s}
-.mk .core{fill:var(--green);stroke:#fff;stroke-width:2;transition:.25s}
-.mk .mlabel{font-family:'Noto Sans TC',sans-serif;font-size:19px;font-weight:700;fill:#25453c;paint-order:stroke;stroke:#fffdf8;stroke-width:5px;stroke-linejoin:round}
-.mk:hover .ring{fill:rgba(25,58,51,.2)}
-.mk.active .ring{fill:rgba(172,101,73,.2);stroke:rgba(172,101,73,.6)}
-.mk.active .core{fill:var(--terra)}
-.mk.active .mlabel{fill:#8c4f36}
-.mk .count{fill:#fffdf8;font-size:12px;font-weight:700;font-family:'Noto Sans TC',sans-serif}
-.compass{fill:#8aa09b;font-size:13px;font-family:'Noto Serif TC',serif}
-.fuji{fill:#8aa09b;font-size:12px;font-family:'Noto Serif TC',serif}
-.map-zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
-.map-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid #cfd6c9;background:#fffdf8;color:#3d534a;font-size:16px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.map-zoom button:hover{background:#eef2ea}
-.map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:#5c6f63;font-size:13px;line-height:1.9}
-
-.map-side{border-top:1px solid #eceae0;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);min-width:0}
-.photo{width:100%;height:320px;flex:0 0 auto;background:linear-gradient(135deg,#637f70,#d7c4a9);display:flex;align-items:center;justify-content:center;color:white;font:22px 'Noto Serif TC',serif;position:relative;overflow:hidden;border-right:1px solid #eceae0}
-.photo img{width:100%;height:100%;object-fit:cover}
-.photo .credit{position:absolute;bottom:5px;right:8px;color:white;background:#0008;font-size:9px;padding:3px 5px;border-radius:3px}
-
-.detail{padding:22px 25px 26px;min-height:180px}
-.detail .micro{font-size:11px;color:#a86e51;letter-spacing:.08em;font-weight:700}
-.detail h3{font:600 25px 'Noto Serif TC',serif;margin:9px 0}
-.detail p{color:#55645b;line-height:1.95;font-size:13px;margin:8px 0}
-.detail p a{color:var(--green);font-weight:600}
-.detail .linkrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
-.linkrow a,.linkrow button{border:1px solid #c7d0c3;border-radius:6px;padding:9px 12px;text-decoration:none;color:var(--green);font-size:12px;background:#f9fbf6;cursor:pointer}
-.linkrow a:hover{background:#e9f1e8}
-.chips{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 4px}
-.chips button{border:1px solid #d5dccf;background:#fbfcf8;color:#5b6b60;border-radius:100px;padding:6px 11px;font-size:11px}
-.chips button.on{background:var(--green);border-color:var(--green);color:#fff}
-
-.footer{background:#193a33;color:#e6eadf;padding:30px 24px;text-align:center;font-size:12px;margin-top:56px;line-height:1.9}
-.footer a{color:#efdeba}
-.credits{margin-top:10px;font-size:11px;color:#b9c6b6}
-.credits summary{cursor:pointer;color:#d8c9a3;letter-spacing:.06em}
-.credits summary:hover{color:#efdeba}
-
-@media(max-width:980px){
-  .map-side{grid-template-columns:1fr}
-  .photo{height:240px;border-right:0;border-bottom:1px solid #eceae0}
-  #map{height:min(58vh,520px)}
-}
-@media(max-width:850px){
-  #map{height:min(56vh,460px)}
-  .hero{min-height:56vh}
-}
-@media(max-width:480px){
-  .hero h1{font-size:38px}
-  #map{height:420px}
-  .event{grid-template-columns:78px 22px 1fr}
-  .event h4{font-size:14px}
-  .event .year{font-size:13px}
-  .map-head{padding:16px}
-  .photo{height:200px}
-}
-
-.region-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#58665b}
-.region-control select{max-width:100%;min-height:36px;padding:7px 12px;border:1px solid #d8dbd0;border-radius:18px;background:#fff;color:#26332d;font:inherit}
-.region-control select:focus-visible{outline:2px solid #2c6e63;outline-offset:3px}
-.region-note{flex-basis:100%;font-size:11px;line-height:1.7;color:#68766c;margin:10px 0 0}
-</style>
 </head>
 <body>
 
@@ -146,22 +27,39 @@ button{cursor:pointer}
 
 <header class="hero">
   <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末時代的江戶與黑船" decoding="async"></div>
+  <span class="hero-frame" aria-hidden="true"></span>
   <div class="hero-inner">
-    <p class="hero-kicker">12/6 – 12/17 ・ 東京 → 志摩</p>
-    <h1 class="serif">幕末歷史與東日本</h1>
-    <p>沿著旅程走進幕末：黑船、無血開城與大政奉還，地圖帶你找到每個故事真正發生的地方。</p>
+    <div class="hero-copy">
+      <p class="hero-kicker">EAST JAPAN ・ 12/06 – 12/17</p>
+      <h1>幕末歷史與東日本</h1>
+      <p class="hero-meta"><span>東京 → 下田 → 靜岡 → 名古屋 → 伊勢志摩</span><span>15 篇故事</span></p>
+    </div>
+    <div class="hero-rail" aria-hidden="true"><span class="mag-tate">東日本・黒船から維新へ</span></div>
   </div>
   <div class="hero-credit" id="hero-credit" style="display:none">圖片來源：Wikimedia Commons</div>
 </header>
 
 <main class="wrap">
-  <div class="intro">
-    <p>點時間軸事件或地圖標記，讀故事、看位置。12/17 抵達博多後，接續 <a href="/personal/travel/kyushu/">「幕末歷史與九州」</a>。</p>
+
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow"><span class="no">01</span>CHRONOLOGY</p>
+      <h2>東日本歷史時間軸</h2>
+    </div>
+    <p class="head-side">點一個事件，地圖會移到它發生的地方；12/17 抵達博多後接續九州篇。</p>
   </div>
 
   <section class="timeline-panel" aria-label="東日本歷史時間軸">
     <div class="timeline-scroll" id="timeline"></div>
   </section>
+
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow"><span class="no">02</span>INTERACTIVE MAP</p>
+      <h2>互動地圖</h2>
+    </div>
+    <p class="head-side">也可以直接點地圖標記；切換區域只留下該區的景點。</p>
+  </div>
 
   <aside class="map-panel">
     <div class="map-head">
@@ -193,12 +91,14 @@ button{cursor:pointer}
 </main>
 
 <footer class="footer" id="sources">
+<div class="wrap">
   <a href="/personal/travel/">← 旅行地圖索引</a> · <a href="/personal/travel/kyushu/">接續：幕末歷史與九州 ↗</a><br>
   <details class="credits">
     <summary>資料與圖片來源</summary>
     歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
     地圖：Natural Earth 10m 向量圖資 · 照片：Wikimedia Commons
   </details>
+</div>
 </footer>
 
 <script src="/personal/travel/history-context.js"></script>
@@ -452,7 +352,7 @@ function focus(id,scroll=false,zoom=true){
     chips='<div class="chips">'+g.ids.map(i=>'<button data-id="'+i+'" class="'+(i===id?'on':'')+'">'+byId[i].year+'　'+byId[i].spot+'</button>').join('')+'</div>';
   }
   el('detail').innerHTML='<div class="micro">'+e.year+' · '+e.where+' · '+e.date+'</div><h3>'+e.title+'</h3>'+
-    (chips?'<div style="font-size:11px;color:#9aa298;margin-top:2px">同一地點的相關事件：</div>'+chips:'')+
+    (chips?'<div class="chips-label">同一地點的相關事件</div>'+chips:'')+
     '<p>'+e.story+'</p>'+
     '<div class="linkrow"><a href="'+mapLink(e)+'" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟景點 ↗</a>'+(e.next?'<a href="'+e.next+'">接續：幕末歷史與九州 ↗</a>':'')+'<button id="copylink">分享這段故事</button></div>';
   const cp=el('copylink');

@@ -1,5 +1,6 @@
 # Agent content and map rules
 
+- Every page under `personal/travel/` shares one Japanese travel-magazine layer: `magazine.css` (tokens, masthead, cover, section heads, 基本情報 tables, footer), `itinerary.css` for the two 幕末 maps, `okinawa/okinawa.css` for the island page, and the "magazine pass" block in `map/style.css`. Page CSS must consume the `--mag-*` tokens, keep serif headings at weight 500, keep corners square and shadows out, and keep the vertical 縦書き rail on covers. New pages link `magazine.css` first.
 - Keep page copy concise. A page gets one clear title; every other visible phrase must directly guide a user action, identify content, communicate status, or provide a necessary accessibility/safety/data limitation. Remove decorative slogans, redundant explanatory paragraphs, and filler metadata.
 - For travel visit records, capture and display month and year only (`YYYY-MM`). Do not ask for or show a day. Preserve older saved `YYYY-MM-DD` records by migrating them to their month on read; prevent duplicate stamps within the same place and month.
 - Show each destination's country flag (bundled `flags/` SVGs) beside country, city, U.S. state, and U.S./Canadian/Japanese park names in the index, the selected-place heading, and the hover tooltip. Entries with no ISO 3166-1 code show no flag rather than an invented one.
