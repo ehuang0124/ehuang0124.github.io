@@ -973,9 +973,10 @@
     const gate = Boolean(account?.localGateAvailable?.());
     const localBlock = $('#local-signin');
     if (localBlock) localBlock.hidden = !(local && gate);
-    // Cloud sign-in uses personal credentials plus the server-checked invite.
+    // Open returning-user login by default; registration has its own view.
     const codeBlock = $('#code-signin');
     if (codeBlock) codeBlock.hidden = !cloud;
+    if (cloud) setAccountMode(false);
     if (cloud && $('#traveller-name') && !$('#traveller-name').value) {
       $('#traveller-name').value = account?.lastTravellerName?.() || '';
     }
@@ -983,12 +984,15 @@
     if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
     // What signing in actually buys you depends on whether a backend exists.
     const signInNote = cloud
-      ? '用邀請碼與個人密碼登入，戳章存進 Supabase 並跨裝置同步；訪客只能瀏覽。'
+      ? ''
       : atlasAccount.mode === 'demo'
         ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
         : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
-    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = cloud ? '登入你的旅行帳號。' : '登入後才能蓋章。';
-    if ($('#account-sync-note')) $('#account-sync-note').textContent = signInNote;
+    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = '登入';
+    if ($('#account-sync-note')) {
+      $('#account-sync-note').textContent = signInNote;
+      $('#account-sync-note').hidden = cloud;
+    }
     $('#account-error').textContent = message;
     // Only explain the missing sign-in method when nothing more specific happened.
     if (local && !gate && !message) {
@@ -1287,38 +1291,48 @@
     if (event.key === 'Enter') { event.preventDefault(); submitLocalPassphrase(); }
   });
   accountDialog.addEventListener('click', event => { if (event.target === accountDialog) accountDialog.close(); });
-  // Cloud sign-in: personal credentials, invite, and a name for new accounts.
+  // Login only collects personal credentials; creation also requires an invite.
   async function submitAccessCode() {
     if (atlasAccount.mode !== 'cloud' || $('#code-signin-submit')?.disabled) return;
     $('#account-error').textContent = '';
     const submit = $('#code-signin-submit');
     if (submit) submit.disabled = true;
     const result = await account?.signIn?.({
-      code: $('#access-code') ? $('#access-code').value : '',
-      name: $('#account-create')?.checked ? $('#traveller-name').value : '',
+      code: $('#code-signin').dataset.mode === 'create' ? $('#access-code').value : undefined,
+      name: $('#code-signin').dataset.mode === 'create' ? $('#traveller-name').value : '',
       email: $('#account-email')?.value,
       password: $('#account-password')?.value,
-      createAccount: Boolean($('#account-create')?.checked)
+      createAccount: $('#code-signin').dataset.mode === 'create'
     });
     if ($('#account-password')) $('#account-password').value = '';
     if (submit) submit.disabled = false;
     if (!result || result.ok !== true) {
       $('#account-error').textContent = result?.reason || '無法登入。';
-      const codeInput = $('#access-code');
-      if (codeInput) { codeInput.focus(); codeInput.select?.(); }
+      const field = $('#code-signin').dataset.mode === 'create' ? $('#access-code') : $('#account-password');
+      field?.focus();
       return;
     }
     if ($('#access-code')) $('#access-code').value = '';
     accountDialog.close();
   }
-  $('#account-create')?.addEventListener('change', () => {
-    const creating = $('#account-create').checked;
-    $('#traveller-name').closest('label').hidden = !creating;
+  function setAccountMode(creating) {
+    $('#code-signin').dataset.mode = creating ? 'create' : 'login';
+    $('#account-login').setAttribute('aria-pressed', String(!creating));
+    $('#account-create').setAttribute('aria-pressed', String(creating));
+    for (const id of ['#traveller-name', '#access-code']) {
+      $(id).closest('label').hidden = !creating;
+      $(id).disabled = !creating;
+      $(id).required = creating;
+    }
+    $('#account-password').value = '';
+    $('#access-code').value = '';
     $('#account-password').autocomplete = creating ? 'new-password' : 'current-password';
-    $('#account-password').minLength = creating ? 12 : 1;
-    $('#code-signin-submit').textContent = creating ? '建立帳號並登入 ↗' : '登入 ↗';
+    $('#account-dialog-title').textContent = creating ? '建立帳號' : '登入';
+    $('#code-signin-submit').textContent = creating ? '建立帳號 ↗' : '登入 ↗';
     $('#account-error').textContent = '';
-  });
+  }
+  $('#account-create')?.addEventListener('click', () => setAccountMode(true));
+  $('#account-login')?.addEventListener('click', () => setAccountMode(false));
   accountDialog.addEventListener('close', () => {
     $('#account-password').value = '';
     $('#access-code').value = '';

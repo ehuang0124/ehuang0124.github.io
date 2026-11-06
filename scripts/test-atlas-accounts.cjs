@@ -156,11 +156,17 @@ function createServer() {
   // profile, and every accepted code appends to atlas_logins.
   async function rpc(name, args, who) {
     calls.push({ op:'rpc', name, payload:args });
-    if (name !== 'atlas_redeem_code') {
+    if (!['atlas_redeem_code', 'atlas_login'].includes(name)) {
       return { data:null, error:{ message:`Could not find the function public.${name}`, code:'PGRST202' } };
     }
     const current = who();
     if (!current?.user) return { data:{ ok:false, reason:'no_session' }, error:null };
+    if (name === 'atlas_login') {
+      const profile = tables.profiles.find(row => row.id === current.user.id);
+      if (!profile) return { data:{ ok:false, reason:'not_approved' }, error:null };
+      tables.logins.push({ user_id:profile.id, display_name:profile.display_name, user_agent:args.p_user_agent, ip:'test' });
+      return { data:{ ok:true, user_id:profile.id, display_name:profile.display_name, avatar_url:profile.avatar_url, discoverable:profile.discoverable }, error:null };
+    }
     if (String(args?.p_code || '').trim() !== ACCESS_CODE) {
       return { data:{ ok:false, reason:'invalid_code' }, error:null };
     }
@@ -195,7 +201,7 @@ function createServer() {
         // A browser-created traveller account: random address, random password.
         async signUp({ email, password }) {
           calls.push({ op:'signUp', payload:{ email } });
-          if (accounts.has(email)) return { data:{ user:null, session:null }, error:null };
+          if (accounts.has(email)) return { data:{ user:null, session:null }, error:{ message:'User already registered', code:'user_already_exists' } };
           const user = addUser({ name:'旅人', email });
           accounts.set(email, { email, password, user });
           const next = { access_token:uuid('token'), user };
@@ -363,6 +369,22 @@ async function main() {
     assert.equal(page.$('#account-dialog').open, true, 'locked action asks for sign-in');
     assert.equal(page.$('#code-signin').hidden, false, 'the access-code field is offered');
     assert.equal(page.$('#local-signin').hidden, true, 'the browser-only passphrase is not offered in cloud mode');
+    assert.equal(page.$('#code-signin').dataset.mode, 'login');
+    assert.equal(page.$('#access-code').closest('label').hidden, true);
+    assert.equal(page.$('#access-code').disabled, true);
+    assert.equal(page.$('#traveller-name').closest('label').hidden, true);
+    assert.equal(page.$('#account-sync-note').hidden, true, 'login has no feature list');
+    assert.equal(page.$('.account-list'), null, 'unnecessary feature list removed');
+    click(page.window, page.$('#account-create'));
+    assert.equal(page.$('#access-code').closest('label').hidden, false);
+    assert.equal(page.$('#traveller-name').closest('label').hidden, false);
+    assert.equal(page.$('#account-password').autocomplete, 'new-password');
+    page.$('#access-code').value = 'discard-on-switch';
+    click(page.window, page.$('#account-login'));
+    assert.equal(page.$('#access-code').value, '');
+    assert.equal(page.$('#access-code').required, false);
+    assert.equal(page.$('#account-password').minLength, 7);
+    assert.equal(page.$('#account-password').autocomplete, 'current-password');
     assert.equal(server.tables.stamps.length, 1, 'a visitor cannot create stamps');
     // Custom city creation is also blocked.
     click(page.window, page.$$('.category-tab')[1]);
@@ -385,8 +407,7 @@ async function main() {
     assert.equal(page.$('#code-signin').hidden, false, 'cloud sign-in asks for the access code');
 
     // A wrong code is refused by Postgres, and the page translates the reason.
-    page.$('#account-create').checked = true;
-    change(page.window, page.$('#account-create'));
+    click(page.window, page.$('#account-create'));
     page.$('#account-email').value = 'eva@example.com';
     page.$('#account-password').value = 'personal-password-123';
     page.$('#traveller-name').value = 'Eva Huang';
@@ -460,23 +481,24 @@ async function main() {
     assert.equal(page.$('#account-card').hidden, true, 'signing out returns to the visitor view');
     click(page.window, page.$('#sign-in'));
     await page.settle();
-    page.$('#account-create').checked = false;
-    change(page.window, page.$('#account-create'));
+    click(page.window, page.$('#account-login'));
     page.$('#account-password').value = 'personal-password-123';
     assert.equal(page.$('#traveller-name').value, 'Eva Huang', 'the last name is prefilled');
-    page.$('#access-code').value = 'travel2n';
+    assert.equal(page.$('#access-code').closest('label').hidden, true, 'login does not show invite');
+    assert.equal(page.$('#access-code').value, '', 'login needs no invite');
     click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
     assert.equal(page.window.TravelAtlasAccount.user.id, traveller.id, 'the same browser keeps the same traveller');
     assert.equal(server.tables.logins.length, 2, 'each sign-in is logged');
-    console.log('PASS sign-in: access code, login log, device identity, companion stamping, cloud delete');
+    assert.equal(server.calls.filter(call => call.op === 'rpc').at(-1).name, 'atlas_login');
+    console.log('PASS creation and login: invite only on creation, login log, identity, companion stamping, cloud delete');
   }
 
   // Personal passwords protect an account even when the invite is known.
   {
     const page = await boot();
     const account = page.window.TravelAtlasAccount;
-    const valid = { email:'eva-approved@example.com', password:'personal-password-123', code:'travel2n' };
+    const valid = { email:'eva-approved@example.com', password:'personal-password-123' };
     let result = await account.signIn({ ...valid, password:'wrong-password' });
     assert.equal(result.ok, false);
     assert(result.reason.includes('個人密碼不正確'));
@@ -488,19 +510,44 @@ async function main() {
     assert.equal(result.ok, false);
     assert.equal(account.user, null);
     assert.equal((await page.connection.client.auth.getSession()).data.session, null);
-    // Auth SIGNED_IN fires before redemption in this double. A rejected code
-    // must never leave that previously approved profile signed in.
-    result = await account.signIn({ ...valid, code:'wrong-invite' });
-    assert.equal(result.ok, false);
-    assert.equal(account.user, null);
-    assert.equal((await page.connection.client.auth.getSession()).data.session, null);
+    // Returning accounts do not redeem or transmit any invite.
+    const redemptions = server.calls.filter(call => call.name === 'atlas_redeem_code').length;
+    result = await account.signIn({ ...valid, code:'ignored-in-login' });
+    assert.equal(result.ok, true);
+    assert.equal(server.calls.filter(call => call.name === 'atlas_redeem_code').length, redemptions);
+    assert.equal(server.calls.filter(call => call.op === 'rpc').at(-1).payload.p_code, undefined);
     const authCalls = server.calls.filter(call => call.op === 'signUp').length;
-    result = await account.signIn({ ...valid, password:'short', createAccount:true, name:'Eva' });
+    result = await account.signIn({ ...valid, password:'123456', code:'travel2n', createAccount:true, name:'Eva' });
     assert.equal(result.ok, false);
     assert.equal(server.calls.filter(call => call.op === 'signUp').length, authCalls, 'short signup password is rejected before Auth');
-    assert.equal((await account.signIn({ ...valid, createAccount:true, name:'Eva' })).ok, false, 'duplicate registration cannot take over an account');
+    assert.equal((await account.signIn({ ...valid, code:'travel2n', createAccount:true, name:'Eva' })).ok, false, 'duplicate registration cannot take over an account');
     assert.equal(account.user, null);
-    console.log('PASS passwords: wrong password, existing-session bypass, rejected invite, short password, duplicate signup');
+    console.log('PASS passwords: wrong password, existing-session bypass, invite-free login, short password, duplicate signup');
+  }
+
+  // Registration retries, approval boundary, and exact password length.
+  {
+    const page = await boot();
+    const account = page.window.TravelAtlasAccount;
+    const credentials = { email:'seven@example.com', password:'abcdefg', name:'七字旅人' };
+    const authCalls = server.calls.filter(call => call.op === 'signUp' || call.op === 'signInWithPassword').length;
+    assert.equal((await account.signIn({ ...credentials, password:'abcdef', code:'travel2n', createAccount:true })).ok, false);
+    assert.equal((await account.signIn({ ...credentials, password:'abcdef' })).ok, false);
+    assert.equal(server.calls.filter(call => call.op === 'signUp' || call.op === 'signInWithPassword').length, authCalls);
+    assert.equal((await account.signIn({ ...credentials, createAccount:true })).ok, false, 'creation requires an invite');
+    assert.equal((await account.signIn({ ...credentials, code:'bad-invite', createAccount:true })).ok, false);
+    assert.equal(account.user, null);
+    let result = await account.signIn(credentials);
+    assert.equal(result.ok, false, 'Auth without an approved profile remains read-only');
+    assert(result.reason.includes('尚未完成建立'));
+    assert.equal(account.user, null);
+    assert.equal((await page.connection.client.auth.getSession()).data.session, null);
+    assert.equal((await account.signIn({ ...credentials, code:'travel2n', createAccount:true })).ok, true, 'creation resumes after fixing invite, with a seven-character password');
+    const id = account.user.id;
+    await account.signOut();
+    assert.equal((await account.signIn(credentials)).ok, true, 'seven-character password logs in without an invite');
+    assert.equal(account.user.id, id);
+    console.log('PASS creation boundary: 6 rejected, 7 accepted, retry rejected invite, unapproved account blocked');
   }
 
   // ---------------------------------------------------------------- 3. companion view + live updates

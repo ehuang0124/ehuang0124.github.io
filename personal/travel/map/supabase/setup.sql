@@ -1,4 +1,4 @@
--- Stamp Atlas · Supabase setup (access-code sign-in)
+-- Stamp Atlas · Supabase setup (personal accounts, invite-only registration)
 --
 -- Paste this whole file into Supabase → SQL Editor → New query → Run.
 -- It is safe to run again: every statement is idempotent.
@@ -7,19 +7,18 @@
 --   profiles              one row per traveller, created only by a correct code
 --   stamps                one row per traveller / place / month
 --   custom_cities         traveller-added cities (same ids the page already uses)
---   atlas_access          the one shared sign-in code (bcrypt hash, never plain)
+--   atlas_access          the shared registration invite (bcrypt hash, never plain)
 --   atlas_logins          who signed in, when, from which browser/address
 --   atlas_login_attempts  failed guesses, used to slow brute force down
 --
--- Sign-in
---   1. The page signs in anonymously with Supabase Auth, so Postgres knows the
---      browser (`auth.uid()`), but that alone grants nothing.
---   2. `atlas_redeem_code(code, name)` checks the bcrypt hash. Only a match
---      writes the traveller's `profiles` row, records `atlas_logins`, and lets
---      Row Level Security accept that user's stamps.
---   3. Rotate the code any time with:
---        select public.atlas_rotate_code('your new code');
---      The plain code is never stored: the table only holds a bcrypt hash.
+-- Accounts
+--   1. Supabase Auth verifies each traveller's personal email and password.
+--   2. On creation only, atlas_redeem_code checks the invite's bcrypt hash
+--      and creates the profile that RLS requires before any write.
+--   3. Returning users call atlas_login, which requires an existing profile
+--      and appends the login log without checking an invite or creating a profile.
+--   Rotate registration invites with atlas_rotate_code('your new code').
+--   Password length is enforced by Supabase Auth settings (minimum 7).
 --
 -- Security
 --   Anyone (including signed-out visitors) may read stamps, so the public map
@@ -240,6 +239,43 @@ end;
 $$;
 
 grant execute on function public.atlas_redeem_code(text, text, text) to anon, authenticated;
+
+-- Returning-user login: no invite needed and no way to create a profile here.
+create or replace function public.atlas_login(p_user_agent text default '')
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_profile public.profiles;
+  v_headers jsonb := '{}'::jsonb;
+  v_ip text;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'reason', 'no_session');
+  end if;
+  select * into v_profile from public.profiles where id = v_uid;
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'not_approved');
+  end if;
+  begin
+    v_headers := nullif(current_setting('request.headers', true), '')::jsonb;
+  exception when others then
+    v_headers := '{}'::jsonb;
+  end;
+  v_ip := left(btrim(split_part(coalesce(v_headers ->> 'x-forwarded-for', ''), ',', 1)), 45);
+  insert into public.atlas_logins (user_id, display_name, user_agent, ip)
+  values (v_uid, v_profile.display_name, left(coalesce(p_user_agent, ''), 300), nullif(v_ip, ''));
+  return jsonb_build_object(
+    'ok', true, 'user_id', v_profile.id, 'display_name', v_profile.display_name,
+    'avatar_url', v_profile.avatar_url, 'discoverable', v_profile.discoverable);
+end;
+$$;
+
+revoke all on function public.atlas_login(text) from public, anon;
+grant execute on function public.atlas_login(text) to authenticated;
 
 -- ---------------------------------------------------------------- profiles ---
 alter table public.profiles enable row level security;

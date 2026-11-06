@@ -4,7 +4,7 @@ GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index
 
 The atlas is read-only until someone signs in: **no sign-in, no stamps.** Sign-in itself has two modes in the same files.
 
-- **With a Supabase project (the live site).** The top bar offers personal email/password sign-in plus an invite code. New accounts also choose a display name; Supabase Auth checks personal credentials, and Postgres checks the invite against a bcrypt hash before creating the traveller profile. Stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control. Every accepted code also writes a row to `atlas_logins`, so the owner can see who signed in, when, and from which browser and address.
+- **With a Supabase project (the live site).** The top bar offers personal email/password login. The separate account-creation view also asks for an invite and display name; Supabase Auth checks personal credentials, and Postgres checks the invite against a bcrypt hash before creating the traveller profile. Stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control. Every accepted code also writes a row to `atlas_logins`, so the owner can see who signed in, when, and from which browser and address.
 - **No Supabase project.** The top bar falls back to a passphrase stored in `config.js` (`localGate`). Stamps then live in that browser's `localStorage`; nothing is uploaded and nothing syncs between devices. The passphrase check runs in the page, so it keeps out visitors, but it is not a security boundary — a static page cannot enforce one.
 
 The account control and the backend status line sit in the sticky top bar on every screen; the footer repeats where the records actually live.
@@ -42,9 +42,9 @@ GitHub Pages only serves files: there is no server process in this repository, s
 Linking a Supabase project turns the atlas into a small multi-traveller atlas. The account features below are off until `config.js` has a project URL and anon key; until then the `localGate` passphrase is the only sign-in.
 
 - **Visitors see the map, but cannot change it.** Reading is public; every write is checked by Postgres Row Level Security against `auth.uid()`. A visitor's stamp button opens the sign-in dialog instead of writing, and the page never holds a key that could edit someone else's rows.
-- **Personal account + invite code.** Travellers enter their own email, password, and the shared invite code. First-time visitors select “建立帳號” and choose a display name and a password of at least 12 characters. Supabase Auth verifies the password on every form submission; only then does `atlas_redeem_code(code, name, userAgent)` approve the profile. A known invite or a matching display name cannot access somebody else's account. The page never stores passwords; Supabase persists its normal session. Set Auth's minimum password length to 12 as well for API enforcement. Failed sign-ins clear the session and keep the dialog open.
-- **Login log.** Each successful redemption appends to `atlas_logins` (time, name, browser string, IP, user id). The page never reads it; it is for the owner in the dashboard.
-- **Sign-in persistence.** A session survives reloads. After sign-out, the same email and password plus invite return to the same traveller on any device, even after clearing site data. Legacy generated device credentials are removed, not reused. Existing legacy sessions and records remain; see the setup guide's migration note before signing out of an old account.
+- **Separate login and creation.** Returning travellers enter only email and password. The “建立帳號” view also asks for an invite and display name. Passwords must be more than 6 characters (minimum 7); set Auth's minimum password length to 7 for API enforcement. Only creation calls `atlas_redeem_code(code, name, userAgent)` to approve a profile. Returning login calls `atlas_login(userAgent)`, which requires an existing approved profile and only appends to the private login log. An Auth account without an approved profile stays read-only and must finish creation with an invite. After a wrong invite, creation can resume with the same email and password. The page never stores passwords; Supabase persists its normal session.
+- **Login log.** Each successful creation or login appends to `atlas_logins` (time, name, browser string, IP, user id). The page never reads it; it is for the owner in the dashboard.
+- **Sign-in persistence.** A session survives reloads. After sign-out, the same email and password return to the same traveller on any device, even after clearing site data. Legacy generated device credentials are removed, not reused. Existing legacy sessions and records remain; see the setup guide's migration note before signing out of an old account.
 - **Companions.** Any signed-in traveller can be tagged on a trip before or after stamping. A trip is stored per traveller per place per month, so the same place can carry several months and several travellers. Untagging someone keeps your stamp.
 - **一起走過.** Choosing a traveller lists the places you visited together — either because one of you tagged the other, or because you independently stamped the same place and month. Selecting a row jumps to that place on the map.
 - **Live sync.** Writes go to Postgres and the page subscribes to `postgres_changes` for `stamps`, `custom_cities`, and `profiles`, so a stamp on one device appears on every open tab and phone. `syncPull()` refetches on reconnect, on tab focus, and every 20 s while the websocket is down.
@@ -69,7 +69,7 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
 **[`SETUP-SUPABASE.md`](SETUP-SUPABASE.md) is the click-by-click guide (Chinese) for the whole thing.** The short version:
 
 1. Create a Supabase project, then run [`supabase/setup.sql`](supabase/setup.sql) in **SQL Editor**. It creates `profiles`, `stamps`, `custom_cities`, their RLS policies, and adds the tables to the realtime publication. The script is idempotent.
-2. In **Authentication → Sign In / Providers**, enable **Email** and turn **Confirm email** off. Travellers create personal email/password accounts; set the minimum password length to 12 in Auth settings. No confirmation mail is sent, so email ownership is not verified. The invite code separately admits the account to the atlas.
+2. In **Authentication → Sign In / Providers**, enable **Email** and turn **Confirm email** off. Travellers create personal email/password accounts; set the minimum password length to 7 in Auth settings. No confirmation mail is sent, so email ownership is not verified. The invite code is checked only when creating the atlas profile. Rerun `setup.sql` on existing projects before deploying this version to install `atlas_login`.
 3. Set the shared code in **SQL Editor**: `select public.atlas_rotate_code('your code');` (at least 6 characters; only a bcrypt hash is stored). Repeat this line any time to rotate it.
 4. Connect the project and check it in one command:
 
@@ -133,3 +133,17 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cj
 - `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: the access code, the login log, personal-password protection, cross-device identity, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, sessions that never redeemed the code, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
 
+
+The split account UI and the actual returning-user SQL function have focused tests:
+
+```sh
+npm install --prefix /tmp/atlas-test-deps playwright-core @sparticuz/chromium @electric-sql/pglite
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-auth-ui.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-login-sql.cjs
+```
+
+The browser test checks map/index startup and real map clicks, login/creation switching,
+creation-only fields, password validation, and overflow at 1440, 390, and 320 px.
+The SQL test runs the deployed `atlas_login` definition and grants in embedded Postgres:
+anonymous access is denied, an unapproved session cannot create a profile, and approved
+logins are recorded privately under `auth.uid()`.

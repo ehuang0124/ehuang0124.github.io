@@ -33,11 +33,14 @@ function makeClient({ signedUp = true, rpc = { data:null, error:null } } = {}) {
       onAuthStateChange() { return { data:{ subscription:{ unsubscribe(){} } } }; },
       async getSession() { return { data:{ session: state.session }, error:null }; },
       async signUp() {
-        if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the device account' } };
+        if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the personal account' } };
         state.session = { access_token:'token', user:{ id:'user-device' } };
         return { data:{ user:state.session.user, session:state.session }, error:null };
       },
-      async signInWithPassword() { return { data:{ session:null, user:null }, error:{ message:'Invalid login credentials' } }; },
+      async signInWithPassword() {
+        state.session = { access_token:'token', user:{ id:'user-personal' } };
+        return { data:{ session:state.session, user:state.session.user }, error:null };
+      },
       async signOut() { state.session = null; return { error:null }; }
     },
     from: chain,
@@ -85,10 +88,10 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
   await wait();
   const $ = selector => window.document.querySelector(selector);
   const click = node => node.dispatchEvent(new window.MouseEvent('click', { bubbles:true, cancelable:true }));
-  async function signIn({ name = 'Eva Huang', code = 'travel2n' } = {}) {
+  async function signIn({ name = 'Eva Huang', code = 'travel2n', createAccount = true } = {}) {
     click($('#sign-in'));
     await wait();
-    $('#account-create').checked = true;
+    if (createAccount) click($('#account-create'));
     $('#account-email').value = 'eva@example.com';
     $('#account-password').value = 'personal-password-123';
     $('#traveller-name').value = name;
@@ -157,7 +160,27 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
     assert.deepEqual(page.errors, []);
   }
 
-  console.log('PASS sign-in errors: wrong code, throttling, missing code, missing setup, offline');
+  // Returning login has its own backend setup hint and approval boundary.
+  {
+    const page = await load({ clientOptions:{ rpc:{ data:null, error:{ message:'Could not find the function public.atlas_login', code:'PGRST202' } } } });
+    await page.signIn({ createAccount:false });
+    assert(page.$('#account-error').textContent.includes('setup.sql'));
+    assert.equal(page.$('#account-dialog').open, true);
+    assert.equal(page.fake.state.session, null);
+    assert.equal(page.fake.state.rpcCalls.at(-1).name, 'atlas_login');
+    assert.equal(page.fake.state.rpcCalls.at(-1).args.p_code, undefined);
+    assert.deepEqual(page.errors, []);
+  }
+  {
+    const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'not_approved' }, error:null } } });
+    await page.signIn({ createAccount:false });
+    assert(page.$('#account-error').textContent.includes('建立帳號'));
+    assert.equal(page.$('#account-card').hidden, true);
+    assert.equal(page.fake.state.session, null);
+    assert.deepEqual(page.errors, []);
+  }
+
+  console.log('PASS sign-in errors: wrong code, throttling, missing code, missing setup, offline, login function, unapproved login');
   process.exit(0);
 })().catch(error => {
   console.error(error);
