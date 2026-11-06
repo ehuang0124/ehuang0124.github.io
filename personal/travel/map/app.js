@@ -1172,8 +1172,6 @@
     if (!button) return;
     const place = selectedPlace(), date = button.dataset.date;
     if (!editable()) {openAccountDialog('登入後才能修改戳章。');return;}
-    // Removing a stamp is destructive and synced, so it is always confirmed.
-    if (!confirm(`要移除「${place.zh}」${printedDate(date)} 的戳章嗎？移除後無法復原。`)) return;
     if (cloudMode()) {
       const id = myStampId(place, date);
       atlasAccount.rows = atlasAccount.rows.filter(row => !(row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === date));
