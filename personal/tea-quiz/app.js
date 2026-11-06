@@ -24,24 +24,11 @@ const state = {
 /* ---------------- 文案 ---------------- */
 const S = {
   zh: {
-    heroEyebrow: '7 題 · 從香氣到餘韻 · 綠茶與和紅茶',
     heroTitle: '找到適合你的<br><em>日本茶</em>。',
     heroLede: '從靜岡的茶園、宇治的石臼，到鹿兒島的茶葉。用你熟悉的味道，找一杯屬於你的日本茶。',
     start: '開始選茶',
     explore: '直接探索茶種',
     heroCap: '茶園與茶葉的真實風景。照片經裁切、縮圖，依原授權使用。',
-    value1: '從鼻尖聞到的香氣，到舌面留下的餘韻，不用先懂茶名。',
-    value2: '三款茶，各自附上推薦原因、沖泡比例，還有在茶店說得出口的日文。',
-    value3: '咖啡因只回答「含／經證實無／未知」，不估算、不猜。',
-    howTitle: '這個測驗怎麼運作',
-    how1Title: '從熟悉的感覺出發',
-    how1: '青草、花果、蜜香、炒米或麥芽；先選喜歡的，再遇見產地與品種。',
-    how2Title: '規則明確，結果可解釋',
-    how2: '同樣的答案得到同樣的三款茶；煎茶、抹茶與不同產地的和紅茶，都有各自的理由。',
-    how3Title: '咖啡因不靠猜',
-    how3: '需要無咖啡因時，只給包裝明確標示的商品；焙茶、玄米茶不會被當成無咖啡因。',
-    noteTitle: '先說清楚',
-    note: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。這份測驗不是健康或醫療建議。',
     catalogLink: `看全部 ${TEAS.length} 款茶 →`,
     progress: (i, n) => `第 ${i} 題／共 ${n} 題`,
     qPrefix: 'QUESTION',
@@ -105,24 +92,11 @@ const S = {
     foot: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。'
   },
   en: {
-    heroEyebrow: '7 questions · aroma to finish · green tea & wakoucha',
     heroTitle: 'Find the Japanese tea<br>that fits <em>you</em>.',
     heroLede: 'Tea fields in Shizuoka, a stone mill in Uji, leaves from Kagoshima. Find your Japanese tea through flavours you already know.',
     start: 'Start the quiz',
     explore: 'Browse the teas',
     heroCap: 'Real tea gardens and leaves. Photographs cropped and resized under their original licences.',
-    value1: 'Begin with what you smell, taste and feel — no tea names to memorise.',
-    value2: 'Three teas, each with a reason, a brew ratio, and the words to ask for it in Japanese.',
-    value3: 'Caffeine is answered as contains / verified caffeine-free / unknown — never guessed.',
-    howTitle: 'How it works',
-    how1Title: 'Begin with familiar sensations',
-    how1: 'Grass, flowers, honey, toasted rice or malt: choose what you like, then meet the region and cultivar.',
-    how2Title: 'Fixed rules, explained results',
-    how2: 'The same answers give the same three teas, from sencha and matcha to wakoucha across Japan, each with a reason.',
-    how3Title: 'No guessing on caffeine',
-    how3: 'If you need caffeine-free, you only get products labelled as such. Hōjicha and genmaicha are never treated as decaf.',
-    noteTitle: 'Read this first',
-    note: 'Flavour scores are editorial labels, not lab values. Caffeine figures are official reference infusions by tea category and cannot be read as what you ingest per cup. This is not health or medical advice.',
     catalogLink: `See all ${TEAS.length} teas →`,
     progress: (i, n) => `Question ${i} of ${n}`,
     qPrefix: 'QUESTION',
@@ -232,14 +206,6 @@ async function copy(text) {
     catch { say(t('copyFail')); }
     area.remove();
   }
-}
-
-let latticeSeq = 0;
-function lattice() {
-  const id = `tea-lattice-${latticeSeq += 1}`;
-  return el('div', { class: 'lattice', 'aria-hidden': 'true' },
-    el('div', { html: `<svg viewBox="0 0 780 14" preserveAspectRatio="none" role="presentation"><defs><pattern id="${id}" width="26" height="14" patternUnits="userSpaceOnUse"><path d="M0 7 L6.5 1 L13 7 L19.5 13 L26 7" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs><rect width="780" height="14" fill="url(#${id})"/></svg>` })
-  );
 }
 
 function tasteTags(tea) {
@@ -392,8 +358,8 @@ function openTea(id) {
 
 /* ---------------- 首頁 ---------------- */
 function viewLanding() {
+  document.body.dataset.view = 'home';
   const hero = el('section', { class: 'hero' },
-    el('p', { class: 'eyebrow' }, t('heroEyebrow')),
     el('h1', { html: t('heroTitle') }),
     el('p', { class: 'lede' }, t('heroLede')),
     heroCollage(),
@@ -410,24 +376,7 @@ function viewLanding() {
     )
   );
 
-  const how = el('section', {},
-    lattice(),
-    el('h2', {}, t('howTitle')),
-    el('div', { style: 'display:grid;gap:10px;margin-top:14px' },
-      [['how1Title', 'how1'], ['how2Title', 'how2'], ['how3Title', 'how3']].map(([title, body]) =>
-        el('div', { class: 'card' },
-          el('h3', { style: 'font-size:16px;margin-bottom:4px' }, t(title)),
-          el('p', { class: 'small muted', style: 'margin:0' }, t(body))
-        )
-      )
-    ),
-    el('div', { class: 'notice', style: 'margin-top:18px' },
-      el('b', {}, `${t('noteTitle')} — `), t('note')
-    ),
-    el('p', { class: 'small', style: 'margin-top:16px' }, el('a', { href: '#/teas' }, t('catalogLink')))
-  );
-
-  app.replaceChildren(hero, how);
+  app.replaceChildren(hero);
 }
 
 const HERO_PHOTOS = [
@@ -501,6 +450,7 @@ function restore() {
 }
 
 function viewQuiz() {
+  document.body.dataset.view = 'quiz';
   const total = QUESTIONS.length;
   const i = Math.min(state.index, total - 1);
   const q = QUESTIONS[i];
@@ -514,16 +464,17 @@ function viewQuiz() {
     el('div', { class: 'progress-track', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1), 'aria-label': t('progress', i + 1, total) }, fill)
   );
 
-  /* 勾選狀態同時用 class 標記，讓不支援 :has() 的瀏覽器也看得到選了哪一項 */
+  /* 選了哪一項只靠這個 class：填色、邊框與右邊的 ✓ 都跟著它 */
   const syncChecked = () => {
     app.querySelectorAll('.option').forEach((label) => {
-      const field = label.querySelector('input');
+      const fieldId = label.getAttribute('for');
+      const field = fieldId ? document.getElementById(fieldId) : null;
       label.classList.toggle('is-checked', Boolean(field && field.checked));
     });
   };
 
-  const group = el('fieldset', { class: 'options', 'aria-describedby': q.hintZh ? 'q-hint' : null });
-  group.append(el('legend', { class: 'visually-hidden' }, L(q.zh, q.en)));
+  /* 選項是一組 radio，但不畫任何 radio 圓點；群組名稱直接指向題目標題 */
+  const group = el('div', { class: 'options', role: 'radiogroup', 'aria-labelledby': 'q-title', 'aria-describedby': q.hintZh ? 'q-hint' : null });
   q.options.forEach((option) => {
     const id = `${q.id}-${option.id}`;
     const checked = state.answers[q.id] === option.id;
@@ -537,13 +488,18 @@ function viewQuiz() {
       const next = app.querySelector('.quiz-nav .btn:last-child');
       if (next) next.disabled = false;
     });
+    /* 整個選項就是一顆按鈕：不畫圓形 radio、不標 A/B/C，點下去就選好了。 */
     const label = el('label', { class: 'option', for: id },
-      input,
-      el('span', { class: 'tick', 'aria-hidden': 'true' }, String.fromCharCode(65 + q.options.indexOf(option))),
       el('span', { class: 'label' }, L(option.zh, option.en),
-        option.subZh ? el('span', { class: 'sub' }, L(option.subZh, option.subEn)) : null)
+        option.subZh ? el('span', { class: 'sub' }, L(option.subZh, option.subEn)) : null),
+      el('span', { class: 'mark', 'aria-hidden': 'true' }, '✓')
     );
-    group.append(label);
+    /* 真正的 input 只留給鍵盤與螢幕閱讀器；焦點框只給鍵盤，滑鼠與觸控點選不留外框 */
+    input.addEventListener('focus', () => {
+      if (input.matches(':focus-visible')) label.classList.add('is-focused');
+    });
+    input.addEventListener('blur', () => label.classList.remove('is-focused'));
+    group.append(input, label);
   });
 
   // 只有咖啡因這題需要一段說明：它會改變候選集，必須先講清楚
@@ -568,7 +524,7 @@ function viewQuiz() {
   const nav = el('div', { class: 'quiz-nav' },
     el('div', { class: 'quiz-nav-in' },
       el('button', {
-        type: 'button', class: 'btn secondary', style: 'min-width:104px',
+        type: 'button', class: 'btn secondary',
         onclick: () => go(i - 1), disabled: i === 0 ? true : null
       }, '← ', t('prev')),
       q.optional
@@ -577,7 +533,6 @@ function viewQuiz() {
       el('button', {
         type: 'button',
         class: 'btn',
-        style: 'min-width:132px',
         disabled: canProceed ? null : true,
         onclick: () => (isLast ? finish() : advance())
       }, isLast ? t('seeResult') : t('next'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, isLast ? '✦' : '→'))
@@ -585,7 +540,10 @@ function viewQuiz() {
   );
 
   app.replaceChildren(el('div', { class: 'quiz-wrap' }, progress, section, nav));
-  if (typeof progress.scrollIntoView === 'function') progress.scrollIntoView({ block: 'start', behavior: 'auto' });
+
+  /* 畫面固定在一個視窗高度內，換題時只把選項區帶回頂端。 */
+  const optionList = app.querySelector('.options');
+  if (optionList) optionList.scrollTop = 0;
 
   syncChecked();
   document.getElementById('q-title').focus({ preventScroll: true });
@@ -659,6 +617,7 @@ function resultCard(row, index) {
 }
 
 function viewResults(code) {
+  document.body.dataset.view = 'result';
   const answers = decodeAnswers(code);
   if (answers) { state.answers = answers; state.index = 0; persist(); }
 
@@ -734,6 +693,7 @@ function shareUrl() {
 let catalogFilter = 'all';
 
 function viewCatalog() {
+  document.body.dataset.view = 'catalog';
   const families = [['all', t('filterAll')], ...Object.entries(TEA_FAMILIES).map(([key, value]) => [key, value[state.lang]])];
   const list = TEAS
     .filter((tea) => catalogFilter === 'all' || tea.family === catalogFilter)

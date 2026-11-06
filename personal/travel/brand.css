@@ -411,6 +411,10 @@ footer b,.footer b,.ng-footer b{font-family:var(--ng-sans);font-weight:900;lette
    East Japan / Kyushu — 幕末 itinerary pages
    ======================================================================= */
 .hero{background:var(--ng-navy);color:var(--ng-white)}
+/* the two scrims overlap over the title, so each stays light where the other one already darkens */
+.hero:after{background:
+  linear-gradient(180deg,rgba(18,24,28,.30) 0%,rgba(18,24,28,.11) 38%,rgba(15,19,22,.82) 100%),
+  linear-gradient(90deg,rgba(8,14,20,.58) 0%,rgba(8,14,20,.28) 44%,rgba(8,14,20,.03) 78%)}
 .hero-photo img{object-position:50% 55%}
 .hero-inner{
   width:min(100% - clamp(32px,5vw,64px),var(--ng-shell));
@@ -579,15 +583,18 @@ section.hero{
   background:var(--ng-navy);
   color:var(--ng-white);
   border-bottom:0;
+  isolation:isolate; /* this page skips itinerary.css, so keep the scrim and photo inside the hero */
 }
 section.hero:before{display:none}
 section.hero:after{background:
-  linear-gradient(180deg,rgba(10,18,26,.55) 0%,rgba(10,18,26,.35) 40%,rgba(8,14,20,.85) 100%),
+  linear-gradient(180deg,rgba(10,18,26,.44) 0%,rgba(10,18,26,.28) 42%,rgba(8,14,20,.78) 100%),
+  linear-gradient(90deg,rgba(8,14,20,.52) 0%,rgba(8,14,20,.18) 54%,rgba(8,14,20,0) 84%),
   radial-gradient(90% 70% at 85% 10%,rgba(194,160,92,.26) 0%,rgba(194,160,92,0) 60%)}
-.hero-waves{opacity:.16}
+/* with a photograph behind, the wave lines and island outline step back to a whisper */
+.hero-waves{opacity:.07}
 .hero-waves path{stroke:var(--ng-white) !important}
-.hero-art .isl{stroke:rgba(255,255,255,.65);opacity:.8}
-.hero-art .isld{fill:rgba(255,255,255,.07)}
+.hero-art .isl{stroke:rgba(255,255,255,.75);opacity:.9}
+.hero-art .isld{fill:rgba(255,255,255,.06)}
 .hero-art .dot{fill:var(--ng-gold)}
 .hero-art .dot.ring{stroke:var(--ng-gold);opacity:.55}
 .hero-in{

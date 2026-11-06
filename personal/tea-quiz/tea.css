@@ -113,19 +113,6 @@ a:hover { color: var(--jf-ink); }
 .crumbs a:hover { color: var(--jf-matcha); text-decoration: underline; }
 .crumbs [aria-current="page"] { color: var(--jf-ink); font-weight: 600; }
 
-.brand-head { padding: 26px 0 0; }
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--jf-mono);
-  font-size: 12px;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--jf-muted);
-}
-.brand-mark span.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--jf-gold); }
-
 /* ---------- 版面元件 ---------- */
 h1, h2, h3, h4 { font-family: var(--jf-serif); font-weight: 600; letter-spacing: -.01em; color: var(--jf-ink); }
 h1 { font-size: clamp(30px, 7.4vw, 46px); line-height: 1.22; margin: 0 0 14px; }
@@ -280,38 +267,35 @@ p { margin: 0 0 14px; }
 .option {
   position: relative;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 20px;
   align-items: center;
   gap: 12px;
-  min-height: 76px;
-  padding: 14px 16px;
+  min-height: 58px;
+  padding: 10px 14px;
   border: 1px solid var(--jf-line);
   border-radius: var(--jf-radius);
   background: var(--jf-card);
   cursor: pointer;
-  transition: border-color .18s, background .18s, transform .18s;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .18s, background .18s;
 }
 .option:hover { border-color: var(--jf-matcha); background: #FCFDFA; }
-.option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.option .tick {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--jf-line-strong);
-  border-radius: 50%;
-  color: var(--jf-muted);
-  font: 600 12px/1 var(--jf-mono);
-  background: var(--jf-paper);
+/* radio 本身不上畫面，也不佔一格：整列都是可點選項，input 只保留給鍵盤與螢幕閱讀器 */
+.options > input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.option .label { font-size: 15.5px; line-height: 1.45; }
+.option .sub { display: block; font-size: 12.5px; line-height: 1.6; color: var(--jf-muted); margin-top: 2px; }
+.option .mark {
+  justify-self: end;
+  color: var(--jf-matcha-deep);
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity .15s;
 }
-.option .label { font-size: 15.5px; line-height: 1.5; }
-.option .sub { display: block; font-size: 12.5px; line-height: 1.6; color: var(--jf-muted); margin-top: 4px; }
-.option:has(input:checked),
 .option.is-checked { border-color: var(--jf-matcha); background: var(--jf-matcha-wash); }
-.option:has(input:checked) .tick,
-.option.is-checked .tick { background: var(--jf-matcha); border-color: var(--jf-matcha); color: #fff; }
-.option:has(input:focus-visible),
-.option:focus-within { outline: 2px solid var(--jf-matcha); outline-offset: 2px; }
+.option.is-checked .mark { opacity: 1; }
+.option.is-focused { outline: 2px solid var(--jf-matcha); outline-offset: 2px; }
+.option:active { background: var(--jf-matcha-wash); }
 
 .quiz-nav {
   position: fixed;
@@ -580,18 +564,8 @@ footer.site p { margin: 0 0 6px; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-.visually-hidden {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  margin: -1px; padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* ---------- 窄螢幕 ---------- */
-@media (max-width: 600px) {
+@media (max-width: 1060px) {
   /* 右上角固定的語言切換不可以壓到麵包屑與進度列 */
   .crumbs ol { padding-right: 108px; }
   .progress-meta { padding-right: 104px; }
@@ -621,10 +595,6 @@ footer.site p { margin: 0 0 6px; }
 .origin-map small { color: var(--jf-muted); font-size: 12px; }
 .map-kicker { color: var(--jf-matcha-deep); font: 600 10px/1.4 var(--jf-mono); letter-spacing: .12em; }
 .question h2:focus { outline: none; }
-@media (min-width: 600px) {
-  .options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .options .option:last-child:nth-child(odd) { grid-column: 1 / -1; }
-}
 @media (max-width: 520px) {
   .tea-collage { height: 400px; grid-template-columns: 1fr 1fr; grid-template-rows: 1.2fr 1fr; gap: 5px; }
   .photo-shizuoka { grid-row: 1; grid-column: 1 / 3; }
@@ -637,3 +607,97 @@ footer.site p { margin: 0 0 6px; }
   .hero-routes { gap: 6px; font-size: 11px; }
 }
 @media (max-width: 430px) { .origin-map { gap: 10px; padding: 8px 10px; } .map-art { flex-basis: 82px; height: 95px; } }
+/* ---------- Quiz：整頁停在一個視窗高度內，手機不用滑動 ---------- */
+body[data-view="quiz"] {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+body[data-view="quiz"] footer.site { display: none; }
+
+body[data-view="quiz"] #app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+body[data-view="quiz"] .quiz-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+/* 一頁不捲動，進度列不需要 sticky，直接留在版面最上方 */
+body[data-view="quiz"] .progress-top { position: static; padding: 6px 0 8px; }
+
+/* 題目與選項一起撐滿剩下的高度；選項等分，不用捲動就看得到全部 */
+body[data-view="quiz"] .question {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0 0;
+}
+body[data-view="quiz"] .question .hint { margin-bottom: 12px; }
+body[data-view="quiz"] .options {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-auto-rows: minmax(min-content, 1fr);
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 下面的按鈕留在版面裡，不再浮在內容上 */
+body[data-view="quiz"] .quiz-nav {
+  position: static;
+  flex: none;
+  margin-top: 8px;
+  padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--jf-line);
+  background: var(--jf-paper);
+  backdrop-filter: none;
+}
+.quiz-nav .btn { min-width: 104px; }
+.quiz-nav .btn:last-child { min-width: 132px; }
+
+@media (min-width: 1024px) {
+  body[data-view="quiz"] .quiz-wrap { max-height: 680px; }
+}
+
+@media (max-width: 600px) {
+  body[data-view="quiz"] .crumbs { padding-top: 10px; font-size: 11.5px; }
+  body[data-view="quiz"] .question .qnum { margin-bottom: 4px; }
+  body[data-view="quiz"] .question h2 { font-size: clamp(19px, 5.2vw, 23px); margin-bottom: 4px; }
+  body[data-view="quiz"] .question .hint { font-size: 12.5px; line-height: 1.6; margin-bottom: 10px; }
+  body[data-view="quiz"] .options { gap: 8px; }
+  body[data-view="quiz"] .option { padding: 9px 12px; gap: 10px; grid-template-columns: minmax(0, 1fr) 18px; }
+  body[data-view="quiz"] .option .label { font-size: 15px; }
+  body[data-view="quiz"] .quiz-nav-in { gap: 8px; }
+  body[data-view="quiz"] .quiz-nav .btn { min-width: 0; padding: 0 15px; }
+  body[data-view="quiz"] .quiz-nav .skip { font-size: 12px; padding: 0 2px; }
+}
+
+/* 橫式手機、很矮的視窗：先把提示與麵包屑收起來，換取一頁放得下 */
+@media (max-height: 560px) {
+  body[data-view="quiz"] .question .hint { display: none; }
+  body[data-view="quiz"] .progress-top { padding: 2px 0 6px; }
+  body[data-view="quiz"] .options { gap: 5px; }
+  body[data-view="quiz"] .option { min-height: 44px; padding: 4px 12px; }
+  body[data-view="quiz"] .option .sub { display: none; }
+  body[data-view="quiz"] .quiz-nav { margin-top: 4px; padding-top: 4px; }
+  body[data-view="quiz"] .quiz-nav .btn { min-height: 44px; }
+}
+@media (max-height: 480px) {
+  body[data-view="quiz"] .crumbs { display: none; }
+  body[data-view="quiz"] .question { padding-top: 4px; }
+  body[data-view="quiz"] .question h2 { margin-bottom: 2px; }
+}
+/* 橫式手機：選項改兩欄，保留 44px 觸控目標，整頁仍停在一個視窗高度內。 */
+@media (max-height: 560px) and (min-width: 600px) {
+  body[data-view="quiz"] .options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
