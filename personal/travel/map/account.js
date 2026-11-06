@@ -185,6 +185,28 @@
     if (!state.user) return [];
     return readOutbox().filter(op => op.userId === state.user.id);
   }
+  // Remember that one queued change was refused, so the page can show it
+  // instead of claiming the cloud already has it.
+  function markFailed(op) {
+    const ops = readOutbox();
+    const index = ops.findIndex(item => item.userId === op.userId && item.op === op.op
+      && item.payload?.placeKey === op.payload?.placeKey
+      && item.payload?.month === op.payload?.month
+      && item.payload?.id === op.payload?.id);
+    if (index < 0) return;
+    ops[index] = { ...ops[index], failed:true, attempts:(ops[index].attempts || 0) + 1 };
+    writeOutbox(ops);
+  }
+  function syncStates() {
+    const map = new Map();
+    if (state.mode !== 'cloud' || !state.user) return map;
+    for (const op of outboxForCurrentUser()) {
+      const { placeKey, month } = op.payload || {};
+      if (typeof placeKey !== 'string' || typeof month !== 'string') continue;
+      map.set(`${placeKey}|${month}`, op.failed ? 'failed' : 'pending');
+    }
+    return map;
+  }
 
   // ---------- demo store (no server; cross-tab live via BroadcastChannel) ----------
   function demoStore() {
@@ -296,6 +318,8 @@
       mode:state.mode,
       connection:state.connection,
       pending:state.pending,
+      // Records whose last attempt failed and that are waiting for a retry.
+      failing:state.user ? outboxForCurrentUser().filter(op => op.failed).length : 0,
       lastSyncAt:state.lastSyncAt,
       realtime:state.realtime,
       signedIn:Boolean(state.user)
@@ -340,6 +364,8 @@
     myRows,
     cities: visibleCities,
     pendingOps: outboxForCurrentUser,
+    // One record's state: queued ('pending'), refused ('failed') or confirmed.
+    syncStates,
     demoUsers: () => DEMO_USERS.slice(),
     demoAvailable: () => state.mode === 'demo',
     localGateAvailable: () => Boolean(localGate()),
@@ -369,6 +395,8 @@
         });
         client.auth.onAuthStateChange((event, session) => {
           if (authenticating) return;
+          // A recovery link proves the address; it only asks for a new password.
+          if (event === 'PASSWORD_RECOVERY') { emit('recovery', true); return; }
           if (!session?.user) { setUser(null); return; }
           // A refreshed token for the traveller already on screen changes nothing.
           if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id) return;
@@ -377,6 +405,9 @@
         const { data } = await client.auth.getSession();
         await resolveSession(data?.session || null);
         setConnection('online');
+        // A link that carries the recovery type opens the reset view even if
+        // the exchange completes after the page has already rendered.
+        if (recoveryLink()) setTimeout(() => emit('recovery', true), 0);
         // Every visitor loads the public atlas, signed in or not.
         await syncPull();
         startPolling();
@@ -596,6 +627,44 @@
     await syncPull();
     emit('cities', { reset:true });
   }
+  // ---------- password reset ----------
+  // The link in the mail must come back to this page, without the query string
+  // that started it.
+  function recoveryRedirect() {
+    try {
+      const url = new URL(location.href);
+      url.search = '';
+      url.hash = '';
+      return url.href;
+    } catch { return undefined; }
+  }
+  function recoveryLink() {
+    try {
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+      return query.get('type') === 'recovery' || hash.get('type') === 'recovery';
+    } catch { return false; }
+  }
+  async function requestPasswordReset(rawEmail) {
+    if (state.mode !== 'cloud' || !client) return { ok:false, reason:'unavailable' };
+    const address = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, reason:'invalid_email' };
+    const { error } = await client.auth.resetPasswordForEmail(address, { redirectTo:recoveryRedirect() });
+    return error ? { ok:false, reason:'failed' } : { ok:true };
+  }
+  async function updatePassword(password) {
+    if (state.mode !== 'cloud' || !client) return { ok:false, reason:'unavailable' };
+    if (typeof password !== 'string' || password.length <= 6) return { ok:false, reason:'short' };
+    const { error } = await client.auth.updateUser({ password });
+    if (error) return { ok:false, reason:'failed' };
+    const { data } = await client.auth.getSession();
+    await resolveSession(data?.session || null);
+    return { ok:true };
+  }
+  api.requestPasswordReset = requestPasswordReset;
+  api.updatePassword = updatePassword;
+  api.recoveryRequested = recoveryLink;
+
   function enterDemo(id = 'demo-eva') {
     const user = DEMO_USERS.find(item => item.id === id);
     if (!user) return;
@@ -792,6 +861,7 @@
         dropOp(op);
       } catch (error) {
         console.warn('queued change failed', op.op, error);
+        markFailed(op);
         flushing = false;
         setConnection(navigator.onLine ? 'error' : 'offline');
         startPolling();
@@ -805,6 +875,14 @@
     emit('status', status());
   }
   api.flush = flush;
+  // Ask again for everything that failed, e.g. from the retry next to a record.
+  api.retry = async () => {
+    const ops = readOutbox();
+    let cleared = false;
+    for (const op of ops) if (op.failed) { delete op.failed; cleared = true; }
+    if (cleared) writeOutbox(ops);
+    return flush();
+  };
 
   // Optimistic local writes: app.js updates its own model immediately, then
   // calls these. If the network is down the change waits in the outbox.
@@ -898,9 +976,36 @@
   };
   // Persist a per-user view locally so a reload without a network still shows stamps.
   api.writeCache = payload => writeJSON(CACHE_KEY, payload);
-  api.cachedVisits = () => {
+  // The whole per-traveller snapshot, identity included, so the page can refuse
+  // a cache that belongs to somebody else.
+  api.cachedSnapshot = () => {
     const raw = readJSON(CACHE_KEY, null);
-    return raw && typeof raw.visits === 'object' && !Array.isArray(raw.visits) ? raw.visits : null;
+    if (!raw || typeof raw.userId !== 'string' || !raw.visits || typeof raw.visits !== 'object' || Array.isArray(raw.visits)) return null;
+    return raw;
+  };
+  api.cachedVisits = () => api.cachedSnapshot()?.visits || null;
+  // A tagged traveller may take their own tag off somebody else's record; the
+  // database function only ever removes auth.uid() from companions.
+  api.leaveStamp = async stampId => {
+    if (state.mode === 'local' || !state.user || typeof stampId !== 'string') return { ok:false, reason:'local' };
+    if (state.mode === 'demo') {
+      demoWriteGuarded(store => {
+        (store.stamps || []).forEach(row => {
+          if (row.id !== stampId) return;
+          row.companions = (row.companions || []).filter(id => id !== state.user.id);
+        });
+      });
+      const row = rowsById.get(stampId);
+      if (row) rowsById.set(stampId, { ...row, companions:(row.companions || []).filter(id => id !== state.user.id) });
+      emit('rows', { reset:true });
+      return { ok:true };
+    }
+    if (!client) return { ok:false, reason:'offline' };
+    const { data, error } = await client.rpc('atlas_leave_stamp', { p_stamp_id:stampId });
+    if (error) return { ok:false, reason:'failed' };
+    const result = Array.isArray(data) ? data[0] : data;
+    await syncPull();
+    return result && result.ok === true ? { ok:true } : { ok:false, reason:result?.reason || 'failed' };
   };
 
   window.TravelAtlasAccount = api;

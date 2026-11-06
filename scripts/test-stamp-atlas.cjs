@@ -52,6 +52,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       };
       const chooseCollection = async id => { await page.locator('#collection-menu-button').click(); await page.locator(`#tab-${id}`).click(); };
       page.on('pageerror',error => errors.push(error.message));
+      // Destructive actions ask first; this suite always confirms.
+      page.on('dialog',dialog => dialog.accept());
       await page.goto(`${url}/personal/travel/map/`);
       await page.evaluate(() => document.fonts.ready);
       assert.deepEqual(errors,[],'the atlas should initialize without uncaught JavaScript errors');
@@ -257,7 +259,6 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#place-search').fill('臺南');
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#history-list li').count(),1);
-      page.once('dialog',dialog => dialog.accept());
       await page.locator('#delete-city').click();
       assert.equal(await page.locator('#board-total').textContent(),'171');
       assert.equal(await page.locator('#passport-count').textContent(),'2');
