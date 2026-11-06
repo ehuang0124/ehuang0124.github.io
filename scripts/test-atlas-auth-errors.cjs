@@ -15,7 +15,7 @@ const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoM
 const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
-function makeClient({ signedUp = true, rpc = { data:null, error:null } } = {}) {
+function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null } } = {}) {
   const state = { session: null, rpcCalls: [] };
   const chain = () => {
     const builder = {
@@ -33,6 +33,7 @@ function makeClient({ signedUp = true, rpc = { data:null, error:null } } = {}) {
       onAuthStateChange() { return { data:{ subscription:{ unsubscribe(){} } } }; },
       async getSession() { return { data:{ session: state.session }, error:null }; },
       async signUp() {
+        if (signupResponse) return signupResponse;
         if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the personal account' } };
         state.session = { access_token:'token', user:{ id:'user-device' } };
         return { data:{ user:state.session.user, session:state.session }, error:null };
@@ -177,6 +178,29 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
     assert(page.$('#account-error').textContent.includes('建立帳號'));
     assert.equal(page.$('#account-card').hidden, true);
     assert.equal(page.fake.state.session, null);
+    assert.deepEqual(page.errors, []);
+  }
+
+  // Obfuscated duplicate-signup responses are not email-confirmation errors.
+  {
+    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[] }, session:null }, error:null } } });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('已註冊'));
+    assert(!page.$('#account-error').textContent.includes('Confirm email'));
+    assert.equal(page.$('#account-create').getAttribute('aria-selected'), 'true');
+    assert.equal(page.fake.state.rpcCalls.length, 0);
+  }
+  // Unexpected network/client exceptions never leave a disabled form behind.
+  {
+    const page = await load();
+    page.window.TravelAtlasAccount.signIn = async () => { throw new Error('network interrupted'); };
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('連線失敗'));
+    assert.equal(page.$('#code-signin-submit').disabled, false);
+    assert.equal(page.$('#account-create').disabled, false);
+    assert.equal(page.$('#account-login').disabled, false);
+    assert.equal(page.$('#account-panel').hasAttribute('aria-busy'), false);
+    assert.equal(page.$('#account-dialog').open, true);
     assert.deepEqual(page.errors, []);
   }
 

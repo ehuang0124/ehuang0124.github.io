@@ -1286,46 +1286,65 @@
     if (input) input.value = '';
     accountDialog.close();
   }
-  if ($('#local-signin-submit')) $('#local-signin-submit').addEventListener('click', submitLocalPassphrase);
-  if ($('#passphrase')) $('#passphrase').addEventListener('keydown', event => {
-    if (event.key === 'Enter') { event.preventDefault(); submitLocalPassphrase(); }
-  });
   accountDialog.addEventListener('click', event => { if (event.target === accountDialog) accountDialog.close(); });
   // Login only collects personal credentials; creation also requires an invite.
   async function submitAccessCode() {
     if (atlasAccount.mode !== 'cloud' || $('#code-signin-submit')?.disabled) return;
     $('#account-error').textContent = '';
     const submit = $('#code-signin-submit');
-    if (submit) submit.disabled = true;
-    const result = await account?.signIn?.({
-      code: $('#code-signin').dataset.mode === 'create' ? $('#access-code').value : undefined,
-      name: $('#code-signin').dataset.mode === 'create' ? $('#traveller-name').value : '',
-      email: $('#account-email')?.value,
-      password: $('#account-password')?.value,
-      createAccount: $('#code-signin').dataset.mode === 'create'
-    });
-    if ($('#account-password')) $('#account-password').value = '';
-    if (submit) submit.disabled = false;
+    const creating = $('#code-signin').dataset.mode === 'create';
+    submit.disabled = true;
+    $('#account-login').disabled = true;
+    $('#account-create').disabled = true;
+    $('#account-panel').setAttribute('aria-busy', 'true');
+    submit.textContent = creating ? '建立中…' : '登入中…';
+    let result;
+    try {
+      result = await account?.signIn?.({
+        code: creating ? $('#access-code').value : undefined,
+        name: creating ? $('#traveller-name').value : '',
+        email: $('#account-email').value,
+        password: $('#account-password').value,
+        createAccount: creating
+      });
+    } catch {
+      result = { ok:false, reason:'連線失敗，請稍後再試。' };
+    } finally {
+      submit.disabled = false;
+      $('#account-login').disabled = false;
+      $('#account-create').disabled = false;
+      $('#account-panel').removeAttribute('aria-busy');
+      submit.textContent = creating ? '建立帳號 ↗' : '登入 ↗';
+    }
+    // Keep a locally invalid form editable; clear the password after any
+    // request actually reached Auth, regardless of success or failure.
+    if (!result?.field) $('#account-password').value = '';
     if (!result || result.ok !== true) {
       $('#account-error').textContent = result?.reason || '無法登入。';
-      const field = $('#code-signin').dataset.mode === 'create' ? $('#access-code') : $('#account-password');
-      field?.focus();
+      $(result?.field || (creating ? '#access-code' : '#account-password'))?.focus();
       return;
     }
-    if ($('#access-code')) $('#access-code').value = '';
+    $('#access-code').value = '';
     accountDialog.close();
   }
   function setAccountMode(creating) {
+    if ($('#code-signin-submit').disabled) return;
+    const changed = $('#code-signin').dataset.mode !== (creating ? 'create' : 'login');
     $('#code-signin').dataset.mode = creating ? 'create' : 'login';
-    $('#account-login').setAttribute('aria-pressed', String(!creating));
-    $('#account-create').setAttribute('aria-pressed', String(creating));
+    for (const [id, selected] of [['#account-login', !creating], ['#account-create', creating]]) {
+      $(id).setAttribute('aria-selected', String(selected));
+      $(id).tabIndex = selected ? 0 : -1;
+    }
+    $('#account-panel').setAttribute('aria-labelledby', creating ? 'account-create' : 'account-login');
     for (const id of ['#traveller-name', '#access-code']) {
       $(id).closest('label').hidden = !creating;
       $(id).disabled = !creating;
       $(id).required = creating;
     }
-    $('#account-password').value = '';
-    $('#access-code').value = '';
+    if (changed) {
+      $('#account-password').value = '';
+      $('#access-code').value = '';
+    }
     $('#account-password').autocomplete = creating ? 'new-password' : 'current-password';
     $('#account-dialog-title').textContent = creating ? '建立帳號' : '登入';
     $('#code-signin-submit').textContent = creating ? '建立帳號 ↗' : '登入 ↗';
@@ -1337,13 +1356,19 @@
     $('#account-password').value = '';
     $('#access-code').value = '';
   });
-  if ($('#code-signin-submit')) $('#code-signin-submit').addEventListener('click', submitAccessCode);
-  for (const selector of ['#access-code', '#traveller-name', '#account-email', '#account-password']) {
-    if (!$(selector)) continue;
-    $(selector).addEventListener('keydown', event => {
-      if (event.key === 'Enter') { event.preventDefault(); submitAccessCode(); }
-    });
-  }
+  $('#account-form').addEventListener('submit', event => {
+    event.preventDefault();
+    if (atlasAccount.mode === 'cloud') submitAccessCode();
+    else if (atlasAccount.mode === 'local') submitLocalPassphrase();
+  });
+  $('.account-modes').addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    if ($('#code-signin-submit').disabled) return;
+    const creating = event.key === 'End' || (event.key !== 'Home' && $('#code-signin').dataset.mode !== 'create');
+    setAccountMode(creating);
+    $(creating ? '#account-create' : '#account-login').focus();
+  });
   $('#account-demo').addEventListener('click', () => {
     account?.enterDemo('demo-eva');
     accountDialog.close();
