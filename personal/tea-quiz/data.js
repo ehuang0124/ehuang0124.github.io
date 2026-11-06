@@ -8,6 +8,8 @@
  *  - 咖啡因若沒有「同產品、同沖泡條件」的實測值，caffeine.mgPer100ml 一律為
  *    null，介面只顯示「數值未知」與類別參考值，不得換算成每杯攝取量。
  *  - 產地知名不等於每一款茶品質一致；每筆都必須有可追溯來源。
+ *  - knownForZh / knownForEn 是「這款茶以什麼聞名」的單句：一句話、只講產地與茶本身的
+ *    名聲，不解釋為什麼推薦給這位使用者（結果卡不顯示推薦理由）。
  *
  * 咖啡因參考值來源：農林水產省「食品中のカフェイン」（標準浸出液 mg/100mL）
  * https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html
@@ -62,6 +64,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '三重縣水澤的冠茶，以遮光栽培帶來的甘甜與柔滑茶湯聞名。',
+    knownForEn: 'Kabusecha from Mizusawa in Mie, known for the sweetness and silkiness that shading brings.',
     copyZh: '覆蓋遮光讓茶湯少了澀味、多了甘甜與圓潤，是「想要柔滑但不想太濃」最直接的答案。',
     copyEn: 'Shade-grown to keep astringency low and sweetness high — the most direct answer to “silky but not too dense.”'
   },
@@ -85,6 +89,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '鹿兒島知覽的深蒸煎茶，以さえみどり品種的濃醇甘甜與翠綠茶湯聞名。',
+    knownForEn: 'Deep-steamed sencha from Chiran in Kagoshima, known for the Saemidori cultivar’s rich sweetness and jade-green cup.',
     copyZh: 'さえみどり品種的甘味配上深蒸的厚實茶湯，濃綠但不苦，冷水短泡也很穩。',
     copyEn: 'The Saemidori cultivar’s sweetness with deep-steamed body: dense and deep green without bitterness.'
   },
@@ -108,6 +114,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '福岡八女的傳統本玉露，以手摘茶葉低溫慢泡出的高湯般鮮味聞名。',
+    knownForEn: 'Yame’s traditional hand-picked gyokuro, known for a broth-like umami drawn out slowly at low temperature.',
     copyZh: '極少量水低溫慢出的濃厚鮮味，像高湯一樣包覆舌面；是要「濃厚探索」時的答案，不建議當日常第一杯。',
     copyEn: 'A tiny amount of water at low temperature yields broth-like umami that coats the tongue — the “go deeper” choice rather than an everyday first cup.'
   },
@@ -131,6 +139,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '佐賀嬉野的蒸製玉綠茶，以勾玉狀茶葉與圓潤少澀的甘甜聞名。',
+    knownForEn: 'Steamed tamaryokucha from Ureshino in Saga, known for comma-shaped leaves and a round, low-astringency sweetness.',
     copyZh: '九州式的圓潤甘甜，澀味比多數煎茶更收斂，價格通常也比玉露親切。',
     copyEn: 'Kyushu-style roundness and sweetness with less astringency than most sencha, and usually kinder to your budget than gyokuro.'
   },
@@ -154,6 +164,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '佐賀嬉野的釜炒茶，以鍋炒的清爽焙香取代蒸青的海苔味聞名。',
+    knownForEn: 'Pan-fired kamairicha from Ureshino in Saga, known for a clean toasted aroma in place of steamed seaweed notes.',
     copyZh: '清爽中帶著炒香的溫暖尾韻，是「不愛海苔味、想要一點焙火」的入門選擇。',
     copyEn: 'Fresh and light with a warm, toasted finish — a friendly entry if you don’t love the seaweed side of green tea.'
   },
@@ -177,6 +189,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '靜岡川根山區的普通蒸煎茶，以清澈茶湯與乾淨香氣聞名。',
+    knownForEn: 'Standard-steamed sencha from the Kawane mountains of Shizuoka, known for a clear cup and clean aroma.',
     copyZh: '清澈、香氣乾淨、帶一點收斂感，是最標準的「日本茶長相」。',
     copyEn: 'Clear, clean-aromaed and lightly astringent — the textbook shape of Japanese green tea.'
   },
@@ -200,6 +214,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '靜岡掛川的深蒸茶，以濃綠厚實、日常沖泡也不易失手聞名。',
+    knownForEn: 'Fukamushicha from Kakegawa in Shizuoka, known for a deep-green, full-bodied cup that forgives everyday brewing.',
     copyZh: '深蒸讓茶湯濃綠、口感厚實、澀味靠後，日常泡也不容易失敗。',
     copyEn: 'Deep steaming gives a deep-green, full-bodied cup with the astringency pushed back — hard to get wrong day to day.'
   },
@@ -223,6 +239,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '靜岡朝比奈與京都宇治、福岡八女並列日本三大玉露產區，以濃厚鮮味聞名。',
+    knownForEn: 'Asahina in Shizuoka ranks with Uji and Yame among Japan’s three great gyokuro districts, known for deep umami.',
     copyZh: '高鮮味、甘醇、幾乎不澀；比八女玉露輕一點，適合第一次練低溫沖泡。',
     copyEn: 'High umami and sweetness with almost no astringency — a lighter entry into low-temperature brewing than Yame gyokuro.'
   },
@@ -246,6 +264,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '京都宇治是日本抹茶的代表產區，以石臼研磨的細緻粉末與覆下茶香聞名。',
+    knownForEn: 'Uji in Kyoto is Japan’s reference matcha origin, known for stone-milled finesse and shaded-tea aroma.',
     copyZh: '整片茶葉磨成粉喝下，鮮味最濃、茶湯最稠；份量以粉量計，不是以水量計。',
     copyEn: 'The whole leaf, ground and drunk — the densest umami and thickest texture here, measured by powder rather than water.'
   },
@@ -269,6 +289,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '愛知西尾是日本主要的碾茶產區之一，以粉末厚重、茶味鮮明的抹茶聞名。',
+    knownForEn: 'Nishio in Aichi is one of Japan’s leading tencha areas, known for matcha with a heavy powder and assertive tea flavour.',
     copyZh: '粉末感更厚重、苦味輪廓更清楚，加奶或做甜點時個性比宇治更明顯。',
     copyEn: 'Thicker on the palate with a clearer bitter edge — holds its own in milk drinks and sweets better than Uji.'
   },
@@ -292,6 +314,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'editorial',
+    knownForZh: '煎茶或番茶拌入炒焙糙米，以烘米香主導、茶味輕淡的日常茶聞名。',
+    knownForEn: 'Sencha or bancha blended with roasted rice, known as an everyday cup led by toasty rice aroma rather than tea.',
     copyZh: '烘米香主導、茶味輕，數字上偏低但仍有咖啡因（標準浸出液約 10 mg／100 mL），不能當無咖啡因。',
     copyEn: 'Rice-forward and light, but still caffeinated (≈10 mg/100 mL in the reference infusion) — never a caffeine-free option.'
   },
@@ -309,6 +333,8 @@ export const TEAS = [
     brew: { grams: 3, ml: 200, temp: 95, seconds: 150, method: 'teapot' },
     purchaseJa: ['牧之原 和紅茶', 'べにふうき 紅茶'],
     sources: ['https://www.oguri-farm.com/product/18', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '靜岡牧之原台地的紅富貴和紅茶，以花果般的甜香聞名。',
+    knownForEn: 'Benifuuki wakoucha from the Makinohara plateau in Shizuoka, known for floral, fruit-like sweetness.',
     copyZh: '紅富貴品種的香氣，在牧之原被做成一杯帶花果聯想的和紅茶。先單喝，感受甜韻，再試一點牛奶。',
     copyEn: 'Benifuuki from Makinohara, with floral and fruit-like aromas. Try it straight for its gentle sweetness before adding a little milk.'
   },
@@ -332,6 +358,8 @@ export const TEAS = [
     sources: [MAFF],
     reviewedAt: '2026-11',
     confidence: 'productDependent',
+    knownForZh: '以商品包裝標示為準的無咖啡因茶飲類別，是晚上仍想喝一杯茶時的路線。',
+    knownForEn: 'A caffeine-free class defined by the product label — the route for a late cup of tea.',
     copyZh: '這是一個商品類別，不是茶種：只有包裝明確標示無咖啡因的加工商品才算。風味依商品而定，購買前請看標示。',
     copyEn: 'A product class, not a tea type: only packaged goods explicitly labelled caffeine-free count. Flavour depends on the product.'
   },
@@ -349,6 +377,8 @@ export const TEAS = [
     brew: { grams: 3, ml: 200, temp: 95, seconds: 150, method: 'teapot' },
     purchaseJa: ['本山 和紅茶', 'やぶきた 紅茶'],
     sources: ['https://chasho.yamachou.net/products/detail/570', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '靜岡本山的藪北和紅茶，以含蓄蜜香與適合單飲的柔和甘甜聞名。',
+    knownForEn: 'Yabukita wakoucha from Motoyama in Shizuoka, known for understated honeyed aroma and a soft sweetness made for drinking straight.',
     copyZh: '熟悉的藪北品種，換成紅茶的做法。含蓄的香氣與甘甜，適合不加糖、不加奶，安靜地喝完一杯。',
     copyEn: 'The familiar Yabukita cultivar made as black tea: understated aroma and sweetness, well suited to a quiet cup without milk or sugar.'
   },
@@ -366,6 +396,8 @@ export const TEAS = [
     brew: { grams: 3, ml: 200, temp: 90, seconds: 120, method: 'teapot' },
     purchaseJa: ['牧之原 蜜香紅茶', '柴本 蜜香茶'],
     sources: ['https://changetea.jp/article/drink/the-best-black-tea-in-japan/', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '靜岡牧之原的蜜香和紅茶，以蜜香與麝香葡萄般的清爽香氣聞名。',
+    knownForEn: 'Honey-aroma wakoucha from Makinohara in Shizuoka, known for honeyed notes and a muscat-like freshness.',
     copyZh: '柴本俊史的蜜香茶，帶熟成韻味與麝香葡萄般的清爽香氣，幾乎不澀。一杯喝完，還能再回沖。',
     copyEn: 'Toshifumi Shibamoto’s honey-aroma tea pairs a mellow character with a refreshing muscat-like aroma and almost no astringency. Enjoy another infusion.'
   },
@@ -383,6 +415,8 @@ export const TEAS = [
     brew: { grams: 4, ml: 250, temp: 95, seconds: 180, method: 'teapot' },
     purchaseJa: ['薩摩紅茶', '鹿児島 和紅茶', 'べにふうき'],
     sources: ['https://susumuya.com/?pid=88430894', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '鹿兒島的薩摩紅茶，以紅富貴做出的厚實茶體與鮮明收斂感聞名。',
+    knownForEn: 'Satsuma black tea from Kagoshima, known for a full body and clear structure built from Benifuuki.',
     copyZh: '南國茶園做出來的厚實一杯，香氣與收斂感都比較鮮明。想要茶味在牛奶裡仍然清楚，可以從這裡開始。',
     copyEn: 'A fuller cup from southern Japan, with a clearer aromatic and astringent structure. A good starting point when you want the tea to come through milk.'
   },
@@ -400,6 +434,8 @@ export const TEAS = [
     brew: { grams: 3, ml: 200, temp: 95, seconds: 180, method: 'teapot' },
     purchaseJa: ['和束紅茶', 'ふきみ', '京都 和紅茶'],
     sources: ['https://www.wazukakoucha.jp/item/003a/', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '京都和束位於宇治茶鄉，其紅富貴和紅茶「ふきみ」以撐得起奶茶的厚度聞名。',
+    knownForEn: 'Wazuka sits in the Uji tea country of Kyoto; its Benifuuki wakoucha “Fukimi” is known for a body that stands up to milk.',
     copyZh: '宇治茶鄉和束的紅茶路線。紅富貴做成有份量的「ふきみ」，熱奶茶、冰奶茶都能保留茶的輪廓。',
     copyEn: 'Black tea from the Uji-tea countryside of Wazuka. Fukimi gives Benifuuki enough body to keep its shape in hot or iced milk tea.'
   },
@@ -417,6 +453,8 @@ export const TEAS = [
     brew: { grams: 3, ml: 200, temp: 90, seconds: 120, method: 'teapot' },
     purchaseJa: ['和束紅茶', 'みおく', '京都 和紅茶'],
     sources: ['https://www.wazukakoucha.jp/', MAFF], reviewedAt: '2026-11', confidence: 'editorial',
+    knownForZh: '京都和束のみおく和紅茶，以輕盈甜香與乾淨收尾聞名。',
+    knownForEn: 'Mioku wakoucha from Wazuka in Kyoto, known for a light, sweet-aromaed cup with a clean finish.',
     copyZh: '和紅茶不一定濃厚。みおく走輕盈、甜香、收尾乾淨的路線，像午後穿過茶園的一陣風。',
     copyEn: 'Wakoucha need not be heavy. Mioku takes the light, sweet-aromaed, clean-finishing route — an afternoon breeze through the tea fields.'
   },

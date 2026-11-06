@@ -96,7 +96,7 @@
             </div>
 
             <aside class="stamp-panel" aria-label="目的地與蓋章台">
-              <div class="stamp-panel-top"><span>目的地</span></div>
+              <div class="stamp-panel-top"><span>目的地 / DESTINATION</span><button type="button" class="mobile-stamp-close" id="mobile-stamp-close" aria-label="關閉蓋章視窗">×</button></div>
               <div class="stamp-panel-inner">
                 <div class="place-heading"><h2 class="place-name-line"><span id="place-flag" class="place-flag" aria-hidden="true"></span><span id="place-name">日本</span><span id="place-code" hidden></span></h2><p id="place-en">JAPAN</p><p id="place-location">亞洲 · 國家與地區</p><p id="legacy-note" class="legacy-note" hidden></p></div>
                 <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 58" aria-hidden="true"></svg><svg class="stamp-tool-icon stamp-preview-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-owner-seal" id="stamp-owner-seal" hidden><b id="stamp-owner-initial"></b><small>TRIP</small></span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div><div class="plate-caption"><span id="plate-motif" class="plate-motif">日本 · 富士山</span><span class="plate-scale" role="img" aria-label="單色墨色四階"><i></i><i></i><i></i><i></i></span><span id="plate-kind" class="plate-kind">風景</span></div></div>
@@ -133,6 +133,8 @@
     </main>
     <footer class="footer"><span>© 2026 EVA HUANG</span><a href="./specimen.html">戳章圖稿索引 ↗</a><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
   </div>
+
+  <dialog id="mobile-stamp-dialog" class="mobile-stamp-dialog" aria-labelledby="place-name"></dialog>
 
   <dialog id="collection-menu" class="collection-menu" aria-labelledby="collection-menu-title">
     <div class="collection-menu-inner">
