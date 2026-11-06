@@ -4,7 +4,7 @@
  * 沒有後端、沒有帳號、不蒐集個資；分享只把答案編碼放進網址。
  */
 
-import { TEAS, TEA_FAMILIES, CAFFEINE_REFERENCE } from './data.js';
+import { TEAS, TEA_FAMILIES, FAMILY_IMAGES, CAFFEINE_REFERENCE } from './data.js';
 import { JAPAN_PATH } from './japan-path.js';
 import {
   QUESTIONS, recommend, encodeAnswers, decodeAnswers, SCALE_LABELS
@@ -18,7 +18,9 @@ const toastEl = document.getElementById('toast');
 const state = {
   lang: document.documentElement.lang.startsWith('zh') ? 'zh' : 'en',
   answers: {},
-  index: 0
+  index: 0,
+  step: 0,
+  resultCode: null
 };
 
 /* ---------------- 文案 ---------------- */
@@ -91,6 +93,24 @@ const S = {
     copied: '已複製',
     copyFail: '複製失敗，請手動選取',
     shareHint: '分享連結只包含你的答案，不含任何個人資料。',
+    profileBtn: '風味偏好',
+    profileSheetTitle: '你的風味偏好',
+    deckGuide: '3 款推薦：用下方按鈕一張一張看',
+    deckAria: '推薦茶款卡牌',
+    stepsAria: '選擇第幾款',
+    prevTea: '上一款',
+    nextTea: '下一款',
+    shareShort: '分享茶譜',
+    fullInfo: '完整資訊',
+    guideTitle: '三張卡牌怎麼看',
+    roleHintTop1: '七個維度都最靠近你的答案',
+    roleHintTop2: '同一條路線的第二個選擇',
+    roleHintTop3: '同一個茶類，但個性不同',
+    roleHintExplore: '刻意換一條路線，讓三張不完全一樣',
+    deckStatus: (i, n, name) => `第 ${i} 款，共 ${n} 款：${name}`,
+    goTo: (i, name) => `看第 ${i} 款：${name}`,
+    imgAlt: (family) => `${family}茶湯的水彩插畫，一杯放在米紙上的茶`,
+    recNote: '推薦只依你剛才的答案與茶款標籤比對；資料庫裡的風味分數是編輯假設，尚未經大規模品飲校準。',
     backHome: '回首頁',
     langLabel: '語言',
     foot: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。'
@@ -163,6 +183,24 @@ const S = {
     copied: 'Copied',
     copyFail: 'Copy failed — please select manually',
     shareHint: 'The shared link contains only your answers, no personal data.',
+    profileBtn: 'Profile',
+    profileSheetTitle: 'Your flavour profile',
+    deckGuide: 'Three teas — one card at a time',
+    deckAria: 'Recommended teas',
+    stepsAria: 'Choose a card',
+    prevTea: 'Previous',
+    nextTea: 'Next',
+    shareShort: 'Share',
+    fullInfo: 'Full detail',
+    guideTitle: 'How to read the three cards',
+    roleHintTop1: 'Closest to all seven of your answers',
+    roleHintTop2: 'The second choice on the same route',
+    roleHintTop3: 'The same family, with a different character',
+    roleHintExplore: 'A deliberate change of route, so the three are not all alike',
+    deckStatus: (i, n, name) => `Tea ${i} of ${n}: ${name}`,
+    goTo: (i, name) => `Show tea ${i}: ${name}`,
+    imgAlt: (family) => `Watercolour illustration of a cup of ${family} tea on cream paper`,
+    recNote: 'Recommendations compare your answers with editorial flavour labels only; those scores have not yet been calibrated by large-scale tasting.',
     backHome: 'Home',
     langLabel: 'Language',
     foot: 'Flavour scores are editorial labels, not lab values. Caffeine figures are official reference infusions by category and are not a per-cup intake comparison.'
@@ -349,6 +387,13 @@ function openTea(id) {
   document.getElementById('sheet-ja').textContent = tea.nameJa;
   const body = document.getElementById('sheet-body');
   body.replaceChildren(
+    el('figure', { class: 'sheet-media' },
+      el('img', {
+        src: familyImage(tea),
+        alt: t('imgAlt', TEA_FAMILIES[tea.family][state.lang]),
+        width: '1264', height: '848', loading: 'lazy', decoding: 'async'
+      })
+    ),
     el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
     el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
     originMap(tea),
@@ -566,12 +611,29 @@ function go(index) {
 function finish() {
   const code = encodeAnswers(state.answers);
   state.index = 0;
+  state.step = 0;
   persist();
   location.hash = `#/result/${code}`;
   viewResults(code);
 }
 
-/* ---------------- 結果 ---------------- */
+/* ---------------- 結果 ----------------
+ * 一次只呈現一張卡牌：整頁停在一個視窗高度內，不必往下滑。
+ * 由下方按鈕（上一款／下一款／1·2·3）逐張看完 Top 3，
+ * 卡面只放「為什麼是這款」的資訊；咖啡因、沖泡、購買用語與產地圖
+ * 留在「完整資訊」的詳情層，避免把卡牌擠成一長條。
+ */
+const deck = {
+  total: 0,
+  index: 0,
+  cards: [],
+  dots: [],
+  prev: null,
+  next: null,
+  status: null,
+  results: []
+};
+
 function roleLabel(role) {
   if (role === 'top1') return t('top1');
   if (role === 'top2') return t('top2');
@@ -579,47 +641,147 @@ function roleLabel(role) {
   return t('roleExplore');
 }
 
-function resultCard(row, index) {
+function roleHint(role) {
+  if (role === 'top1') return t('roleHintTop1');
+  if (role === 'top2') return t('roleHintTop2');
+  if (role === 'top3') return t('roleHintTop3');
+  return t('roleHintExplore');
+}
+
+/* 茶種的飲品插畫：認茶類用，不是某一支商品的實拍照 */
+function familyImage(tea) {
+  return FAMILY_IMAGES[tea.family] || FAMILY_IMAGES.sencha;
+}
+
+function brewSummary(tea) {
+  const b = tea.brew;
+  if (b.method === 'label' || (!b.grams && !b.ml)) return L('依包裝標示沖泡', 'Brew as labelled');
+  return [
+    b.grams ? `${b.grams} ${t('g')}` : null,
+    b.ml ? `${b.ml} ${t('ml')}` : null,
+    b.temp ? `${b.temp}°C` : null
+  ].filter(Boolean).join(' · ');
+}
+
+function profileCard(row, index) {
   const { tea, reasons, role } = row;
-  const card = el('article', { class: `result-card${index === 0 ? ' top' : ''}` },
-    el('div', { class: 'rc-head' },
-      el('div', { class: 'rc-rank' }, el('span', { class: 'n' }, String(index + 1)), roleLabel(role)),
-      el('div', { class: 'rc-title' },
-        el('h3', {}, L(tea.nameZh, tea.nameEn)),
-        el('span', { class: 'rc-ja', lang: 'ja' }, tea.nameJa)
-      ),
-      el('p', { class: 'rc-region' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
-      el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
-      originMap(tea)
+  const titleId = `pc-title-${index}`;
+  return el('article', {
+    class: `profile-card${index === 0 ? ' top' : ''}`,
+    'aria-labelledby': titleId,
+    'data-step': String(index)
+  },
+    el('div', { class: 'pc-media' },
+      el('img', {
+        src: familyImage(tea),
+        alt: t('imgAlt', TEA_FAMILIES[tea.family][state.lang]),
+        width: '1264', height: '848', decoding: 'async'
+      }),
+      el('span', { class: 'pc-rank' }, el('span', { class: 'n' }, String(index + 1)), roleLabel(role))
     ),
-    el('div', { class: 'rc-body' },
-      el('div', { class: 'rc-section' },
-        el('h4', {}, t('whyTitle')),
-        el('ul', { class: 'reasons' }, reasons.map((r) => el('li', {}, r.text)))
-      ),
-      el('div', { class: 'rc-section' },
-        el('h4', {}, t('flavourTitle')),
-        el('div', { class: 'tags' }, tasteTags(tea))
-      ),
-      el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
-      el('div', { class: 'rc-section' }, el('h4', {}, t('brewTitle')), brewBlock(tea)),
-      el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
-      el('div', { class: 'share-bar' },
-        el('button', { type: 'button', class: 'btn secondary small', onclick: () => openTea(tea.id) }, t('detail'))
-      ),
-      sourceBlock(tea)
+    el('div', { class: 'pc-body' },
+      el('h2', { class: 'pc-title', id: titleId }, L(tea.nameZh, tea.nameEn)),
+      el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),
+      el('p', { class: 'pc-role' }, roleHint(role)),
+      el('p', { class: 'pc-meta' },
+        `${L(tea.regionZh, tea.regionEn)} ・ ${TEA_FAMILIES[tea.family][state.lang]} ・ ${caffeineStatusLabel(tea)}`),
+      el('p', { class: 'pc-copy' }, L(tea.copyZh, tea.copyEn)),
+      el('ul', { class: 'reasons pc-reasons' }, reasons.slice(0, 2).map((r) => el('li', {}, r.text))),
+      el('div', { class: 'tags pc-tags' }, tasteTags(tea).slice(0, 3)),
+      el('div', { class: 'pc-foot' },
+        el('button', { type: 'button', class: 'btn secondary small', onclick: () => openTea(tea.id) },
+          t('fullInfo'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
+        el('span', { class: 'pc-brew' }, brewSummary(tea))
+      )
     )
   );
-  return card;
+}
+
+function paintDeckNext() {
+  const last = deck.index === deck.total - 1;
+  deck.next.classList.toggle('share', last);
+  deck.next.setAttribute('aria-label', last ? t('shareShort') : t('nextTea'));
+  deck.next.replaceChildren(
+    el('span', { class: 'deck-btn-text' }, last ? t('shareShort') : t('nextTea')),
+    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, last ? '↗' : '→')
+  );
+}
+
+/* 只換卡牌，不重繪整頁：按鈕與焦點都留著，鍵盤使用者不會被丟回頁首 */
+function setStep(index) {
+  if (!deck.total) return;
+  const next = Math.max(0, Math.min(deck.total - 1, index));
+  deck.index = next;
+  state.step = next;
+
+  deck.cards.forEach((card, i) => {
+    const active = i === next;
+    card.classList.toggle('is-active', active);
+    card.toggleAttribute('inert', !active);
+    card.setAttribute('aria-hidden', String(!active));
+    if (active) {
+      const body = card.querySelector('.pc-body');
+      if (body) body.scrollTop = 0;
+    }
+  });
+
+  deck.dots.forEach((dot, i) => {
+    if (i === next) dot.setAttribute('aria-current', 'step');
+    else dot.removeAttribute('aria-current');
+  });
+
+  deck.prev.disabled = next === 0;
+  paintDeckNext();
+  const row = deck.results[next];
+  deck.status.textContent = t('deckStatus', next + 1, deck.total, L(row.tea.nameZh, row.tea.nameEn));
+}
+
+function buildDeck(report) {
+  deck.total = report.results.length;
+  deck.results = report.results;
+  deck.cards = report.results.map((row, i) => profileCard(row, i));
+
+  deck.dots = report.results.map((row, i) => el('button', {
+    type: 'button', class: 'step-dot',
+    'aria-label': t('goTo', i + 1, L(row.tea.nameZh, row.tea.nameEn)),
+    onclick: () => setStep(i)
+  }, String(i + 1)));
+
+  deck.prev = el('button', {
+    type: 'button', class: 'btn secondary small deck-prev',
+    'aria-label': t('prevTea'),
+    onclick: () => setStep(deck.index - 1)
+  },
+    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, '←'),
+    el('span', { class: 'deck-btn-text' }, t('prevTea'))
+  );
+
+  deck.next = el('button', {
+    type: 'button', class: 'btn small deck-next',
+    onclick: () => {
+      if (deck.index >= deck.total - 1) copy(shareUrl());
+      else setStep(deck.index + 1);
+    }
+  });
+
+  deck.status = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+
+  const stage = el('div', { class: 'deck', role: 'group', 'aria-label': t('deckAria') }, deck.cards);
+  const nav = el('div', { class: 'deck-nav' },
+    deck.prev,
+    el('div', { class: 'deck-steps', role: 'group', 'aria-label': t('stepsAria') }, deck.dots),
+    deck.next
+  );
+  return { stage, nav };
 }
 
 function viewResults(code) {
-  document.body.dataset.view = 'result';
   const answers = Object.keys(state.answers).length ? state.answers : decodeAnswers(code);
   if (answers) state.answers = answers;
 
   /* 沒有任何可用答案（例如壞掉的分享連結）就不要假裝有結果。 */
   if (!Object.keys(state.answers).length) {
+    document.body.dataset.view = 'result-empty';
     if (location.hash !== '#/') location.replace('#/');
     viewLanding();
     return;
@@ -628,6 +790,7 @@ function viewResults(code) {
   const report = recommend(state.answers, state.lang);
 
   if (report.empty) {
+    document.body.dataset.view = 'result-empty';
     app.replaceChildren(
       el('section', { class: 'result-hero' },
         el('p', { class: 'eyebrow' }, t('resultEyebrow')),
@@ -647,40 +810,69 @@ function viewResults(code) {
     return;
   }
 
+  /* 換一組新答案就回到第一張；只是切換語言則停在原本那一張 */
+  const resultCode = code || encodeAnswers(state.answers);
+  if (state.resultCode !== resultCode) {
+    state.resultCode = resultCode;
+    state.step = 0;
+  }
+
+  document.body.dataset.view = 'result';
   const profile = report.profile;
-  const header = el('section', { class: 'result-hero' },
-    teaArtwork('result'),
-    el('p', { class: 'eyebrow' }, t('resultEyebrow')),
-    el('h1', { style: 'font-size:clamp(26px,6.4vw,38px);margin-bottom:12px' },
-      el('span', { style: 'display:block;font-family:var(--jf-serif)' }, L(profile.zh, profile.en)),
-      el('span', { style: 'display:block;font-family:var(--jf-mono);font-size:12px;letter-spacing:.18em;color:var(--jf-gold);text-transform:uppercase;margin-top:6px' }, L(profile.en, profile.zh))
-    ),
-    el('p', { class: 'small muted' }, t('resultLede')),
-    el('div', { class: 'card', style: 'margin-top:18px' },
-      el('h3', { style: 'font-size:14px;font-family:var(--jf-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--jf-muted);margin-bottom:10px' }, t('tasteTitle')),
+  const { stage, nav } = buildDeck(report);
+
+  app.replaceChildren(
+    el('section', { class: 'result-shell', 'aria-labelledby': 'result-heading' },
+      el('div', { class: 'result-top' },
+        el('p', { class: 'eyebrow' }, t('resultEyebrow')),
+        el('button', { type: 'button', class: 'chip profile-open', onclick: () => openProfile(report) }, t('profileBtn'))
+      ),
+      el('h1', { class: 'sr-only', id: 'result-heading' }, `${t('resultTitle')}：${L(profile.zh, profile.en)}`),
+      el('p', { class: 'deck-guide' },
+        el('strong', { class: 'deck-profile' }, L(profile.zh, profile.en)), ` · ${t('deckGuide')}`),
+      stage,
+      deck.status,
+      nav
+    )
+  );
+
+  setStep(state.step);
+}
+
+/* 風味偏好、角色說明與其他出口：從卡牌右上角打開，不佔卡面空間 */
+function openProfile(report) {
+  document.getElementById('sheet-title').textContent = t('profileSheetTitle');
+  document.getElementById('sheet-ja').textContent = L(report.profile.en, report.profile.zh);
+  const body = document.getElementById('sheet-body');
+  body.replaceChildren(
+    el('p', { class: 'small muted', style: 'margin-top:0' }, t('resultLede')),
+    el('div', { class: 'rc-section', style: 'margin-top:14px' },
+      el('h4', {}, t('tasteTitle')),
       tasteRows(report.prefs.target)
     ),
-    el('div', { class: 'actions' },
-      el('a', { class: 'btn secondary small', href: '#/quiz' }, t('editAnswers')),
-      el('button', { type: 'button', class: 'btn secondary small', onclick: startQuiz }, t('restart')),
-      el('button', {
-        type: 'button', class: 'btn small',
-        onclick: () => copy(shareUrl())
-      }, t('copyShare'))
+    el('div', { class: 'rc-section' },
+      el('h4', {}, t('guideTitle')),
+      el('ul', { class: 'role-legend' }, report.results.map((row, i) =>
+        el('li', {},
+          el('b', {}, `${i + 1} · ${roleLabel(row.role)}`),
+          el('span', {}, roleHint(row.role))
+        )
+      ))
     ),
-    el('p', { class: 'tiny muted', style: 'margin-top:8px' }, t('shareHint'))
+    el('div', { class: 'actions' },
+      el('button', { type: 'button', class: 'btn small', onclick: () => copy(shareUrl()) }, t('copyShare')),
+      el('a', { class: 'btn secondary small', href: '#/quiz', onclick: () => closeSheet() }, t('editAnswers')),
+      el('button', {
+        type: 'button', class: 'btn secondary small',
+        onclick: () => { closeSheet(); startQuiz(); }
+      }, t('restart'))
+    ),
+    el('p', { class: 'tiny muted', style: 'margin-top:10px' }, t('shareHint')),
+    el('div', { class: 'notice', style: 'margin-top:16px' }, t('recNote')),
+    el('p', { style: 'margin:14px 0 0' },
+      el('a', { href: '#/teas', onclick: () => closeSheet() }, t('catalogLink')))
   );
-
-  const cards = report.results.map((row, index) => resultCard(row, index));
-  const tail = el('div', { style: 'margin-top:26px' },
-    el('div', { class: 'notice' }, L(
-      '推薦只依你剛才的答案與茶款標籤比對；資料庫裡的風味分數是編輯假設，尚未經大規模品飲校準。',
-      'Recommendations compare your answers with editorial flavour labels only; those scores have not yet been calibrated by large-scale tasting.'
-    )),
-    el('p', { style: 'margin-top:14px' }, el('a', { href: '#/teas' }, t('catalogLink')))
-  );
-
-  app.replaceChildren(header, ...cards, tail);
+  openSheet();
 }
 
 function shareUrl() {
@@ -798,12 +990,19 @@ window.addEventListener('hashchange', () => {
   app.focus({ preventScroll: true });
 });
 
-/* 鍵盤：左右鍵在 Quiz 前後移動 */
+/* 鍵盤：Quiz 與結果卡牌都用左右鍵移動 */
 document.addEventListener('keydown', (event) => {
-  if (!location.hash.startsWith('#/quiz')) return;
   if (document.activeElement?.tagName === 'INPUT') return;
-  if (event.key === 'ArrowLeft') { go(state.index - 1); }
-  if (event.key === 'ArrowRight') { go(state.index + 1); }
+  if (sheet.open || sheet.hasAttribute('open')) return;
+  if (location.hash.startsWith('#/quiz')) {
+    if (event.key === 'ArrowLeft') { go(state.index - 1); }
+    if (event.key === 'ArrowRight') { go(state.index + 1); }
+    return;
+  }
+  if (location.hash.startsWith('#/result') && deck.total) {
+    if (event.key === 'ArrowLeft') { event.preventDefault(); setStep(deck.index - 1); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); setStep(deck.index + 1); }
+  }
 });
 
 restore();
