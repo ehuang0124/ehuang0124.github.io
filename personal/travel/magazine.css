@@ -21,9 +21,12 @@
   --mag-ai:#27475c;        /* 藍 */
   --mag-kin:#a98a4e;       /* 金 */
   --mag-sea:#e6ebe6;
-  --mag-serif:"Mag Serif TC","Noto Serif TC","Songti TC","Source Han Serif TC",Georgia,serif;
-  --mag-mincho:"Shippori Mincho","Noto Serif TC","Songti TC",serif;
-  --mag-sans:"Mag Sans TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+  /* second-tier accents, used by the landing page's section coding */
+  --mag-sakura:#e2b6a9;    /* 桜 */
+  --mag-matcha:#6d7c57;    /* 抹茶 */
+  --mag-serif:"Mag Serif TC","Noto Serif TC","Songti TC","Source Han Serif TC","Shippori Mincho",Georgia,serif;
+  --mag-mincho:"Shippori Mincho","Noto Serif TC","Songti TC",serif; /* 明朝 for Japanese display type */
+  --mag-sans:"Mag Sans TC","Noto Sans TC","PingFang TC","Microsoft JhengHei","Shippori Mincho",Arial,sans-serif;
   --mag-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Mag Sans TC",monospace;
   --mag-w:1180px;
   --mag-gutter:clamp(20px,4vw,48px);

@@ -7,10 +7,27 @@ Every page under `personal/travel/` is laid out like a Japanese travel magazine 
 | File | Scope |
 | --- | --- |
 | `magazine.css` | Design tokens (`--mag-*`), base paper texture, masthead, cover, section heads, 基本情報 tables, 目次 list, footer. Linked by every page. |
+| `landing.css` | Layout for the landing page (`index.html`) only: issue cover, photo feature cards, full-bleed quote band, moment strip, postcard, and the printed style guide. |
+| `assets/travel-icons.svg` | Shared 24×24 line-icon sprite (12 symbols: 神社 / 五重塔 / 城 / 山 / 海 / 鐵道 / 渡船 / 溫泉 / 食 / 寫真 / 地點 / 郵戳). Reference one with `<svg class="an-i"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>`; stroke and fill are inherited, so a single class themes every icon. |
 | `itinerary.css` | Layout for the two 幕末 itinerary maps (East Japan, Kyushu): cover, prefecture cards, chronology, map panel, place panel. |
 | `okinawa/okinawa.css` | 沖繩 page layout only; tokens and shared pieces come from `magazine.css`. |
 | `map/style.css` | Stamp Atlas application CSS. Its `:root` aliases the old palette names to the `--mag-*` tokens, and a marked "magazine pass" block at the end keeps the atlas on the same paper. |
 | `crumbs.css` | Shared breadcrumb, themed per page through `--crumb-*` custom properties. |
+
+## Landing page (`index.html`)
+
+The landing page is laid out as an issue of a Japanese travel magazine, in the photo-dense register of tourism features such as `at-nagasaki.jp`: a full-bleed cover with a vertical 縦書き rail and a 旅 seal, an issue strip, a compact 目次, three photographic 特集 cards (one accent colour each — 藍 for East Japan, 朱 for Kyushu, 金 for Okinawa), a stamp-atlas ticket row, a full-bleed quote band, a 旅の断片 photo strip, a postcard, and a 型錄 (style guide).
+
+Two motifs are deliberately kept and theirs is a narrow brief:
+
+- **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
+- **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
+
+The closing 型錄 section is the printed style guide: eight palette entries with token names, the twelve-icon set, the type scale, and the layout rules (square corners, hairlines, no shadows). It is generated from the same tokens the page uses, so editing `magazine.css` changes the guide too.
+
+Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. Two tokens were added for this page's section coding and for the 旅の断片 month chips: `--mag-sakura` (桜) and `--mag-matcha` (抹茶). `--mag-serif` and `--mag-sans` now fall back to **Shippori Mincho** before the generic serif/sans, because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets.
+
+The design comp in `design/landing-page-comp.jpg` is a local render of the page at 1440 px; the stand-in photography used for that render is not part of the repository.
 
 Rules for future edits: page CSS consumes tokens instead of new hex values, headings stay `font-weight:500` serif, corners stay square, and decorative shadows are not reintroduced. Copy stays minimal — one page title, plus labels that identify content, report status, or explain a limitation. Every page keeps its own `hero-credit` / credits block for the Wikimedia Commons photo attributions that already ship with it.
 
