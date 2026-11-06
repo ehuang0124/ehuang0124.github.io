@@ -911,6 +911,12 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .map-us-state.done{fill:var(--ng-red);stroke:var(--ng-white)}
 .map-us-state.selected{fill:var(--ng-navy-soft);stroke:var(--ng-navy);stroke-width:2}
 .map-us-state.selected.done{fill:var(--ng-red-dark);stroke:var(--ng-white)}
+.map-jp-prefecture{stroke:rgba(18,49,75,.5)}
+.map-jp-prefecture.region-hot{stroke:var(--ng-red)}
+.map-jp-prefecture.hot{stroke:var(--ng-navy)}
+.map-jp-region{stroke:var(--ng-navy)}
+.map-jp-region.region-hot{stroke:var(--ng-red)}
+.map-country.covered{fill:none;stroke:none;pointer-events:none}
 .legend-pin{background:var(--ng-white);border-color:var(--ng-navy)}
 .legend-pin.done{background:var(--ng-red);border-color:var(--ng-white)}
 .map-topline{font-family:var(--ng-grotesk);font-weight:700;color:var(--ng-navy)}

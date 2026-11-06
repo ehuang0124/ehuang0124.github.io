@@ -1,0 +1,18 @@
+Japan administrative shapes in personal/travel/map/jp-admin.js
+
+Source geometry: Geospatial Information Authority of Japan (国土地理院),
+Global Map Japan, 2016 edition (地球地図日本).
+Converted to TopoJSON and published by dataofjapan/land:
+https://github.com/dataofjapan/land
+
+The atlas simplifies those prefecture polygons and projects them into the
+page's Natural Earth 1 coordinate system. The drawing illustrates the 47
+prefectures (都道府縣) and the nine conventional regions (北海道、東北、關東、
+中部、近畿、中國、四國、九州、沖繩). Okinawa is kept separate from Kyushu,
+matching the source's region table; the statutory eight-region system
+sometimes folds Okinawa into Kyushu. These shapes are not surveyed
+boundaries and not a legal map.
+
+Global Map Japan asks non-commercial reuse to name the source (地球地図日本).
+That credit is this file and the provenance note in map/README.md. The public
+page does not carry a data-source line.

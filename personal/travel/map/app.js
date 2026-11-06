@@ -4,9 +4,10 @@
   const world = window.TravelAtlasWorld;
   const source = window.TravelAtlasPlaces;
   const stateSource = window.TravelAtlasStates;
+  const japanAdmin = window.TravelAtlasJapan;
   const okinawa = window.TravelAtlasOkinawa;
   const palette = window.TravelAtlasPalette;
-  if (!world || !source || !stateSource || !okinawa || !palette) return;
+  if (!world || !source || !stateSource || !japanAdmin || !okinawa || !palette) return;
 
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -315,6 +316,8 @@
   const surface = $('#map-surface');
   const countryLayer = $('#country-layer');
   const stateLayer = $('#state-layer');
+  const jpPrefLayer = $('#jp-prefecture-layer');
+  const jpRegionLayer = $('#jp-region-layer');
   const markerLayer = $('#marker-layer');
   const tooltip = $('#map-tooltip');
   const dateInput = $('#visit-date');
@@ -367,7 +370,9 @@
     $('#map-caption').textContent = spec.map;
     $('#add-city').hidden = category !== 'cities';
     const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : category === 'okinawa' ? '點選沖繩地點標記' : '點選國家公園標記';
-    svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
+    svg.setAttribute('aria-label', category === 'jp'
+      ? `${spec.title}互動地圖，含地方分區與都道府縣界。${mapAction}，或搜尋目的地清單。`
+      : `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
   }
   function areaLabel(place) {
@@ -804,6 +809,68 @@
     }
     if (selectedPlace()?.isState) stateLayer.append(statePaths.get(selectedPlace().id));
   }
+  // Prefectures and the nine conventional regions are geography for the Japan
+  // parks layer, not stamp destinations. Travel chips above the index stay a
+  // separate grouping and must not be read as these borders.
+  const jpRegionById = new Map(japanAdmin.regions.map(region => [region.id, region]));
+  const jpPrefById = new Map(japanAdmin.prefectures.map(pref => [pref.id, pref]));
+  const jpPrefPaths = new Map();
+  const jpRegionPaths = new Map();
+  function japanAdminLabel(pref) {
+    return `${pref.zh} · ${jpRegionById.get(pref.region).zh}`;
+  }
+  function highlightJapanRegion(regionId, prefId) {
+    for (const path of jpPrefPaths.values()) {
+      const match = path.dataset.adminRegion === regionId;
+      path.classList.toggle('region-hot', match);
+      path.classList.toggle('hot', match && path.dataset.id === prefId);
+    }
+    for (const path of jpRegionPaths.values()) path.classList.toggle('region-hot', path.dataset.adminRegion === regionId);
+  }
+  function clearJapanRegion() {
+    for (const path of jpPrefPaths.values()) path.classList.remove('region-hot', 'hot');
+    for (const path of jpRegionPaths.values()) path.classList.remove('region-hot');
+  }
+  function showJapanAdmin(pref, event) {
+    highlightJapanRegion(pref.region, pref.id);
+    showTooltip({ category:'jp' }, event, japanAdminLabel(pref));
+  }
+  japanAdmin.prefectures.forEach(pref => {
+    const path = makeSvg('path', {
+      d:pref.d,
+      class:'map-jp-prefecture',
+      'data-id':pref.id,
+      'data-admin-region':pref.region,
+      'data-tone':String(pref.tone)
+    });
+    path.addEventListener('pointerenter', event => showJapanAdmin(pref, event));
+    path.addEventListener('pointermove', event => showJapanAdmin(pref, event));
+    path.addEventListener('pointerleave', event => {
+      const next = event.relatedTarget;
+      if (next && next.closest && next.closest('.map-jp-prefecture')) return;
+      clearJapanRegion();
+      if (!(next && next.closest && next.closest('.map-point'))) hideTooltip();
+    });
+    jpPrefPaths.set(pref.id, path);
+    jpPrefLayer.append(path);
+  });
+  japanAdmin.regions.forEach(region => {
+    if (!region.d) return;
+    const path = makeSvg('path', { d:region.d, class:'map-jp-region', 'data-admin-region':region.id });
+    jpRegionPaths.set(region.id, path);
+    jpRegionLayer.append(path);
+  });
+  function renderJapanAdmin() {
+    const show = category === 'jp';
+    const was = jpPrefLayer.classList.contains('active');
+    jpPrefLayer.classList.toggle('active', show);
+    jpRegionLayer.classList.toggle('active', show);
+    countryPaths.get('392')?.classList.toggle('covered', show);
+    if (!show && was) {
+      clearJapanRegion();
+      hideTooltip();
+    }
+  }
   function renderCountries() {
     world.countries.forEach(country => {
       const path = countryPaths.get(country.id);
@@ -873,7 +940,7 @@
     }
     markerLayer.replaceChildren(fragment);
   }
-  function renderMap() { renderCountries(); renderUSStates(); renderMarkers(); }
+  function renderMap() { renderCountries(); renderUSStates(); renderJapanAdmin(); renderMarkers(); }
   // Keep the map uncluttered: reveal place and administrative context only on hover.
   function placeTooltip(place) {
     const dates = visitsOf(place);
@@ -882,12 +949,12 @@
     const names = stampAuthors(place).map(author => author.name);
     return dates.length ? `${details} · ${printedDate(dates.at(-1))}${names.length ? ` · 蓋章：${names.join('、')}` : ''}` : details;
   }
-  function showTooltip(place,event) {
+  function showTooltip(place, event, label) {
     if (!place) return;
     const flag = flagImage(place, 'flag tooltip-flag');
     tooltip.replaceChildren();
     if (flag) tooltip.append(flag);
-    tooltip.append(document.createTextNode(placeTooltip(place)));
+    tooltip.append(document.createTextNode(label || placeTooltip(place)));
     tooltip.hidden = false;
     const bounds = surface.getBoundingClientRect();
     const left = Math.min(Math.max(12,event.clientX-bounds.left+12),Math.max(12,bounds.width-tooltip.offsetWidth-8));
@@ -976,6 +1043,12 @@
 
   // Delegate all map selection so country paths, state shapes, and marker hits stay clickable.
   svg.addEventListener('click',event => {
+    const admin = event.target.closest('.map-jp-prefecture');
+    if (admin && category === 'jp') {
+      const pref = jpPrefById.get(admin.dataset.id);
+      if (pref) showJapanAdmin(pref, event);
+      return;
+    }
     const target = event.target.closest('.map-point,.map-country.selectable,.map-us-state.selectable');
     if (!target) return;
     const id = target.dataset.id;
@@ -988,7 +1061,7 @@
   // Pointer drag pans only when begun on the sea; land and markers stay clickable.
   let drag = null;
   svg.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || event.target.closest('.map-point,.map-country,.map-us-state')) return;
+    if (event.button !== 0 || event.target.closest('.map-point,.map-country,.map-us-state,.map-jp-prefecture')) return;
     drag = {id:event.pointerId,x:event.clientX,y:event.clientY,origin:{...view}};
     svg.setPointerCapture(event.pointerId);
     svg.classList.add('is-dragging');
