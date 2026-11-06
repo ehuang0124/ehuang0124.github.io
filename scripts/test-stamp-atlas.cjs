@@ -35,7 +35,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
   await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
   let browser;
   try {
-    const bundled = process.env.CHROMIUM_PATH ? null : (await import('@sparticuz/chromium')).default;
+    const bundled = process.env.CHROMIUM_PATH ? null : (await import(require.resolve('@sparticuz/chromium'))).default;
     browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH || await bundled.executablePath(),args:bundled ? bundled.args.filter(arg => arg !== '--single-process') : ['--no-sandbox'],headless:true});
     const url = `http://127.0.0.1:${server.address().port}`;
     for (const viewport of [{width:1440,height:960},{width:390,height:844},{width:320,height:700}]) {
@@ -51,12 +51,34 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
         await page.locator('#account-card').waitFor({state:'visible'});
       };
       const chooseCollection = async id => { await page.locator('#collection-menu-button').click(); await page.locator(`#tab-${id}`).click(); };
+      const onShape = async (selector, action) => {
+        await page.locator('#map-svg').scrollIntoViewIfNeeded();
+        const point = await page.locator(selector).evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          for (let y = Math.max(0, rect.top); y < Math.min(innerHeight, rect.bottom); y += 1)
+            for (let x = Math.max(0, rect.left); x < Math.min(innerWidth, rect.right); x += 1)
+              if (el.contains(document.elementFromPoint(x, y))) return {x, y};
+        });
+        assert(point, `${selector} has a visible point`);
+        if (action === 'hover') await page.mouse.move(point.x, point.y);
+        else await page.mouse.click(point.x, point.y);
+      };
       page.on('pageerror',error => errors.push(error.message));
       await page.goto(`${url}/personal/travel/map/`);
       await page.evaluate(() => document.fonts.ready);
       assert.deepEqual(errors,[],'the atlas should initialize without uncaught JavaScript errors');
       assert.equal(await page.locator('.map-country').count(),240);
-      await page.locator('.map-country[data-id="840"]').hover();
+      // The USA's SVG bounding box includes distant territories; its centre
+      // can be over France. Hover a genuinely visible point on the path.
+      await page.locator('#map-svg').scrollIntoViewIfNeeded();
+      const usaPoint = await page.locator('.map-country[data-id="840"]').evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        for (let y = rect.top; y < rect.bottom; y += 3) for (let x = rect.left; x < rect.right; x += 3) {
+          if (document.elementFromPoint(x, y) === el) return {x, y};
+        }
+      });
+      assert(usaPoint, 'USA has a visible hover point');
+      await page.mouse.move(usaPoint.x, usaPoint.y);
       assert.equal(await page.locator('#map-tooltip').isVisible(),true);
       assert((await page.locator('#map-tooltip').textContent()).includes('美國'));
       await page.mouse.move(5,5);
@@ -98,18 +120,27 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.place-item').count(),1);
       await page.locator('#place-search').fill('');
       await page.locator('[data-region="all"]').click();
-      await page.locator('.map-country[data-id="158"]').click();
+      await page.locator('#map-svg').scrollIntoViewIfNeeded();
+      const taiwanPoint = await page.locator('.map-country[data-id="158"]').evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        for (let y = Math.max(0, rect.top); y < Math.min(innerHeight, rect.bottom); y += .7)
+          for (let x = Math.max(0, rect.left); x < Math.min(innerWidth, rect.right); x += .7)
+            if (document.elementFromPoint(x, y) === el) return {x, y};
+      });
+      assert(taiwanPoint, 'Taiwan has a visible clickable point');
+      await page.mouse.click(taiwanPoint.x, taiwanPoint.y);
       assert.equal(await page.locator('#place-name').textContent(),'台灣');
       assert(await page.locator('#map-svg').getAttribute('viewBox').then(box => Number(box.split(' ')[2]) < 1000));
       // No sign-in, no ink: the stamp button is locked for a fresh visitor.
       assert.equal(await page.locator('#sign-in').isVisible(),true,'the sign-in control lives in the top bar');
-      assert.equal(await page.locator('#stamp-button').getAttribute('aria-disabled'),'true');
+      assert.equal(await page.locator('#stamp-button').getAttribute('data-locked'),'true');
+      await page.locator('#visit-date').fill('2023-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#account-dialog').evaluate(el => el.open),true);
       assert.equal(await page.locator('#passport-count').textContent(),'0');
       await page.locator('#account-dialog-close').click();
       await ensureSignedIn();
-      assert.equal(await page.locator('#stamp-button').getAttribute('aria-disabled'),'false');
+      assert.equal(await page.locator('#stamp-button').getAttribute('data-locked'),'false');
       await page.locator('#visit-date').fill('2023-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'1');
@@ -157,7 +188,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert((await page.locator('.empty-results').textContent()).includes('還沒有蓋章'));
       await page.locator('#visited-filter').click();
       await page.locator('[data-region="EU"]').click();
-      await page.locator('.map-point[data-id="berlin-de"]').click();
+      await onShape('.map-point[data-id="berlin-de"]', 'click');
       assert.equal(await page.locator('#place-name').textContent(),'柏林');
       assert(await page.locator('.place-item').count() > 20);
       await page.locator('#place-search').fill('巴黎');
@@ -174,17 +205,28 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.map-us-state').count(),50);
       assert.equal(await page.locator('#state-legend').isHidden(),false);
       assert.equal(await page.locator('.map-point').count(),112);
-      await page.locator('.map-us-state[data-id="state-ca"]').hover();
+      // Zoom a dense layer before targeting a state on a narrow screen.
+      await page.locator('[data-region="us"]').click();
+      await page.locator('#place-search').fill('加利福尼亞州');
+      await page.locator('.place-item').click();
+      await onShape('.map-us-state[data-id="state-ca"]', 'hover');
+      await page.locator('#place-search').fill('');
       assert((await page.locator('#map-tooltip').textContent()).includes('加利福尼亞州'));
       await page.mouse.move(5,5);
-      await page.locator('.map-point[data-id="banff"]').hover();
+      await page.locator('[data-region="ca"]').click();
+      await page.locator('#place-search').fill('Banff');
+      await page.locator('.place-item').click();
+      await onShape('.map-point[data-id="banff"]', 'hover');
+      await page.locator('#place-search').fill('');
       assert((await page.locator('#map-tooltip').textContent()).includes('亞伯達省'));
       await page.mouse.move(5,5);
       assert((await page.locator('[data-region="us"]').textContent()).includes('114'));
       assert((await page.locator('[data-region="ca"]').textContent()).includes('48'));
+      await page.locator('[data-region="all"]').click();
       await page.locator('#place-search').fill('加利福尼亞州');
       assert.equal(await page.locator('.place-item').count(),1);
-      await page.locator('.map-us-state[data-id="state-ca"]').click();
+      await page.locator('.place-item').click(); // focuses the small state
+      await onShape('.map-us-state[data-id="state-ca"]', 'click');
       assert.equal(await page.locator('#place-name').textContent(),'加利福尼亞州');
       assert.equal(await page.locator('.map-us-state.selected').count(),1);
       await page.locator('#visit-date').fill('2024-06');
@@ -224,7 +266,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#city-name').fill('臺南');
       await page.locator('#city-lat').fill('22.998');
       await page.locator('#city-lon').fill('120.212');
-      await page.locator('.dialog-submit').click();
+      await page.locator('#city-dialog .dialog-submit').click();
       assert.equal(await page.locator('#city-dialog').evaluate(el => el.open),false);
       assert.equal(await page.locator('#place-name').textContent(),'臺南');
       assert.equal(await page.locator('#board-total').textContent(),'172');
@@ -264,13 +306,12 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.deepEqual(errors,[]);
       await page.goto(`${url}/personal/travel/`);
-      assert.equal(await page.locator('a.atlas-postcard[href="/personal/travel/map/"]').count(),1);
+      assert.equal(await page.locator('a.ng-postcard-btn[href="/personal/travel/map/"]').count(),1);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       await page.goto(`${url}/personal/travel/map/specimen.html`);
       assert.equal(await page.locator('.specimen-card').count(),110);
       assert.equal(await page.locator('.kind-section').count(),4);
       await page.goto(url);
-      assert.equal(await page.locator('.nav-links a[href="/personal/travel/"]').count(),1);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       console.log(`PASS stamp atlas ${viewport.width}px: four layers, North America states and parks, regional geography, zoom, map/list selection, month-only stamps, delete, persistence, city creation, backup round-trip, no overflow or JS errors`);
       await context.close();

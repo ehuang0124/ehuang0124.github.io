@@ -16,6 +16,7 @@ const { PGlite } = require('@electric-sql/pglite');
       create role authenticated;
       create schema auth;
       create schema extensions;
+      create table auth.users (id uuid primary key, email_confirmed_at timestamptz);
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
       $$;
@@ -44,6 +45,7 @@ const { PGlite } = require('@electric-sql/pglite');
     await db.exec('reset role');
     const alice = '00000000-0000-4000-8000-000000000001';
     const bob = '00000000-0000-4000-8000-000000000002';
+    await db.query("insert into auth.users (id, email_confirmed_at) values ($1, now()), ($2, now())", [alice, bob]);
     await db.query("select set_config('request.jwt.claim.sub', $1, false)", [alice]);
     await db.exec('set role authenticated');
     assert.deepEqual(await login(), { ok:false, reason:'not_approved' });

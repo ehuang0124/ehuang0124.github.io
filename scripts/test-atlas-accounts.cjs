@@ -32,7 +32,7 @@ function createServer() {
   const uuid = prefix => `${prefix}-${String(nextId++).padStart(4, '0')}`;
   function addUser({ name, email, sub }) {
     const id = sub || uuid('user');
-    users.set(id, { id, email: email || `${name}@example.com`, user_metadata:{ full_name:name, avatar_url:`https://img.example/${id}.png` } });
+    users.set(id, { id, email: email || `${name}@example.com`, email_confirmed_at:new Date().toISOString(), user_metadata:{ full_name:name, avatar_url:`https://img.example/${id}.png` } });
     return users.get(id);
   }
   function signInAs(id) {
@@ -198,22 +198,23 @@ function createServer() {
       auth: {
         onAuthStateChange(handler) { handlers.push(handler); return { data:{ subscription:{ unsubscribe(){} } } }; },
         async getSession() { return { data:{ session }, error:null }; },
-        // A browser-created traveller account: random address, random password.
         async signUp({ email, password }) {
           calls.push({ op:'signUp', payload:{ email } });
-          if (accounts.has(email)) return { data:{ user:null, session:null }, error:{ message:'User already registered', code:'user_already_exists' } };
+          if (accounts.has(email)) return { data:{ user:{ identities:[] }, session:null }, error:null };
           const user = addUser({ name:'旅人', email });
+          user.email_confirmed_at = null;
+          user.identities = [{ provider:'email' }];
           accounts.set(email, { email, password, user });
-          const next = { access_token:uuid('token'), user };
-          fireAuth(next);
-          return { data:{ user, session:next }, error:null };
+          return { data:{ user, session:null }, error:null };
         },
+        async resend({ email }) { calls.push({ op:'resend', payload:{ email } }); return { error:null }; },
         async signInWithPassword({ email, password }) {
           calls.push({ op:'signInWithPassword', payload:{ email } });
           const record = accounts.get(email);
           if (!record || record.password !== password) {
             return { data:{ user:null, session:null }, error:{ message:'Invalid login credentials' } };
           }
+          if (!record.user.email_confirmed_at) return { data:{ user:null, session:null }, error:{ message:'Email not confirmed', code:'email_not_confirmed' } };
           const next = { access_token:uuid('token'), user:record.user };
           fireAuth(next);
           return { data:{ user:record.user, session:next }, error:null };
@@ -270,7 +271,8 @@ function createServer() {
   }
 
   function notifyLive(payload) { channels.forEach(realtime => realtime.notify('postgres_changes', payload)); }
-  return { users, tables, calls, accounts, addUser, connect, uuid, notifyLive, accessCode:ACCESS_CODE };
+  const verify = email => { const user = accounts.get(email)?.user; assert(user); user.email_confirmed_at = new Date().toISOString(); };
+  return { users, tables, calls, accounts, addUser, connect, uuid, notifyLive, verify, accessCode:ACCESS_CODE };
 }
 
 // ---------------------------------------------------------------- page harness
@@ -306,6 +308,7 @@ async function boot({ demo = false, seed = {}, viewport = 'desktop' } = {}) {
   for (const [key, value] of Object.entries(seed)) storage.set(key, typeof value === 'string' ? value : JSON.stringify(value));
   const connection = sharedServer.connect();
   window.supabase = { createClient:() => connection.client };
+  window.fetch = async () => ({ ok:true, json:async () => ({ mailer_autoconfirm:false }) });
   const inject = (file, transform) => {
     const source = transform ? transform(fs.readFileSync(path.join(mapDir, file), 'utf8')) : fs.readFileSync(path.join(mapDir, file), 'utf8');
     window.eval(source);
@@ -361,7 +364,8 @@ async function main() {
     assert.equal(page.$('#passport-count').textContent, '1', 'visitors see the published collection');
     assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
     assert.equal(page.$('#stamp-button').classList.contains('locked'), true, 'the stamp action is locked for visitors');
-    assert.equal(page.$('#companion-manage').hidden, true);
+    assert.equal(page.$('#companion-manage').hidden, false, 'visitors can see how to start tagging');
+    assert(page.$('#companion-manage').textContent.includes('登入後標記旅伴'));
     // Locked stamp button opens the account dialog instead of writing.
     page.$('#visit-date').value = '2024-01';
     click(page.window, page.$('#stamp-button'));
@@ -414,13 +418,31 @@ async function main() {
     page.$('#access-code').value = 'not-the-code';
     click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
-    assert(page.$('#account-error').textContent.includes('通行碼不正確'), 'a wrong code is rejected');
+    assert(page.$('#account-status').textContent.includes('驗證信'), 'signup first requests email verification');
+    assert.equal(server.tables.profiles.length, 2, 'unverified signup creates no profile');
+    assert.equal(server.calls.filter(call => call.name === 'atlas_redeem_code').length, 0, 'invite is not redeemed before confirmation');
+    assert.equal(page.$('#account-password').value, '');
+    assert.equal(page.$('#access-code').value, '');
+    assert.equal(page.$('#account-resend').hidden, false);
+    server.verify('eva@example.com');
+    page.$('#account-password').value = 'personal-password-123';
+    page.$('#access-code').value = 'not-the-code';
+    click(page.window, page.$('#code-signin-submit'));
+    await page.settle(); await page.settle();
+    assert(page.$('#account-error').textContent.includes('通行碼不正確'), 'a wrong code is rejected after verification');
     assert.equal(page.$('#account-card').hidden, true, 'the visitor stays signed out');
     assert.equal(server.tables.profiles.length, 2, 'a wrong code creates no traveller');
     assert.equal(server.tables.logins.length, 0, 'a wrong code is not a login');
 
     // The right code creates this browser's traveller and logs the sign-in.
     page.$('#account-email').value = 'eva-approved@example.com';
+    page.$('#account-password').value = 'personal-password-123';
+    page.$('#access-code').value = 'travel2n';
+    click(page.window, page.$('#code-signin-submit'));
+    await page.settle(); await page.settle();
+    assert(page.$('#account-status').textContent.includes('驗證信'));
+    assert.equal(page.$('#account-card').hidden, true, 'still read-only before verification');
+    server.verify('eva-approved@example.com');
     page.$('#account-password').value = 'personal-password-123';
     page.$('#access-code').value = 'travel2n';
     click(page.window, page.$('#code-signin-submit'));
@@ -535,8 +557,11 @@ async function main() {
     assert.equal((await account.signIn({ ...credentials, password:'abcdef' })).ok, false);
     assert.equal(server.calls.filter(call => call.op === 'signUp' || call.op === 'signInWithPassword').length, authCalls);
     assert.equal((await account.signIn({ ...credentials, createAccount:true })).ok, false, 'creation requires an invite');
-    assert.equal((await account.signIn({ ...credentials, code:'bad-invite', createAccount:true })).ok, false);
+    const pending = await account.signIn({ ...credentials, code:'bad-invite', createAccount:true });
+    assert.equal(pending.pendingVerification, true);
     assert.equal(account.user, null);
+    server.verify(credentials.email);
+    assert.equal((await account.signIn({ ...credentials, code:'bad-invite', createAccount:true })).ok, false);
     let result = await account.signIn(credentials);
     assert.equal(result.ok, false, 'Auth without an approved profile remains read-only');
     assert(result.reason.includes('尚未完成建立'));

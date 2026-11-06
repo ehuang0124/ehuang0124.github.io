@@ -16,7 +16,7 @@ const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
 function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null } = {}) {
-  const state = { session: null, rpcCalls: [] };
+  const state = { session: null, rpcCalls: [], signupCalls:0, resendCalls:0 };
   const chain = () => {
     const builder = {
       select() { return builder; }, order() { return builder; }, limit() { return builder; },
@@ -33,11 +33,14 @@ function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null,
       onAuthStateChange() { return { data:{ subscription:{ unsubscribe(){} } } }; },
       async getSession() { return { data:{ session: state.session }, error:null }; },
       async signUp() {
+        state.signupCalls++;
         if (signupResponse) return signupResponse;
         if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the personal account' } };
-        state.session = { access_token:'token', user:{ id:'user-device' } };
-        return { data:{ user:state.session.user, session:state.session }, error:null };
+        // A previously verified, not-yet-approved signup returns the
+        // obfuscated duplicate response and must prove the password again.
+        return { data:{ user:{ identities:[] }, session:null }, error:null };
       },
+      async resend() { state.resendCalls++; return { error:null }; },
       async signInWithPassword() {
         if (signInError) return { data:{ user:null, session:null }, error: signInError };
         state.session = { access_token:'token', user:{ id:'user-personal' } };
@@ -56,7 +59,7 @@ function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null,
   return { client, state };
 }
 
-async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/personal/travel/map/' } = {}) {
+async function load({ config = CLOUD, clientOptions, autoConfirm = false, url = 'https://eva.example/personal/travel/map/' } = {}) {
   const dom = new JSDOM(html, { url, runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   const errors = [];
@@ -84,6 +87,7 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
   });
   const fake = makeClient(clientOptions);
   window.supabase = { createClient: () => fake.client };
+  window.fetch = async () => ({ ok:true, json:async () => ({ mailer_autoconfirm:autoConfirm }) });
   for (const file of ['config.js', 'account.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'app.js']) {
     window.eval(file === 'config.js' ? config : fs.readFileSync(path.join(mapDir, file), 'utf8'));
   }
@@ -198,13 +202,40 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
     assert.deepEqual(page.errors, []);
   }
 
-  // Obfuscated duplicate-signup responses are not email-confirmation errors.
+  // An obfuscated duplicate does not bypass the original password.
   {
-    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[] }, session:null }, error:null } } });
+    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[] }, session:null }, error:null }, signInError:{ message:'Invalid login credentials' } } });
     await page.signIn();
-    assert(page.$('#account-error').textContent.includes('已註冊'));
-    assert(!page.$('#account-error').textContent.includes('Confirm email'));
+    assert(page.$('#account-error').textContent.includes('個人密碼不正確'));
     assert.equal(page.$('#account-create').getAttribute('aria-selected'), 'true');
+    assert.equal(page.fake.state.rpcCalls.length, 0);
+  }
+  // A new account stays read-only until the email has been verified.
+  {
+    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[{ provider:'email' }] }, session:null }, error:null } } });
+    await page.signIn();
+    assert(page.$('#account-status').textContent.includes('驗證信'));
+    assert.equal(page.$('#account-card').hidden, true);
+    assert.equal(page.$('#account-password').value, '');
+    assert.equal(page.$('#access-code').value, '');
+    assert.equal(page.fake.state.rpcCalls.length, 0);
+    page.click(page.$('#account-resend')); await wait();
+    assert.equal(page.fake.state.resendCalls, 1);
+    assert(page.$('#account-status').textContent.includes('垃圾郵件'));
+  }
+  {
+    const page = await load({ clientOptions:{ signInError:{ message:'Email not confirmed', code:'email_not_confirmed' } } });
+    await page.signIn({ createAccount:false });
+    assert(page.$('#account-error').textContent.includes('驗證信'));
+    assert.equal(page.$('#account-resend').hidden, false);
+    assert.equal(page.fake.state.rpcCalls.length, 0);
+  }
+  // Do not create even a provisional Auth user if confirmation is disabled.
+  {
+    const page = await load({ autoConfirm:true });
+    await page.signIn();
+    assert(page.$('#account-error').textContent.includes('網站擁有者'));
+    assert.equal(page.fake.state.signupCalls, 0);
     assert.equal(page.fake.state.rpcCalls.length, 0);
   }
   // Unexpected network/client exceptions never leave a disabled form behind.

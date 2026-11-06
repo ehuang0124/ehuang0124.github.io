@@ -12,8 +12,8 @@
 --   atlas_login_attempts  failed guesses, used to slow brute force down
 --
 -- Accounts
---   1. Supabase Auth verifies each traveller's personal email and password.
---   2. On creation only, atlas_redeem_code checks the invite's bcrypt hash
+--   1. Supabase Auth must require email confirmation (disable auto-confirm).
+--   2. Only a confirmed address can redeem the invite's bcrypt hash
 --      and creates the profile that RLS requires before any write.
 --   3. Returning users call atlas_login, which requires an existing profile
 --      and appends the login log without checking an invite or creating a profile.
@@ -103,7 +103,11 @@ stable
 security definer
 set search_path = public, extensions, pg_temp
 as $$
-  select exists (select 1 from public.profiles where id = auth.uid());
+  select exists (
+    select 1 from public.profiles p
+    join auth.users u on u.id = p.id
+    where p.id = auth.uid() and u.email_confirmed_at is not null
+  );
 $$;
 
 grant execute on function public.atlas_is_traveller() to anon, authenticated;
@@ -182,6 +186,12 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
 
+  -- An authenticated session and a correct invite are not sufficient: the
+  -- email address must be verified before a public profile can be created.
+  if not exists (select 1 from auth.users where id = v_uid and email_confirmed_at is not null) then
+    return jsonb_build_object('ok', false, 'reason', 'email_unverified');
+  end if;
+
   begin
     v_headers := nullif(current_setting('request.headers', true), '')::jsonb;
   exception when others then
@@ -256,6 +266,9 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
+  if not exists (select 1 from auth.users where id = v_uid and email_confirmed_at is not null) then
+    return jsonb_build_object('ok', false, 'reason', 'email_unverified');
+  end if;
   select * into v_profile from public.profiles where id = v_uid;
   if not found then
     return jsonb_build_object('ok', false, 'reason', 'not_approved');
@@ -295,8 +308,8 @@ drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update"
   on public.profiles for update
   to authenticated
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
+  using (auth.uid() = id and public.atlas_is_traveller())
+  with check (auth.uid() = id and public.atlas_is_traveller());
 
 -- ---------------------------------------------------------------- stamps -----
 alter table public.stamps enable row level security;

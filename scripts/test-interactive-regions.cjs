@@ -115,17 +115,11 @@ const root = path.resolve(__dirname, '..');
       await page.locator('[data-history-pick="shuri-battle"]').click();
       assert((await page.locator('.history-detail').textContent()).includes('首里戰線'));
       assert.equal(await page.locator('[data-history-pick="shuri-battle"]:focus').count(),1);
-      await page.evaluate(() => { visited.clear(); saveVisited(); updateAll(); });
-      await page.locator('[data-filter="visited"]').click();
-      assert.equal(await page.locator('#sidenav-list button').count(), 0);
-      assert.equal(await page.locator('.history-marker').count(),1);
-      assert(await page.locator('#sidenav-list').textContent().then(s => s.includes('沒有符合')));
-      await page.locator('[data-filter="all"]').click();
-      await page.evaluate(() => toggleVisited('shuri'));
-      await page.locator('[data-filter="visited"]').click();
-      assert.equal(await page.locator('#sidenav-list button').count(), 1);
-      await page.reload();
-      assert(await page.evaluate(() => visited.has('shuri')));
+      // The itinerary is a planning map; visit stamps now live only in the
+      // atlas. Region, history and route controls must still work without the
+      // retired local visit filter or mutation functions.
+      assert.equal(await page.locator('[data-filter="visited"]').count(), 0);
+      assert.equal(await page.locator('.history-marker').count(), 1);
       await page.selectOption('#region-filter', 'kerama');
       await page.locator('#plan-grid [data-stop="kume"]').click();
       assert.equal(await page.inputValue('#region-filter'), 'all');
@@ -139,7 +133,7 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('#region-filter').evaluate(el => el === document.activeElement), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.deepEqual(errors, []);
-      console.log(`PASS okinawa ${viewport.width}px: 10 regions, view/card sync, stamps, empty state, persistence, itinerary, route, history, keyboard, no overflow`);
+      console.log(`PASS okinawa ${viewport.width}px: 10 regions, view/card sync, itinerary, route, history, keyboard, no overflow`);
       await context.close();
     }
   } finally {

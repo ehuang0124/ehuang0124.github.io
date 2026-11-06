@@ -57,7 +57,8 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assert.equal($('#board-total').textContent, '240');
   assert.equal($('#sign-in').hidden, false, 'the sign-in control sits in the top bar in every mode');
   assert.equal($('#stamp-button').classList.contains('locked'), true, 'a signed-out visitor cannot stamp');
-  assert.equal($('#stamp-button').textContent.trim(), '登入後蓋章');
+  assert($('#stamp-button').textContent.includes('登入後蓋章'));
+  assert($('#stamp-button svg'), 'a stamp-shaped icon remains visible');
   assertCount('.place-item .flag', 237, 'countries with an ISO code carry a flag (three disputed entries have no ISO code)');
   assertCount('.place-item[data-place="somaliland"] .flag', 0, 'no flag where there is no ISO code');
   assert.equal($('#place-flag img').getAttribute('src'), './flags/jp.svg', 'the selected country shows its flag');

@@ -4,7 +4,7 @@ GitHub Pages route: `/personal/travel/map/`. Linked from the boarding-pass index
 
 The atlas is read-only until someone signs in: **no sign-in, no stamps.** Sign-in itself has two modes in the same files.
 
-- **With a Supabase project (the live site).** The top bar offers personal email/password login. The separate account-creation view also asks for an invite and display name; Supabase Auth checks personal credentials, and Postgres checks the invite against a bcrypt hash before creating the traveller profile. Stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control. Every accepted code also writes a row to `atlas_logins`, so the owner can see who signed in, when, and from which browser and address.
+- **With a Supabase project (the live site).** The top bar offers personal email/password login. The separate account-creation view also asks for an invite and display name; once confirmation and SMTP are enabled (see setup below), Supabase Auth verifies email ownership and personal credentials, and Postgres checks the confirmed email and invite against a bcrypt hash before creating the traveller profile. Stamps live in Postgres, every device syncs, companions and the shared "一起走過" view work, and Row Level Security is the real access control. Every accepted code also writes a row to `atlas_logins`, so the owner can see who signed in, when, and from which browser and address.
 - **No Supabase project.** The top bar falls back to a passphrase stored in `config.js` (`localGate`). Stamps then live in that browser's `localStorage`; nothing is uploaded and nothing syncs between devices. The passphrase check runs in the page, so it keeps out visitors, but it is not a security boundary — a static page cannot enforce one.
 
 The account control and the backend status line sit in the sticky top bar on every screen; the footer repeats where the records actually live.
@@ -13,7 +13,7 @@ The account control and the backend status line sit in the sticky top bar on eve
 
 - Five map collections: **240 countries and regions**, **171 editorially selected major cities**, **North America: 50 U.S. states, 64 U.S. national parks, and 48 Canadian national parks / national park reserves**, **35 Japanese national parks**, and **49 Okinawa destinations**. U.S. parks include Chiricahua (redesignated October 2026); Canadian parks include Pituamkek (established 2024).
 - Click a country/marker or use the searchable, keyboard-accessible destination index. Geographic area chips filter the index and reframe the map. Country and U.S. state outlines remain selectable; place and administrative names appear in hover tooltips instead of persistent map text. The North America layer combines selectable U.S. state boundaries, U.S. national parks, and Canadian national parks. Its filters narrow to the United States, Canada, or subregions. These travel groupings are not administrative boundaries. The map can be dragged from the sea, zoomed, and reset. Where parks are far apart (e.g. Alaska, American Samoa, Japan's southern islands), selecting them from the index pans the map to their location.
-- A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Every catalogue entry has a **destination-specific postcard plate**: a well-known local landscape, flower, figure or building drawn as a single-ink engraving. Each plate also carries its own deterministic contour lines and a unique catalogue serial (including every U.S., Canadian and Japanese park), so returning to a place reproduces exactly the same artwork. The plate caption names the motif and its family (風景 / 花草 / 人文 / 建築) and shows the four-step ink scale. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
+- A native month picker records visits at month precision (`YYYY-MM`) and produces a red rubber-stamp impression and a small owner-initial seal on the map. Multiple owners are derived from the existing rows/profiles; companions are not mistaken for stamp owners. Every catalogue entry has a **destination-specific postcard plate**: a well-known local landscape, flower, figure or building drawn as a single-ink engraving. Each plate also carries its own deterministic contour lines and a unique catalogue serial (including every U.S., Canadian and Japanese park), so returning to a place reproduces exactly the same artwork. The plate caption names the motif and its family (風景 / 花草 / 人文 / 建築) and shows the four-step ink scale. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
 - Every layer shows the **country flag** of each destination: countries, cities, U.S. states, and U.S./Canadian/Japanese parks inherit the flag of their country. Flags are bundled local SVGs (`flags/`, from `country-flag-icons`, MIT), so they render the same on every platform and need no network. The five disputed or unassigned catalogue entries with no ISO 3166-1 code (Somaliland, Northern Cyprus, Siachen Glacier) deliberately show no flag.
 - Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), with the former Okinawa checklist kept separately as undated reminders. Signing in with the local passphrase is what unlocks stamping, custom cities, import and export. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
@@ -69,7 +69,7 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
 **[`SETUP-SUPABASE.md`](SETUP-SUPABASE.md) is the click-by-click guide (Chinese) for the whole thing.** The short version:
 
 1. Create a Supabase project, then run [`supabase/setup.sql`](supabase/setup.sql) in **SQL Editor**. It creates `profiles`, `stamps`, `custom_cities`, their RLS policies, and adds the tables to the realtime publication. The script is idempotent.
-2. In **Authentication → Sign In / Providers**, enable **Email** and turn **Confirm email** off. Travellers create personal email/password accounts; set the minimum password length to 7 in Auth settings. No confirmation mail is sent, so email ownership is not verified. The invite code is checked only when creating the atlas profile. Rerun `setup.sql` on existing projects before deploying this version to install `atlas_login`.
+2. In **Authentication → Sign In / Providers**, enable **Email** and configure custom SMTP for real recipients, then enable **Confirm email** after deploying this version. Set the minimum password length to 7. Travellers follow the email link, then re-enter their credentials and invite to finish approval. Previously auto-confirmed accounts are not retroactively verified. Unconfirmed Auth users can still temporarily exist, but cannot create profiles or stamps; use rate limits/CAPTCHA and cleanup for signup abuse.
 3. Set the shared code in **SQL Editor**: `select public.atlas_rotate_code('your code');` (at least 6 characters; only a bcrypt hash is stored). Repeat this line any time to rotate it.
 4. Connect the project and check it in one command:
 
@@ -77,7 +77,7 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
    node scripts/connect-supabase.cjs --url https://<project>.supabase.co --key <anon key> --check
    ```
 
-   It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, email sign-up is open with confirmation off, a code is set, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
+   It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, email sign-up is open with confirmation on, a code is set, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
 5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` and `node scripts/test-atlas-auth-errors.cjs` to check the page against an in-memory double of PostgREST, RLS, Supabase sessions, and realtime.
 
 Misconfiguration is answered in plain language on the page (never naming dashboard steps, SQL, or file paths); the raw error goes to the browser console for the owner. A wrong password, a wrong code, a throttled address, an unapproved account, missing tables or functions, an e-mail block, and being offline each get their own sentence (`scripts/test-atlas-auth-errors.cjs`).
@@ -97,7 +97,7 @@ The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://g
 
 ## Fonts
 
-The local `fonts/` files are site-character subsets of the variable Google Fonts **Noto Sans TC** and **Noto Serif TC**, redistributed under the SIL Open Font License 1.1 (full notices in `fonts/`). They let Traditional Chinese names render in offline/headless previews. `atlas-sans-extra.woff2` and `atlas-serif-extra.woff2` are additional OFL-licensed subsets covering only the caption characters introduced with the postcard plates; their `unicode-range` keeps them from overriding the main fonts. Browsers can still fall back to installed Chinese fonts for characters in user-entered custom city names that are outside every subset. Neither the full fonts nor a remote font CDN are needed at runtime.
+The local `fonts/` files are site-character subsets of the variable Google Fonts **Noto Sans TC** and **Noto Serif TC**, redistributed under the SIL Open Font License 1.1 (full notices in `fonts/`). They let Traditional Chinese names render in offline/headless previews. `atlas-sans-extra.woff2` and `atlas-serif-extra.woff2` are additional OFL-licensed subsets covering only the caption characters introduced with the postcard plates; their `unicode-range` keeps them from overriding the main fonts. Browsers can still fall back to installed Chinese fonts for characters in user-entered custom city names that are outside every subset. The atlas additionally bundles the on-demand segmented `@fontsource-variable/noto-sans-tc@5.3.1` under `fonts/noto-sans-tc/` (OFL) so names and initials outside the small subset remain legible without a system CJK font. Neither a full unsegmented font nor a remote font CDN is needed at runtime.
 
 ## Tests
 
@@ -140,17 +140,20 @@ The split account UI and the actual returning-user SQL function have focused tes
 npm install --prefix /tmp/atlas-test-deps playwright-core @sparticuz/chromium @electric-sql/pglite
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-auth-ui.cjs
 NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-login-sql.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-email-sql.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-personal-seals.cjs
 ```
 
 The browser test checks map/index startup and real map clicks, login/creation switching,
-creation-only fields, password validation, native form submission, rejected-invite retries, completed registration/login through the real Auth client with mocked HTTP responses, and overflow at 1440, 390, and 320 px.
-The SQL test runs the deployed `atlas_login` definition and grants in embedded Postgres:
+creation-only fields, password validation, native form submission, confirmation and resend (including a fresh-browser callback), rejected-invite retries, completed registration/login through the real Auth client with mocked HTTP responses, and overflow at 1440, 390, and 320 px.
+The personal-seal browser test covers multi-owner initials and their dates, large companion controls, local-only demo, persistence, deletion, map layers, chapter palettes and narrow-screen layout.
+The login SQL test runs the deployed `atlas_login` definition and grants in embedded Postgres:
 anonymous access is denied, an unapproved session cannot create a profile, and approved
 logins are recorded privately under `auth.uid()`.
 
 Existing projects missing `atlas_login` can apply only the additive repair in
 [`supabase/migrations/20261105_add_atlas_login.sql`](supabase/migrations/20261105_add_atlas_login.sql).
-This repair was applied to the configured live project on 2026-11-05; the public API cannot call it anonymously.
+This repair was applied to the configured live project on 2026-11-05; the public API cannot call it anonymously. The additive [`20261106_require_verified_email.sql`](supabase/migrations/20261106_require_verified_email.sql) was applied on 2026-11-05 US Eastern (2026-11-06 UTC); confirmation and external SMTP still need enabling alongside deployment. The SQL test exercises the real verified-email and profile RLS gates.
 
 ## Collection navigation and Okinawa
 

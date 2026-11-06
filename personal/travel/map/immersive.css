@@ -1,8 +1,8 @@
 /* Each collection is a different chapter of the same travel journal. */
-body[data-atlas-theme="countries"]{--chapter-image:url('./images/world.jpg');--chapter-accent:#c66b4d;--chapter-map:#e9e7db}
-body[data-atlas-theme="cities"]{--chapter-image:url('./images/cities.jpg');--chapter-accent:#b88360;--chapter-map:#dce4e5}
-body[data-atlas-theme="na"]{--chapter-image:url('./images/north-america.jpg');--chapter-accent:#b66a42;--chapter-map:#eee2d3}
-body[data-atlas-theme="jp"]{--chapter-image:url('./images/japan.jpg');--chapter-accent:#63806a;--chapter-map:#e3eadf}
+body[data-atlas-theme="countries"]{--chapter-image:url('./images/world-bright.jpg');--chapter-accent:#0875b8;--chapter-map:#d8eef8;--chapter-shade:6,46,84}
+body[data-atlas-theme="cities"]{--chapter-image:url('./images/cities-bright.jpg');--chapter-accent:#c34858;--chapter-map:#ffebe4;--chapter-shade:102,30,41}
+body[data-atlas-theme="na"]{--chapter-image:url('./images/north-america-bright.jpg');--chapter-accent:#bf5717;--chapter-map:#ffecd5;--chapter-shade:99,43,10}
+body[data-atlas-theme="jp"]{--chapter-image:url('./images/japan-bright.jpg');--chapter-accent:#31834b;--chapter-map:#e1f3e4;--chapter-shade:20,69,40}
 body[data-atlas-theme="okinawa"]{--chapter-image:url('./images/okinawa.jpg');--chapter-accent:#3b8e89;--chapter-map:#dbefeb}
 .collection-menu-button{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--ng-ink);padding:11px 14px;background:var(--ng-ink);color:#fff;font-weight:700;font-size:12px;white-space:nowrap}
 .menu-icon{display:grid;gap:5px;width:18px}.menu-icon i{display:block;height:1px;background:currentColor;width:18px}.menu-icon i:last-child{width:12px}
@@ -15,3 +15,97 @@ body[data-atlas-theme="okinawa"]{--chapter-image:url('./images/okinawa.jpg');--c
 .collection-menu-top{display:flex;align-items:center;justify-content:space-between;font:700 10px var(--mono);letter-spacing:.2em;color:#c3d2c7}.collection-menu-top button{border:1px solid #9caea3;background:transparent;color:white;font-size:28px;line-height:1;width:45px;height:45px;cursor:pointer}.collection-menu-heading{margin:clamp(35px,6vh,65px) 0 24px}.collection-menu-heading p:first-child{font:700 10px var(--mono);letter-spacing:.24em;color:#b6cbbf}.collection-menu-heading h2{font:500 clamp(36px,5vw,64px) var(--serif);margin:10px 0;color:white}.collection-menu-heading h2 span{color:#d99f78}.collection-menu-heading p:last-child{color:#c6d3ca;font-size:13px}
 .collection-list{max-width:980px;border-top:1px solid #ffffff45}.collection-choice{display:grid;grid-template-columns:55px 1fr auto 34px;align-items:center;gap:15px;width:100%;text-align:left;border:0;border-bottom:1px solid #ffffff45;background:transparent;color:#f8f5eb;padding:17px 8px;cursor:pointer;transition:background .2s,padding .2s}.collection-choice:hover,.collection-choice:focus-visible,.collection-choice[aria-current="true"]{background:#ffffff10;padding-left:18px}.choice-number{color:#a7c2b1;font:700 11px var(--mono)}.choice-name{display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}.choice-name strong{font:500 clamp(18px,2.5vw,26px) var(--serif)}.choice-name small{font:600 9px var(--mono);letter-spacing:.15em;color:#b4c9bc}.collection-choice .tab-count{color:#c5d5cb;font-size:10px}.choice-arrow{font-size:20px;text-align:right}.collection-menu-footer{font:600 9px var(--mono);letter-spacing:.2em;color:#9eb5a6;margin:34px 0 0}
 @media(max-width:700px){.collection-menu-button{padding:10px}.collection-menu-button>span:last-child{font-size:11px}.intro{min-height:260px;padding:26px!important;margin-top:16px}.intro h1{font-size:38px!important}.intro-lede{margin-top:12px}.collection-choice{grid-template-columns:28px 1fr auto 20px;gap:8px;padding:16px 2px}.choice-name{display:grid;gap:4px}.choice-name small{font-size:8px}.collection-menu-inner{background-attachment:scroll}.collection-menu-heading{margin:32px 0 20px}}
+
+
+/* Bright, single-colour chapters. Okinawa intentionally keeps its original view. */
+body:not([data-atlas-theme="okinawa"]) .intro:before{
+  background:linear-gradient(90deg,rgba(var(--chapter-shade),.82) 0%,rgba(var(--chapter-shade),.60) 32%,rgba(var(--chapter-shade),.16) 62%,transparent 82%);
+}
+body:not([data-atlas-theme="okinawa"]) .intro .eyebrow{color:#fff!important}
+body:not([data-atlas-theme="okinawa"]) .map-surface{
+  background-image:radial-gradient(rgba(var(--chapter-shade),.09) .6px,transparent .9px),linear-gradient(135deg,var(--chapter-map),#fff)!important;
+}
+body:not([data-atlas-theme="okinawa"]) .board-total strong{color:var(--chapter-accent)}
+body:not([data-atlas-theme="okinawa"]) .region-controls button[aria-pressed="true"]{background:var(--chapter-accent);border-color:var(--chapter-accent);color:white}
+body:not([data-atlas-theme="okinawa"]) .collection-menu{background:#f5f8f8;color:var(--ng-ink)}
+body:not([data-atlas-theme="okinawa"]) .collection-menu-inner{
+  background:linear-gradient(100deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.96) 57%,rgba(255,255,255,.67) 100%),var(--chapter-image) center/cover fixed;
+}
+body:not([data-atlas-theme="okinawa"]) .collection-menu-top,
+body:not([data-atlas-theme="okinawa"]) .collection-menu-heading p:first-child,
+body:not([data-atlas-theme="okinawa"]) .choice-number,
+body:not([data-atlas-theme="okinawa"]) .collection-menu-heading h2 span{color:var(--chapter-accent)}
+body:not([data-atlas-theme="okinawa"]) .collection-menu-top button{border-color:var(--ng-line);color:var(--ng-ink);background:#fff}
+body:not([data-atlas-theme="okinawa"]) .collection-menu-heading h2,
+body:not([data-atlas-theme="okinawa"]) .collection-choice{color:var(--ng-ink)}
+body:not([data-atlas-theme="okinawa"]) .collection-menu-heading p:last-child,
+body:not([data-atlas-theme="okinawa"]) .choice-name small,
+body:not([data-atlas-theme="okinawa"]) .collection-choice .tab-count,
+body:not([data-atlas-theme="okinawa"]) .collection-menu-footer{color:var(--ng-ink-soft)}
+body:not([data-atlas-theme="okinawa"]) .collection-list,
+body:not([data-atlas-theme="okinawa"]) .collection-choice{border-color:rgba(var(--chapter-shade),.23)}
+body:not([data-atlas-theme="okinawa"]) .collection-choice:hover,
+body:not([data-atlas-theme="okinawa"]) .collection-choice:focus-visible,
+body:not([data-atlas-theme="okinawa"]) .collection-choice[aria-current="true"]{background:rgba(var(--chapter-shade),.06)}
+
+/* Red ink, like a real rubber stamp; the initial belongs to its actual owner. */
+body{
+  --stamp-ink:#a92339;
+  /* The extended on-demand font covers arbitrary travellers' Chinese initials,
+     including characters outside the site's small editorial subset. */
+  --ng-sans:"Noto Sans JP","Noto Sans TC","Atlas Sans TC","Noto Sans TC Variable","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+  --ng-grotesk:"Archivo","Noto Sans JP","Noto Sans TC","Atlas Sans TC","Noto Sans TC Variable",Arial,sans-serif;
+  --sans:var(--ng-sans);--serif:var(--ng-sans);--mono:var(--ng-grotesk);
+}
+.stamp-face-initial{
+  display:grid;place-items:center;width:22px;height:22px;margin:0 0 2px;
+  border:1.5px solid currentColor;border-radius:50%;font:900 12px/1 var(--ng-sans);
+}
+.plate-caption{color:var(--stamp-ink);border-top-color:rgba(169,35,57,.25)}
+.stamp-signatures{margin:-6px 0 17px}
+.stamp-signatures-label{display:block;margin-bottom:7px;color:var(--ng-ink-soft);font-size:11px;font-weight:700}
+.stamp-signature-list{display:flex;flex-wrap:wrap;gap:7px}
+.stamp-signature{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 9px 4px 4px;border:1px solid #efc8c9;border-radius:8px;background:#fff8f6;color:var(--ng-ink-soft);font-size:11px;font-weight:700}
+.signature-seal{display:grid;place-items:center;width:28px;height:28px;flex:none;border:2px double #aa263b;border-radius:50%;color:#a92339;font:900 14px/1 var(--ng-sans);transform:rotate(-8deg)}
+.signature-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stamp-button{min-height:50px;border-radius:var(--ng-r);font-size:14px;letter-spacing:.04em}
+.stamp-button-icon{width:23px;height:23px;flex:none}
+.map-seal,.state-imprint{pointer-events:none}
+.map-seal-outer{fill:#fffaf6;stroke:#a92339;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.map-seal-inner{fill:none;stroke:#a92339;stroke-width:.7;stroke-dasharray:1.5 1;vector-effect:non-scaling-stroke}
+.map-seal-initial{fill:#a92339;font-family:var(--ng-sans);font-weight:900}
+.map-point.done .point-outer,.map-point.done .point-center{opacity:0}
+.place-item.done .item-status{font-family:var(--ng-sans);font-weight:900}
+
+/* A full-width touch target makes tagging companions a clear secondary action. */
+.companion-head{align-items:center}
+#companion-label{font-size:12px}
+#companion-label small{margin-left:4px;color:var(--ng-muted);font-size:10px;font-weight:500}
+.companion-manage{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin-top:8px;padding:10px 12px;
+  border:1.5px solid #b43a4b;border-radius:var(--ng-r-sm);background:#fff8f7;color:#9f273a;
+  font-size:13px;font-weight:700;text-align:left;text-decoration:none;
+}
+.companion-manage:hover{background:#ffeded;border-color:#a92339;color:#8f1f31}
+.companion-manage svg{width:22px;height:22px;flex:none}
+.companion-arrow{margin-left:auto;font-size:18px;line-height:1}
+.companion-chips{gap:7px;margin-top:10px}
+.companion-chip{min-height:34px;font-size:11px}
+.companion-chip button{min-width:28px;min-height:28px;font-size:17px}
+.companion-note{font-size:11px}
+.companion-option{min-height:58px;padding:10px 13px;border-radius:var(--ng-r-sm);font-size:14px}
+.companion-option input{width:20px;height:20px;flex:none;accent-color:#a92339}
+.companion-option:has(input:checked){border-color:#b43a4b;background:#fff4f3}
+.companion-option img,.companion-option .companion-initial{width:34px;height:34px;font-size:13px}
+#account-dialog p.verification-status{
+  margin:0 0 14px;padding:11px 13px;border-left:3px solid #287b65;border-radius:var(--ng-r-sm);
+  background:#eaf7f0;color:#195640;font-size:12px;line-height:1.7;
+}
+#account-dialog p.account-create-hint{margin:0;padding:10px 12px;border-radius:var(--ng-r-sm);background:#f4f7fa;color:var(--ng-ink-soft);font-size:11px}
+.verification-resend{min-height:44px;border:1px solid var(--ng-line);border-radius:var(--ng-r-sm);background:#fff;color:var(--ng-ink);font-size:12px;font-weight:700}
+.verification-resend:hover{border-color:var(--ng-red);color:var(--ng-red)}
+.verification-resend:disabled{opacity:.6;cursor:wait}
+@media(max-width:700px){
+  body:not([data-atlas-theme="okinawa"]) .intro:before{background:linear-gradient(90deg,rgba(var(--chapter-shade),.82),rgba(var(--chapter-shade),.54) 55%,rgba(var(--chapter-shade),.15))}
+  body:not([data-atlas-theme="okinawa"]) .collection-menu-inner{background-attachment:scroll}
+}
