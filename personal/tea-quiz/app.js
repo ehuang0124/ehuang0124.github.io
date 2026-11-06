@@ -364,6 +364,7 @@ function openTea(id) {
 
 /* ---------------- 首頁 ---------------- */
 function viewLanding() {
+  document.body.dataset.view = 'home';
   const hero = el('section', { class: 'hero' },
     el('p', { class: 'eyebrow' }, t('heroEyebrow')),
     el('h1', { html: t('heroTitle') }),
@@ -449,6 +450,7 @@ function restore() {
 }
 
 function viewQuiz() {
+  document.body.dataset.view = 'quiz';
   const total = QUESTIONS.length;
   const i = Math.min(state.index, total - 1);
   const q = QUESTIONS[i];
@@ -462,7 +464,7 @@ function viewQuiz() {
     el('div', { class: 'progress-track', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1), 'aria-label': t('progress', i + 1, total) }, fill)
   );
 
-  /* 勾選狀態同時用 class 標記，讓不支援 :has() 的瀏覽器也看得到選了哪一項 */
+  /* 選了哪一項只靠這個 class：填色、邊框與右邊的 ✓ 都跟著它 */
   const syncChecked = () => {
     app.querySelectorAll('.option').forEach((label) => {
       const fieldId = label.getAttribute('for');
@@ -471,8 +473,8 @@ function viewQuiz() {
     });
   };
 
-  const group = el('fieldset', { class: 'options', style: 'border:0;padding:0;margin:0' });
-  group.append(el('legend', { class: 'visually-hidden' }, L(q.zh, q.en)));
+  /* 選項是一組 radio，但不畫任何 radio 圓點；群組名稱直接指向題目標題 */
+  const group = el('div', { class: 'options', role: 'radiogroup', 'aria-labelledby': 'q-title' });
   q.options.forEach((option) => {
     const id = `${q.id}-${option.id}`;
     const checked = state.answers[q.id] === option.id;
@@ -486,11 +488,17 @@ function viewQuiz() {
       const next = app.querySelector('.quiz-nav .btn:last-child');
       if (next) next.disabled = false;
     });
+    /* 整個選項就是一顆按鈕：不畫圓形 radio、不標 A/B/C，點下去就選好了。 */
     const label = el('label', { class: 'option', for: id },
-      el('span', { class: 'tick', 'aria-hidden': 'true' }, String.fromCharCode(65 + q.options.indexOf(option))),
       el('span', { class: 'option-icon', 'aria-hidden': 'true' }, QUESTION_ART[i][q.options.indexOf(option)]),
-      el('span', { class: 'label' }, L(option.zh, option.en))
+      el('span', { class: 'label' }, L(option.zh, option.en)),
+      el('span', { class: 'mark', 'aria-hidden': 'true' }, '✓')
     );
+    /* 真正的 input 只留給鍵盤與螢幕閱讀器；焦點框只給鍵盤，滑鼠與觸控點選不留外框 */
+    input.addEventListener('focus', () => {
+      if (input.matches(':focus-visible')) label.classList.add('is-focused');
+    });
+    input.addEventListener('blur', () => label.classList.remove('is-focused'));
     group.append(input, label);
   });
 
@@ -517,7 +525,7 @@ function viewQuiz() {
   const nav = el('div', { class: 'quiz-nav' },
     el('div', { class: 'quiz-nav-in' },
       el('button', {
-        type: 'button', class: 'btn secondary', style: 'min-width:104px',
+        type: 'button', class: 'btn secondary',
         onclick: () => go(i - 1), disabled: i === 0 ? true : null
       }, '← ', t('prev')),
       q.optional
@@ -526,7 +534,6 @@ function viewQuiz() {
       el('button', {
         type: 'button',
         class: 'btn',
-        style: 'min-width:132px',
         disabled: canProceed ? null : true,
         onclick: () => (isLast ? finish() : advance())
       }, isLast ? t('seeResult') : t('next'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, isLast ? '✦' : '→'))
@@ -534,7 +541,10 @@ function viewQuiz() {
   );
 
   app.replaceChildren(el('div', { class: 'quiz-wrap' }, progress, section, nav));
-  if (typeof progress.scrollIntoView === 'function') progress.scrollIntoView({ block: 'start', behavior: 'auto' });
+
+  /* 畫面固定在一個視窗高度內，換題時只把選項區帶回頂端。 */
+  const optionList = app.querySelector('.options');
+  if (optionList) optionList.scrollTop = 0;
 
   syncChecked();
   const current = app.querySelector('input:checked');
@@ -603,6 +613,7 @@ function resultCard(row, index) {
 }
 
 function viewResults(code) {
+  document.body.dataset.view = 'result';
   const answers = Object.keys(state.answers).length ? state.answers : decodeAnswers(code);
   if (answers) state.answers = answers;
 
@@ -679,6 +690,7 @@ function shareUrl() {
 let catalogFilter = 'all';
 
 function viewCatalog() {
+  document.body.dataset.view = 'catalog';
   const families = [['all', t('filterAll')], ...Object.entries(TEA_FAMILIES).map(([key, value]) => [key, value[state.lang]])];
   const list = TEAS
     .filter((tea) => catalogFilter === 'all' || tea.family === catalogFilter)
