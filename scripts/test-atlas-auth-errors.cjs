@@ -88,6 +88,9 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
   async function signIn({ name = 'Eva Huang', code = 'travel2n' } = {}) {
     click($('#sign-in'));
     await wait();
+    $('#account-create').checked = true;
+    $('#account-email').value = 'eva@example.com';
+    $('#account-password').value = 'personal-password-123';
     $('#traveller-name').value = name;
     $('#access-code').value = code;
     click($('#code-signin-submit'));

@@ -145,9 +145,9 @@ async function check(url, key) {
 接著確認這三件事（都只要做一次）：\n\n  1. 資料表    https://supabase.com/dashboard/project/${ref}/sql/new
      貼上 personal/travel/map/supabase/setup.sql 全文並 Run。\n\n  2. 帳號服務  Authentication → Sign In / Providers
      Email: 開啟；同頁關閉「Confirm email」。
-     （每個瀏覽器會自動建立一個帳號，人只需要輸入通行碼。）\n\n  3. 通行碼    同一頁的 SQL Editor：
+     （旅人使用個人電子郵件、密碼與邀請碼；Auth Settings 的最低密碼長度設為 12。）\n\n  3. 通行碼    同一頁的 SQL Editor：
        select public.atlas_rotate_code('你的通行碼');
-     之後要換碼，重跑這一行就好。\n\n設定完成後：${SITE_URL} 右上角會出現「通行碼登入」；
+     之後要換碼，重跑這一行就好。\n\n設定完成後：${SITE_URL} 右上角會出現「帳號登入」；
 每次登入都寫進 Supabase 的 atlas_logins（Table Editor 就看得到）。
 要檢查設定是否正確，再跑一次並加上 --check。
 `);

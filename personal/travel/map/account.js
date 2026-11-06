@@ -22,12 +22,9 @@
   // Without a Supabase project the page still needs a way to tell the owner
   // from a visitor. This key holds the local (browser-only) traveller session.
   const LOCAL_SESSION_KEY = 'eva.travel.atlas.session.v1';
-  // Every browser gets its own Supabase Auth account (a random email + password
-  // this page generates). That keeps one traveller per device without asking
-  // anybody to remember a second password: the shared access code is the only
-  // thing a person types. The credentials below are that device's identity, so
-  // signing out and back in on the same browser returns to the same stamps.
+  // Legacy generated credentials are no longer used or retained.
   const DEVICE_KEY = 'eva.travel.atlas.device.v1';
+  let authenticating = false;
   const TRAVELLER_NAME_KEY = 'eva.travel.atlas.name.v1';
   const DEMO_USERS = [
     { id:'demo-eva', name:'Eva Huang' },
@@ -364,6 +361,7 @@
       if (initialised) return;
       initialised = true;
       if (isConfigured()) {
+        try { localStorage.removeItem(DEVICE_KEY); } catch { /* ignore */ }
         state.mode = 'cloud';
         state.connection = 'connecting';
         if (!window.supabase?.createClient) { setConnection('error'); return; }
@@ -371,6 +369,7 @@
           auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce' }
         });
         client.auth.onAuthStateChange((event, session) => {
+          if (authenticating) return;
           if (!session?.user) { setUser(null); return; }
           // A refreshed token for the traveller already on screen changes nothing.
           if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id) return;
@@ -432,47 +431,19 @@
   api.setDiscoverable = setDiscoverable;
 
   // ---------- auth ----------
-  // Postgres can only recognise a traveller through auth.uid(), so the page
-  // needs a Supabase Auth session before it can even ask about the access code.
-  // Each browser therefore gets its own account, created from a random address
-  // and password this page generates and keeps in localStorage: nobody has to
-  // remember a second credential, and the code stays the one thing a person
-  // types. Re-using the stored account means signing out and in again on the
-  // same browser returns to the same traveller and the same stamps.
-  function randomToken(bytes) {
-    if (window.crypto?.getRandomValues) {
-      const buffer = new Uint8Array(bytes);
-      window.crypto.getRandomValues(buffer);
-      return [...buffer].map(value => value.toString(16).padStart(2, '0')).join('');
-    }
-    return Array.from({ length: bytes * 2 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-  }
-  async function ensureSession() {
-    const existing = (await client.auth.getSession()).data?.session;
-    if (existing) return { session: existing };
-    const stored = readJSON(DEVICE_KEY, null);
-    if (stored?.email && stored?.password) {
-      const { data, error } = await client.auth.signInWithPassword({ email: stored.email, password: stored.password });
-      if (!error && data?.session) return { session: data.session };
-      // The stored account is gone (project reset, revoked user): make a new one.
-    }
-    const email = `atlas-${randomToken(10)}@example.com`;
-    const password = randomToken(24);
-    const { data, error } = await client.auth.signUp({ email, password });
-    if (error) return { error };
-    if (!data?.session) return { error: { message: 'email_confirmation_required' } };
-    writeJSON(DEVICE_KEY, { email, password });
-    return { session: data.session };
-  }
   // Supabase errors are terse and English. Turn the ones that mean "one more
   // switch in the dashboard" into that switch.
   function signInErrorText(error) {
     const text = `${error?.message || error || ''} ${error?.code || ''}`;
+    if (/invalid login credentials|invalid_credentials/i.test(text)) return '電子郵件或個人密碼不正確。';
+    if (/already registered|user_already_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
+    if (/weak_password|password.*(short|least|weak)/i.test(text)) return '請設定至少 12 個字元的個人密碼；Supabase → Authentication → Settings 可設定密碼規則。';
+    if (/rate.limit|too many requests|over_.*rate_limit/i.test(text)) return '登入或註冊太頻繁，請稍後再試。';
     if (/email_confirmation_required|email not confirmed|confirm your email/i.test(text)) {
       return '這個專案還要求確認信：Supabase → Authentication → Sign In / Providers → Email → 關閉「Confirm email」後再試。';
     }
     if (/signups? (are )?(not allowed|disabled)|signup.*disabl/i.test(text)) {
-      return 'Supabase 目前不開放建立帳號：Authentication → Sign In / Providers → Email 要開啟（本頁靠它建立這台裝置的旅人身分）。';
+      return 'Supabase 目前不開放建立帳號：Authentication → Sign In / Providers → Email 要開啟（本頁使用個人電子郵件與密碼建立旅人帳號）。';
     }
     if (/invalid api key|no api key|invalid jwt|jwt expired/i.test(text)) {
       return 'anon key 不正確或已失效：請換上 Project Settings → API 的 anon public key，或重跑 scripts/connect-supabase.cjs。';
@@ -496,7 +467,7 @@
       default: return '登入失敗，請稍後再試。';
     }
   }
-  async function signIn({ code, name } = {}) {
+  async function signIn({ code, name, email, password, createAccount = false } = {}) {
     if (state.mode === 'demo') { enterDemo('demo-eva'); return { ok:true }; }
     // No backend: the dialog collects the browser-only passphrase instead.
     if (state.mode === 'local') return localSignIn(code);
@@ -504,46 +475,74 @@
     const value = typeof code === 'string' ? code.trim() : '';
     const traveller = typeof name === 'string' ? name.trim().slice(0, 40) : '';
     if (!value) return { ok:false, reason:'請輸入通行碼。' };
+    const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, reason:'請輸入有效的電子郵件。' };
+    if (typeof password !== 'string' || !password) return { ok:false, reason:'請輸入個人密碼。' };
+    if (createAccount && password.length < 12) return { ok:false, reason:'個人密碼至少需要 12 個字元。' };
+    if (createAccount && !traveller) return { ok:false, reason:'請輸入顯示名稱。' };
+    if (authenticating) return { ok:false, reason:'登入中，請稍候。' };
+    authenticating = true;
+    ++resolveSeq;
+    stopSubscription();
+    setUser(null);
     setConnection('connecting');
-    const attempt = await ensureSession();
-    if (attempt.error) {
-      setConnection('error');
-      return { ok:false, reason: signInErrorText(attempt.error) };
+    let accepted = false;
+    try {
+      // Never reuse an existing session as proof of the typed password.
+      const response = createAccount
+        ? await client.auth.signUp({ email:address, password })
+        : await client.auth.signInWithPassword({ email:address, password });
+      if (response.error) return { ok:false, reason:signInErrorText(response.error) };
+      const attempt = { session:response.data?.session };
+      if (!attempt.session?.user) return { ok:false, reason:signInErrorText({ message:'email_confirmation_required' }) };
+      // Keep the traveller's existing name when signing in; the redemption
+      // function uses this name when it updates the profile.
+      const { data:existingProfile, error:profileError } = await client.from('profiles')
+        .select('id,display_name').eq('id', attempt.session.user.id).maybeSingle();
+      if (profileError) return { ok:false, reason:signInErrorText(profileError) };
+      // The code itself is checked in Postgres, never in this file.
+      const { data, error } = await client.rpc('atlas_redeem_code', {
+        p_code: value,
+        p_name: existingProfile?.display_name || traveller,
+        p_user_agent: String(navigator.userAgent || '').slice(0, 300)
+      });
+      if (error) {
+        setConnection('error');
+        return { ok:false, reason: signInErrorText(error) };
+      }
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result || result.ok !== true) {
+        setConnection('online');
+        return { ok:false, reason: codeErrorText(result?.reason) };
+      }
+      const profile = {
+        id: String(result.user_id || attempt.session.user.id),
+        name: typeof result.display_name === 'string' && result.display_name.trim() ? result.display_name.trim() : '旅人',
+        avatar: typeof result.avatar_url === 'string' ? result.avatar_url : '',
+        email: ''
+      };
+      writeJSON(TRAVELLER_NAME_KEY, profile.name);
+      profiles.set(profile.id, { ...profile, discoverable: result.discoverable !== false });
+      accepted = true;
+      setUser(profile);
+      startSubscription();
+      emit('profiles', profiles);
+      await syncPull();
+      flush();
+      emit('status', status());
+      return { ok:true };
+    } catch (error) {
+      return { ok:false, reason:signInErrorText(error) };
+    } finally {
+      // A failed invite must not leave an approved account unlocked by an
+      // auth event emitted before redemption completed.
+      if (!accepted) {
+        try { await client.auth.signOut(); } catch { /* remain read-only */ }
+        setUser(null);
+      }
+      authenticating = false;
+      setConnection(navigator.onLine ? 'online' : 'offline');
     }
-    if (!attempt.session?.user) {
-      setConnection('error');
-      return { ok:false, reason:'無法開始登入，請重新整理再試。' };
-    }
-    // The code itself is checked in Postgres, never in this file.
-    const { data, error } = await client.rpc('atlas_redeem_code', {
-      p_code: value,
-      p_name: traveller,
-      p_user_agent: String(navigator.userAgent || '').slice(0, 300)
-    });
-    if (error) {
-      setConnection('error');
-      return { ok:false, reason: signInErrorText(error) };
-    }
-    const result = Array.isArray(data) ? data[0] : data;
-    if (!result || result.ok !== true) {
-      setConnection('online');
-      return { ok:false, reason: codeErrorText(result?.reason) };
-    }
-    const profile = {
-      id: String(result.user_id || attempt.session.user.id),
-      name: typeof result.display_name === 'string' && result.display_name.trim() ? result.display_name.trim() : '旅人',
-      avatar: typeof result.avatar_url === 'string' ? result.avatar_url : '',
-      email: ''
-    };
-    writeJSON(TRAVELLER_NAME_KEY, profile.name);
-    profiles.set(profile.id, { ...profile, discoverable: result.discoverable !== false });
-    setUser(profile);
-    startSubscription();
-    emit('profiles', profiles);
-    await syncPull();
-    flush();
-    emit('status', status());
-    return { ok:true };
   }
   // A session only means something once the code has produced a profile row.
   let resolveSeq = 0;
