@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
   <link rel="stylesheet" href="/personal/travel/brand.css">
   <link rel="stylesheet" href="/personal/travel/landing.css">
+  <script src="/personal/travel/navigation.js" defer></script>
 </head>
 <body class="ng-body">
   <nav class="ng-crumbs" aria-label="Breadcrumb">
@@ -42,7 +43,7 @@
     <!-- 主視覺：冬日特集 -->
     <section class="ng-hero ng-hero--winter" aria-labelledby="page-title">
       <div class="ng-hero-media">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/8f/Glover_Garden_01.jpg" alt="從長崎格拉巴園眺望長崎港" fetchpriority="high" decoding="async">
+        <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/2021-01-07_Aoshima_Island_%28Miyazaki%29Aerial_photography%E9%9D%92%E5%B3%B6_%28%E5%AE%AE%E5%B4%8E%E7%9C%8C%29DJI_0246_%282%29%E7%A9%BA%E6%92%AE.jpg/960px-2021-01-07_Aoshima_Island_%28Miyazaki%29Aerial_photography%E9%9D%92%E5%B3%B6_%28%E5%AE%AE%E5%B4%8E%E7%9C%8C%29DJI_0246_%282%29%E7%A9%BA%E6%92%AE.jpg" alt="宮崎青島海岸與環繞島嶼的太平洋航拍" fetchpriority="high" decoding="async">
       </div>
       <div class="ng-hero-in">
         <p class="ng-eyebrow">
@@ -64,13 +65,14 @@
           <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg>沖繩</span>
         </p>
       </div>
-      <span class="ng-credit">表紙写真：長崎・グラバー園 / Wikimedia Commons・STA3816（CC BY-SA 3.0）</span>
+      <a class="ng-scroll" href="#journeys" aria-label="往下閱讀旅行內容"><span>往下閱讀</span><b aria-hidden="true">↓</b></a>
+      <span class="ng-credit">表紙写真：宮崎・青島 / 松岡明芳（CC BY-SA 4.0）</span>
     </section>
 
     <!-- 観光案内 — 只保留對應三帖的導覽 -->
-    <nav class="ng-catnav" aria-label="頁面分類">
+    <nav id="journeys" class="ng-catnav" aria-label="頁面分類">
       <div class="ng-shell ng-catnav-in">
-        <a class="ng-cat" href="#trilogy"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-camera"/></svg><span>三帖</span></a>
+        <a class="ng-cat" href="#guide"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-camera"/></svg><span>三帖</span></a>
         <a class="ng-cat" href="/personal/travel/east-japan/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg><span>東海道</span></a>
         <a class="ng-cat" href="/personal/travel/kyushu/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-ferry"/></svg><span>九州</span></a>
         <a class="ng-cat" href="/personal/travel/okinawa/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg><span>沖繩</span></a>
@@ -94,133 +96,9 @@
       </div>
     </section>
 
-    <!-- 0102 三帖：文案完整套用 -->
-    <section class="ng-section" id="trilogy" aria-labelledby="trilogy-title">
-      <div class="ng-shell">
-        <div class="ng-head ng-head-side">
-          <div>
-            <p class="ng-head-top"><span class="ng-head-no">0102</span>沿著海，讀日本。</p>
-            <h2 id="trilogy-title">三つの帖</h2>
-          </div>
-          <p>顏色是這本刊物的分類法：藍是東海道，紅是九州，金是琉球。<b>每一帖都是一次沿海的閱讀</b>。</p>
-        </div>
-
-        <div class="ng-trilogy" role="list">
-          <a class="ng-trilogy-item" href="/personal/travel/east-japan/" role="listitem" style="--cat-accent:var(--ng-navy)">
-            <span class="ng-trilogy-no"><b>01</b><span>TOKAI · 12.06–12.17</span></span>
-            <span class="ng-trilogy-main">
-              <span class="ng-trilogy-title"><b>東海道 <i>｜</i> 城與街道之間</b><em>Tōkaidō ・ 幕末の街道</em></span>
-              <span class="ng-trilogy-desc">下田看開國，駿府讀德川，犬山走城下町。</span>
-              <span class="ng-trilogy-meta">路線 <b>東京 → 下田 → 靜岡 → 名古屋 → 伊勢志摩</b></span>
-            </span>
-            <span class="ng-trilogy-go">看地圖 →</span>
-          </a>
-
-          <a class="ng-trilogy-item" href="/personal/travel/kyushu/" role="listitem" style="--cat-accent:var(--ng-red)">
-            <span class="ng-trilogy-no"><b>02</b><span>KYUSHU · 12.18–12.27</span></span>
-            <span class="ng-trilogy-main">
-              <span class="ng-trilogy-title"><b>九州 <i>｜</i> 立誓走向世界的日本</b><em>Kyushu ・ 幕末紀行</em></span>
-              <span class="ng-trilogy-desc">從柳川水巷到長崎洋館，再越過錦江灣的火山風景。海路帶來商人、信仰與技術，也把九州推進幕末的變局。</span>
-              <span class="ng-trilogy-meta">路線 <b>柳川 → 長崎 → 鹿兒島 → 宮崎</b></span>
-            </span>
-            <span class="ng-trilogy-go">看地圖 →</span>
-          </a>
-
-          <a class="ng-trilogy-item" href="/personal/travel/okinawa/" role="listitem" style="--cat-accent:var(--ng-gold)">
-            <span class="ng-trilogy-no"><b>03</b><span>OKINAWA · 2027.01.07–01.10</span></span>
-            <span class="ng-trilogy-main">
-              <span class="ng-trilogy-title"><b>沖繩 <i>｜</i> 福州與華人移民史</b><em>Okinawa ・ 島と海の記憶</em></span>
-              <span class="ng-trilogy-desc">首里的城、久米的廟、讀谷的陶窯。</span>
-              <span class="ng-trilogy-meta">路線 <b>那霸 → 中部 → 山原 → 離島</b>　地點 <b>49 個</b></span>
-            </span>
-            <span class="ng-trilogy-go">看地圖 →</span>
-          </a>
-        </div>
-
-        <!-- 三帖卡片 — 保留照片視覺，與文案並存 -->
-        <div class="ng-cards" style="margin-top:22px">
-          <a class="ng-card" href="/personal/travel/east-japan/">
-            <div class="ng-card-media">
-              <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Five-storied_Pagoda_of_Sensoji_Temple_in_Tokyo%2C_20240824_1103_5615.jpg/1920px-Five-storied_Pagoda_of_Sensoji_Temple_in_Tokyo%2C_20240824_1103_5615.jpg" alt="淺草寺五重塔" loading="lazy" decoding="async">
-              <span class="ng-card-no">01 TOKAIDO</span>
-              <span class="ng-card-season">12.06 — 12.17</span>
-            </div>
-            <div class="ng-card-body">
-              <h3>東海道<em>城與街道之間</em></h3>
-              <p class="ng-card-route">東京 → 下田 → 靜岡 → 名古屋 → 伊勢志摩</p>
-              <p class="ng-card-desc">下田看開國，駿府讀德川，犬山走城下町。</p>
-              <div class="ng-card-chips">
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>城</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pagoda"/></svg>街道</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>15 篇</span>
-              </div>
-              <div class="ng-card-foot"><span>進入</span><b>→</b></div>
-            </div>
-          </a>
-
-          <a class="ng-card" href="/personal/travel/kyushu/">
-            <div class="ng-card-media">
-              <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Sakurajima55.jpg/960px-Sakurajima55.jpg" alt="鹿兒島櫻島" loading="lazy" decoding="async">
-              <span class="ng-card-no">02 KYUSHU</span>
-              <span class="ng-card-season">12.18 — 12.27</span>
-            </div>
-            <div class="ng-card-body">
-              <h3>九州<em>立誓走向世界</em></h3>
-              <p class="ng-card-route">柳川 → 長崎 → 鹿兒島 → 宮崎</p>
-              <p class="ng-card-desc">從柳川水巷到長崎洋館，再越過錦江灣的火山風景。海路帶來商人、信仰與技術，也把九州推進幕末的變局。</p>
-              <div class="ng-card-chips">
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-ferry"/></svg>海路</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-onsen"/></svg>火山</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>11 篇</span>
-              </div>
-              <div class="ng-card-foot"><span>進入</span><b>→</b></div>
-            </div>
-          </a>
-
-          <a class="ng-card" href="/personal/travel/okinawa/">
-            <div class="ng-card-media">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/100927_Shuri_Cstl_aerial.jpg" alt="沖繩首里城上空航照" loading="lazy" decoding="async">
-              <span class="ng-card-no">03 OKINAWA</span>
-              <span class="ng-card-season">2027.01.07 — 01.10</span>
-            </div>
-            <div class="ng-card-body">
-              <h3>沖繩<em>福州與華人移民史</em></h3>
-              <p class="ng-card-route">那霸 → 中部 → 山原 → 離島</p>
-              <p class="ng-card-desc">首里的城、久米的廟、讀谷的陶窯。</p>
-              <div class="ng-card-chips">
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg>福州</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>御城</span>
-                <span class="ng-chip"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>49 個地點</span>
-              </div>
-              <div class="ng-card-foot"><span>進入</span><b>→</b></div>
-            </div>
-          </a>
-        </div>
-
-        <a class="ng-callout" href="/personal/travel/map/">
-          <div class="ng-callout-copy">
-            <p class="ng-callout-tag"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg>04 ・ 世界蓋章 ・ Stamp Atlas</p>
-            <h3>走過的每一站，都留在一枚戳章裡</h3>
-            <p>世界各國、主要城市、州省與日本國立公園。到訪月份蓋一枚戳，圖樣依地點而定；同一個地方再去一次，蓋的還是同一枚。</p>
-          </div>
-          <span class="ng-callout-go">打開地圖 →</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 全幅寫真 — 呼應「沿著海」 -->
-    <section class="ng-band" aria-label="寫真">
-      <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/2021-01-07_Aoshima_Island_%28Miyazaki%29Aerial_photography%E9%9D%92%E5%B3%B6_%28%E5%AE%AE%E5%B4%8E%E7%9C%8C%29DJI_0246_%282%29%E7%A9%BA%E6%92%AE.jpg/960px-2021-01-07_Aoshima_Island_%28Miyazaki%29Aerial_photography%E9%9D%92%E5%B3%B6_%28%E5%AE%AE%E5%B4%8E%E7%9C%8C%29DJI_0246_%282%29%E7%A9%BA%E6%92%AE.jpg" alt="宮崎青島上空航照" loading="lazy" decoding="async">
-      <div class="ng-band-in">
-        <blockquote>
-          沿著海，讀日本。
-          <cite>WINTER SPECIAL 2026–2027 ・ 日本三帖</cite>
-        </blockquote>
-        <div class="ng-lattice" aria-hidden="true">
-          <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
-        </div>
-      </div>
-    </section>
+    <!-- 三帖內容見下方圖文行程入口 -->
+<!-- 全幅寫真 — 呼應「沿著海」 -->
+    <div class="ng-geo-divider" aria-hidden="true"><span></span><i></i><b></b><i></i><span></span></div>
 
     <!-- 0103 旅の断片 — 保留，作為三帖的照片索引 -->
     <section class="ng-section" aria-labelledby="moments-title">
@@ -305,7 +183,7 @@
             </div>
           </div>
         </div>
-        <p class="ng-postcard-note">戳章保存在你自己的瀏覽器裡；換裝置前記得先在世界蓋章地圖做一次備份。</p>
+        <p class="ng-postcard-note">紀錄儲存位置與同步狀態，請見世界蓋章地圖的帳號設定與資料來源。</p>
       </div>
     </section>
 

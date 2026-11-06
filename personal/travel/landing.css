@@ -642,3 +642,17 @@
     .ng-trilogy-no b{width:38px;height:38px;font-size:10px}
     .ng-title-main--large{font-size:clamp(36px,9vw,48px)}
   }
+
+/* Cover reading cue and quiet geometric chapter break. */
+#journeys,#guide{scroll-margin-top:100px}
+.ng-hero--winter{min-height:clamp(580px,82svh,850px)}
+.ng-hero--winter .ng-hero-media img{object-position:65% 48%}
+.ng-hero--winter .ng-hero-in{padding-bottom:110px}
+.ng-scroll{position:absolute;bottom:34px;left:max(24px,calc((100vw - var(--ng-shell))/2));display:flex;align-items:center;gap:18px;color:var(--ng-white);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.16em;z-index:3}
+.ng-scroll b{display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;width:42px;height:42px;font-size:23px;transition:transform .2s}
+.ng-scroll:hover b{transform:translateY(4px)}
+.ng-geo-divider{display:flex;align-items:center;justify-content:center;gap:18px;width:min(88%,1000px);margin:72px auto 4px;color:var(--ng-navy)}
+.ng-geo-divider span{height:1px;flex:1;background:var(--ng-line)}
+.ng-geo-divider i{width:16px;height:16px;border:1px solid currentColor;transform:rotate(45deg)}
+.ng-geo-divider b{width:24px;height:24px;background:var(--ng-red);transform:rotate(45deg)}
+@media(max-width:760px){.ng-title-kicker{font-size:9px;letter-spacing:.14em}.ng-hero--winter .ng-hero-in{padding-bottom:115px}.ng-hero--winter{min-height:680px}.ng-geo-divider{margin-top:48px}}
