@@ -199,7 +199,7 @@ a{color:inherit}
 .place-item.done .item-info strong{color:var(--rust-dark)}
 .empty-results{grid-column:1/-1;padding:34px 8px;text-align:center;color:var(--ng-muted);font-size:12px}.empty-results strong{display:block;font:22px/1.5 var(--serif);color:var(--ng-ink-soft);margin-bottom:6px}
 .directory-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:15px;min-height:42px}.directory-bottom p{margin:0;font-size:10px;color:var(--ng-muted)}
-.add-city{border:1px dashed var(--ng-red);background:#ffffff;color:var(--rust-dark);border-radius:2px;padding:7px 12px;font-size:11px;font-weight:700}.add-city:hover{background:var(--ng-paper)}
+.add-city{border:1px dashed var(--ng-red);background:#ffffff;color:var(--rust-dark);border-radius:2px;padding:7px 12px;font-size:11px;font-weight:700}.add-city:hover{background:var(--ng-paper)}.empty-results .add-city{margin-top:10px;max-width:100%}
 
 /* Local backup, footer, and add-city dialogue */
 .backup{display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:20px 24px;margin:38px 0 0;padding:26px 28px;background:var(--card);border:1px solid var(--line);border-top:3px solid var(--rust)}
@@ -303,6 +303,11 @@ a{color:inherit}
 .companion-manage-icon{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .companion-manage-plus{margin-left:auto;font-size:20px;line-height:1}
 .companion-manage[hidden]{display:none}
+.account-forgot{justify-self:start;border:0;background:transparent;color:var(--rust-dark);font-size:10.5px;font-weight:700;text-decoration:underline;text-underline-offset:2px;padding:0}
+.account-forgot:hover{color:var(--rust)}
+.account-forgot[hidden]{display:none}
+.friends-leave{border:0;background:transparent;color:var(--ng-muted);font-size:9.5px;font-weight:700;text-decoration:underline;text-underline-offset:2px;padding:0;margin-left:auto}
+.friends-leave:hover{color:var(--rust)}
 .companion-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .companion-chips:empty{display:none}
 .companion-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--ng-line);background:#ffffff;border-radius:999px;padding:2px 9px 2px 3px;font-size:10.5px;font-weight:700;color:var(--ng-ink-soft);max-width:100%}
@@ -375,6 +380,12 @@ a{color:inherit}
 .stamp-history li{flex-wrap:wrap}
 .history-who{font-size:9.5px;color:var(--ng-muted);margin-left:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .history-mine-mark{font:700 8px var(--mono);letter-spacing:.08em;color:var(--ng-muted);border:1px solid var(--ng-line);border-radius:2px;padding:1px 4px;margin-left:5px}
+/* Sync state: the record says what the browser knows, not more. */
+.history-sync{font:700 8px var(--mono);letter-spacing:.06em;color:var(--ng-muted);border:1px solid var(--ng-line);border-radius:2px;padding:1px 4px;margin-left:5px}
+.history-sync.waiting{color:var(--rust-dark);border-color:var(--rust-dark)}
+.history-sync.failed{color:var(--ng-red-dark);border-color:var(--ng-red-dark)}
+.history-retry{border:0;background:transparent;color:var(--rust-dark);font:700 9.5px var(--mono);text-decoration:underline;text-underline-offset:2px;padding:0 0 0 5px}
+.history-retry:hover{color:var(--rust)}
 #history-list li.not-mine time{color:var(--ng-muted)}
 
 /* Country flags (bundled SVGs, see licenses/LICENSE-country-flag-icons.txt) */

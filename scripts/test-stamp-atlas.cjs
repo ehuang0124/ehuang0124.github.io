@@ -96,6 +96,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
         else await page.locator(selector).dispatchEvent('click');
       };
       page.on('pageerror',error => errors.push(error.message));
+      // Destructive actions ask first; this suite always confirms.
+      page.on('dialog',dialog => dialog.accept());
       await page.goto(`${url}/personal/travel/map/`);
       await page.evaluate(() => document.fonts.ready);
       assert.deepEqual(errors,[],'the atlas should initialize without uncaught JavaScript errors');
@@ -141,7 +143,9 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('[data-region="AS"]').click();
       assert.equal(await page.locator('.place-item').count(),55);
       await page.locator('#place-search').fill('日本');
-      assert.equal(await page.locator('.place-item').count(),1);
+      // Search spans every collection, so Japan also matches its cities/parks.
+      assert.equal(await page.locator('.place-item').count(),9);
+      assert.equal(await page.locator('.place-item[data-place="392"]').count(),1);
       await page.locator('#place-search').fill('');
       await page.locator('[data-region="all"]').click();
       await clickMapTarget('.map-country[data-id="158"]');
@@ -305,7 +309,6 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#place-search').fill('臺南');
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#history-list li').count(),1);
-      page.once('dialog',dialog => dialog.accept());
       await page.locator('#delete-city').click();
       assert.equal(await page.locator('#board-total').textContent(),'171');
       assert.equal(await page.locator('#passport-count').textContent(),'2');

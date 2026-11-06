@@ -28,6 +28,7 @@ function createServer() {
   const accounts = new Map(); // email -> { email, password, user }
   const ACCESS_CODE = 'travel2n';
   let nextId = 1;
+  let failedTable = null;
 
   const uuid = prefix => `${prefix}-${String(nextId++).padStart(4, '0')}`;
   function addUser({ name, email, sub }) {
@@ -72,6 +73,12 @@ function createServer() {
       in(column, value) { query.push(['in', column, value]); return builder; },
       upsert(payload, options) {
         calls.push({ op:'upsert', table, payload:Array.isArray(payload) ? payload : [payload] });
+        // A test can make the next writes to one table fail, to prove the page
+        // never claims a record the server has not accepted.
+        if (failedTable === table) {
+          builder._result = { data:null, error:{ message:'simulated write failure' } };
+          return builder;
+        }
         const owner = ownerForWrite();
         const list = Array.isArray(payload) ? payload : [payload];
         const saved = [];
@@ -143,6 +150,7 @@ function createServer() {
       return { data:doomed, error:null };
     }
     async function resolve(kind) {
+      if (builder._result) return builder._result;
       if (builder._update) return runUpdate();
       if (builder._delete) return runDelete();
       const rows = visible(table).filter(row => matches(row, query));
@@ -156,11 +164,21 @@ function createServer() {
   // profile, and every accepted code appends to atlas_logins.
   async function rpc(name, args, who) {
     calls.push({ op:'rpc', name, payload:args });
-    if (!['atlas_redeem_code', 'atlas_login'].includes(name)) {
+    if (!['atlas_redeem_code', 'atlas_login', 'atlas_leave_stamp'].includes(name)) {
       return { data:null, error:{ message:`Could not find the function public.${name}`, code:'PGRST202' } };
     }
     const current = who();
     if (!current?.user) return { data:{ ok:false, reason:'no_session' }, error:null };
+    // Mirrors the SQL function: it only ever removes auth.uid() from companions.
+    if (name === 'atlas_leave_stamp') {
+      const stamp = tables.stamps.find(row => row.id === args?.p_stamp_id);
+      if (!stamp) return { data:{ ok:false, reason:'not_found' }, error:null };
+      if (stamp.user_id === current.user.id) return { data:{ ok:false, reason:'owner' }, error:null };
+      if (!(stamp.companions || []).includes(current.user.id)) return { data:{ ok:false, reason:'not_tagged' }, error:null };
+      stamp.companions = stamp.companions.filter(id => id !== current.user.id);
+      publish('stamps', 'UPDATE', stamp);
+      return { data:{ ok:true, stamp_id:stamp.id }, error:null };
+    }
     if (name === 'atlas_login') {
       const profile = tables.profiles.find(row => row.id === current.user.id);
       if (!profile) return { data:{ ok:false, reason:'not_approved' }, error:null };
@@ -223,6 +241,17 @@ function createServer() {
           session = null;
           handlers.forEach(handler => handler('SIGNED_OUT', null));
           return { error:null };
+        },
+        // Never reveals whether an address exists, like the real endpoint.
+        async resetPasswordForEmail(email, options) {
+          calls.push({ op:'resetPasswordForEmail', payload:{ email, options } });
+          return { data:{}, error:null };
+        },
+        async updateUser({ password }) {
+          calls.push({ op:'updateUser' });
+          if (!session?.user) return { data:{ user:null }, error:{ message:'Auth session missing!' } };
+          for (const record of accounts.values()) if (record.user.id === session.user.id) record.password = password;
+          return { data:{ user:session.user }, error:null };
         }
       },
       from(table) { return makeQuery(table, () => session); },
@@ -270,14 +299,17 @@ function createServer() {
   }
 
   function notifyLive(payload) { channels.forEach(realtime => realtime.notify('postgres_changes', payload)); }
-  return { users, tables, calls, accounts, addUser, connect, uuid, notifyLive, accessCode:ACCESS_CODE };
+  return {
+    users, tables, calls, accounts, addUser, connect, uuid, notifyLive, accessCode:ACCESS_CODE,
+    setWriteFailure: table => { failedTable = table; }
+  };
 }
 
 // ---------------------------------------------------------------- page harness
 const sharedServer = createServer();
 
-async function boot({ demo = false, seed = {}, viewport = 'desktop' } = {}) {
-  const dom = new JSDOM(pageHtml, { url:'https://eva.example/personal/travel/map/', runScripts:'outside-only', pretendToBeVisual:true });
+async function boot({ demo = false, seed = {}, viewport = 'desktop', url = 'https://eva.example/personal/travel/map/' } = {}) {
+  const dom = new JSDOM(pageHtml, { url, runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   const errors = [];
   window.addEventListener('error', event => errors.push(event.message));
@@ -291,6 +323,9 @@ async function boot({ demo = false, seed = {}, viewport = 'desktop' } = {}) {
     dialogProto.close = function () { this.open = false; this.removeAttribute('open'); };
   }
   window.BroadcastChannel ||= class { postMessage() {} addEventListener() {} close() {} };
+  // Destructive actions ask first; the harness answers yes unless a test says otherwise.
+  window.confirmAnswers = [];
+  window.confirm = message => { window.confirmAnswers.push(message); return window.confirmAnswer !== false; };
   const storage = new Map();
   Object.defineProperty(window, 'localStorage', {
     value: {
@@ -563,24 +598,31 @@ async function main() {
     });
     server.notifyLive({ eventType:'INSERT', table:'stamps', schema:'public', new:{ ...server.tables.stamps.at(-1) }, old:{} });
     await page.settle();
-    // Lin sees only her own collection total; everyone's stamps mark the map.
+    // One scope: the map, the counters and the history all carry Lin's own
+    // footprint; somebody else's stamp never marks her map.
     assert.equal(page.$('#passport-count').textContent, '0', 'a traveller counts only their own stamps');
-    assert.equal(page.$$('.map-country.done').length, 2, 'everyone\'s stamps still mark the shared map');
-    // The live row appears on the map and in the history without a reload.
+    assert.equal(page.$$('.map-country.done').length, 0, 'another traveller\'s stamps do not mark my map');
+    // The live row still reaches the shared-trip view, not my history.
     page.$('#place-search').value = '日本';
     input(page.window, page.$('#place-search'));
     await page.settle();
     choosePlace(page, '日本');
     await page.settle();
-    assert(page.$('#history-list').textContent.includes('2025.02'), 'the other traveller month is visible');
-    assert(page.$('#history-list').textContent.includes('他人'), 'the row is labelled as someone else\'s stamp');
-    assert.equal(page.$('#history-list button[data-date]'), null, 'visitors of a row cannot delete another person stamp');
+    assert.equal(page.$('#stamp-history').hidden, true, 'another traveller\'s month is not in my history');
+    assert.equal(page.$('#history-list button[data-date]'), null, 'I cannot delete another person\'s stamp');
     // The shared-trips panel lists places both travellers visited together.
     const friendsText = page.$('#friends-list').textContent;
     assert(page.$('#friends-tabs').textContent.includes('Eva Huang'), 'friends tab lists the other traveller');
     assert(page.$('#friends-tabs [aria-selected="true"]').textContent.includes('Eva Huang'), 'the traveller with shared trips is selected');
     assert(friendsText.includes('日本'), 'shared trip months appear in 一起走過');
+    // One shared place, one visit: the counter says places, not rows.
     assert.equal(page.$('#friends-shared').textContent, '1');
+    assert(page.$('#friends-visits').textContent.includes('1 次到訪'), 'the shared counter names visits separately');
+    // Signing out returns to the public atlas, which shows everyone.
+    await page.window.TravelAtlasAccount.signOut();
+    await page.settle(); await page.settle();
+    assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
+    assert.equal(page.$$('.map-country.done').length, 2, 'the visitor sees every traveller on the map (TW and JP)');
     console.log('PASS companions: live insert, shared trips, per-user views');
   }
 
@@ -659,6 +701,176 @@ async function main() {
     assert.equal(page.$('#account-dialog').open, true, 'the page asks for the code instead of writing');
     assert.equal(server.tables.stamps.some(row => row.user_id === uninvited.id), false, 'nothing was written');
     console.log('PASS gate: a Supabase session alone cannot write');
+  }
+
+  // ------------------------------------------- 7. shared-trip rules (MVP P0)
+  {
+    const page = await boot();
+    page.connection.fireAuth({ access_token:'token-lin-shared', user:lin });
+    await page.settle(); await page.settle();
+    const account = page.window.TravelAtlasAccount;
+    const addStamp = (id, userId, placeKey, month, companions = []) => server.tables.stamps.push({
+      id, user_id:userId, place_key:placeKey, visit_month:`${month}-01`, companions,
+      created_at:`${month}-01T00:00:00Z`, updated_at:`${month}-01T00:00:00Z`
+    });
+    const sharedWith = async id => {
+      const tab = page.$$('#friends-tabs button').find(button => button.dataset.friend === id);
+      assert(tab, `the traveller ${id} has a tab`);
+      click(page.window, tab);
+      await page.settle();
+      return {
+        places: Number(page.$('#friends-shared').textContent),
+        visits: page.$('#friends-visits').textContent,
+        list: page.$('#friends-list').textContent
+      };
+    };
+    // The only shared record so far is Eva's Japan trip that tagged Lin.
+    let state = await sharedWith(traveller.id);
+    assert.equal(state.places, 1, 'a tagged trip is shared');
+    assert(state.visits.includes('1 次到訪'));
+
+    // Both stamp Kyoto in the same month without tagging each other.
+    addStamp('stamp-kyoto-lin', lin.id, 'cities:kyoto-jp', '2024-09');
+    addStamp('stamp-kyoto-eva', traveller.id, 'cities:kyoto-jp', '2024-09');
+    await account.refresh();
+    await page.settle(); await page.settle();
+    state = await sharedWith(traveller.id);
+    assert.equal(state.places, 1, 'the same city in the same month is not a shared trip');
+
+    // A third traveller records the trip and tags us both.
+    addStamp('stamp-kyoto-hana', hana.id, 'cities:kyoto-jp', '2024-10', [lin.id, traveller.id]);
+    await account.refresh();
+    await page.settle(); await page.settle();
+    state = await sharedWith(traveller.id);
+    assert.equal(state.places, 2, 'a third traveller can record a trip we both took');
+    assert(state.list.includes('京都'), 'the shared place is listed');
+
+    // One shared place visited twice counts as one place and two visits.
+    addStamp('stamp-kyoto-eva-2', traveller.id, 'cities:kyoto-jp', '2024-11', [lin.id]);
+    await account.refresh();
+    await page.settle(); await page.settle();
+    state = await sharedWith(traveller.id);
+    assert.equal(state.places, 2, 'a place counts once however often it is shared');
+    assert(state.visits.includes('3 次到訪'), 'each month is a visit');
+
+    // A tagged traveller takes their own tag off somebody else's record.
+    const leave = page.$$('#friends-list button[data-leave]').find(button => button.dataset.leave === 'stamp-kyoto-hana');
+    assert(leave, 'a tag added by another traveller can be removed');
+    click(page.window, leave);
+    await page.settle(); await page.settle();
+    const hanaRow = server.tables.stamps.find(row => row.id === 'stamp-kyoto-hana');
+    assert.deepEqual([...hanaRow.companions], [traveller.id], 'only my own tag is removed');
+    assert.equal(hanaRow.visit_month, '2024-10-01', 'the visit itself is unchanged');
+    state = await sharedWith(traveller.id);
+    assert(state.visits.includes('2 次到訪'), 'the removed tag no longer counts as a visit');
+    assert.equal(page.$('#friends-feedback').hidden, false, 'the page says the tag was removed');
+    console.log('PASS shared trips: tags only, third-traveller records, places vs visits, leaving a tag');
+  }
+
+  // --------------------------------------------- 8. honest sync state (MVP P0)
+  {
+    const page = await boot();
+    page.connection.fireAuth({ access_token:'token-eva-sync', user:server.users.get(traveller.id) });
+    await page.settle(); await page.settle();
+    const account = page.window.TravelAtlasAccount;
+    page.$('#place-search').value = '日本';
+    input(page.window, page.$('#place-search'));
+    await page.settle();
+    choosePlace(page, '日本');
+    await page.settle();
+    const badgeFor = month => {
+      const row = page.$$('#history-list li').find(item => item.textContent.includes(month.replace('-', '.')));
+      return row?.querySelector('.history-sync') || null;
+    };
+
+    // Offline: the record waits here and the page must not say it synced.
+    Object.defineProperty(page.window.navigator, 'onLine', { value:false, configurable:true });
+    page.$('#visit-date').value = '2026-01';
+    click(page.window, page.$('#stamp-button'));
+    await page.settle(); await page.settle();
+    assert.equal(badgeFor('2026-01')?.textContent, '待同步', 'an offline stamp is marked as waiting');
+    assert(page.$('#stamp-feedback').textContent.includes('同步'), 'the page names the waiting sync');
+    assert.equal(server.tables.stamps.some(row => row.visit_month === '2026-01-01' && row.user_id === traveller.id), false, 'nothing reached the cloud yet');
+
+    // Back online: the same queued record is confirmed, not duplicated.
+    Object.defineProperty(page.window.navigator, 'onLine', { value:true, configurable:true });
+    await account.flush();
+    await page.settle(); await page.settle();
+    assert.equal(badgeFor('2026-01')?.textContent, '已同步', 'a confirmed record says so');
+    assert.equal(server.tables.stamps.filter(row => row.visit_month === '2026-01-01' && row.user_id === traveller.id).length, 1, 'a retry never duplicates the record');
+
+    // A refused write stays visible with its own retry.
+    server.setWriteFailure('stamps');
+    page.$('#visit-date').value = '2026-02';
+    click(page.window, page.$('#stamp-button'));
+    await page.settle(); await page.settle(); await page.settle();
+    assert.equal(badgeFor('2026-02')?.textContent, '未同步', 'a failed write is not called synced');
+    const retry = badgeFor('2026-02').parentElement.querySelector('button[data-retry]');
+    assert(retry, 'a failed record offers a retry');
+    server.setWriteFailure(null);
+    click(page.window, retry);
+    await page.settle(); await page.settle(); await page.settle();
+    assert.equal(badgeFor('2026-02')?.textContent, '已同步', 'the retry reaches the cloud');
+    assert.equal(server.tables.stamps.filter(row => row.visit_month === '2026-02-01' && row.user_id === traveller.id).length, 1, 'the retry stores one record');
+    console.log('PASS sync state: waiting, confirmed, failed with retry, no duplicates');
+  }
+
+  // ------------------------------------------- 9. password reset (MVP P1)
+  {
+    const page = await boot();
+    click(page.window, page.$('#sign-in'));
+    await page.settle();
+    assert.equal(page.$('#account-forgot').hidden, false, 'returning-user login offers a reset');
+    click(page.window, page.$('#account-create'));
+    assert.equal(page.$('#account-forgot').hidden, true, 'creating an account does not');
+    click(page.window, page.$('#account-login'));
+    // Without an address the page explains what to fill in and sends nothing.
+    page.$('#account-email').value = '';
+    click(page.window, page.$('#account-forgot'));
+    await page.settle();
+    assert(page.$('#account-error').textContent.includes('電子郵件'), 'the page asks for the address');
+    assert.equal(server.calls.some(call => call.op === 'resetPasswordForEmail'), false, 'nothing is sent without an address');
+    // With the address a reset mail is requested, in plain language.
+    page.$('#account-email').value = 'eva-approved@example.com';
+    click(page.window, page.$('#account-forgot'));
+    await page.settle();
+    const request = server.calls.filter(call => call.op === 'resetPasswordForEmail').at(-1);
+    assert.equal(request.payload.email, 'eva-approved@example.com');
+    assert(request.payload.options.redirectTo.startsWith('https://eva.example/personal/travel/map/'), 'the link returns to this page');
+    assert.equal(request.payload.options.redirectTo.includes('?'), false, 'the link carries no query string');
+    assert(page.$('#account-error').textContent.includes('信已寄出'), 'the page says the mail was sent');
+    console.log('PASS reset request: entry only on login, address required, link returns to the page');
+  }
+  {
+    // Following the link opens the same dialog on its reset view.
+    const page = await boot({ url:'https://eva.example/personal/travel/map/?type=recovery' });
+    await page.settle(); await page.settle();
+    const account = page.window.TravelAtlasAccount;
+    assert.equal(page.$('#account-dialog').open, true, 'the recovery link opens the account dialog');
+    assert.equal(page.$('#code-signin').dataset.mode, 'reset');
+    assert.equal(page.$('#account-dialog-title').textContent, '重設密碼');
+    assert.equal(page.$('#account-email').closest('label').hidden, true, 'the address came from the link');
+    assert.equal(page.$('#account-password').autocomplete, 'new-password');
+    assert.equal(page.$('.account-modes').hidden, true, 'a reset is not a sign-in or a creation');
+    // A too-short password is refused before any request.
+    page.$('#account-password').value = 'abcdef';
+    page.$('#account-form').dispatchEvent(new page.window.Event('submit', { bubbles:true, cancelable:true }));
+    await page.settle(); await page.settle();
+    assert(page.$('#account-error').textContent.includes('6'), 'a short password is refused');
+    assert.equal(server.calls.some(call => call.op === 'updateUser'), false, 'nothing was sent');
+    // The link proves the address; a new password finishes the reset.
+    page.connection.fireAuth({ access_token:'token-recovery', user:server.users.get(traveller.id) });
+    await page.settle(); await page.settle();
+    page.$('#account-password').value = 'replacement-password-1';
+    page.$('#account-form').dispatchEvent(new page.window.Event('submit', { bubbles:true, cancelable:true }));
+    await page.settle(); await page.settle();
+    assert.equal(page.$('#account-dialog').open, false, 'the dialog closes once the password is set');
+    assert.equal(page.$('#account-card').hidden, false, 'the traveller is signed in with the new password');
+    await account.signOut();
+    await page.settle();
+    assert.equal((await account.signIn({ email:'eva-approved@example.com', password:'personal-password-123' })).ok, false, 'the old password no longer works');
+    assert.equal((await account.signIn({ email:'eva-approved@example.com', password:'replacement-password-1' })).ok, true, 'the new password does');
+    console.log('PASS password reset: link view, short password refused, new password signs in');
   }
 
   // ---------------------------------------------------------------- 6. demo mode

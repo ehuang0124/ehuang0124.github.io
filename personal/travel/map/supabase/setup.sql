@@ -6,6 +6,8 @@
 -- Model
 --   profiles              one row per traveller, created only by a correct code
 --   stamps                one row per traveller / place / month
+--                         (owner fixed by trigger, month never in the future,
+--                          companions limited to approved discoverable profiles)
 --   custom_cities         traveller-added cities (same ids the page already uses)
 --   atlas_access          the shared registration invite (bcrypt hash, never plain)
 --   atlas_logins          who signed in, when, from which browser/address
@@ -93,6 +95,94 @@ create index if not exists stamps_user_idx on public.stamps (user_id);
 create index if not exists custom_cities_user_idx on public.custom_cities (user_id);
 create index if not exists atlas_logins_user_idx on public.atlas_logins (user_id, created_at desc);
 create index if not exists atlas_attempts_ip_idx on public.atlas_login_attempts (ip, created_at desc);
+-- Companion lookups ("where was I tagged?") read the array itself.
+create index if not exists stamps_companions_idx on public.stamps using gin (companions);
+
+-- ------------------------------------------------------------- record guards -
+-- Row Level Security decides who may write a row; these rules decide what a row
+-- may say. They are enforced in Postgres, never only in the page.
+--   * a record never changes owner, so nobody can take over somebody's visit,
+--   * a month can never be in the future,
+--   * every companion is an approved traveller who allows being tagged.
+create or replace function public.atlas_guard_stamp()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_companion uuid;
+begin
+  if tg_op = 'UPDATE' and new.user_id <> old.user_id then
+    raise exception 'a stamp cannot change owner' using errcode = '42501';
+  end if;
+
+  if new.visit_month > date_trunc('month', now())::date then
+    raise exception 'a stamp cannot be in the future' using errcode = '22007';
+  end if;
+
+  for v_companion in select unnest(coalesce(new.companions, '{}'::uuid[])) loop
+    if v_companion = new.user_id then
+      raise exception 'a traveller cannot be their own companion' using errcode = '23514';
+    end if;
+    -- Only companions being added now are checked; an existing tag is untouched.
+    if tg_op = 'UPDATE' and v_companion = any(coalesce(old.companions, '{}'::uuid[])) then
+      continue;
+    end if;
+    if not exists (select 1 from public.profiles where id = v_companion) then
+      raise exception 'companions must be approved travellers' using errcode = '23514';
+    end if;
+    if exists (select 1 from public.profiles where id = v_companion and discoverable = false) then
+      raise exception 'this traveller does not allow being tagged' using errcode = '23514';
+    end if;
+  end loop;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.atlas_guard_stamp() from public, anon, authenticated;
+
+drop trigger if exists atlas_guard_stamp on public.stamps;
+create trigger atlas_guard_stamp
+  before insert or update on public.stamps
+  for each row execute function public.atlas_guard_stamp();
+
+-- A tagged traveller may take their own tag off somebody else's record. The
+-- function only ever removes auth.uid(); it cannot edit the visit itself.
+create or replace function public.atlas_leave_stamp(p_stamp_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_row public.stamps;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'reason', 'no_session');
+  end if;
+  select * into v_row from public.stamps where id = p_stamp_id;
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'not_found');
+  end if;
+  if v_row.user_id = v_uid then
+    return jsonb_build_object('ok', false, 'reason', 'owner');
+  end if;
+  if not (v_uid = any(v_row.companions)) then
+    return jsonb_build_object('ok', false, 'reason', 'not_tagged');
+  end if;
+  update public.stamps
+     set companions = array_remove(companions, v_uid),
+         updated_at = now()
+   where id = p_stamp_id;
+  return jsonb_build_object('ok', true, 'stamp_id', p_stamp_id);
+end;
+$$;
+
+revoke all on function public.atlas_leave_stamp(uuid) from public, anon;
+grant execute on function public.atlas_leave_stamp(uuid) to authenticated;
 
 -- ------------------------------------------------------- access code plumbing -
 -- A traveller is somebody whose profile row exists, and a profile row only
@@ -400,3 +490,5 @@ begin
     begin alter publication supabase_realtime add table public.profiles; exception when duplicate_object then null; end;
   end if;
 end $$;
+
+notify pgrst, 'reload schema';
