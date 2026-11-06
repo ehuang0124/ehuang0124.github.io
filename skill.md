@@ -9,6 +9,7 @@ The copy axis for every page on this site is the journey itself — roads, seaso
 - **Manual-style instruction sentences.** 「點一個事件，地圖會移到它發生的地方」, 「也可以直接點地圖標記；切換區域只留下該區的景點」, 「在地圖上找一個國家，或在下方搜尋它的名字」, 「座標選填；留空時以國家中心標示」. If the interface needs a sentence to be usable, the interface is wrong, not the visitor.
 - **Descriptions parked beside section headings.** A page gets one clear title; the heading carries it alone. No side descriptions beside section heads, no paragraph restating the heading.
 - **Decorative slogans.** 「COLLECT MOMENTS, NOT JUST PLACES.」, 「每一張地圖，都是一種走看世界的方式。」, 「WHERE TO NEXT?」 — taglines that say nothing about the journey are out.
+- **Promotional guide text above a page title.** Do not add redundant product-name eyebrows or quiz metadata such as 「JAPANESE TEA FINDER」 and 「7 題 · 2 分鐘 · 不需要註冊」. Let the page title and action speak for themselves; keep necessary navigation and accessible labels.
 - **Pointers at this repo.** No visible copy may reference `spec.md`, setup guides, Notion, or agent rules. Visibly noting `personal/travel/spec.md` or 「行程整理自 Notion」 was a violation.
 - **Duplicate attribution lines.** If the footer already carries the full photo/font credit, no `Photographs ・ Wikimedia Commons` strip-notes.
 
