@@ -1,17 +1,18 @@
-/* Historical context layer, styled as a magazine sidebar note.
-   Consumes magazine.css tokens; falls back to warm paper/ink values. */
+/* Historical context layer: the shared history sidebar for the Japan maps.
+   Consumes brand.css tokens (loaded last) and is themed by the
+   historical-context pass in that file. */
 .history-panel{
   padding:20px clamp(16px,2.4vw,26px) 24px;
-  border-top:1px solid var(--mag-line,#d9d2c3);
-  background:var(--mag-card,#fffdf8);
-  color:var(--mag-ink,#1d1c19);
-  font:12px/1.95 var(--mag-sans,"Noto Sans TC","PingFang TC",Arial,sans-serif);
+  border-top:1px solid var(--ng-line);
+  background:var(--ng-white,#ffffff);
+  color:var(--ng-ink);
+  font:12px/1.95 var(--ng-sans,"Noto Sans TC","PingFang TC",Arial,sans-serif);
 }
 .history-panel h3{
   margin:0 0 12px;
   padding-bottom:10px;
-  border-bottom:1px solid var(--mag-line-soft,#e9e3d6);
-  font-family:var(--mag-serif,"Noto Serif TC",serif);
+  border-bottom:1px solid var(--ng-line-soft);
+  font-family:var(--ng-sans,sans-serif);
   font-weight:500;
   font-size:18px;
   letter-spacing:.1em;
@@ -21,28 +22,28 @@
   font:inherit;
   cursor:pointer;
   text-align:left;
-  border:1px solid var(--mag-line,#d9d2c3);
+  border:1px solid var(--ng-line);
   border-radius:0;
   padding:6px 11px;
   background:transparent;
-  color:var(--mag-ink-soft,#453f38);
+  color:var(--ng-ink-soft);
   font-size:11px;
   letter-spacing:.04em;
   transition:background .18s,color .18s,border-color .18s;
 }
-.history-panel button:hover{border-color:var(--mag-ink,#1d1c19);color:var(--mag-ink,#1d1c19)}
+.history-panel button:hover{border-color:var(--ng-ink);color:var(--ng-ink)}
 .history-controls button[aria-pressed="true"]{
-  background:var(--mag-ink,#1d1c19);
-  border-color:var(--mag-ink,#1d1c19);
-  color:var(--mag-card,#fffdf8);
+  background:var(--ng-ink);
+  border-color:var(--ng-ink);
+  color:var(--ng-white,#ffffff);
 }
-.history-panel button:focus-visible{outline:2px solid var(--mag-shu,#b3402c);outline-offset:3px}
-.history-panel p{margin:12px 0;max-width:92ch;font-size:11px;line-height:1.95;color:var(--mag-muted,#8b8478)}
+.history-panel button:focus-visible{outline:2px solid var(--ng-red);outline-offset:3px}
+.history-panel p{margin:12px 0;max-width:92ch;font-size:11px;line-height:1.95;color:var(--ng-muted)}
 .history-note{font-size:10.5px}
 .gateway-note{
-  border-left:2px solid var(--mag-ai,#27475c);
+  border-left:2px solid var(--ng-navy);
   padding:2px 0 2px 12px;
-  color:var(--mag-ink-soft,#453f38) !important;
+  color:var(--ng-ink-soft) !important;
 }
 .history-list{
   display:grid;
@@ -50,61 +51,61 @@
   gap:5px;
   margin:14px 0;
   padding-top:12px;
-  border-top:1px solid var(--mag-line-soft,#e9e3d6);
+  border-top:1px solid var(--ng-line-soft);
 }
 .history-list button{font-size:10.5px;line-height:1.7;width:100%}
 .history-list button[aria-pressed="true"]{
-  border-color:var(--mag-shu,#b3402c);
+  border-color:var(--ng-red);
   background:rgba(179,64,44,.06);
-  color:var(--mag-shu-dark,#8e3121);
+  color:var(--ng-red-dark);
 }
 .history-detail h4{
   margin:14px 0 4px;
-  font-family:var(--mag-serif,"Noto Serif TC",serif);
+  font-family:var(--ng-sans,sans-serif);
   font-weight:500;
   font-size:15px;
   letter-spacing:.05em;
 }
-.history-detail p{margin:0 0 8px;font-size:11.5px;color:var(--mag-ink-soft,#453f38)}
+.history-detail p{margin:0 0 8px;font-size:11.5px;color:var(--ng-ink-soft)}
 .history-detail a{
-  color:var(--mag-shu,#b3402c);
+  color:var(--ng-red);
   font-size:10.5px;
   text-decoration:none;
   border-bottom:1px solid rgba(179,64,44,.35);
   text-underline-offset:3px;
 }
-.history-detail a:hover{border-bottom-color:var(--mag-shu,#b3402c)}
+.history-detail a:hover{border-bottom-color:var(--ng-red)}
 .history-marker{cursor:pointer;outline:none}
-.history-leader{stroke:#b3402c;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.75}
-.history-origin{fill:#b3402c;stroke:#fffdf8;stroke-width:1;vector-effect:non-scaling-stroke}
-.history-diamond{fill:#b3402c;stroke:#fffdf8;stroke-width:1.2}
-.history-number{fill:#fffdf8;font:600 10px "Mag Sans TC","Noto Sans TC",Arial,sans-serif;pointer-events:none}
+.history-leader{stroke:var(--ng-red);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.75}
+.history-origin{fill:var(--ng-red);stroke:#ffffff;stroke-width:1;vector-effect:non-scaling-stroke}
+.history-diamond{fill:var(--ng-red);stroke:#ffffff;stroke-width:1.2}
+.history-number{fill:#ffffff;font:600 10px var(--ng-sans,sans-serif);pointer-events:none}
 .history-marker:hover .history-diamond,
 .history-marker:focus-visible .history-diamond,
 .history-marker[aria-pressed="true"] .history-diamond{
-  fill:#8e3121;
-  stroke:#a98a4e;
+  fill:var(--ng-red-dark);
+  stroke:var(--ng-gold);
   stroke-width:2.4;
 }
-.gateway-leader{stroke:#27475c;stroke-width:.9;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-.gateway-diamond{fill:#fffdf8;stroke:#27475c;stroke-width:1.2}
+.gateway-leader{stroke:var(--ng-navy);stroke-width:.9;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.gateway-diamond{fill:#ffffff;stroke:var(--ng-navy);stroke-width:1.2}
 .gateway-label{
-  fill:#27475c;
-  stroke:#f7f4ec;
+  fill:var(--ng-navy);
+  stroke:var(--ng-paper);
   stroke-width:2.6;
   paint-order:stroke;
   stroke-linejoin:round;
-  font-family:"Mag Sans TC","Noto Sans TC",Arial,sans-serif;
+  font-family:var(--ng-sans,sans-serif);
   font-weight:600;
   letter-spacing:.06em;
 }
 .history-map-label{
-  fill:#8e3121;
-  stroke:#f7f4ec;
+  fill:var(--ng-red-dark);
+  stroke:var(--ng-paper);
   stroke-width:2.8;
   paint-order:stroke;
   stroke-linejoin:round;
-  font:500 10px "Mag Serif TC","Noto Serif TC",serif;
+  font:500 10px var(--ng-sans,sans-serif);
   letter-spacing:.04em;
   pointer-events:none;
 }

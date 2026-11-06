@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>沖縄・島與海的標記｜互動地圖</title>
-<meta name="theme-color" content="#f7f4ec">
+<meta name="theme-color" content="#ffffff">
 <meta name="description" content="沖繩互動地圖：從那霸的久米村、福州園，到山原的邊戶岬與八重山的離島，把去過與想去的地方一一標記起來。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="/personal/travel/crumbs.css">
-<link rel="stylesheet" href="/personal/travel/magazine.css">
 <link rel="stylesheet" href="./okinawa.css">
 <link rel="stylesheet" href="/personal/travel/history-context.css">
+<link rel="stylesheet" href="/personal/travel/brand.css">
 </head>
-<body>
+<body class="ng-body">
 
-<nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent; --crumb-ink:#8b8478; --crumb-strong:#1d1c19; --crumb-accent:#b3402c; --crumb-line:#d9d2c3; font-family:var(--mag-mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;">
+<nav class="crumbs" aria-label="Breadcrumb">
   <ol>
     <li><a href="/">Eva Huang</a></li>
     <li><a href="/personal/travel/">Travel</a></li>
@@ -66,6 +66,9 @@
   <div class="hero-in">
     <p class="hero-kicker">OKINAWA ・ 2027 WINTER</p>
     <h1><span class="small">島と海の記録</span>島與海的標記</h1>
+    <div class="ng-lattice ng-lattice--hero" aria-hidden="true">
+      <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
+    </div>
     <div class="hero-stats">
       <div><b>49</b><span>個地點</span></div>
       <div><b>10</b><span>個區域</span></div>
@@ -186,6 +189,11 @@
 </main>
 
 <footer>
+  <div class="wrap">
+  <div class="ng-lattice ng-footer-lattice" aria-hidden="true">
+    <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
+  </div>
+  </div>
   <div class="wrap frow">
     <div class="fcol">
       <b>島與海的標記 / OKINAWA ATLAS</b><br>
@@ -491,7 +499,7 @@ function renderLand(){
       + '<text class="area-text" x="590" y="566" text-anchor="middle">南部</text>'
       + '<text class="area-text" x="372" y="596" text-anchor="middle" style="font-size:12px;letter-spacing:.2em">慶良間</text>'
       + '<text class="area-text" x="104" y="398" text-anchor="middle" style="font-size:12px;letter-spacing:.2em">久米島</text>'
-      + '<g transform="translate(78,548)" fill="none" stroke="#5f584d" stroke-width="1" opacity=".6"><path d="M0,-16 L5,4 L0,0 L-5,4 Z" fill="#5f584d"/><text x="0" y="18" text-anchor="middle" fill="#5f584d" font-size="9" font-family="serif">N</text></g>'
+      + '<g transform="translate(78,548)" fill="none" stroke="#5f584d" stroke-width="1" opacity=".6"><path d="M0,-16 L5,4 L0,0 L-5,4 Z" fill="#5f584d"/><text x="0" y="18" text-anchor="middle" fill="#5f584d" font-size="9" font-family="Noto Sans JP,sans-serif">N</text></g>'
     : '<text class="sea-text" x="640" y="46" text-anchor="middle">東 シ ナ 海</text>'
       + '<text class="sea-text" x="330" y="330" text-anchor="middle" transform="rotate(-8 330 330)">太 平 洋</text>'
       + '<text class="area-text" x="862" y="150" text-anchor="middle" style="font-size:15px">宮古諸島</text>'

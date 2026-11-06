@@ -71,7 +71,7 @@ sprite 檔案：`personal/travel/assets/travel-icons.svg`。
 
 | ID | 尺寸 | 用途 |
 | -- | ---- | ---- |
-| `an-lattice` | 240 × 24 viewBox | 長崎觀光品牌的菱格鏈紋；**僅用於**分區隔線（hero 下方、青島 band、footer 上方、型錄標題區），不作為一般 icon 使用、不鋪滿大面積背景 |
+| `an-lattice` | 240 × 24 viewBox | 長崎觀光品牌的菱格鏈紋；**僅用於**分區隔線（各頁標題下方、頁尾上方、青島 band、型錄標題區），不作為一般 icon 使用、不鋪滿大面積背景 |
 
 使用菱格紋時筆觸寬與 icon 同為 1.5，顏色同樣由 `currentColor` 繼承（常套 `--ng-line` 或 `--ng-red`）。
 
@@ -87,7 +87,7 @@ sprite 檔案：`personal/travel/assets/travel-icons.svg`。
 
 ## 3. 色彩系統
 
-落地頁（長崎品牌）使用 `--ng-*` token；行程頁使用 `--mag-*` token。型錄使用的 icon 在兩個頁面皆透過 `currentColor` 吃文字色，不直接指定色票。
+`/travel` 全站（落地頁、東日本／九州行程頁、沖繩、世界蓋章與圖稿索引）都由 `brand.css` 提供同一組 `--ng-*` token；各頁 layout CSS 只引用 token。所有 icon 與菱格紋皆透過 `currentColor` 吃文字色，不直接指定色票。
 
 ### 長崎品牌（landing）色票
 
@@ -123,7 +123,7 @@ sprite 檔案：`personal/travel/assets/travel-icons.svg`。
 | Body | 14 | 1.90 | 0.02em | Noto Sans JP/TC 400–500 |
 | Label／拉丁小標 | 9 | – | 0.26em | Archivo 700, uppercase |
 
-- 落地頁全頁ゴシック（Noto Sans JP/TC + Archivo）；**不使用明朝體**。
+- 全站ゴシック（Noto Sans JP/TC + Archivo）；**不使用明朝體**，也不再使用縱書 rail。
 - 級數與實作以 CSS 變數為準，不在 HTML 寫死 px。
 
 ---

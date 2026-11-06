@@ -3,40 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f4ec">
+  <meta name="theme-color" content="#ffffff">
   <title>戳章圖稿 — Eva Huang Travel Atlas</title>
   <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
   <link rel="stylesheet" href="/personal/travel/crumbs.css">
-  <link rel="stylesheet" href="/personal/travel/magazine.css">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="/personal/travel/brand.css">
   <style>
     body{background:var(--paper)}
     .specimen{width:min(100% - 48px,1180px);margin:0 auto;padding:38px 0 70px}
-    .specimen-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px 30px;border-top:1px solid var(--ink);border-bottom:0;padding:16px 0 0}
-    .specimen-head h1{margin:0;font:500 clamp(30px,4.4vw,52px)/1.22 var(--serif);letter-spacing:.08em}
+    .specimen-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px 30px;border-bottom:1px solid var(--ng-line);padding:0 0 16px}
+    .specimen-head h1{margin:0;font:900 clamp(30px,4.4vw,52px)/1.15 var(--ng-sans);letter-spacing:.03em}
     .specimen-head p{margin:10px 0 0;max-width:620px;font-size:11.5px;line-height:1.95;color:#87907f}
-    .specimen-back{font:700 11px/1.4 var(--mono);letter-spacing:.08em;color:var(--rust-dark);text-decoration:none;white-space:nowrap}
+    .specimen-back{font:700 11px/1.4 var(--ng-grotesk);letter-spacing:.06em;color:var(--ng-red);text-decoration:none;white-space:nowrap;border-bottom:1px solid rgba(201,32,47,.35);padding-bottom:2px}
     .specimen-back:hover{text-decoration:underline}
     .scale-note{display:flex;align-items:center;gap:10px;margin:22px 0 0;font:600 10px/1.4 var(--mono);letter-spacing:.06em;color:#5c6a5e}
     .scale-note i{display:block;width:16px;height:16px;background:var(--stamp-ink)}
     .scale-note i:nth-of-type(1){opacity:1}.scale-note i:nth-of-type(2){opacity:.72}.scale-note i:nth-of-type(3){opacity:.44}.scale-note i:nth-of-type(4){opacity:.13}
     .kind-section{margin-top:38px}
     .kind-head{display:flex;align-items:baseline;gap:12px;margin:0 0 15px;padding-bottom:9px;border-bottom:1px solid var(--line)}
-    .kind-head h2{margin:0;font:500 21px/1.3 var(--serif);letter-spacing:.06em}
+    .kind-head h2{margin:0;font:900 20px/1.35 var(--ng-sans);letter-spacing:.03em}
     .kind-head span{font:600 10px/1.4 var(--mono);letter-spacing:.1em;color:#8a9385}
     .specimen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
-    .specimen-card{min-width:0;padding:12px 12px 13px;background:var(--card);border:1px solid var(--line)}
-    .specimen-plate{display:grid;place-items:center;height:104px;background:var(--stamp-paper);border:1px solid #eee3d2}
+    .specimen-card{min-width:0;padding:12px 12px 13px;background:#fff;border:1px solid var(--ng-line);border-radius:var(--ng-r-sm)}
+    .specimen-plate{display:grid;place-items:center;height:104px;background:var(--ng-paper);border:1px solid var(--ng-line);border-radius:6px}
     .specimen-plate svg{display:block;width:132px;height:77px;overflow:visible;fill:none;stroke:var(--stamp-ink);stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
     .specimen-plate svg .t-1{opacity:1}.specimen-plate svg .t-2{opacity:.72}.specimen-plate svg .t-3{opacity:.44}.specimen-plate svg .f{fill:var(--stamp-ink);stroke:none}
-    .specimen-card strong{display:block;margin:10px 0 2px;font:500 14px/1.45 var(--serif);letter-spacing:.04em;overflow-wrap:anywhere}
+    .specimen-card strong{display:block;margin:10px 0 2px;font:900 13.5px/1.45 var(--ng-sans);letter-spacing:.02em;overflow-wrap:anywhere}
     .specimen-card small{display:block;font:600 9px/1.6 var(--mono);letter-spacing:.03em;color:#8b9587;overflow-wrap:anywhere}
     .specimen-foot{margin-top:34px;font-size:11px;line-height:1.8;color:#7b8476}
     @media(max-width:600px){.specimen{width:min(100% - 32px,1180px);padding:28px 0 50px}.specimen-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.specimen-plate svg{width:112px;height:65px}}
   </style>
 </head>
-<body>
-  <nav class="crumbs" aria-label="Breadcrumb" style="--crumb-bg:transparent;--crumb-line:#d9d2c3;--crumb-ink:#8b8478;--crumb-strong:#1d1c19;--crumb-accent:#b3402c;font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase">
+<body class="ng-body">
+  <nav class="crumbs" aria-label="Breadcrumb">
     <ol>
       <li><a href="/">Eva Huang</a></li>
       <li><a href="/personal/travel/">Travel</a></li>
