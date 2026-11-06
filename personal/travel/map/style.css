@@ -494,3 +494,25 @@ a{color:inherit}
 .verification-resend:hover{border-color:var(--ng-red);background:var(--ng-red-tint)}
 .verification-resend:disabled,.email-verification .dialog-submit:disabled{cursor:wait;opacity:.6}
 #verification-feedback{min-height:18px;margin:0;color:var(--ng-ink-soft)}
+
+/* Date-stamp-inspired month picker. The native month field remains editable. */
+.date-stamp-picker{position:relative;color:var(--rust-dark)}
+.date-stamp-entry{display:flex;align-items:stretch;min-width:0;border:1px solid currentColor;border-radius:3px;background:#fffdf9;box-shadow:inset 0 0 0 2px #fffdf9,inset 0 0 0 3px rgba(151,68,48,.17)}
+.date-stamp-mark{display:flex;align-items:center;flex:none;padding:0 10px;border-right:1px dashed rgba(151,68,48,.35);font:700 8px/1.2 var(--mono);letter-spacing:.08em}
+.stamp-fields .date-stamp-entry input{flex:1;min-width:0;width:0;height:48px;padding:8px 7px 8px 10px;border:0;background:transparent;color:var(--rust-dark);font:700 15px var(--mono);letter-spacing:.04em}
+.stamp-fields .date-stamp-entry input[aria-invalid="true"]{background:#fff2eb}
+.date-picker-toggle{flex:none;width:38px;border:0;border-left:1px dashed rgba(151,68,48,.35);background:transparent;color:inherit;font-size:21px;line-height:1}
+.date-picker-toggle:hover,.date-picker-toggle[aria-expanded="true"]{background:#f8ece5}
+.date-picker-panel{margin-top:6px;padding:12px;border:1px solid var(--rust-dark);background:#fffdf9;box-shadow:inset 0 0 0 3px #fffdf9,inset 0 0 0 4px rgba(151,68,48,.16)}
+.date-picker-panel[hidden]{display:none}
+.date-picker-heading{display:flex;justify-content:space-between;font:700 9px/1 var(--mono);letter-spacing:.12em;opacity:.72}
+.date-picker-year{display:flex;justify-content:center;align-items:center;gap:5px;margin:9px 0;color:var(--rust-dark);font:700 13px var(--mono)}
+.date-picker-year button{width:32px;height:32px;border:1px solid rgba(151,68,48,.3);background:transparent;color:inherit;font-size:22px;line-height:1}
+.date-picker-year button:disabled{opacity:.3;cursor:not-allowed}
+.stamp-fields .date-picker-year input{width:72px;height:32px;padding:3px;border:0;border-bottom:1px solid currentColor;background:transparent;color:inherit;text-align:center;font:700 16px var(--mono);appearance:textfield}
+.date-picker-year input::-webkit-inner-spin-button,.date-picker-year input::-webkit-outer-spin-button{appearance:none;margin:0}
+.date-months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.date-months button{min-height:34px;border:1px solid rgba(151,68,48,.25);border-radius:2px;background:transparent;color:inherit;font:700 11px var(--mono)}
+.date-months button:hover:not(:disabled){background:#f8ece5}.date-months button[aria-pressed="true"]{border-color:var(--rust-dark);background:var(--rust-dark);color:white}.date-months button:disabled{opacity:.28;cursor:not-allowed}
+.date-picker-note{margin:9px 0 0;text-align:center;color:var(--ng-muted);font-size:10px}
+.date-stamp-picker button:focus-visible,.date-stamp-picker input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
