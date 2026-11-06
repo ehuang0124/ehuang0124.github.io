@@ -76,6 +76,13 @@ a { color: var(--jf-matcha-deep); text-underline-offset: 3px; }
 a:hover { color: var(--jf-ink); }
 
 :focus-visible { outline: 2px solid var(--jf-matcha); outline-offset: 3px; border-radius: 4px; }
+/* 程式焦點容器（#app、題目標題、詳情層）只承接導覽焦點，不畫外框 */
+#app:focus,
+#app:focus-visible,
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible,
+dialog.sheet:focus,
+dialog.sheet:focus-visible { outline: none; }
 
 /* ---------- 語言切換 ---------- */
 .lang-switch {
@@ -859,7 +866,6 @@ footer.site p { margin: 0 0 6px; }
 .origin-map.mini .map-kicker { font-size: 9px; letter-spacing: .1em; }
 .origin-map.mini strong { font-size: 13.5px; line-height: 1.45; }
 .map-meta { color: var(--jf-muted); font-size: 11.5px; line-height: 1.5; }
-.question h2:focus { outline: none; }
 @media (max-width: 520px) {
   .tea-collage { height: 400px; grid-template-columns: 1fr 1fr; grid-template-rows: 1.2fr 1fr; gap: 5px; }
   .photo-shizuoka { grid-row: 1; grid-column: 1 / 3; }

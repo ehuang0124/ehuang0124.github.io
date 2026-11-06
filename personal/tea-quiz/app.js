@@ -929,7 +929,14 @@ function viewCatalog() {
     families.map(([key, label]) =>
       el('button', {
         type: 'button', class: 'chip', 'aria-pressed': String(catalogFilter === key),
-        onclick: () => { catalogFilter = key; location.hash = key === 'all' ? '#/teas' : `#/teas/${key}`; viewCatalog(); }
+        onclick: (event) => {
+          const keepFocus = event.currentTarget.matches(':focus-visible');
+          const nextHash = key === 'all' ? '#/teas' : `#/teas/${key}`;
+          catalogFilter = key;
+          if (location.hash !== nextHash) history.replaceState(null, '', nextHash);
+          viewCatalog();
+          if (keepFocus) app.querySelector('.filters .chip[aria-pressed="true"]')?.focus({ preventScroll: true });
+        }
       }, label)
     )
   );
@@ -1001,7 +1008,6 @@ function setLang(lang) {
   });
   if (sheet.open || sheet.hasAttribute('open')) closeSheet();
   route();
-  app.focus({ preventScroll: true });
 }
 
 document.querySelectorAll('.lang-switch button').forEach((button) => {
@@ -1027,7 +1033,7 @@ sheet.addEventListener('click', (event) => {
 
 window.addEventListener('hashchange', () => {
   route();
-  app.focus({ preventScroll: true });
+  if (!location.hash.startsWith('#/quiz')) app.focus({ preventScroll: true });
 });
 
 /* 鍵盤：Quiz 與結果卡牌都用左右鍵移動 */
