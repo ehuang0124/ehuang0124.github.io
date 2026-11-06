@@ -7,6 +7,14 @@ const http = require('node:http');
 const { chromium } = require('playwright-core');
 const root = path.resolve(__dirname, '..');
 
+// Use the same single month picker as a traveller, not a native input or DOM assignment.
+async function chooseVisitMonth(page, month) {
+  await page.locator('#date-picker-toggle').click();
+  await page.locator('#date-year').fill(month.slice(0, 4));
+  await page.locator('#date-year').press('Tab');
+  await page.locator(`#date-months button[data-month="${month}"]`).click();
+}
+
 (async () => {
   const server = http.createServer(async (req, res) => {
     let file = path.resolve(root, '.' + decodeURIComponent(req.url.split('?')[0]));
@@ -53,7 +61,7 @@ const root = path.resolve(__dirname, '..');
       assert(id);
       await first.click();
       assert(await page.locator('#stamp-signatures').isHidden(), 'unvisited places do not invent an owner');
-      await page.locator('#visit-date').fill('2020-02');
+      await chooseVisitMonth(page, '2020-02');
       const bounds = await page.locator('#companion-manage').boundingBox();
       assert(bounds.width >= 200 && bounds.height >= 44, 'tagging has a large touch target');
       await page.locator('#companion-manage').click();
@@ -90,7 +98,7 @@ const root = path.resolve(__dirname, '..');
       await switchToLin();
       assert.equal(await country.locator('.map-seal').count(), 0, 'another traveller is not shown as my stamp');
       assert(await page.locator('#stamp-signatures').isHidden());
-      await page.locator('#visit-date').fill('2019-01');
+      await chooseVisitMonth(page, '2019-01');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#stamp-owner-initial').textContent(), '林');
       assert.equal(await page.locator('#stamp-face-date').textContent(), '2019.01', 'initial and date belong to the same owner');
@@ -127,7 +135,7 @@ const root = path.resolve(__dirname, '..');
       const city = page.locator('.place-item:not(.done)').first();
       const cityId = await city.getAttribute('data-place');
       await city.click();
-      await page.locator('#visit-date').fill('2020-03');
+      await chooseVisitMonth(page, '2020-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator(`.map-point[data-id="${cityId}"] .map-seal-initial`).textContent(), '林');
       await page.locator('#collection-inline').click();
@@ -135,7 +143,7 @@ const root = path.resolve(__dirname, '..');
       const state = page.locator('.place-item[data-place^="state-"]:not(.done)').first();
       const stateId = await state.getAttribute('data-place');
       await state.click();
-      await page.locator('#visit-date').fill('2020-04');
+      await chooseVisitMonth(page, '2020-04');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator(`.state-imprint[data-place-key="us:${stateId}"] .map-seal-initial`).textContent(), '林');
       // The four refreshed chapters have distinct bright images; Okinawa is preserved.
