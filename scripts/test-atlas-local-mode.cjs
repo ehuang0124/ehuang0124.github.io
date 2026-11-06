@@ -56,7 +56,6 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   // Since the hover-label change, static labels live in #map-tooltip instead.
   assertCount('#map-svg text, #map-svg title', 0, 'no baked-in map labels');
   assert.equal($('#map-tooltip').hidden, true, 'the tooltip starts hidden');
-  assert.equal($('#state-legend').hidden, true);
   assertCount('.map-country.selected.done', 0);
   assert.equal($('#board-total').textContent, '240');
   assert.equal($('#sign-in').hidden, false, 'the sign-in control sits in the top bar in every mode');
@@ -90,7 +89,6 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assert.equal($('#account-card').hidden, false);
   assert.equal($('#account-name').textContent, 'Eva Huang');
   assert.equal($('#stamp-button').classList.contains('locked'), false, 'signed-in travellers may stamp');
-  assert($('#data-source').textContent.includes('此瀏覽器'), 'the footer names where the data lives');
 
   // stamping, duplicates, delete, persistence
   $('#visit-date').value = '2023-03'; change($('#visit-date'));

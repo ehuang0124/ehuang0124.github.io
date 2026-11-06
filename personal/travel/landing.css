@@ -205,11 +205,6 @@
   font-family:var(--ng-sans);font-weight:700;font-size:11px;color:var(--ng-ink-soft);
 }
 .ng-shot figcaption .an-i{color:var(--ng-red)}
-.ng-strip-note{
-  margin:12px 0 0;
-  font-family:var(--ng-grotesk);font-weight:700;font-size:9px;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ng-muted);
-}
 
 /* ---------- postcard ---------- */
 .ng-postcard{
@@ -413,15 +408,6 @@
 .ng-lead > a:hover .ng-lead-go i{transform:translateX(5px)}
 .ng-lead > a:focus-visible{outline:2px solid var(--ng-red);outline-offset:6px;border-radius:16px}
 
-.ng-cat-note{
-  margin:clamp(26px,3.4vw,40px) 0 0;padding-top:14px;border-top:1px solid var(--ng-line-soft);
-  font-size:11px;line-height:1.9;color:var(--ng-muted);
-}
-.ng-cat-note code{
-  font-family:var(--ng-grotesk);font-weight:600;font-size:10px;
-  padding:1px 6px;border-radius:4px;background:var(--ng-paper);
-  color:var(--ng-red-dark);
-}
 
 /* ---------- responsive ---------- */
 @media(max-width:1000px){

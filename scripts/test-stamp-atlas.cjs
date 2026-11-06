@@ -88,7 +88,6 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('#place-name').textContent(),'日本');
       assert.equal(await page.locator('#visit-date').getAttribute('type'),'month');
       assert.equal(await page.locator('#map-svg text, #map-svg title').count(),0);
-      assert.equal(await page.locator('#state-legend').isHidden(),true);
       assert.equal(await page.locator('.map-country.selected.done').count(),0);
       assert.equal(await page.locator('#board-total').textContent(),'240');
       assert.equal(await page.locator('#tab-count-na').textContent(),'0 / 162');
@@ -208,7 +207,6 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await chooseCollection('na');
       assert.equal(await page.locator('.place-item').count(),162);
       assert.equal(await page.locator('.map-us-state').count(),50);
-      assert.equal(await page.locator('#state-legend').isHidden(),false);
       assert.equal(await page.locator('.map-point').count(),112);
       // Zoom a dense layer before targeting a state on a narrow screen.
       await page.locator('[data-region="us"]').click();
@@ -255,7 +253,6 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#place-search').fill('');
       await page.locator('[data-region="ca"]').click();
       assert.equal(await page.locator('.place-item').count(),48);
-      assert.equal(await page.locator('#state-legend').isHidden(),true);
       assert.equal(await page.locator('.map-point').count(),48);
       await page.locator('[data-region="na-ca-north"]').click();
       assert.equal(await page.locator('.place-item').count(),14);

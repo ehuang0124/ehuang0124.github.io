@@ -255,14 +255,6 @@ button { font: inherit; }
   letter-spacing: -.05em;
 }
 .browser-heading-copy { min-width: 0; }
-.browser-heading-note {
-  max-width: 29em;
-  margin: 0 0 3px;
-  color: var(--ink-soft);
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: right;
-}
 
 .tag-nav {
   display: flex;
@@ -609,7 +601,6 @@ button { font: inherit; }
   .archive-browser { margin-top: 65px; }
   .browser-heading { align-items: flex-start; flex-direction: column; gap: 21px; padding: 29px 0 20px; }
   .browser-heading h2 { font-size: 53px; }
-  .browser-heading-note { margin: 0; text-align: left; }
   .tag-nav { padding: 18px 0 19px; }
   .results-toolbar { min-height: 52px; }
   .story-grid { grid-template-columns: 1fr; gap: 0; }

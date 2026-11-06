@@ -90,7 +90,7 @@
     <div class="wrap">
       <p class="eyebrow"><span class="no">01</span>EXPLORE BY AREA</p>
       <h2 class="section-title">十個區域</h2>
-      <p class="section-lede">旅遊分區，不是古代三山疆界；選一區，地圖會跟著過去。</p>
+      <p class="section-lede">旅遊分區，不是古代三山疆界。</p>
       <div class="region-grid" id="region-cards"></div>
     </div>
   </section>
@@ -149,7 +149,7 @@
     <div class="wrap">
       <p class="eyebrow"><span class="no">03</span>2027 ITINERARY</p>
       <h2 class="section-title">1/7 – 1/10，四天三夜</h2>
-      <div class="plan-note-top"><strong>備註</strong><span>僅中間兩天（1/8–1/9）租車；斎場御嶽本版先移除，不為此特地南下南城。地點名稱前的紅點，是這趟第一次去的地方。</span></div>
+      <div class="plan-note-top"><strong>備註</strong><span>僅中間兩天（1/8–1/9）租車；斎場御嶽本版先移除，不為此特地南下南城。</span></div>
       <div class="plan-grid" id="plan-grid"></div>
     </div>
   </section>
@@ -158,7 +158,6 @@
     <div class="wrap">
       <p class="eyebrow"><span class="no">04</span>FULL LIST</p>
       <h2 class="section-title">完整清單</h2>
-      <p class="section-lede">點選地點，在地圖上查看介紹。</p>
       <div class="list-tools">
         <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋地名、市町村或關鍵字" aria-label="搜尋地點"></label>
         <span class="legend" id="list-count"></span>
@@ -178,7 +177,7 @@
     <div class="fcol">
       <b>島與海的標記 / OKINAWA ATLAS</b><br>
       海岸線圖資：<a href="https://www.gsi.go.jp/kankyochiri/gm_jpn.html" target="_blank" rel="noopener noreferrer">地球地図日本（国土地理院）</a>，經 <a href="https://github.com/dataofjapan/land" target="_blank" rel="noopener noreferrer">dataofjapan/land</a> 轉檔，非商業使用並註明出處。<br>
-      行程整理自 Notion「沖繩 2027」；地點座標為概略位置，僅供旅行規劃參考。
+      地點座標為概略位置，僅供旅行規劃參考。
     </div>
     <div class="fcol" style="text-align:right">
       <a href="/personal/travel/">← 回旅行地圖索引</a><br>
@@ -737,7 +736,6 @@ function renderDetail(){
   if(!p){
     box.innerHTML = '<div class="kicker">選擇一個標記</div>'
       + '<h3 style="font-size:24px">還沒有選地點</h3>'
-      + '<p class="empty-note">點一個標記，看看這裡的介紹。</p>'
       + '<div class="actions"><a class="gbtn" href="#list">看完整清單 ↓</a></div>';
     return;
   }
@@ -763,7 +761,7 @@ function showCluster(ids){
   const box = el('detail');
   box.innerHTML = '<div class="kicker">'+REGIONS[items[0].region].zh+'<span>'+items.length+' 個地點聚集在這裡</span></div>'
     + '<h3 style="font-size:24px">這一區的地點</h3>'
-    + '<p class="empty-note">已經靠近了。點一個名字，或直接在地圖上再點一次。</p>'
+    + '<p class="empty-note">已經靠近了。</p>'
     + '<div class="chips" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:16px">'
     + items.map(p=>'<button class="mini" data-pick="'+p.id+'">'+p.short+(visited.has(p.id)?' ✓':'')+'</button>').join('')
     + '</div>';
