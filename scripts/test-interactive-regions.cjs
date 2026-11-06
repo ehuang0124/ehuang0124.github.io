@@ -54,7 +54,7 @@ const root = path.resolve(__dirname, '..');
         assert.equal(await page.locator('.history-marker:focus').count(),1);
         if(name==='east-japan'){
           assert.equal(await page.locator('.gateway-marker').count(),3);
-          assert((await page.locator('.gateway-note').textContent()).includes('不直接接壤'));
+          assert.equal(await page.locator('.gateway-note, .history-note').count(),0);
           await page.locator('[data-gateway-toggle]').click();
           assert.equal(await page.locator('.gateway-marker').count(),0);
           await page.locator('[data-gateway-toggle]').click();
