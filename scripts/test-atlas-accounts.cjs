@@ -350,7 +350,7 @@ async function main() {
     const page = await boot();
     assert.deepEqual(page.errors, [], 'visitor page should load without errors');
     assert.equal(page.$('#sign-in').hidden, false, 'visitors get a code sign-in button');
-    assert.equal(page.$('#sign-in').textContent, '通行碼登入');
+    assert.equal(page.$('#sign-in').textContent, '帳號登入');
     assert.equal(page.$('#account-card').hidden, true);
     assert.equal(page.$('#passport-count').textContent, '1', 'visitors see the published collection');
     assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
@@ -385,6 +385,10 @@ async function main() {
     assert.equal(page.$('#code-signin').hidden, false, 'cloud sign-in asks for the access code');
 
     // A wrong code is refused by Postgres, and the page translates the reason.
+    page.$('#account-create').checked = true;
+    change(page.window, page.$('#account-create'));
+    page.$('#account-email').value = 'eva@example.com';
+    page.$('#account-password').value = 'personal-password-123';
     page.$('#traveller-name').value = 'Eva Huang';
     page.$('#access-code').value = 'not-the-code';
     click(page.window, page.$('#code-signin-submit'));
@@ -395,6 +399,8 @@ async function main() {
     assert.equal(server.tables.logins.length, 0, 'a wrong code is not a login');
 
     // The right code creates this browser's traveller and logs the sign-in.
+    page.$('#account-email').value = 'eva-approved@example.com';
+    page.$('#account-password').value = 'personal-password-123';
     page.$('#access-code').value = 'travel2n';
     click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
@@ -410,8 +416,9 @@ async function main() {
     const login = server.tables.logins.at(-1);
     assert.equal(login.display_name, 'Eva Huang', 'the login log names the traveller');
     assert(login.user_agent, 'the login log records the browser');
-    const device = JSON.parse(page.window.localStorage.getItem('eva.travel.atlas.device.v1'));
-    assert(device.email && device.password, 'this browser keeps its own Supabase account');
+    assert.equal(page.window.localStorage.getItem('eva.travel.atlas.device.v1'), null, 'no generated credentials retained');
+    assert(!JSON.stringify(page.window.localStorage).includes('personal-password-123'), 'password is never saved by the page');
+    assert.equal(page.$('#account-password').value, '', 'password field is cleared');
     traveller = page.window.TravelAtlasAccount.user;
     assert.equal(server.tables.profiles.filter(row => row.id === traveller.id).length, 1, 'the code created one profile');
 
@@ -453,6 +460,9 @@ async function main() {
     assert.equal(page.$('#account-card').hidden, true, 'signing out returns to the visitor view');
     click(page.window, page.$('#sign-in'));
     await page.settle();
+    page.$('#account-create').checked = false;
+    change(page.window, page.$('#account-create'));
+    page.$('#account-password').value = 'personal-password-123';
     assert.equal(page.$('#traveller-name').value, 'Eva Huang', 'the last name is prefilled');
     page.$('#access-code').value = 'travel2n';
     click(page.window, page.$('#code-signin-submit'));
@@ -460,6 +470,37 @@ async function main() {
     assert.equal(page.window.TravelAtlasAccount.user.id, traveller.id, 'the same browser keeps the same traveller');
     assert.equal(server.tables.logins.length, 2, 'each sign-in is logged');
     console.log('PASS sign-in: access code, login log, device identity, companion stamping, cloud delete');
+  }
+
+  // Personal passwords protect an account even when the invite is known.
+  {
+    const page = await boot();
+    const account = page.window.TravelAtlasAccount;
+    const valid = { email:'eva-approved@example.com', password:'personal-password-123', code:'travel2n' };
+    let result = await account.signIn({ ...valid, password:'wrong-password' });
+    assert.equal(result.ok, false);
+    assert(result.reason.includes('個人密碼不正確'));
+    assert.equal(account.user, null);
+    assert.equal((await account.signIn(valid)).ok, true);
+    assert.equal(account.user.id, traveller.id);
+    // An existing session must not bypass password verification.
+    result = await account.signIn({ ...valid, password:'wrong-password' });
+    assert.equal(result.ok, false);
+    assert.equal(account.user, null);
+    assert.equal((await page.connection.client.auth.getSession()).data.session, null);
+    // Auth SIGNED_IN fires before redemption in this double. A rejected code
+    // must never leave that previously approved profile signed in.
+    result = await account.signIn({ ...valid, code:'wrong-invite' });
+    assert.equal(result.ok, false);
+    assert.equal(account.user, null);
+    assert.equal((await page.connection.client.auth.getSession()).data.session, null);
+    const authCalls = server.calls.filter(call => call.op === 'signUp').length;
+    result = await account.signIn({ ...valid, password:'short', createAccount:true, name:'Eva' });
+    assert.equal(result.ok, false);
+    assert.equal(server.calls.filter(call => call.op === 'signUp').length, authCalls, 'short signup password is rejected before Auth');
+    assert.equal((await account.signIn({ ...valid, createAccount:true, name:'Eva' })).ok, false, 'duplicate registration cannot take over an account');
+    assert.equal(account.user, null);
+    console.log('PASS passwords: wrong password, existing-session bypass, rejected invite, short password, duplicate signup');
   }
 
   // ---------------------------------------------------------------- 3. companion view + live updates
@@ -501,8 +542,11 @@ async function main() {
     const user = server.users.get(traveller.id);
     const pageA = await boot();
     const pageB = await boot();
-    pageA.connection.fireAuth({ access_token:'token-eva-a', user });
-    pageB.connection.fireAuth({ access_token:'token-eva-b', user });
+    for (const page of [pageA, pageB]) {
+      const result = await page.window.TravelAtlasAccount.signIn({ email:'eva-approved@example.com', password:'personal-password-123', code:'travel2n' });
+      assert.equal(result.ok, true, 'same credentials work on a fresh device');
+      assert.equal(page.window.TravelAtlasAccount.user.id, user.id);
+    }
     await pageA.settle();
     await pageB.settle();
     pageA.$('#place-search').value = '泰國';

@@ -416,3 +416,7 @@ a{color:inherit}
 #main{scroll-margin-top:84px}
 @media(max-width:600px){.crumbs ol{width:calc(100% - 40px);padding:9px 0}}
 @media(max-width:840px){.intro{flex-direction:column;align-items:flex-start;gap:16px}.intro-rail{display:none}}
+
+/* Account mode uses a normal checkbox, not a full-width text field. */
+.account-field input[type="checkbox"]{width:16px;height:16px;padding:0;vertical-align:middle;accent-color:var(--teal)}
+.account-field[hidden]{display:none}
