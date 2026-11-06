@@ -1,428 +1,278 @@
-/* 選茶 Quiz — 題目、偏好向量與推薦引擎
- *
- * 依規格 §3（MVP 7 題）與 §5（Rule-based + Weighted Scoring）實作。
- * 引擎是確定性的：同樣的答案一定得到同樣的結果，沒有 LLM、沒有隨機。
- *
- * 權重（規格建議值）：口感與稠滑 30%、甘甜鮮味 25%、澀度 20%、香氣 10%、
- * 使用情境與泡法 15%。咖啡因「盡量少」是軟性降權，「必須無咖啡因」是硬過濾。
+/* Japanese Tea Finder — sensory quiz, version 2.
+ * Deterministic editorial matching; flavour scores are not laboratory measurements.
+ * The versioned share code deliberately rejects v1 codes rather than remapping
+ * answers to questions that no longer mean the same thing.
  */
-
 import { TEAS } from './data.js';
 
+export const QUIZ_VERSION = 'v2';
 const DIMS = ['body', 'viscosity', 'umami', 'sweetness', 'astringency', 'roast', 'aroma'];
 
-/* ---------- 題目 ---------- */
-/* 每個選項給出它影響的維度目標值（0–5）。沒被問到的維度保持 3（中性）。 */
 export const QUESTIONS = [
   {
-    id: 'q1',
-    key: 'texture',
-    zh: '你喜歡茶湯喝起來是什麼感覺？',
-    en: 'How should the tea feel in your mouth?',
-    hintZh: '選最接近的一款，不用想茶種。',
-    hintEn: 'Pick what sounds closest — no tea knowledge needed.',
+    id: 'q1', key: 'aroma', zh: '把茶杯湊近鼻尖，你想聞到什麼？', en: 'Bring the cup to your nose. What would you like to smell?',
+    hintZh: '不用想茶名，選一個讓你想停下來的香氣。', hintEn: 'Forget the tea names. Choose an aroma you would pause for.',
     options: [
-      { id: 'light', zh: '清爽如水', en: 'Light, almost like water', target: { body: 1, viscosity: 1, umami: 2 } },
-      { id: 'smooth', zh: '柔順圓潤', en: 'Smooth and round', target: { body: 3, viscosity: 2, umami: 3 } },
-      { id: 'silky', zh: '微微稠滑、有包覆感', en: 'Slightly silky, coating', target: { body: 3, viscosity: 4, umami: 4 } },
-      { id: 'thick', zh: '濃厚像高湯', en: 'Thick, like broth', target: { body: 5, viscosity: 4, umami: 5 } }
+      { id: 'green', zh: '青草、嫩葉與海苔', en: 'Fresh grass, young leaves and nori', subZh: '像走進剛下過雨的茶園', subEn: 'Like a tea garden after rain', target: { aroma: 2, roast: 0 }, families: ['green', 'cover'] },
+      { id: 'floral', zh: '花朵與清新果香', en: 'Flowers and fresh fruit', subZh: '輕盈、明亮，香氣先抵達', subEn: 'Light and bright, with aroma arriving first', target: { aroma: 4, roast: 1 }, families: ['floral', 'fruity'] },
+      { id: 'honey', zh: '蜂蜜與甜薯', en: 'Honey and sweet potato', subZh: '溫暖的甜香，讓我想慢下來', subEn: 'A warm sweetness that makes me slow down', target: { aroma: 3, roast: 2 }, families: ['honey', 'fruity'] },
+      { id: 'toasted', zh: '炒米、堅果與焙火', en: 'Toasted rice, nuts and roast', subZh: '像剛打開一袋炒香的穀物', subEn: 'Like opening a bag of freshly toasted grains', target: { aroma: 3, roast: 4 }, families: ['roasted', 'rice'] },
+      { id: 'malty', zh: '麥芽與可可', en: 'Malt and cocoa', subZh: '熟悉的紅茶調，香氣更厚一點', subEn: 'A familiar black-tea note, with a little more depth', target: { aroma: 4, roast: 3 }, families: ['malty', 'cocoa'] }
     ]
   },
   {
-    id: 'q2',
-    key: 'flavour',
-    zh: '你偏好的味道？',
-    en: 'Which flavour pulls you in?',
+    id: 'q2', key: 'flavour', zh: '第一口，最想嚐到哪種味道？', en: 'What would you like the first sip to taste like?',
     options: [
-      { id: 'sweet', zh: '清甜', en: 'Clean sweetness', target: { sweetness: 4, umami: 2 } },
-      { id: 'umami', zh: '鮮味 umami', en: 'Umami savouriness', target: { umami: 5, sweetness: 2 } },
-      { id: 'roasted', zh: '焙炒溫香', en: 'Toasted, warm', target: { roast: 4, sweetness: 2 } },
-      { id: 'balanced', zh: '平衡、不特別突出', en: 'Balanced, nothing loud', target: { sweetness: 3, umami: 3, roast: 1 } }
+      { id: 'sweet', zh: '清甜，慢慢回甘', en: 'Clean sweetness that lingers', subZh: '不用加糖，也有舒服的甜韻', subEn: 'A gentle sweetness without adding sugar', target: { sweetness: 4, umami: 2 }, reasonDim: 'sweetness' },
+      { id: 'umami', zh: '鮮味，像一口清湯', en: 'Savoury umami, like a clear broth', subZh: '茶的鮮與甘，比苦澀更明顯', subEn: 'Savouriness and sweetness ahead of bitterness', target: { umami: 5, sweetness: 3 }, reasonDim: 'umami' },
+      { id: 'honeyed', zh: '果蜜般的甜韻', en: 'A fruit-and-honey-like finish', subZh: '甜香柔和，適合配一塊點心', subEn: 'Soft sweet aromatics, lovely beside a small sweet', target: { sweetness: 5, umami: 2, roast: 1 }, reasonDim: 'sweetness' },
+      { id: 'toasty', zh: '焙炒的溫暖滋味', en: 'Warm, toasted flavour', subZh: '想要炒香，而不是青草味', subEn: 'Toasty warmth rather than grassy freshness', target: { roast: 4, sweetness: 2, umami: 2 }, reasonDim: 'roast' },
+      { id: 'balanced', zh: '甜、鮮、茶味都有一點', en: 'A balance of sweetness, umami and tea', subZh: '沒有哪一種味道特別搶戲', subEn: 'No single note taking all the attention', target: { sweetness: 3, umami: 3, roast: 2 }, reasonDim: 'sweetness' }
     ]
   },
   {
-    id: 'q3',
-    key: 'astringency',
-    zh: '你能接受多少澀味？',
-    en: 'How much astringency can you take?',
+    id: 'q3', key: 'texture', zh: '茶湯在嘴裡，你喜歡哪種份量？', en: 'How much weight should the tea have on your palate?',
     options: [
-      { id: 'none', zh: '幾乎不要', en: 'Almost none', target: { astringency: 0.5 } },
-      { id: 'some', zh: '一點可以', en: 'A little is fine', target: { astringency: 2 } },
-      { id: 'enjoy', zh: '喜歡有收斂感', en: 'I like the grip', target: { astringency: 4 } }
+      { id: 'light', zh: '輕盈，像水一樣', en: 'Light, almost like water', subZh: '喝完覺得乾淨，沒有負擔', subEn: 'A clean, unburdened finish', target: { body: 1, viscosity: 1 } },
+      { id: 'round', zh: '柔順，剛好圓潤', en: 'Smooth and gently round', subZh: '有一點厚度，但不濃重', subEn: 'Some substance, without heaviness', target: { body: 3, viscosity: 2 } },
+      { id: 'silky', zh: '微微稠滑，包住舌頭', en: 'Silky, gently coating the tongue', subZh: '喜歡茶湯慢慢滑過的感覺', subEn: 'I like the tea to glide slowly across my tongue', target: { body: 3, viscosity: 4 } },
+      { id: 'full', zh: '厚實，茶味很有存在感', en: 'Full, with a clear presence', subZh: '想喝到一杯有份量的茶', subEn: 'I want a cup with substance', target: { body: 5, viscosity: 3 } }
     ]
   },
   {
-    id: 'q4',
-    key: 'aroma',
-    zh: '你希望什麼香氣？',
-    en: 'What aroma do you want?',
+    id: 'q4', key: 'finish', zh: '喝完後，舌頭喜歡什麼感覺？', en: 'How would you like your palate to feel afterwards?',
+    hintZh: '澀感是舌面微微乾、收緊的感覺，不是辣味。', hintEn: 'Astringency is that gently dry, tightening feeling — not spiciness.',
     options: [
-      { id: 'subtle', zh: '低調柔和', en: 'Quiet and soft', target: { aroma: 1 }, families: ['cover'] },
-      { id: 'grassy', zh: '青草清香', en: 'Fresh-cut grass', target: { aroma: 2 }, families: ['green'] },
-      { id: 'floral', zh: '花香', en: 'Floral', target: { aroma: 4 }, families: ['cover', 'fruity'] },
-      { id: 'toasty', zh: '炒焙香', en: 'Roasted', target: { aroma: 3 }, families: ['roasted', 'rice'] }
+      { id: 'soft', zh: '柔柔的，幾乎不乾澀', en: 'Soft, with almost no dryness', subZh: '希望最後留下的是甘甜', subEn: 'Let sweetness be the last thing I notice', target: { astringency: 0.5 } },
+      { id: 'fresh', zh: '一點收斂，剛好清爽', en: 'A little grip, a fresh finish', subZh: '有茶的感覺，但不要咬舌', subEn: 'Clearly tea, but not mouth-puckering', target: { astringency: 2 } },
+      { id: 'bold', zh: '明顯一點，收尾俐落', en: 'A firmer, more defined finish', subZh: '我喜歡茶留下清楚的輪廓', subEn: 'I like tea to leave a clear outline', target: { astringency: 4 } }
     ]
   },
   {
-    id: 'q5',
-    key: 'caffeine',
-    zh: '你對咖啡因的要求？',
-    en: 'What do you need from caffeine?',
-    optional: true,
+    id: 'q5', key: 'method', zh: '這杯茶，你打算怎麼喝？', en: 'How will you make this cup?',
     options: [
-      { id: 'none', zh: '必須無咖啡因', en: 'Must be caffeine-free', caffeine: 'strict' },
-      { id: 'low', zh: '盡量少', en: 'As little as possible', caffeine: 'low' },
-      { id: 'normal', zh: '一般即可', en: 'Normal is fine', caffeine: 'ok' },
-      { id: 'any', zh: '不在意', en: 'Don’t care', caffeine: 'any' }
+      { id: 'daily', zh: '熱水一沖，日常慢慢喝', en: 'Hot water, an everyday cup', subZh: '茶壺或急須，簡單就好', subEn: 'A teapot or kyusu is enough', method: 'daily' },
+      { id: 'slow', zh: '留一段時間，細細品飲', en: 'Set aside time for a tasting', subZh: '願意控制水溫，也願意等', subEn: 'Happy to mind the temperature and wait', method: 'slow' },
+      { id: 'cold', zh: '放進冰箱，隔天喝冷泡', en: 'Cold brew for tomorrow', subZh: '喜歡冰涼、柔和的味道', subEn: 'I like a cool, gentle cup', method: 'cold' },
+      { id: 'milk', zh: '加牛奶，做一杯奶茶', en: 'With milk, as a milk tea', subZh: '希望奶香裡還喝得到茶', subEn: 'I still want to taste the tea through the milk', method: 'milk' },
+      { id: 'whisk', zh: '用茶筅，刷一碗抹茶', en: 'Whisk a bowl of matcha', subZh: '想要濃郁茶香與綿密口感', subEn: 'I want rich tea aroma and a fine froth', method: 'whisk' }
     ]
   },
   {
-    id: 'q6',
-    key: 'occasion',
-    zh: '最常什麼時候飲用？',
-    en: 'When will you usually drink it?',
-    optional: true,
+    id: 'q6', key: 'occasion', zh: '想把這杯茶，留給哪個時刻？', en: 'When would you like this tea alongside you?', optional: true,
     options: [
-      { id: 'evening', zh: '晚上', en: 'In the evening', occasion: 'evening' },
-      { id: 'allday', zh: '全天', en: 'All day', occasion: 'allday' },
-      { id: 'morning', zh: '早晨提神', en: 'Morning wake-up', occasion: 'morning' },
-      { id: 'tasting', zh: '特別品飲', en: 'A special tasting', occasion: 'tasting' }
+      { id: 'morning', zh: '早晨，配早餐', en: 'Morning, with breakfast', occasion: 'morning' },
+      { id: 'afternoon', zh: '午後，配一塊點心', en: 'Afternoon, with something sweet', occasion: 'afternoon' },
+      { id: 'evening', zh: '晚上，讀幾頁書', en: 'Evening, with a few pages of a book', occasion: 'evening' },
+      { id: 'anytime', zh: '隨時，想喝就喝', en: 'Whenever I feel like a cup', occasion: 'anytime' }
     ]
   },
   {
-    id: 'q7',
-    key: 'method',
-    zh: '你想怎麼喝？',
-    en: 'How do you want to brew it?',
+    id: 'q7', key: 'caffeine', zh: '這杯茶，需要避開咖啡因嗎？', en: 'Does this cup need to avoid caffeine?', optional: true,
     options: [
-      { id: 'daily', zh: '日常、容易泡', en: 'Easy, everyday', method: 'daily' },
-      { id: 'slow', zh: '願意低溫慢泡', en: 'Happy to brew low and slow', method: 'slow' },
-      { id: 'cold', zh: '冷泡', en: 'Cold brew', method: 'cold' },
-      { id: 'milk', zh: '紅茶或加奶', en: 'Black tea or with milk', method: 'milk' }
+      { id: 'normal', zh: '不用，一般茶就可以', en: 'No, regular tea is fine', caffeine: 'ok' },
+      { id: 'low', zh: '盡量少一點', en: 'A little less, if possible', caffeine: 'low' },
+      { id: 'strict', zh: '只選明確標示無咖啡因的商品', en: 'Only explicitly labelled caffeine-free products', caffeine: 'strict' }
     ]
   }
 ];
 
 export const SCALE_LABELS = {
-  zh: { body: '茶湯厚度 Body', viscosity: '稠滑 Umami-body', umami: '鮮味 Umami', sweetness: '甘甜 Sweetness', astringency: '澀味 Astringency', roast: '焙香 Roast', aroma: '香氣 Aroma' },
+  zh: { body: '茶湯厚度 Body', viscosity: '稠滑 Texture', umami: '鮮味 Umami', sweetness: '甘甜 Sweetness', astringency: '澀感 Astringency', roast: '焙香 Roast', aroma: '香氣 Aroma' },
   en: { body: 'Body', viscosity: 'Silky texture', umami: 'Umami', sweetness: 'Sweetness', astringency: 'Astringency', roast: 'Roast', aroma: 'Aroma' }
 };
+export const AROMA_LABELS = {
+  green: { zh: '嫩葉清香', en: 'fresh leaves' }, cover: { zh: '覆下茶香', en: 'shaded-tea aroma' },
+  floral: { zh: '花香', en: 'floral notes' }, fruity: { zh: '果香', en: 'fruit-like notes' },
+  honey: { zh: '蜜香', en: 'honey-like notes' }, roasted: { zh: '焙火香', en: 'roasted notes' },
+  rice: { zh: '炒米香', en: 'toasted rice' }, malty: { zh: '麥芽香', en: 'malt' }, cocoa: { zh: '可可調', en: 'cocoa-like notes' }
+};
 
-/* ---------- 偏好向量 ---------- */
-export function buildPreference(answers = {}) {
-  const target = {};
-  DIMS.forEach((d) => { target[d] = 3; });
-  const prefs = { target, families: [], caffeine: 'any', occasion: 'allday', method: 'daily', answered: 0 };
-
-  QUESTIONS.forEach((q) => {
-    const answer = answers[q.id];
-    if (!answer) return;
+export function sanitizeAnswers(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  return Object.fromEntries(QUESTIONS.flatMap((q) => {
+    const value = input[q.id];
+    return q.options.some((o) => o.id === value) ? [[q.id, value]] : [];
+  }));
+}
+export function missingRequired(answers) {
+  return QUESTIONS.filter((q) => !q.optional && !answers[q.id]).map((q) => q.id);
+}
+export function buildPreference(input = {}) {
+  const answers = sanitizeAnswers(input);
+  const target = Object.fromEntries(DIMS.map((d) => [d, 3]));
+  const prefs = { target, families: [], caffeine: 'any', occasion: 'anytime', method: 'daily', answered: 0 };
+  for (const q of QUESTIONS) {
+    const option = q.options.find((o) => o.id === answers[q.id]);
+    if (!option) continue;
     prefs.answered += 1;
-    const option = q.options.find((o) => o.id === answer);
-    if (!option) return;
-    if (option.target) Object.entries(option.target).forEach(([k, v]) => { target[k] = v; });
+    if (option.target) Object.assign(target, option.target);
     if (option.families) prefs.families = option.families;
-    if (option.caffeine) prefs.caffeine = option.caffeine;
-    if (option.occasion) prefs.occasion = option.occasion;
-    if (option.method) prefs.method = option.method;
-  });
-
+    for (const key of ['caffeine', 'occasion', 'method']) if (option[key]) prefs[key] = option[key];
+  }
   return prefs;
 }
 
-/* ---------- 相似度 ---------- */
-const closeness = (teaValue, wanted) => 1 - Math.abs(teaValue - wanted) / 5;
-
-const FAMILY_AFFINITY = {
-  gyokuro: ['cover'],
-  kabuse: ['cover', 'green'],
-  sencha: ['green'],
-  kamairi: ['roasted', 'green'],
-  matcha: ['cover', 'green'],
-  genmaicha: ['roasted', 'rice'],
-  wakoucha: ['fruity', 'roasted'],
-  decaf: ['green', 'roasted', 'cover']
-};
-
-/* 泡法契合度：回傳 0–1 */
-function methodFit(tea, method) {
-  const easy = tea.brew.method === 'kyusu' && (tea.brew.temp ?? 80) >= 70;
-  const lowAndSlow = (tea.brew.temp ?? 80) <= 60 || tea.brew.method === 'chasen';
+const closeness = (value, wanted) => 1 - Math.abs(value - wanted) / 5;
+const GREEN_FAMILIES = ['sencha', 'gyokuro', 'kabuse', 'kamairi', 'genmaicha'];
+export function methodFit(tea, method) {
   switch (method) {
-    case 'slow': return lowAndSlow ? 1 : tea.brew.method === 'chasen' ? 1 : 0.45;
-    case 'cold': return ['sencha', 'kabuse', 'gyokuro', 'matcha'].includes(tea.family) ? 0.9 : tea.family === 'wakoucha' ? 0.5 : 0.6;
-    case 'milk': return tea.family === 'wakoucha' || tea.family === 'matcha' ? 1 : 0.25;
-    case 'daily': return easy ? 1 : lowAndSlow ? 0.35 : 0.6;
-    default: return 0.7;
+    case 'milk': return tea.family === 'wakoucha' ? (tea.milkFit ?? 0.7) : tea.family === 'matcha' ? 0.9 : 0.15;
+    case 'whisk': return tea.family === 'matcha' ? 1 : 0.1;
+    case 'slow': return tea.family === 'gyokuro' ? 1 : tea.family === 'matcha' ? 0.8 : tea.brew.method === 'kyusu' ? 0.65 : 0.5;
+    case 'cold': return GREEN_FAMILIES.includes(tea.family) ? 0.9 : tea.family === 'wakoucha' ? 0.8 : tea.family === 'matcha' ? 0.55 : 0.6;
+    default: return tea.brew.method === 'label' ? 0.5 : tea.family === 'gyokuro' ? 0.5 : 0.9;
   }
 }
-
-/* 飲用情境契合度：回傳 0–1 */
 function occasionFit(tea, occasion) {
-  const strong = tea.caffeine.mgPer100ml !== null && tea.caffeine.mgPer100ml >= 30;
-  const veryStrong = tea.family === 'matcha' || tea.family === 'gyokuro';
-  switch (occasion) {
-    case 'evening': return tea.caffeine.status === 'verified_free' ? 1 : veryStrong ? 0.1 : strong ? 0.35 : 0.65;
-    case 'morning': return veryStrong ? 0.9 : strong ? 0.85 : 0.55;
-    case 'tasting': return veryStrong ? 1 : tea.taste.umami >= 4 ? 0.9 : 0.5;
-    default: return 0.7;
-  }
+  if (occasion === 'evening') return tea.caffeine.status === 'verified_free' ? 1 : ['gyokuro', 'matcha'].includes(tea.family) ? 0.25 : 0.55;
+  if (occasion === 'morning') return tea.family === 'wakoucha' || tea.family === 'matcha' ? 0.95 : 0.75;
+  if (occasion === 'afternoon') return tea.taste.sweetness >= 4 || tea.family === 'matcha' ? 1 : 0.7;
+  return 0.75;
 }
-
-/* 咖啡因軟性降權（嚴格需求已在硬過濾處理） */
 function caffeineMultiplier(tea, prefs) {
-  if (prefs.caffeine === 'strict') return 1;
-  if (prefs.caffeine === 'low') {
-    if (tea.caffeine.status === 'verified_free') return 1.03;
-    const strong = tea.caffeine.mgPer100ml !== null && tea.caffeine.mgPer100ml >= 30;
-    if (strong || tea.family === 'matcha') return 0.82;
-    if (tea.caffeine.mgPer100ml === null) return 0.94;
-    return 0.97;
-  }
-  return 1;
+  if (prefs.caffeine !== 'low') return 1;
+  if (tea.caffeine.status === 'verified_free') return 1;
+  // Never compare gyokuro's concentrated reference infusion with other categories.
+  if (['gyokuro', 'matcha', 'wakoucha'].includes(tea.family)) return 0.82;
+  return tea.caffeine.mgPer100ml === null ? 0.94 : 0.97;
 }
-
 export function scoreTea(tea, prefs) {
+  const wanted = prefs.target;
   const t = tea.taste;
-  const target = prefs.target;
-
-  const texture = (closeness(t.body, target.body) + closeness(t.viscosity, target.viscosity)) / 2;
-  const sweetUmami = (closeness(t.sweetness, target.sweetness) + closeness(t.umami, target.umami)) / 2;
-  const astringency = closeness(t.astringency, target.astringency);
-
-  const families = FAMILY_AFFINITY[tea.family] || [];
-  const familyMatch = prefs.families.length
-    ? (prefs.families.some((f) => families.includes(f)) ? 1 : 0.45)
-    : 0.7;
-  const aroma = closeness(t.aroma, target.aroma) * 0.6 + familyMatch * 0.4;
-
-  const context = (methodFit(tea, prefs.method) + occasionFit(tea, prefs.occasion)) / 2;
-
-  const raw = texture * 0.30 + sweetUmami * 0.25 + astringency * 0.20 + aroma * 0.10 + context * 0.15;
-  const decafPenalty = tea.family === 'decaf' && prefs.caffeine !== 'strict' && prefs.caffeine !== 'low' ? 0.9 : 1;
-  return {
-    tea,
-    score: raw * caffeineMultiplier(tea, prefs) * decafPenalty,
-    parts: { texture, sweetUmami, astringency, aroma, context }
+  const aromaFamilies = prefs.families.length
+    ? prefs.families.filter((f) => tea.aromaFamily.includes(f)).length / prefs.families.length : 0.5;
+  const parts = {
+    aroma: closeness(t.aroma, wanted.aroma) * 0.35 + aromaFamilies * 0.65,
+    flavour: (closeness(t.sweetness, wanted.sweetness) + closeness(t.umami, wanted.umami) + closeness(t.roast, wanted.roast)) / 3,
+    texture: (closeness(t.body, wanted.body) + closeness(t.viscosity, wanted.viscosity)) / 2,
+    finish: closeness(t.astringency, wanted.astringency),
+    context: (methodFit(tea, prefs.method) * 2 + occasionFit(tea, prefs.occasion)) / 3
   };
+  const raw = parts.aroma * 0.25 + parts.flavour * 0.25 + parts.texture * 0.20 + parts.finish * 0.15 + parts.context * 0.15;
+  const decafPenalty = tea.family === 'decaf' && prefs.caffeine !== 'strict' ? (prefs.caffeine === 'low' ? 0.9 : 0.82) : 1;
+  return { tea, parts, score: raw * caffeineMultiplier(tea, prefs) * decafPenalty };
 }
 
-/* ---------- 多樣性（規格 §5 Step D）---------- */
-/* Top 3 不全部出自同一茶類：若三名同類，保留第一、第二，第三換成另一風格中最高分者。 */
-function diversify(ranked, count = 3) {
+/* An explicit milk-tea choice is a route, not a cue to force an unrelated green
+ * tea into the top three. Otherwise keep the third recommendation exploratory. */
+function diversify(ranked, prefs, count = 3) {
+  const pool = prefs.method === 'milk' ? ranked.filter((r) => r.tea.family === 'wakoucha') : ranked;
   const picks = [];
-  const taken = new Set();
-  for (const row of ranked) {
+  for (const row of pool) {
     if (picks.length >= count) break;
-    if (picks.length === 2 && picks.every((p) => p.tea.family === picks[0].tea.family) && row.tea.family === picks[0].tea.family) continue;
+    if (prefs.method !== 'milk' && picks.length === 2 && picks.every((r) => r.tea.family === picks[0].tea.family) && row.tea.family === picks[0].tea.family) continue;
     picks.push(row);
-    taken.add(row.tea.id);
   }
-  // 若因多樣性跳過而不足，補回原排序
   for (const row of ranked) {
     if (picks.length >= count) break;
-    if (!taken.has(row.tea.id)) { picks.push(row); taken.add(row.tea.id); }
+    if (!picks.some((r) => r.tea.id === row.tea.id)) picks.push(row);
   }
   return picks;
 }
 
-/* ---------- 解釋（固定結構模板）---------- */
-/* 每條理由都綁定「一題答案 → 一個維度」，所以句子一定讀得通，也不會重複同一題。
- * 用語只描述編輯標籤，不假裝是化學分析或個人化預測。 */
-
 const DIM_WORD = {
-  body: { zh: '茶湯厚度', en: 'body' },
-  viscosity: { zh: '稠滑感', en: 'silky texture' },
-  umami: { zh: '鮮味', en: 'umami' },
-  sweetness: { zh: '甘甜', en: 'sweetness' },
-  astringency: { zh: '澀味', en: 'astringency' },
-  roast: { zh: '焙香', en: 'roast' },
-  aroma: { zh: '香氣強度', en: 'aroma intensity' }
+  sweetness: { zh: '甘甜', en: 'sweetness' }, umami: { zh: '鮮味', en: 'umami' },
+  roast: { zh: '焙香', en: 'roast' }, astringency: { zh: '澀感', en: 'astringency' }
 };
-
-function levelWord(value, lang) {
-  if (value <= 1) return lang === 'zh' ? '很低' : 'very low';
-  if (value <= 2) return lang === 'zh' ? '偏低' : 'low';
-  if (value <= 3) return lang === 'zh' ? '中等' : 'medium';
-  if (value <= 4) return lang === 'zh' ? '偏高' : 'high';
-  return lang === 'zh' ? '最高' : 'the highest';
+function optionFor(id, answers) {
+  const q = QUESTIONS.find((item) => item.id === id);
+  return q?.options.find((o) => o.id === answers[id]);
 }
-
-/* Q1 談的是整體口感（body + viscosity），Q2 談的維度取它設定最多的那一項。 */
-function q2Dimension(option) {
-  if (!option || !option.target) return 'umami';
-  const entries = Object.entries(option.target).sort((a, b) => b[1] - a[1]);
-  return entries[0][0];
-}
-
-function reasonFor(questionId, tea, answers, lang) {
-  const question = QUESTIONS.find((q) => q.id === questionId);
-  const option = question?.options.find((o) => o.id === answers[questionId]);
+function reasonFor(id, tea, answers, lang) {
+  const option = optionFor(id, answers);
   if (!option) return null;
-  const word = lang === 'zh' ? option.zh : option.en;
-
-  if (questionId === 'q1') {
-    return lang === 'zh'
-      ? `你說想要「${word}」的口感；這款稠滑感 ${tea.taste.viscosity}／5、茶湯厚度 ${tea.taste.body}／5。`
-      : `You asked for “${word}”; this one sits at ${tea.taste.viscosity}/5 on silky texture and ${tea.taste.body}/5 on body.`;
+  const word = option[lang];
+  if (id === 'q1') {
+    const notes = tea.aromaFamily.map((f) => AROMA_LABELS[f][lang]).join(lang === 'zh' ? '、' : ', ');
+    return lang === 'zh' ? `你被「${word}」吸引；這款以${notes}為主要香氣線索。` : `“${word}” caught your attention; this tea’s aroma cues are ${notes}.`;
   }
-  if (questionId === 'q2') {
-    const dim = q2Dimension(option);
-    const dimWord = DIM_WORD[dim][lang];
-    return lang === 'zh'
-      ? `你偏好的味道是「${word}」；這款${dimWord} ${tea.taste[dim]}／5（${levelWord(tea.taste[dim], lang)}）。`
-      : `Your flavour pick was “${word}”; this tea scores ${tea.taste[dim]}/5 on ${dimWord} — ${levelWord(tea.taste[dim], lang)}.`;
+  if (id === 'q2') {
+    const dim = option.reasonDim;
+    return lang === 'zh' ? `第一口你想要「${word}」；這款的${DIM_WORD[dim][lang]}標籤是 ${tea.taste[dim]}／5。` : `For your first sip you chose “${word}”; its editorial ${DIM_WORD[dim][lang]} score is ${tea.taste[dim]}/5.`;
   }
-  if (questionId === 'q3') {
-    return lang === 'zh'
-      ? `你能接受的澀味是「${word}」；這款澀味 ${tea.taste.astringency}／5。`
-      : `On astringency you chose “${word}”; this tea is ${tea.taste.astringency}/5.`;
-  }
-  if (questionId === 'q4') {
-    return lang === 'zh'
-      ? `你希望的香氣是「${word}」；這款香氣強度 ${tea.taste.aroma}／5。`
-      : `You wanted a “${word}” aroma; this tea’s aroma intensity is ${tea.taste.aroma}/5.`;
-  }
+  if (id === 'q3') return lang === 'zh'
+    ? `你喜歡「${word}」；這款茶湯厚度 ${tea.taste.body}／5、稠滑感 ${tea.taste.viscosity}／5。`
+    : `You chose “${word}”; this tea is ${tea.taste.body}/5 for body and ${tea.taste.viscosity}/5 for silky texture.`;
+  if (id === 'q4') return lang === 'zh'
+    ? `你希望收尾「${word}」；這款澀感標籤是 ${tea.taste.astringency}／5。`
+    : `You wanted a finish that feels “${word}”; its editorial astringency score is ${tea.taste.astringency}/5.`;
   return null;
 }
-
+function reasonGap(id, tea, option) {
+  if (id === 'q1') return 1 - option.families.filter((f) => tea.aromaFamily.includes(f)).length / option.families.length;
+  if (id === 'q2') return Math.abs(tea.taste[option.reasonDim] - option.target[option.reasonDim]) / 5;
+  if (id === 'q3') return (Math.abs(tea.taste.body - option.target.body) + Math.abs(tea.taste.viscosity - option.target.viscosity)) / 10;
+  return Math.abs(tea.taste.astringency - option.target.astringency) / 5;
+}
 export function buildReasons(tea, prefs, answers, lang = 'zh') {
-  /* 依「與偏好差距」排序，只取最貼近的兩題當理由 */
-  const candidates = ['q1', 'q2', 'q3', 'q4']
-    .filter((id) => answers[id])
-    .map((id) => {
-      const question = QUESTIONS.find((q) => q.id === id);
-      const option = question.options.find((o) => o.id === answers[id]);
-      let gap = 0;
-      let count = 0;
-      if (id === 'q1') {
-        gap += Math.abs(tea.taste.viscosity - (option.target?.viscosity ?? prefs.target.viscosity));
-        gap += Math.abs(tea.taste.body - (option.target?.body ?? prefs.target.body));
-        count = 2;
-      } else if (id === 'q2') {
-        const dim = q2Dimension(option);
-        gap = Math.abs(tea.taste[dim] - (option.target?.[dim] ?? prefs.target[dim]));
-        count = 1;
-      } else if (id === 'q3') {
-        gap = Math.abs(tea.taste.astringency - (option.target?.astringency ?? prefs.target.astringency));
-        count = 1;
-      } else if (id === 'q4') {
-        gap = Math.abs(tea.taste.aroma - (option.target?.aroma ?? prefs.target.aroma));
-        count = 1;
-      }
-      return { id, gap: count ? gap / count : gap };
-    })
-    .sort((a, b) => a.gap - b.gap);
-
-  const reasons = [];
-  for (const { id } of candidates) {
-    if (reasons.length >= 2) break;
-    const reason = reasonFor(id, tea, answers, lang);
-    if (reason) reasons.push({ dim: id, text: reason });
-  }
-
-  /* 第三條：泡法（規格 §5 Step E 要求至少兩條，這裡固定補泡法讓卡片可執行） */
-  const methodNote = {
-    slow: {
-      zh: `你說願意低溫慢泡；這款建議 ${tea.brew.temp ?? '—'}°C、${tea.brew.seconds ?? '—'} 秒。`,
-      en: `You said you would brew low and slow; ${tea.brew.temp ?? '—'}°C for ${tea.brew.seconds ?? '—'} s fits.`
-    },
-    cold: {
-      zh: '你想冷泡：同一份茶葉放進冷水，冰箱 4–6 小時，風味更甜、更少澀。',
-      en: 'For cold brew: the same leaf in cold water, 4–6 h in the fridge — sweeter, less astringent.'
-    },
-    milk: {
-      zh: '你選了紅茶或加奶，這款的焙香與甜度不會被牛奶蓋掉。',
-      en: 'You chose black tea or milk; this one’s roast and sweetness survive the milk.'
-    },
-    daily: {
-      zh: '日常泡法：茶壺、熱水、一分鐘上下，不需要器材。',
-      en: 'Everyday brewing: a pot, hot water, about a minute — no equipment.'
-    }
-  }[prefs.method];
-  if (methodNote) reasons.push({ dim: 'method', text: lang === 'zh' ? methodNote.zh : methodNote.en });
-
+  const reasons = ['q1', 'q2', 'q3', 'q4'].filter((id) => optionFor(id, answers))
+    .sort((a, b) => reasonGap(a, tea, optionFor(a, answers)) - reasonGap(b, tea, optionFor(b, answers)))
+    .slice(0, 2).map((id) => ({ dim: id, text: reasonFor(id, tea, answers, lang) }));
+  reasons.push({ dim: 'method', text: methodNote(tea, prefs.method, lang) });
   return reasons;
 }
-
-/* ---------- 風味輪廓命名 ---------- */
+export function methodNote(tea, method, lang = 'zh') {
+  const b = tea.brew;
+  if (b.method === 'label') return lang === 'zh' ? '你選了自己的喝法；這款請依商品包裝標示沖泡。' : 'Follow the product label for your chosen way of drinking.';
+  if (method === 'milk') {
+    if (tea.family === 'wakoucha') return lang === 'zh'
+      ? `你想做奶茶：先用 ${b.grams} g 茶葉、${Math.round(b.ml / 2)} mL 熱水沖濃，再加入溫牛奶；從少量奶開始，保留茶香。`
+      : `For milk tea, start with ${b.grams} g leaf and ${Math.round(b.ml / 2)} mL hot water, then add a little warm milk. Increase milk to taste.`;
+    return lang === 'zh' ? `你想做奶茶：先用 ${b.grams} g 抹茶刷勻，再慢慢加入牛奶，從少量奶開始。` : `For milk tea, whisk ${b.grams} g matcha first, then gradually add milk to taste.`;
+  }
+  if (method === 'cold') return tea.family === 'matcha'
+    ? (lang === 'zh' ? '冷飲抹茶不是浸泡茶葉：用少量冷水刷勻，再加入冷水與冰塊。' : 'Cold matcha is not steeped: whisk with a little cold water, then add cold water and ice.')
+    : (lang === 'zh' ? `你想冷泡：${b.grams} g 茶葉加 ${b.ml} mL 冷水，冷藏 4–6 小時後濾出茶葉，當天喝完。` : `For cold brew, refrigerate ${b.grams} g leaf in ${b.ml} mL cold water for 4–6 hours. Strain and drink that day.`);
+  if (method === 'whisk' || tea.family === 'matcha') return lang === 'zh'
+    ? `你想慢慢品茶：${b.grams} g 抹茶過篩，加 ${b.ml} mL、${b.temp}°C 的水，刷出細緻泡沫。`
+    : `For a mindful bowl, sift ${b.grams} g matcha, add ${b.ml} mL water at ${b.temp}°C and whisk to a fine froth.`;
+  return lang === 'zh'
+    ? `照你的喝法，先試 ${b.grams} g 茶葉、${b.ml} mL 水、${b.temp}°C、${b.seconds} 秒，再依口感微調。`
+    : `For your chosen cup, start with ${b.grams} g leaf, ${b.ml} mL water at ${b.temp}°C for ${b.seconds} seconds; then adjust to taste.`;
+}
 export function profileFor(prefs) {
   const t = prefs.target;
-  if (t.viscosity >= 3.5 && t.astringency <= 2) return { zh: '柔滑甘醇型', en: 'Mellow & Silky', code: 'mellow' };
-  if (t.umami >= 4 && t.body >= 4) return { zh: '濃厚鮮味型', en: 'Deep Umami', code: 'deep' };
+  if (prefs.method === 'milk') return { zh: '茶香奶茶型', en: 'Tea-forward Milk Tea', code: 'milk' };
+  if (prefs.method === 'whisk') return { zh: '濃郁抹茶型', en: 'Rich & Whisked', code: 'matcha' };
+  if (prefs.families.includes('malty')) return { zh: '麥芽醇香型', en: 'Malty & Aromatic', code: 'malty' };
   if (t.roast >= 3.5) return { zh: '焙香溫潤型', en: 'Toasted & Warm', code: 'toasty' };
-  if (t.aroma >= 3.5) return { zh: '花香清雅型', en: 'Floral & Fragrant', code: 'floral' };
+  if (t.umami >= 4 && t.body >= 3) return { zh: '濃厚鮮味型', en: 'Deep Umami', code: 'deep' };
+  if (t.viscosity >= 3.5 && t.astringency <= 2) return { zh: '柔滑甘醇型', en: 'Mellow & Silky', code: 'mellow' };
+  if (prefs.families.includes('floral')) return { zh: '花果清雅型', en: 'Floral & Fruity', code: 'floral' };
+  if (prefs.families.includes('honey')) return { zh: '蜜香甜韻型', en: 'Honeyed & Gentle', code: 'honey' };
   if (t.body <= 2 && t.viscosity <= 2) return { zh: '清透輕盈型', en: 'Light & Clear', code: 'light' };
   if (t.sweetness >= 3.5) return { zh: '甘甜圓潤型', en: 'Sweet & Round', code: 'sweet' };
   return { zh: '均衡日常型', en: 'Balanced Everyday', code: 'balanced' };
 }
-
-/* ---------- 主推薦 ---------- */
-export function recommend(answers = {}, lang = 'zh') {
+export function recommend(input = {}, lang = 'zh') {
+  const answers = sanitizeAnswers(input);
   const prefs = buildPreference(answers);
-
-  // Step A：硬過濾
-  let eligible = TEAS;
-  let hardFiltered = false;
-  if (prefs.caffeine === 'strict') {
-    eligible = TEAS.filter((t) => t.caffeine.status === 'verified_free');
-    hardFiltered = true;
-  }
-
-  if (!eligible.length) {
-    return { empty: true, prefs, hardFiltered, results: [], ranked: [] };
-  }
-
-  // Step B–C：加權相似度
-  const ranked = eligible
-    .map((tea) => scoreTea(tea, prefs))
-    .sort((a, b) => b.score - a.score || a.tea.id.localeCompare(b.tea.id));
-
-  // Step D：多樣性
-  const picks = diversify(ranked, 3);
-
-  const topFamily = picks[0].tea.family;
-  const results = picks.map((row, index) => {
-    const role = index === 0 ? 'top1' : index === 1 ? 'top2' : (row.tea.family === topFamily ? 'top3' : 'explore');
-    return {
-      ...row,
-      role,
-      reasons: buildReasons(row.tea, prefs, answers, lang),
-      confidence: row.tea.confidence
-    };
-  });
-
-  return {
-    empty: false,
-    prefs,
-    profile: profileFor(prefs, lang),
-    hardFiltered,
-    results,
-    ranked: ranked.map((r) => ({ id: r.tea.id, score: r.score }))
-  };
+  const eligible = prefs.caffeine === 'strict' ? TEAS.filter((t) => t.caffeine.status === 'verified_free') : TEAS;
+  const hardFiltered = prefs.caffeine === 'strict';
+  if (!eligible.length) return { empty: true, prefs, hardFiltered, results: [], ranked: [] };
+  const ranked = eligible.map((tea) => scoreTea(tea, prefs)).sort((a, b) => b.score - a.score || a.tea.id.localeCompare(b.tea.id));
+  const results = diversify(ranked, prefs).map((row, index) => ({
+    ...row,
+    role: index === 0 ? 'top1' : index === 1 ? 'top2' : row.tea.family === ranked[0].tea.family ? 'top3' : 'explore',
+    reasons: buildReasons(row.tea, prefs, answers, lang), confidence: row.tea.confidence
+  }));
+  return { empty: false, prefs, profile: profileFor(prefs), hardFiltered, results, ranked: ranked.map((r) => ({ id: r.tea.id, score: r.score })) };
 }
 
-/* ---------- 分享用答案編碼（不含個資）---------- */
-export function encodeAnswers(answers) {
-  return QUESTIONS.map((q) => {
-    const answer = answers[q.id];
-    if (!answer) return '-';
-    const index = q.options.findIndex((o) => o.id === answer);
-    return index >= 0 ? String(index + 1) : '-';
-  }).join('');
+/* v2 codes are not interchangeable with the original seven-question quiz. */
+export function encodeAnswers(input) {
+  const answers = sanitizeAnswers(input);
+  return `${QUIZ_VERSION}.${QUESTIONS.map((q) => {
+    const index = q.options.findIndex((o) => o.id === answers[q.id]);
+    return index < 0 ? '-' : String(index + 1);
+  }).join('')}`;
 }
-
 export function decodeAnswers(code) {
-  if (!code || typeof code !== 'string') return null;
-  const chars = code.trim().split('');
-  if (chars.length !== QUESTIONS.length) return null;
+  if (typeof code !== 'string' || !/^v2\.[1-5-]{7}$/.test(code)) return null;
   const answers = {};
-  let valid = 0;
-  chars.forEach((ch, i) => {
-    if (ch === '-' || ch === '0' || ch === '') return;
-    const index = Number(ch) - 1;
-    const option = QUESTIONS[i].options[index];
-    if (option) { answers[QUESTIONS[i].id] = option.id; valid += 1; }
+  code.slice(3).split('').forEach((char, index) => {
+    if (char !== '-') answers[QUESTIONS[index].id] = QUESTIONS[index].options[Number(char) - 1].id;
   });
-  return valid >= 3 ? answers : null;
+  return missingRequired(answers).length ? null : answers;
 }
