@@ -15,6 +15,19 @@
 
 const MAFF = 'https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html';
 
+/* 茶類的飲品插畫：畫的是「這個茶種的茶湯」，不是某一支商品的實拍照。
+ * 風味與外觀依商品而定，所以卡牌上的圖只用來認茶類，不當成產品型錄。 */
+export const FAMILY_IMAGES = {
+  gyokuro: '/personal/tea-quiz/drinks/gyokuro.jpg',
+  kabuse: '/personal/tea-quiz/drinks/kabuse.jpg',
+  sencha: '/personal/tea-quiz/drinks/sencha.jpg',
+  kamairi: '/personal/tea-quiz/drinks/kamairi.jpg',
+  matcha: '/personal/tea-quiz/drinks/matcha.jpg',
+  genmaicha: '/personal/tea-quiz/drinks/genmaicha.jpg',
+  wakoucha: '/personal/tea-quiz/drinks/wakoucha.jpg',
+  decaf: '/personal/tea-quiz/drinks/decaf.jpg'
+};
+
 /* 咖啡因狀態只允許三種：contains（含咖啡因）/ verified_free（經證實無咖啡因）/ unknown（數值未知）
  * 注意：玄米茶、焙茶、冠茶都不能因為「喝起來淡」被推定為無咖啡因。 */
 export const TEA_FAMILIES = {

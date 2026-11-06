@@ -271,8 +271,14 @@ export function encodeAnswers(input) {
 export function decodeAnswers(code) {
   if (typeof code !== 'string' || !/^v2\.[1-5-]{7}$/.test(code)) return null;
   const answers = {};
-  code.slice(3).split('').forEach((char, index) => {
-    if (char !== '-') answers[QUESTIONS[index].id] = QUESTIONS[index].options[Number(char) - 1].id;
-  });
+  const chars = code.slice(3).split('');
+  for (let index = 0; index < chars.length; index += 1) {
+    const char = chars[index];
+    if (char === '-') continue;
+    /* 位數超出該題的選項數（例如手改網址）就不是有效的分享碼，回首頁。 */
+    const option = QUESTIONS[index].options[Number(char) - 1];
+    if (!option) return null;
+    answers[QUESTIONS[index].id] = option.id;
+  }
   return missingRequired(answers).length ? null : answers;
 }
