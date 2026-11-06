@@ -34,7 +34,7 @@ Two motifs are deliberately kept and theirs is a narrow brief:
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
 - **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
 
-The closing 型錄 section is the printed style guide: eight palette entries with token names, the twelve-icon grid, the type scale, and the layout rules (24 px icon grid, 1.5 stroke, outline only, lattice reserved for separators). It is written against the same `--ng-*` tokens the page uses, so editing them changes the guide too.
+The closing 型錄 section is an editorial index of the three trip features (photo plate, oversized issue number, route line): eight palette entries with token names, the twelve-icon grid, the type scale, and the layout rules (24 px icon grid, 1.5 stroke, outline only, lattice reserved for separators). It is written against the same `--ng-*` tokens the page uses, so editing them changes the guide too.
 
 Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. `--ng-sans` and `--ng-grotesk` fall back to **Noto Sans JP / Noto Sans TC** (with Archivo first for Latin) because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets.
 
