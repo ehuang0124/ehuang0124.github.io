@@ -581,3 +581,22 @@ footer.site p { margin: 0 0 6px; }
 @media (min-width: 760px) {
   .results-grid { display: grid; grid-template-columns: 1fr; }
 }
+
+/* Illustrated moments and origin notes */
+.tea-art { position: relative; height: 160px; margin: 0 0 24px; overflow: hidden; border-radius: 12px; background: #e9eadb url('/personal/tea-quiz/tea-illustration.png') center 50% / cover no-repeat; }
+.tea-art-result { height: 200px; background-position: center 58%; }
+.tea-art-label { position: absolute; right: 14px; bottom: 12px; padding: 4px 9px; color: #35513c; background: rgba(247,245,238,.85); border-radius: 3px; font: 600 10px/1.5 var(--jf-mono); letter-spacing: .13em; }
+.option-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--jf-matcha-wash); color: var(--jf-matcha-deep); font: 22px/1 var(--jf-serif); }
+.option.is-checked .option-icon { background: #dce9da; }
+.origin-map { display: flex; align-items: center; gap: 18px; margin: 12px 0 16px; padding: 10px 18px; border: 1px solid #e4e8dc; border-radius: 10px; background: #f3f5ed; }
+.map-art { flex: 0 0 100px; height: 110px; display: grid; place-items: center; }
+.map-art svg { width: 100%; height: 100%; }
+.map-land { fill: #c5d3be; stroke: #8fa58a; stroke-width: 1; stroke-linejoin: round; }
+.map-halo { fill: #b46d44; opacity: .2; }
+.map-pin { fill: #a65331; stroke: #fff; stroke-width: 1; }
+.origin-map figcaption { display: grid; gap: 3px; line-height: 1.5; }
+.origin-map strong { font: 600 15px/1.5 var(--jf-serif); }
+.origin-map small { color: var(--jf-muted); font-size: 12px; }
+.map-kicker { color: var(--jf-matcha-deep); font: 600 10px/1.4 var(--jf-mono); letter-spacing: .12em; }
+@media (max-width: 430px) { .tea-art { height: 125px; } .tea-art-result { height: 155px; } .origin-map { gap: 10px; padding: 8px 10px; } .map-art { flex-basis: 82px; height: 95px; } }
+.option { grid-template-columns: 34px 38px minmax(0, 1fr); }
