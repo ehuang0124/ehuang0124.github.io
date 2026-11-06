@@ -28,16 +28,18 @@ Four axes carry the brand everywhere:
 
 ## Landing page (`index.html`)
 
-The landing page is the reference implementation of that brand. Its sections run 0101–0105: 目次, 三つの旅 (three photographic cards plus a 推し POINT callout), the 青島 quote band, 旅の断片, 旅のたより, and 型錄. A tracked micro-eyebrow (`観光特集 ・ 第 01 号 ・ 2026 冬`) sits over an oversized 900-weight gothic headline `日本のどこへ、いつ行く？`, with the 〜まとめ〜 subline below it.
+The landing page is the reference implementation of that brand. A tracked micro-eyebrow (`観光特集 ・ 第 01 号 ・ 2026 冬`) sits over an oversized 900-weight gothic headline `日本のどこへ、いつ行く？`, with the 〜まとめ〜 subline below it.
 
 `landing.css` no longer declares tokens of its own: it consumes `--ng-*` from `brand.css`, so one edit to the brand reaches the landing page, the two itinerary pages, 沖繩 and the atlas at once.
+
+Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, three photographic plates plus a Stamp Atlas callout), the 青島 quote band, 旅の断片, 寄一封明信片, and 型錄.
 
 Two motifs are deliberately kept and theirs is a narrow brief:
 
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
 - **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
 
-The closing 型錄 section is the printed style guide: eight palette entries with token names, the twelve-icon grid, the type scale, and the layout rules (24 px icon grid, 1.5 stroke, outline only, lattice reserved for separators). It is written against the same `--ng-*` tokens the page uses, so editing them changes the guide too.
+The closing 型錄 section indexes the three trip features only (the Stamp Atlas map is reachable from the nav, category bar, postcard section and the callout). Each entry is an editorial spread: alternating photo/copy sides, an offset colour frame, an oversized hollow issue number, a vertical 第 0X 帖 tab, a date line, a route line and a pill link. The palette, icon grid and type rules live in `spec.md`.
 
 Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. `--ng-sans` and `--ng-grotesk` fall back to **Noto Sans JP / Noto Sans TC** (with Archivo first for Latin) because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets. The itinerary, island and atlas pages draw their Wikimedia Commons images the same way and keep their own `hero-credit` / credits blocks.
 
