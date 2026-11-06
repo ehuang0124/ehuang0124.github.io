@@ -312,7 +312,7 @@ async function boot({ demo = false, seed = {}, viewport = 'desktop' } = {}) {
   };
   inject('config.js', () => demo ? 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:true};' : CONFIG_SNIPPET);
   inject('account.js');
-  for (const file of ['world.js', 'places.js', 'us-states.js']) inject(file);
+  for (const file of ['world.js', 'places.js', 'okinawa-places.js', 'us-states.js']) inject(file);
   inject('app.js');
   const document = window.document;
   const settle = async (turns = 12) => { for (let i = 0; i < turns; i++) await new Promise(resolve => setTimeout(resolve, 3)); };
@@ -387,7 +387,7 @@ async function main() {
     assert.equal(page.$('#account-password').autocomplete, 'current-password');
     assert.equal(server.tables.stamps.length, 1, 'a visitor cannot create stamps');
     // Custom city creation is also blocked.
-    click(page.window, page.$$('.category-tab')[1]);
+    click(page.window, page.$$('.collection-choice')[1]);
     await page.settle();
     click(page.window, page.$('#add-city'));
     await page.settle();

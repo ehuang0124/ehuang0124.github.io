@@ -11,12 +11,12 @@ The account control and the backend status line sit in the sticky top bar on eve
 
 ## What it does
 
-- Four map layers: **240 countries and regions**, **171 editorially selected major cities**, **North America: 50 U.S. states, 64 U.S. national parks, and 48 Canadian national parks / national park reserves**, and **35 Japanese national parks**. U.S. parks include Chiricahua (redesignated October 2026); Canadian parks include Pituamkek (established 2024).
+- Five map collections: **240 countries and regions**, **171 editorially selected major cities**, **North America: 50 U.S. states, 64 U.S. national parks, and 48 Canadian national parks / national park reserves**, **35 Japanese national parks**, and **49 Okinawa destinations**. U.S. parks include Chiricahua (redesignated October 2026); Canadian parks include Pituamkek (established 2024).
 - Click a country/marker or use the searchable, keyboard-accessible destination index. Geographic area chips filter the index and reframe the map. Country and U.S. state outlines remain selectable; place and administrative names appear in hover tooltips instead of persistent map text. The North America layer combines selectable U.S. state boundaries, U.S. national parks, and Canadian national parks. Its filters narrow to the United States, Canada, or subregions. These travel groupings are not administrative boundaries. The map can be dragged from the sea, zoomed, and reset. Where parks are far apart (e.g. Alaska, American Samoa, Japan's southern islands), selecting them from the index pans the map to their location.
 - A native month picker records visits at month precision (`YYYY-MM`) and produces a tactile rubber-stamp impression and a small ink mark on the map. Every catalogue entry has a **destination-specific postcard plate**: a well-known local landscape, flower, figure or building drawn as a single-ink engraving. Each plate also carries its own deterministic contour lines and a unique catalogue serial (including every U.S., Canadian and Japanese park), so returning to a place reproduces exactly the same artwork. The plate caption names the motif and its family (風景 / 花草 / 人文 / 建築) and shows the four-step ink scale. Hovering a stamped place reveals its latest date. The same place can have **several visit months**; a repeated month is not added twice. Existing day-precision records migrate to their month when read. Individual stamps can be removed. A place is counted once in the collection total even if it has multiple dates.
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
 - Every layer shows the **country flag** of each destination: countries, cities, U.S. states, and U.S./Canadian/Japanese parks inherit the flag of their country. Flags are bundled local SVGs (`flags/`, from `country-flag-icons`, MIT), so they render the same on every platform and need no network. The five disputed or unassigned catalogue entries with no ISO 3166-1 code (Somaliland, Northern Cyprus, Siachen Glacier) deliberately show no flag.
-- Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), separate from the Okinawa page's storage. Signing in with the local passphrase is what unlocks stamping, custom cities, import and export. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
+- Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), with the former Okinawa checklist kept separately as undated reminders. Signing in with the local passphrase is what unlocks stamping, custom cities, import and export. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
 - Text is set via `textContent` rather than interpolating user input into markup; imported backups are schema-checked and sanitized.
 
 ## Postcard plates
@@ -151,3 +151,23 @@ logins are recorded privately under `auth.uid()`.
 Existing projects missing `atlas_login` can apply only the additive repair in
 [`supabase/migrations/20261105_add_atlas_login.sql`](supabase/migrations/20261105_add_atlas_login.sql).
 This repair was applied to the configured live project on 2026-11-05; the public API cannot call it anonymously.
+
+## Collection navigation and Okinawa
+
+The atlas now uses a full-screen collection menu instead of layer tabs. Its five
+chapters each have a distinct generated background and palette. The Okinawa
+chapter (`?category=okinawa`) contains all 49 locations from the itinerary,
+with ten regional filters and the same month-precision stamping, accounts,
+companions and backup as the rest of the atlas. It uses `okinawa:<id>` keys;
+Okinawa points are approximate and the illustrations are not navigation maps.
+
+The Okinawa itinerary page remains a planning map, but stamping happens in the
+atlas. Its old `okinawa-visited-v2` browser list is not deleted. Because it never
+stored dates, the atlas displays it (or the old page's preselected defaults when
+no list was saved) as a **reminder**, not as a dated stamp. Confirm a place and
+enter its actual month to save it to the current atlas account. These undated
+reminders are browser-local and are not part of atlas backup or cloud sync.
+
+Run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-okinawa.cjs`
+to check the deep link, collection switcher, regional filtering, search, old-list
+reminders and persisted Okinawa stamps.

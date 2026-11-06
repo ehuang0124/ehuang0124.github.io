@@ -50,6 +50,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
         await page.locator('#local-signin-submit').click();
         await page.locator('#account-card').waitFor({state:'visible'});
       };
+      const chooseCollection = async id => { await page.locator('#collection-menu-button').click(); await page.locator(`#tab-${id}`).click(); };
       page.on('pageerror',error => errors.push(error.message));
       await page.goto(`${url}/personal/travel/map/`);
       await page.evaluate(() => document.fonts.ready);
@@ -73,16 +74,16 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.evaluate(() => localStorage.setItem('eva.travel.stamp-atlas.v1',JSON.stringify({version:1,visits:{'us:yell':['2023-03'],'ca:banff':['2024-06']},customCities:[]})));
       await page.reload();
       assert.equal(await page.locator('#passport-count').textContent(),'2');
-      await page.locator('#tab-na').click();
+      await chooseCollection('na');
       assert.equal(await page.locator('#tab-count-na').textContent(),'2 / 162');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-      await page.locator('#tab-countries').focus();
-      await page.keyboard.press('ArrowRight');
-      assert.equal(await page.locator('#tab-cities').getAttribute('aria-selected'),'true');
-      await page.keyboard.press('ArrowLeft');
-      assert.equal(await page.locator('#tab-countries').getAttribute('aria-selected'),'true');
+      await page.locator('#collection-menu-button').click();
+      assert.equal(await page.locator('#collection-menu').evaluate(el => el.open), true);
+      assert.equal(await page.locator('#tab-countries').getAttribute('aria-current'), 'true');
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#collection-menu').evaluate(el => el.open), false);
       await page.locator('#visit-date').fill('2099-01');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'0');
@@ -137,7 +138,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert((await page.locator('.place-item').first().textContent()).includes('台灣'));
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#history-list li').count(),1);
-      await page.locator('#tab-cities').click();
+      await chooseCollection('cities');
       await page.locator('.map-point[data-id="tokyo-jp"]').hover();
       assert.equal(await page.locator('#map-tooltip').isVisible(),true);
       assert((await page.locator('#map-tooltip').textContent()).includes('東京'));
@@ -168,7 +169,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'2');
       assert.equal(await page.locator('.map-point.done').count(),1);
-      await page.locator('#tab-na').click();
+      await chooseCollection('na');
       assert.equal(await page.locator('.place-item').count(),162);
       assert.equal(await page.locator('.map-us-state').count(),50);
       assert.equal(await page.locator('#state-legend').isHidden(),false);
@@ -210,7 +211,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.map-point').count(),48);
       await page.locator('[data-region="na-ca-north"]').click();
       assert.equal(await page.locator('.place-item').count(),14);
-      await page.locator('#tab-jp').click();
+      await chooseCollection('jp');
       assert.equal(await page.locator('.place-item').count(),35);
       await page.locator('.map-point[data-id="fuji"]').hover();
       assert((await page.locator('#map-tooltip').textContent()).includes('富士箱根伊豆'));
@@ -218,7 +219,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.mouse.move(5,5);
       await page.locator('[data-region="islands"]').click();
       assert.equal(await page.locator('.place-item').count(),6);
-      await page.locator('#tab-cities').click();
+      await chooseCollection('cities');
       await page.locator('#add-city').click();
       await page.locator('#city-name').fill('臺南');
       await page.locator('#city-lat').fill('22.998');
@@ -251,7 +252,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('#passport-count').textContent(),'3');
       assert((await page.locator('#backup-feedback').textContent()).includes('合併'));
       await page.reload();
-      await page.locator('#tab-cities').click();
+      await chooseCollection('cities');
       assert.equal(await page.locator('#board-total').textContent(),'172');
       await page.locator('#place-search').fill('臺南');
       await page.locator('.place-item').click();

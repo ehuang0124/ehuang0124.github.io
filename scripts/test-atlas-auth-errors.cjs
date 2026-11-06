@@ -84,7 +84,7 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
   });
   const fake = makeClient(clientOptions);
   window.supabase = { createClient: () => fake.client };
-  for (const file of ['config.js', 'account.js', 'world.js', 'places.js', 'us-states.js', 'app.js']) {
+  for (const file of ['config.js', 'account.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'app.js']) {
     window.eval(file === 'config.js' ? config : fs.readFileSync(path.join(mapDir, file), 'utf8'));
   }
   await wait();
