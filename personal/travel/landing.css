@@ -185,29 +185,37 @@
 }
 .ng-band .ng-lattice{margin-top:18px;max-width:180px;color:var(--ng-gold);opacity:.9}
 
-/* ---------- photo strip (staggered plate row) ---------- */
-.ng-strip{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:clamp(8px,1.6vw,20px);align-items:start;
-  padding-bottom:4px;
+/* ---------- moments: an at-a-glance destination index ---------- */
+.ng-moments-intro{
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px 24px;flex-wrap:wrap;
+  margin:0 0 20px;color:var(--ng-ink-soft);font-size:14px;line-height:1.8;
 }
-.ng-shot{margin:0;min-width:0}
-.ng-shot:nth-child(even){transform:translateY(clamp(12px,2.4vw,30px))}
-.ng-shot:nth-child(3){transform:translateY(clamp(6px,1.2vw,14px))}
-.ng-shot-media{
-  position:relative;display:block;overflow:hidden;
-  border-radius:12px;aspect-ratio:3/4;background:var(--ng-paper-deep);
+.ng-moments-intro p{margin:0}
+.ng-moments-intro > span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--ng-muted)}
+.ng-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.6vw,20px)}
+.ng-shot{
+  display:flex;flex-direction:column;min-width:0;overflow:hidden;
+  border:1px solid var(--ng-line);border-radius:12px;background:var(--ng-white);
+  color:var(--ng-ink);text-decoration:none;transition:border-color .2s,transform .2s;
 }
-.ng-shot:nth-child(2) .ng-shot-media{aspect-ratio:1}
-.ng-shot:nth-child(3) .ng-shot-media{aspect-ratio:5/6}
-.ng-shot:nth-child(4) .ng-shot-media{aspect-ratio:2/3}
+.ng-shot:hover{border-color:var(--ng-red);transform:translateY(-3px)}
+.ng-shot:focus-visible{outline:3px solid var(--ng-red);outline-offset:3px}
+.ng-shot-media{position:relative;display:block;overflow:hidden;aspect-ratio:4/3;background:var(--ng-paper-deep)}
 .ng-shot-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .ng-shot:hover .ng-shot-media img{transform:scale(1.04)}
-.ng-shot figcaption{
-  display:flex;align-items:center;gap:7px;margin-top:9px;
-  font-family:var(--ng-sans);font-weight:700;font-size:11px;color:var(--ng-ink-soft);
+.ng-shot-no{
+  position:absolute;top:10px;left:10px;padding:4px 8px;border-radius:4px;
+  background:var(--ng-white);color:var(--ng-red);font:700 10px var(--ng-grotesk);letter-spacing:.1em;
 }
-.ng-shot figcaption .an-i{color:var(--ng-red)}
+.ng-shot-copy{display:flex;flex-direction:column;align-items:flex-start;gap:6px;flex:1;padding:15px}
+.ng-shot-region{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ng-muted)}
+.ng-shot-copy strong{font-size:15px;line-height:1.5}
+.ng-shot-action{margin-top:auto;padding-top:10px;color:var(--ng-red-dark);font-size:12px;font-weight:700}
+.ng-shot-action span{display:inline-block;transition:transform .2s}
+.ng-shot:hover .ng-shot-action span{transform:translate(3px,-3px)}
+@media(prefers-reduced-motion:reduce){
+  .ng-shot,.ng-shot-media img,.ng-shot-action span{transition:none}
+}
 
 /* ---------- postcard ---------- */
 .ng-postcard{
@@ -442,14 +450,7 @@
     flex-direction:row;align-items:center;justify-content:space-between;
     padding-left:0;padding-top:14px;border-left:0;border-top:1px solid var(--ng-line-soft);
   }
-  .ng-strip{
-    grid-auto-flow:column;grid-template-columns:none;
-    grid-auto-columns:clamp(150px,44vw,200px);
-    overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;
-  }
-  .ng-shot,.ng-shot:nth-child(3){transform:none}
-  .ng-shot,.ng-shot:nth-child(2),.ng-shot:nth-child(3),.ng-shot:nth-child(4){scroll-snap-align:start}
-  .ng-shot-media{aspect-ratio:4/5}
+  .ng-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ng-lead-fig,
   .ng-lead:nth-child(2) .ng-lead-fig,
   .ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:4/3}
@@ -460,6 +461,7 @@
   .ng-callout-go{width:100%;justify-content:center}
 }
 @media(max-width:380px){
+  .ng-strip{grid-template-columns:1fr}
   .ng-lead-route{gap:6px 7px;font-size:11.5px}
   .ng-lead-route span{gap:7px}
 }

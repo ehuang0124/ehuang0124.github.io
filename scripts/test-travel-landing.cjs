@@ -119,6 +119,33 @@ function near(actual, expected, message) {
       });
       assert.deepEqual(errors, []);
 
+      // The photo index is a visible grid, not a hidden horizontal carousel.
+      const moments = page.locator('.ng-strip');
+      const shots = moments.locator('.ng-shot');
+      assert.equal(await shots.count(), 4);
+      const grid = await moments.evaluate(element => ({
+        columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        clientWidth: element.clientWidth, scrollWidth: element.scrollWidth
+      }));
+      assert.equal(grid.columns, width <= 380 ? 1 : width <= 760 ? 2 : 4);
+      assert(grid.scrollWidth <= grid.clientWidth, `${width}px moments have no hidden horizontal scroll`);
+      for (const shot of await shots.all()) {
+        assert(await shot.locator('img').getAttribute('alt'));
+        assert(await shot.locator('.ng-shot-action').isVisible());
+      }
+      if (width === 390 || width === 1440) {
+        for (const [index, region] of ['fukuoka', 'saga', 'oita', 'kumamoto'].entries()) {
+          const shot = shots.nth(index);
+          await shot.focus();
+          await Promise.all([page.waitForURL(`**/kyushu/?region=${region}#regions`), page.keyboard.press('Enter')]);
+          assert.equal(await page.locator(`.region-tab[data-region="${region}"]`).getAttribute('aria-pressed'), 'true');
+          await page.goBack();
+        }
+        await page.goto(`${base}/personal/travel/kyushu/?region=invalid#regions`);
+        assert.equal(await page.locator('.region-tab[data-region="nagasaki"]').getAttribute('aria-pressed'), 'true');
+        await page.goto(`${base}/personal/travel/`);
+      }
+
       if (width === 1024) {
         // Longer or enlarged copy must stretch the photo vertically, not sideways
         // across the text column or past the edge of the viewport.
