@@ -179,6 +179,67 @@ p { margin: 0 0 14px; }
 .photo-shizuoka .photo-mask strong { font-size: 20px; }
 .hero-figure figcaption { display: grid; gap: 3px; padding: 10px 2px 0; font-size: 11px; line-height: 1.6; color: var(--jf-muted); }
 .photo-credits a { color: inherit; text-decoration-thickness: 1px; }
+/* CTA：標題與一句話說明之後、照片之前，一進頁面就看得到、按得到 */
+.hero-cta { display: grid; justify-items: start; gap: 12px; margin: 24px 0 0; }
+.btn-hero {
+  min-height: 60px;
+  padding: 0 32px;
+  border-color: var(--jf-matcha-deep);
+  background: linear-gradient(180deg, #567D5D 0%, var(--jf-matcha) 54%, var(--jf-matcha-deep) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 14px 26px -16px rgba(53, 81, 60, .9);
+  font: 600 18px/1 var(--jf-serif);
+  letter-spacing: .06em;
+  transition: transform .18s ease, box-shadow .18s ease, background .2s ease;
+}
+.btn-hero:hover {
+  background: linear-gradient(180deg, #4E7455 0%, var(--jf-matcha-deep) 60%, #2C4533 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 18px 32px -16px rgba(53, 81, 60, .95);
+  transform: translateY(-2px);
+  color: #fff;
+}
+.btn-hero:active { transform: translateY(0); }
+.btn-hero .arrow { font-size: 19px; transition: transform .18s ease; }
+.btn-hero:hover .arrow { transform: translateX(4px); }
+
+/* 三杯茶湯的預告：裝飾用，不上文字，也不代替照片署名 */
+.hero-flight { display: flex; align-items: center; margin-left: 6px; }
+.hero-flight img {
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--jf-paper);
+  border-radius: 50%;
+  background: var(--jf-paper-2);
+  object-fit: cover;
+  object-position: center 54%;
+  box-shadow: 0 8px 18px -12px rgba(39, 53, 45, .95);
+}
+.hero-flight img + img { margin-left: -16px; }
+.hero-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--jf-line-strong);
+  color: var(--jf-muted);
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: color .18s, border-color .18s;
+}
+.hero-explore:hover { color: var(--jf-matcha-deep); border-color: var(--jf-matcha); }
+.hero-explore .arrow { font-size: 14px; }
+
+@media (min-width: 760px) {
+  /* 寬螢幕：大按鈕與三杯預告同一行，探索連結落在下一行 */
+  .hero-cta { grid-template-columns: auto auto; align-items: center; gap: 10px 22px; }
+  .hero-explore { grid-column: 1; }
+}
+@media (max-width: 560px) {
+  .hero-cta { gap: 14px; }
+  .btn-hero { width: 100%; min-height: 58px; font-size: 17px; padding: 0 24px; }
+  .hero-flight { justify-self: center; margin-left: 0; }
+  .hero-explore { justify-self: center; }
+}
+
 .hero-routes { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; font-size: 12px; color: var(--jf-muted); }
 .hero-routes a { color: var(--jf-matcha-deep); text-decoration: none; }
 .hero-routes a:hover { text-decoration: underline; }
@@ -353,11 +414,26 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 
 .result-shell { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 6px 0 0; }
 
-.result-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.result-top .eyebrow { margin: 0; }
+.result-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 8px; }
 .profile-open { flex: none; min-height: 36px; font-size: 12px; padding: 0 12px; }
-.deck-guide { margin: 5px 0 8px; font-size: 12px; color: var(--jf-muted); }
-.deck-profile { font-family: var(--jf-serif); font-size: 14px; font-weight: 600; color: var(--jf-ink); }
+.result-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0;
+  font-family: var(--jf-sans);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.rh-label {
+  font-family: var(--jf-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--jf-gold-ink);
+}
+.rh-profile { font-family: var(--jf-serif); font-size: clamp(17px, 4.4vw, 21px); font-weight: 600; color: var(--jf-ink); }
 
 /* 三張卡牌疊在同一個格子裡，只顯示目前這一張 */
 .deck { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); }
@@ -422,14 +498,18 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 }
 .pc-title { margin: 0; font-size: clamp(19px, 4.8vw, 24px); line-height: 1.3; }
 .pc-ja { margin: 2px 0 0; font-family: var(--jf-serif); font-size: 13px; color: var(--jf-ink-soft); }
-.pc-role { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--jf-gold-ink); }
-.pc-meta { margin: 4px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--jf-muted); }
-.pc-copy { margin: 7px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--jf-ink-soft); }
-.pc-reasons { margin: 8px 0 0; gap: 4px; }
-.pc-reasons li { font-size: 13.5px; line-height: 1.55; }
-.pc-tags { margin: 8px 0 0; gap: 5px; }
+/* 卡面的主角：這款茶以什麼聞名，一句話 */
+.pc-known {
+  margin: 10px 0 0;
+  padding-left: 11px;
+  border-left: 2px solid var(--jf-gold);
+  font-family: var(--jf-serif);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--jf-ink);
+}
+.pc-tags { margin: 10px 0 0; gap: 5px; }
 .pc-tags .tag { font-size: 11px; padding: 1px 7px; line-height: 1.6; }
-.pc-aroma { margin: 5px 0 0; font-size: 11.5px; }
 .pc-foot {
   display: flex;
   flex-wrap: wrap;
@@ -442,21 +522,21 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .pc-foot .btn { min-height: 40px; }
 .pc-brew { font-family: var(--jf-mono); font-size: 11.5px; letter-spacing: .02em; color: var(--jf-muted); }
 
-/* 導覽：上一款／第幾款／下一款 */
+/* 導覽：一列 —— ← ／ 1·2·3 ／ →（最後一張變成分享） */
 .deck-nav {
   flex: none;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 10px;
   padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--jf-line);
 }
 .deck-steps { display: flex; justify-content: center; gap: 6px; }
 .step-dot {
-  min-width: 38px;
-  min-height: 38px;
+  min-width: 40px;
+  min-height: 40px;
   padding: 0 8px;
   border: 1px solid var(--jf-line-strong);
   border-radius: 999px;
@@ -468,15 +548,29 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 }
 .step-dot:hover { border-color: var(--jf-matcha); color: var(--jf-matcha-deep); }
 .step-dot[aria-current="step"] { background: var(--jf-matcha); border-color: var(--jf-matcha); color: #fff; }
-.deck-nav .btn { min-height: 44px; }
-.deck-nav .btn:disabled { opacity: .42; cursor: not-allowed; }
-.deck-arrow { font-size: 15px; line-height: 1; }
-
-/* 角色說明（在「風味偏好」層裡） */
-.role-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.role-legend li { display: grid; gap: 2px; padding: 9px 12px; border: 1px solid var(--jf-line); border-radius: 8px; background: var(--jf-paper); }
-.role-legend b { font-size: 13px; color: var(--jf-matcha-deep); }
-.role-legend span { font-size: 12.5px; line-height: 1.55; color: var(--jf-ink-soft); }
+.nav-round {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--jf-line-strong);
+  border-radius: 999px;
+  background: var(--jf-card);
+  color: var(--jf-ink-soft);
+  font: 600 13.5px/1 var(--jf-sans);
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, transform .18s;
+}
+.nav-round:hover:not(:disabled) { background: var(--jf-matcha-wash); border-color: var(--jf-matcha); color: var(--jf-matcha-deep); }
+.nav-round:active:not(:disabled) { transform: translateY(1px); }
+.nav-round:disabled { opacity: .35; cursor: not-allowed; }
+.nav-round.share { background: var(--jf-matcha); border-color: var(--jf-matcha); color: #fff; }
+.nav-round.share:hover { background: var(--jf-matcha-deep); border-color: var(--jf-matcha-deep); color: #fff; }
+.deck-glyph { font-size: 17px; line-height: 1; }
 
 .sr-only {
   position: absolute;
@@ -497,8 +591,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
   .pc-media { height: auto; }
   .pc-body { padding: 20px 22px; justify-content: center; }
   .pc-title { font-size: 26px; }
-  .pc-copy { font-size: 14.5px; }
-  .deck-guide { margin-bottom: 10px; }
+  .pc-known { font-size: 16.5px; margin-top: 12px; }
 }
 
 .taste-panel { margin-top: 22px; }
@@ -514,6 +607,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .rc-region { font-size: 13px; color: var(--jf-muted); margin: 0 0 10px; }
 .rc-cultivar { margin: 0 0 10px; font-size: 12px; color: var(--jf-muted); }
 .rc-cultivar span { color: var(--jf-ink-soft); }
+.rc-known { font-family: var(--jf-serif); font-size: 15.5px; line-height: 1.7; color: var(--jf-ink); margin: 0 0 10px; }
 .rc-copy { font-size: 14.5px; color: var(--jf-ink-soft); margin: 0 0 14px; }
 
 .rc-section { margin-top: 16px; }
@@ -526,9 +620,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
   text-transform: uppercase;
   color: var(--jf-muted);
 }
-.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
-.reasons li { position: relative; padding-left: 18px; font-size: 14px; color: var(--jf-ink-soft); }
-.reasons li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; background: var(--jf-gold); transform: rotate(45deg); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
@@ -721,6 +812,23 @@ footer.site p { margin: 0 0 6px; }
 .origin-map strong { font: 600 15px/1.5 var(--jf-serif); }
 .origin-map small { color: var(--jf-muted); font-size: 12px; }
 .map-kicker { color: var(--jf-matcha-deep); font: 600 10px/1.4 var(--jf-mono); letter-spacing: .12em; }
+
+/* 結果卡上的小地圖：只回答「這茶出自日本的哪一邊」。
+   縮到 40px 寬時海岸線改用 non-scaling-stroke，標點半徑在 JS 裡放大。 */
+.origin-map.mini {
+  gap: 11px;
+  margin: 12px 0 0;
+  padding: 8px 11px;
+  border-color: var(--jf-line);
+  background: var(--jf-paper);
+}
+.origin-map.mini .map-art { flex: 0 0 40px; height: 46px; }
+.origin-map.mini .map-land { stroke-width: 1; vector-effect: non-scaling-stroke; }
+.origin-map.mini .map-pin { stroke-width: 1; vector-effect: non-scaling-stroke; }
+.origin-map.mini figcaption { gap: 1px; min-width: 0; }
+.origin-map.mini .map-kicker { font-size: 9px; letter-spacing: .1em; }
+.origin-map.mini strong { font-size: 13.5px; line-height: 1.45; }
+.map-meta { color: var(--jf-muted); font-size: 11.5px; line-height: 1.5; }
 .question h2:focus { outline: none; }
 @media (max-width: 520px) {
   .tea-collage { height: 400px; grid-template-columns: 1fr 1fr; grid-template-rows: 1.2fr 1fr; gap: 5px; }
@@ -832,30 +940,31 @@ body[data-view="quiz"] .quiz-nav {
 /* ---------- 結果頁：窄螢幕與矮視窗的退讓 ---------- */
 @media (max-width: 430px) {
   .pc-body { padding: 11px 14px 12px; }
-  .deck-guide { font-size: 11.5px; }
-  .deck-nav .btn { padding: 0 14px; }
-  .step-dot { min-width: 36px; min-height: 36px; }
+  .pc-known { font-size: 14px; line-height: 1.6; }
+  .nav-round { min-width: 44px; min-height: 44px; padding: 0 12px; }
+  .step-dot { min-width: 38px; min-height: 38px; }
 }
-@media (max-width: 380px) {
-  /* 只留箭頭：按鈕仍有 aria-label，字寬讓給卡牌 */
-  .deck-btn-text { display: none; }
-  .deck-nav .btn { min-width: 48px; min-height: 44px; padding: 0 12px; }
+@media (max-width: 360px) {
+  /* 320px 也要放得下一列導覽：步進鈕收窄，分享只留箭頭（仍有 aria-label） */
+  .step-dot { min-width: 34px; padding: 0 5px; }
+  .nav-round { min-width: 42px; padding: 0 10px; }
+  .nav-round.share .deck-btn-text { display: none; }
 }
 @media (max-height: 760px) {
-  /* 矮一點的視窗先收掉描述句：推薦原因才是要讀的內容 */
-  body[data-view="result"] .pc-copy { display: none; }
+  /* 矮視窗先收風味標籤與插畫高度：「以什麼聞名」與產地圖要留著 */
+  .pc-tags { display: none; }
   .pc-media { height: clamp(96px, 21svh, 170px); }
   .pc-foot { padding-top: 10px; }
 }
 @media (max-height: 620px) {
   body[data-view="result"] .crumbs { display: none; }
-  body[data-view="result"] .deck-guide { display: none; }
-  body[data-view="result"] .pc-role { display: none; }
-  .pc-media { height: 96px; }
+  .pc-media { height: 84px; }
+  .origin-map.mini { margin-top: 8px; padding: 6px 9px; }
   .pc-foot { padding-top: 8px; }
 }
-@media (min-width: 760px) and (max-height: 620px) {
-  body[data-view="result"] .pc-copy { display: block; }
+@media (min-width: 760px) and (max-height: 760px) {
+  /* 桌機雙欄有橫向空間，把風味標籤放回來 */
+  .pc-tags { display: flex; }
   .pc-media { height: auto; }
 }
 /* flex 置中加上捲動時，內容會有一小段滾不到：矮視窗改成由上往下排 */

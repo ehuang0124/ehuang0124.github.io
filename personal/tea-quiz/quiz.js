@@ -23,11 +23,11 @@ export const QUESTIONS = [
   {
     id: 'q2', key: 'flavour', zh: '第一口，最想嚐到哪種味道？', en: 'What would you like the first sip to taste like?',
     options: [
-      { id: 'sweet', zh: '清甜，慢慢回甘', en: 'Clean sweetness that lingers', subZh: '不用加糖，也有舒服的甜韻', subEn: 'A gentle sweetness without adding sugar', target: { sweetness: 4, umami: 2 }, reasonDim: 'sweetness' },
-      { id: 'umami', zh: '鮮味，像一口清湯', en: 'Savoury umami, like a clear broth', subZh: '茶的鮮與甘，比苦澀更明顯', subEn: 'Savouriness and sweetness ahead of bitterness', target: { umami: 5, sweetness: 3 }, reasonDim: 'umami' },
-      { id: 'honeyed', zh: '果蜜般的甜韻', en: 'A fruit-and-honey-like finish', subZh: '甜香柔和，適合配一塊點心', subEn: 'Soft sweet aromatics, lovely beside a small sweet', target: { sweetness: 5, umami: 2, roast: 1 }, reasonDim: 'sweetness' },
-      { id: 'toasty', zh: '焙炒的溫暖滋味', en: 'Warm, toasted flavour', subZh: '想要炒香，而不是青草味', subEn: 'Toasty warmth rather than grassy freshness', target: { roast: 4, sweetness: 2, umami: 2 }, reasonDim: 'roast' },
-      { id: 'balanced', zh: '甜、鮮、茶味都有一點', en: 'A balance of sweetness, umami and tea', subZh: '沒有哪一種味道特別搶戲', subEn: 'No single note taking all the attention', target: { sweetness: 3, umami: 3, roast: 2 }, reasonDim: 'sweetness' }
+      { id: 'sweet', zh: '清甜，慢慢回甘', en: 'Clean sweetness that lingers', subZh: '不用加糖，也有舒服的甜韻', subEn: 'A gentle sweetness without adding sugar', target: { sweetness: 4, umami: 2 } },
+      { id: 'umami', zh: '鮮味，像一口清湯', en: 'Savoury umami, like a clear broth', subZh: '茶的鮮與甘，比苦澀更明顯', subEn: 'Savouriness and sweetness ahead of bitterness', target: { umami: 5, sweetness: 3 } },
+      { id: 'honeyed', zh: '果蜜般的甜韻', en: 'A fruit-and-honey-like finish', subZh: '甜香柔和，適合配一塊點心', subEn: 'Soft sweet aromatics, lovely beside a small sweet', target: { sweetness: 5, umami: 2, roast: 1 } },
+      { id: 'toasty', zh: '焙炒的溫暖滋味', en: 'Warm, toasted flavour', subZh: '想要炒香，而不是青草味', subEn: 'Toasty warmth rather than grassy freshness', target: { roast: 4, sweetness: 2, umami: 2 } },
+      { id: 'balanced', zh: '甜、鮮、茶味都有一點', en: 'A balance of sweetness, umami and tea', subZh: '沒有哪一種味道特別搶戲', subEn: 'No single note taking all the attention', target: { sweetness: 3, umami: 3, roast: 2 } }
     ]
   },
   {
@@ -171,47 +171,8 @@ function diversify(ranked, prefs, count = 3) {
   return picks;
 }
 
-const DIM_WORD = {
-  sweetness: { zh: '甘甜', en: 'sweetness' }, umami: { zh: '鮮味', en: 'umami' },
-  roast: { zh: '焙香', en: 'roast' }, astringency: { zh: '澀感', en: 'astringency' }
-};
-function optionFor(id, answers) {
-  const q = QUESTIONS.find((item) => item.id === id);
-  return q?.options.find((o) => o.id === answers[id]);
-}
-function reasonFor(id, tea, answers, lang) {
-  const option = optionFor(id, answers);
-  if (!option) return null;
-  const word = option[lang];
-  if (id === 'q1') {
-    const notes = tea.aromaFamily.map((f) => AROMA_LABELS[f][lang]).join(lang === 'zh' ? '、' : ', ');
-    return lang === 'zh' ? `你被「${word}」吸引；這款以${notes}為主要香氣線索。` : `“${word}” caught your attention; this tea’s aroma cues are ${notes}.`;
-  }
-  if (id === 'q2') {
-    const dim = option.reasonDim;
-    return lang === 'zh' ? `第一口你想要「${word}」；這款的${DIM_WORD[dim][lang]}標籤是 ${tea.taste[dim]}／5。` : `For your first sip you chose “${word}”; its editorial ${DIM_WORD[dim][lang]} score is ${tea.taste[dim]}/5.`;
-  }
-  if (id === 'q3') return lang === 'zh'
-    ? `你喜歡「${word}」；這款茶湯厚度 ${tea.taste.body}／5、稠滑感 ${tea.taste.viscosity}／5。`
-    : `You chose “${word}”; this tea is ${tea.taste.body}/5 for body and ${tea.taste.viscosity}/5 for silky texture.`;
-  if (id === 'q4') return lang === 'zh'
-    ? `你希望收尾「${word}」；這款澀感標籤是 ${tea.taste.astringency}／5。`
-    : `You wanted a finish that feels “${word}”; its editorial astringency score is ${tea.taste.astringency}/5.`;
-  return null;
-}
-function reasonGap(id, tea, option) {
-  if (id === 'q1') return 1 - option.families.filter((f) => tea.aromaFamily.includes(f)).length / option.families.length;
-  if (id === 'q2') return Math.abs(tea.taste[option.reasonDim] - option.target[option.reasonDim]) / 5;
-  if (id === 'q3') return (Math.abs(tea.taste.body - option.target.body) + Math.abs(tea.taste.viscosity - option.target.viscosity)) / 10;
-  return Math.abs(tea.taste.astringency - option.target.astringency) / 5;
-}
-export function buildReasons(tea, prefs, answers, lang = 'zh') {
-  const reasons = ['q1', 'q2', 'q3', 'q4'].filter((id) => optionFor(id, answers))
-    .sort((a, b) => reasonGap(a, tea, optionFor(a, answers)) - reasonGap(b, tea, optionFor(b, answers)))
-    .slice(0, 2).map((id) => ({ dim: id, text: reasonFor(id, tea, answers, lang) }));
-  reasons.push({ dim: 'method', text: methodNote(tea, prefs.method, lang) });
-  return reasons;
-}
+/* 結果卡不解釋「為什麼推薦這款」：貼近理由與分數對照已整段移除。
+ * 剩下唯一與答案有關的句子是 methodNote —— 依選定的喝法給這款茶的沖泡方式。 */
 export function methodNote(tea, method, lang = 'zh') {
   const b = tea.brew;
   if (b.method === 'label') return lang === 'zh' ? '你選了自己的喝法；這款請依商品包裝標示沖泡。' : 'Follow the product label for your chosen way of drinking.';
@@ -255,7 +216,7 @@ export function recommend(input = {}, lang = 'zh') {
   const results = diversify(ranked, prefs).map((row, index) => ({
     ...row,
     role: index === 0 ? 'top1' : index === 1 ? 'top2' : row.tea.family === ranked[0].tea.family ? 'top3' : 'explore',
-    reasons: buildReasons(row.tea, prefs, answers, lang), confidence: row.tea.confidence
+    brewNote: methodNote(row.tea, prefs.method, lang), confidence: row.tea.confidence
   }));
   return { empty: false, prefs, profile: profileFor(prefs), hardFiltered, results, ranked: ranked.map((r) => ({ id: r.tea.id, score: r.score })) };
 }
