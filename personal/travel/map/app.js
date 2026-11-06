@@ -5,7 +5,8 @@
   const source = window.TravelAtlasPlaces;
   const stateSource = window.TravelAtlasStates;
   const okinawa = window.TravelAtlasOkinawa;
-  if (!world || !source || !stateSource || !okinawa) return;
+  const palette = window.TravelAtlasPalette;
+  if (!world || !source || !stateSource || !okinawa || !palette) return;
 
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -112,6 +113,15 @@
     for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, String(value));
     return element;
   }
+  // Every map shape and index row carries its continent hue and its tone, so
+  // CSS only has to say what a tone looks like.
+  function paint(element, place) {
+    const colour = colourOf(place);
+    if (!element || !colour) return element;
+    element.dataset.family = colour.family;
+    element.dataset.tone = String(colour.tone);
+    return element;
+  }
   function slug(text) { return text.normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
   const catalogue = {
@@ -186,8 +196,45 @@
     na:catalogue.na,
     jp:catalogue.jp
   });
+  // Map colour: one hue per continent, four tones inside each hue, so touching
+  // countries and neighbouring city pins never repeat a colour. The base atlas
+  // is solved from a fixed order, so a place keeps its colour every visit.
+  const colours = new Map();
+  function colourOf(place) { return place && colours.get(place.key) || null; }
+  // The atlas layers use travel regions (`na-us-west`, `jp` …), so each place
+  // is reduced to its continent before it is coloured.
+  function continentOf(place) {
+    if (place.category === 'na') return 'NA';
+    if (place.category === 'jp' || place.category === 'okinawa') return 'AS';
+    return place.region;
+  }
+  function colourSolve() {
+    colours.clear();
+    const point = place => ({ key:place.key, region:continentOf(place), x:place.x, y:place.y });
+    const solved = palette.atlas({
+      countries:world.countries,
+      states:stateSource,
+      cities:catalogue.cities.filter(place => !place.custom).map(point),
+      markers:[...catalogue.na, ...catalogue.jp, ...catalogue.okinawa].filter(place => !place.custom).map(point)
+    });
+    for (const [key, colour] of solved) colours.set(key, colour);
+  }
+  // A custom city takes the tone that is missing from the pins beside it.
+  function colourCustom(city) {
+    const near = catalogue.cities.filter(place => place !== city && place.region === city.region && !place.custom && Math.hypot(place.x - city.x, place.y - city.y) < 26);
+    const used = new Set(near.map(place => colourOf(place)?.tone).filter(tone => tone !== undefined));
+    let tone = 0;
+    while (used.has(tone) && tone < palette.TONES - 1) tone++;
+    const continent = continentOf(city);
+    colours.set(city.key, { family:palette.hue(continent), hue:palette.hue(continent), tone });
+  }
+  function colourCustomCities() {
+    catalogue.cities.filter(place => place.custom).forEach(colourCustom);
+  }
+  colourSolve();
   let data = loadState();
   data.customCities.forEach(city => catalogue.cities.push(cityFromCustom(city)));
+  colourCustomCities();
   function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); return true; }
     catch { $('#backup-feedback').textContent = '無法儲存；請匯出備份。'; return false; }
@@ -399,6 +446,7 @@
     $('#place-code').hidden = !code;
     $('#place-en').textContent = place.en === place.zh ? '' : place.en.toUpperCase();
     $('#place-location').textContent = areaLabel(place);
+    paint($('.place-heading'), place);
     const legacyNote = $('#legacy-note');
     legacyNote.hidden = place.category !== 'okinawa' || !legacyOkinawaVisits().includes(place.id);
     legacyNote.textContent = legacyNote.hidden ? '' : '舊版沖繩清單曾標記或預設為去過（未記錄月份）。請確認後選擇實際到訪月份，再蓋章保存。';
@@ -590,10 +638,13 @@
       const button = makeElement('button', `place-item${isStamped(place) ? ' done' : ''}`);
       button.type = 'button';
       button.dataset.place = place.id;
+      paint(button, place);
       if (selectedPlace()?.id === place.id) button.setAttribute('aria-current', 'true');
       button.append(makeElement('span', 'item-index', String(index + 1).padStart(3, '0')));
       const info = makeElement('span', 'item-info');
       const name = makeElement('strong', 'item-place-name');
+      name.append(makeElement('i', 'item-tone'));
+      name.lastElementChild.setAttribute('aria-hidden', 'true');
       const flag = flagImage(place);
       if (flag) name.append(flag);
       name.append(document.createTextNode(place.zh));
@@ -677,6 +728,7 @@
   const countryPaths = new Map();
   world.countries.forEach(country => {
     const path = makeSvg('path', { d:country.d, class:'map-country', 'data-id':country.id });
+    paint(path, countryById.get(country.id));
     path.addEventListener('pointerenter', event => {
       if (!path.classList.contains('selectable')) return;
       showTooltip(countryById.get(country.id), event);
@@ -689,6 +741,7 @@
   const statePaths = new Map();
   stateSource.forEach(state => {
     const path = makeSvg('path',{d:state.d,class:'map-us-state','data-id':state.id});
+    paint(path, catalogue.na.find(place => place.id === state.id));
     path.addEventListener('pointerenter',event => showTooltip(catalogue.na.find(place => place.id === state.id),event));
     path.addEventListener('pointermove',event => showTooltip(catalogue.na.find(place => place.id === state.id),event));
     path.addEventListener('pointerleave',hideTooltip);
@@ -729,6 +782,7 @@
       // the map itself so visited countries look collected, not just coloured.
       for (const place of catalogue.countries.filter(p => matchesRegion(p) && isStamped(p))) {
         const mark = makeSvg('g',{class:'country-imprint','aria-hidden':'true'});
+        paint(mark, place);
         mark.append(makeSvg('circle',{class:'imprint-outer',cx:place.x,cy:place.y,r:7/scale}));
         mark.append(makeSvg('circle',{class:'imprint-inner',cx:place.x,cy:place.y,r:4.6/scale}));
         mark.append(makeSvg('circle',{class:'imprint-dot',cx:place.x,cy:place.y,r:1.4/scale}));
@@ -741,6 +795,7 @@
       for (const place of points) {
         // Keep circles small on screen at every zoom, but make their pointer target comfortable.
         const group = makeSvg('g', {class:`map-point${isStamped(place) ? ' done' : ''}${selectedPlace().id === place.id ? ' selected' : ''}`, 'data-id':place.id});
+        paint(group, place);
         group.append(makeSvg('circle',{class:'point-hit',cx:place.x,cy:place.y,r:14/scale}));
         group.append(makeSvg('circle',{class:'point-halo',cx:place.x,cy:place.y,r:radius*2.5}));
         group.append(makeSvg('circle',{class:'point-stamp',cx:place.x,cy:place.y,r:radius*1.65}));
@@ -1020,7 +1075,9 @@
     const raw = normalizedCustom({ id:`custom-${globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`, en:name, iso, lat:latText ? Number(latText) : null, lon:lonText ? Number(lonText) : null });
     if (!raw) {error.textContent = '座標不正確，緯度需在 -90～90、經度需在 -180～180。';return;}
     data.customCities.push(raw);
-    catalogue.cities.push(cityFromCustom(raw));
+    const added = cityFromCustom(raw);
+    catalogue.cities.push(added);
+    colourCustom(added);
     saveState();
     if (cloudMode() && signedIn()) {
       atlasAccount.cities.push({ id:raw.id, userId:atlasAccount.user.id, en:raw.en, iso:raw.iso, lat:raw.lat, lon:raw.lon });
@@ -1071,7 +1128,7 @@
       if (raw?.version !== 1 || !raw.visits || !Array.isArray(raw.customCities)) throw new Error('不是這張地圖的戳章備份，或版本不相容。');
       const incoming = cleanState(raw);
       const existingIds = new Set(data.customCities.map(city => city.id));
-      incoming.customCities.forEach(city => {if (!existingIds.has(city.id)) {data.customCities.push(city);catalogue.cities.push(cityFromCustom(city));}});
+      incoming.customCities.forEach(city => {if (!existingIds.has(city.id)) {data.customCities.push(city);const added = cityFromCustom(city);catalogue.cities.push(added);colourCustom(added);}});
       for (const [key,dates] of Object.entries(incoming.visits)) data.visits[key] = [...new Set([...(data.visits[key] || []),...dates])].sort();
       const saved = saveState();
       const imported = Object.values(incoming.visits).reduce((sum,dates)=>sum+dates.length,0);
@@ -1336,6 +1393,9 @@
       });
     }
     catalogue.cities = cities;
+    // Custom cities come and go with the traveller, so their tones are solved
+    // again each time the list is rebuilt.
+    colourCustomCities();
   }
   // Local records from before sign-in are uploaded once, then merged by month.
   function adoptLocalOnce() {
