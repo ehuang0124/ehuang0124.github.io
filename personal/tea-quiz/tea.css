@@ -975,3 +975,20 @@ body[data-view="quiz"] .quiz-nav {
 @media (min-width: 760px) {
   .pc-media { height: auto; }
 }
+
+/* Results show the complete detail directly; the card itself scrolls vertically. */
+.deck { touch-action: pan-y; }
+.result-detail { display: block; padding: 18px; }
+.result-detail .pc-role { display: block !important; margin-bottom: 14px; }
+.result-detail .sheet-media { margin-top: 14px; }
+.result-rank { margin: 0 0 8px; color: var(--jf-matcha-deep); font: 600 12px/1.4 var(--jf-mono); }
+.deck-indicators { display: flex; justify-content: center; gap: 7px; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); }
+.deck-indicator { width: 7px; height: 7px; border-radius: 50%; background: var(--jf-line-strong); }
+.deck-indicator.is-active { background: var(--jf-matcha); }
+@media (min-width: 760px) {
+  .profile-card { display: flex; }
+  .result-detail { padding: 22px; }
+}
+@media (max-height: 620px) {
+  body[data-view="result"] .deck-guide { display: block; }
+}
