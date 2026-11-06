@@ -889,3 +889,4 @@ footer b{font-family:var(--ng-sans);font-weight:500;font-size:14px;letter-spacin
   html{scroll-behavior:auto}
   *{transition:none!important;animation:none!important}
 }
+.stamp-link-strip{padding:15px 0;background:#e7f2ef;color:#244b49;font-size:13px}.stamp-link-strip a{font-weight:700;margin-left:12px;text-decoration:underline;text-underline-offset:3px}

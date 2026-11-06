@@ -4,7 +4,8 @@
   const world = window.TravelAtlasWorld;
   const source = window.TravelAtlasPlaces;
   const stateSource = window.TravelAtlasStates;
-  if (!world || !source || !stateSource) return;
+  const okinawa = window.TravelAtlasOkinawa;
+  if (!world || !source || !stateSource || !okinawa) return;
 
   const $ = selector => document.querySelector(selector);
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -20,7 +21,7 @@
   const ADOPTED_KEY = userId => `eva.travel.atlas.adopted.${userId}`;
   let friendSelection = null;
   let companionDraft = new Map();
-  const CATEGORY_ORDER = ['countries', 'cities', 'na', 'jp'];
+  const CATEGORY_ORDER = ['countries', 'cities', 'na', 'jp', 'okinawa'];
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
   const CATEGORIES = {
@@ -31,7 +32,8 @@
       {id:'na-us-west',label:'美國・西岸'}, {id:'na-us-mountain',label:'美國・山地沙漠'}, {id:'na-us-midwest',label:'美國・中西部'}, {id:'na-us-east',label:'美國・東岸南方'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'},
       {id:'na-ca-pacific',label:'加拿大・太平洋沿岸'}, {id:'na-ca-rockies',label:'加拿大・洛磯草原'}, {id:'na-ca-central',label:'加拿大・安大略魁北克'}, {id:'na-ca-atlantic',label:'加拿大・大西洋沿岸'}, {id:'na-ca-north',label:'加拿大・北方領地'}
     ], initial:'yell' },
-    jp: { title:'日本國家公園', map:'04 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' }
+    jp: { title:'日本國家公園', map:'04 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
+    okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', description:'從本島到離島，尋找屬於你的沖繩記憶。', note:'地點座標為概略位置；離島可由分區或清單定位。', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
   };
   const WORLD_AREA = { AS:[24,-15,179,78], EU:[-25,29,50,75], AF:[-25,-37,54,38], NA:[-170,0,-50,83], SA:[-85,-56,-30,14], OC:[94,-52,180,16], AN:[68,-58,82,-49] };
   const collator = new Intl.Collator('zh-Hant', { numeric:true });
@@ -125,7 +127,8 @@
       ...stateSource.map(state => ({ ...state, region:`na-us-${state.region}`, nation:'US', category:'na', key:`us:${state.id}`, where:state.abbr, isState:true })),
       ...source.ca.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region:`na-ca-${region}`,where,lat,lon,nation:'CA',category:'na',key:`ca:${id}`,...point(lat,lon) }))
     ],
-    jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) }))
+    jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) })),
+    okinawa: okinawa.places.map(p => ({ ...p, en:p.ja, where:p.city, lon:p.lng, nation:'JP', category:'okinawa', key:`okinawa:${p.id}`, ...point(p.lat,p.lng) }))
   };
   // Stable, collision-free catalogue serials make every saved destination—including
   // every park and custom city—receive a visibly distinct engraved cartouche.
@@ -278,19 +281,21 @@
   }
   function updateCategoryUI() {
     const spec = CATEGORIES[category];
-    document.querySelectorAll('.category-tab').forEach(tab => {
-      const active = tab.dataset.category === category;
-      tab.setAttribute('aria-selected', String(active));
-      tab.tabIndex = active ? 0 : -1;
+    document.querySelectorAll('.collection-choice').forEach(choice => {
+      if (choice.dataset.category === category) choice.setAttribute('aria-current', 'true');
+      else choice.removeAttribute('aria-current');
     });
-    $('#atlas-panel').setAttribute('aria-labelledby', `tab-${category}`);
+    document.body.dataset.atlasTheme = category;
+    $('#page-title').textContent = spec.title;
+    $('.intro .eyebrow').textContent = spec.map + ' ・ STAMP ATLAS';
+    $('.intro-lede').textContent = spec.description;
     $('#board-title').textContent = spec.title;
     $('#map-caption').textContent = spec.map;
     $('#directory-description').textContent = spec.description;
     $('#index-note').textContent = spec.note;
     $('#add-city').hidden = category !== 'cities';
     $('#state-legend').hidden = category !== 'na' || region === 'ca' || region.startsWith('na-ca-') || region === 'na-us-territories';
-    const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : '點選國家公園標記';
+    const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : category === 'okinawa' ? '點選沖繩地點標記' : '點選國家公園標記';
     svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
   }
@@ -298,6 +303,7 @@
     if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
     if (place.category === 'countries') return `${REGION_NAMES[place.region] || '其他地區'} · 國家與地區`;
     if (place.category === 'cities') return `${REGION_NAMES[place.region] || '世界'} · ${place.country}${place.approximate ? ' · 位置近似' : ''}`;
+    if (place.category === 'okinawa') return `沖繩 · ${okinawa.regions[place.region].zh} · ${place.city}`;
     if (place.category === 'na') {
       const names = String(place.where || '').split('·').map(code => code.trim()).filter(Boolean).map(code => place.nation === 'US' ? (usStateNames.get(code) || code) : (canadaAdminNames[code] || code));
       return `${place.nation === 'US' ? '美國國家公園' : '加拿大國家公園'} · ${names.join('、')}`;
@@ -338,6 +344,16 @@
     const kind = $('#plate-kind');
     if (kind) kind.textContent = motif.kind;
   }
+  // The old checklist had no dates. Preserve both saved lists and its original
+  // preselected defaults as reminders, never as fabricated month-precision stamps.
+  function legacyOkinawaVisits() {
+    try {
+      const raw = localStorage.getItem('okinawa-visited-v2');
+      if (raw === null) return okinawa.legacyDefaults || [];
+      const saved = JSON.parse(raw);
+      return Array.isArray(saved) ? saved : [];
+    } catch { return []; }
+  }
   function renderDetail() {
     const place = selectedPlace();
     if (!place) return;
@@ -355,6 +371,9 @@
     $('#place-code').hidden = !code;
     $('#place-en').textContent = place.en === place.zh ? '' : place.en.toUpperCase();
     $('#place-location').textContent = areaLabel(place);
+    const legacyNote = $('#legacy-note');
+    legacyNote.hidden = place.category !== 'okinawa' || !legacyOkinawaVisits().includes(place.id);
+    legacyNote.textContent = legacyNote.hidden ? '' : '舊版沖繩清單曾標記或預設為去過（未記錄月份）。請確認後選擇實際到訪月份，再蓋章保存。';
     const face = $('#stamp-face');
     face.classList.toggle('pending', stamps.length === 0);
     face.classList.toggle('long-name', [...place.zh].length > 6);
@@ -518,6 +537,9 @@
         name.append(code);
       }
       info.append(name, makeElement('small', '', place.en === place.zh ? place.country : place.en));
+      if (place.category === 'okinawa') {
+        if (legacyOkinawaVisits().includes(place.id)) info.append(makeElement('small', 'legacy-label', '舊清單：曾標記或預設（月份未記錄）'));
+      }
       button.append(info, makeElement('span', 'item-status', isStamped(place) ? '✳' : '·'));
       button.lastElementChild.setAttribute('aria-hidden', 'true');
       fragment.append(button);
@@ -559,6 +581,7 @@
     if (category === 'na' && region === 'us') return viewFromGeo([-127,23,-66,52],12,190);
     if (category === 'na' && region === 'ca') return viewFromBounds(countryByIso.get('CA').bbox,13,200);
     if (category === 'jp' && region === 'all') return viewFromPoints(catalogue.jp,11,115);
+    if (category === 'okinawa') { const points = catalogue.okinawa.filter(matchesRegion); return viewFromPoints(points, 2, 12); }
     const points = catalogue[category].filter(matchesRegion);
     if (category === 'na' && region === 'na-us-territories') return viewAround(selectedPlace().x,selectedPlace().y,100);
     return points.length ? viewFromPoints(points,category === 'jp' ? 9 : 13,category === 'jp' ? 40 : 75) : {x:0,y:0,w:1000,h:520};
@@ -629,7 +652,7 @@
       path.classList.toggle('outside', category === 'countries' && !allowed);
       path.classList.toggle('done', category === 'countries' && isStamped(place));
       path.classList.toggle('selected', category === 'countries' && selectedPlace()?.id === country.id);
-      path.classList.toggle('relevant', category === 'na' && (country.iso === 'US' || country.iso === 'CA') || category === 'jp' && country.iso === 'JP');
+      path.classList.toggle('relevant', category === 'na' && (country.iso === 'US' || country.iso === 'CA') || (category === 'jp' || category === 'okinawa') && country.iso === 'JP');
     });
   }
   function renderMarkers() {
@@ -783,13 +806,14 @@
     setView(view.w === 1000 ? {x:0,y:0,w:1000,h:520} : viewAround(centerX,centerY,view.w));
     renderMarkers(); // Pixel scale also changes when the SVG itself is resized.
   });
-  document.querySelectorAll('.category-tab').forEach(tab => {
-    tab.addEventListener('click',() => chooseCategory(tab.dataset.category));
-    tab.addEventListener('keydown',event => {
-      const index = CATEGORY_ORDER.indexOf(tab.dataset.category);
-      const next = event.key === 'ArrowRight' ? (index+1)%CATEGORY_ORDER.length : event.key === 'ArrowLeft' ? (index+CATEGORY_ORDER.length-1)%CATEGORY_ORDER.length : event.key === 'Home' ? 0 : event.key === 'End' ? CATEGORY_ORDER.length-1 : null;
-      if (next !== null) {event.preventDefault();chooseCategory(CATEGORY_ORDER[next],true);}
-    });
+  const menu = $('#collection-menu');
+  const openMenu = () => { if (!menu.open) { menu.showModal(); $('#collection-menu-button').setAttribute('aria-expanded','true'); } };
+  menu.addEventListener('close', () => { $('#collection-menu-button').setAttribute('aria-expanded','false'); });
+  $('#collection-menu-button').addEventListener('click', openMenu);
+  $('#collection-inline').addEventListener('click', openMenu);
+  $('#collection-menu-close').addEventListener('click', () => menu.close());
+  document.querySelectorAll('.collection-choice').forEach(choice => {
+    choice.addEventListener('click', () => { chooseCategory(choice.dataset.category); menu.close(); $('#collection-menu-button').focus(); });
   });
   $('#region-controls').addEventListener('click',event => {
     const button = event.target.closest('button[data-region]');
@@ -1593,7 +1617,8 @@
     renderFriends();
   });
 
-  chooseCategory('countries');
+  const requestedCategory = new URLSearchParams(location.search).get('category');
+  chooseCategory(Object.hasOwn(CATEGORIES, requestedCategory) ? requestedCategory : 'countries');
   renderAccount();
   // On a signed-out visit, show the browser's own records while the cloud loads.
   if (account) account.init().then(() => {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>沖縄・島與海的標記｜互動地圖</title>
 <meta name="theme-color" content="#ffffff">
-<meta name="description" content="沖繩互動地圖：從那霸的久米村、福州園，到山原的邊戶岬與八重山的離島，把去過與想去的地方一一標記起來。">
+<meta name="description" content="沖繩互動地圖：從那霸的久米村、福州園，到山原的邊戶岬與八重山的離島，探索本島與離島的景點和行程。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,7 @@
       <a href="#plan">2027 行程</a>
       <a href="#list">清單</a>
     </nav>
-    <div class="counter" id="topbar-count"><span>已走過</span><b id="cnt-top">0</b><span>/ 49</span></div>
+    <a class="mini" href="/personal/travel/map/?category=okinawa">沖繩戳章 ↗</a>
   </div>
 </header>
 
@@ -76,30 +76,14 @@
       <div><b>1/7 – 1/10</b><span>四天三夜</span></div>
     </div>
     <div class="hero-cta">
-      <a class="btn solid" href="#atlas">開始標記 <span aria-hidden="true">↓</span></a>
+      <a class="btn solid" href="#atlas">探索地圖 <span aria-hidden="true">↓</span></a>
       <a class="btn" href="#plan">2027 行程 <span aria-hidden="true">↗</span></a>
     </div>
   </div>
   <div class="hero-rail" aria-hidden="true"><span class="mag-tate">島と海の記録・沖縄</span></div>
 </section>
 
-<div class="strip">
-  <div class="wrap strip-in">
-    <div>
-      <div class="big"><span id="cnt-main">0</span><small> / 49 已走過</small></div>
-    </div>
-    <div>
-      <div class="bar"><i id="bar-fill"></i></div>
-      <div class="legend">
-        <span>點地圖或清單即可蓋章</span>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="mini" id="copy-list">複製我的清單</button>
-      <button class="mini" id="reset-all">重設全部</button>
-    </div>
-  </div>
-</div>
+<div class="stamp-link-strip"><div class="wrap">沖繩的旅行戳章已搬到世界蓋章地圖。 <a href="/personal/travel/map/?category=okinawa">前往沖繩專區 ↗</a></div></div>
 
 <main>
   <section id="regions" class="section-start">
@@ -118,11 +102,7 @@
           <p class="eyebrow"><span class="no">02</span>INTERACTIVE ATLAS</p>
           <h2 class="section-title">地圖</h2>
         </div>
-        <div class="chip-row">
-          <button class="fchip" data-filter="all" aria-pressed="true">全部</button>
-          <button class="fchip" data-filter="visited" aria-pressed="false">只看去過的</button>
-          <button class="fchip" data-filter="unvisited" aria-pressed="false">還沒去的</button>
-        </div>
+
       </div>
 
       <div class="atlas-body">
@@ -148,8 +128,7 @@
               <button id="zoom-out" aria-label="縮小">－</button>
             </div>
             <div class="map-legend">
-              <div><i></i>還沒去過</div>
-              <div><i class="v"></i>已蓋章</div>
+              <div><i></i>景點</div>
               <div><i class="p"></i>2027 行程</div>
             </div>
             <div class="map-credit">海岸線：地球地図日本（国土地理院）</div>
@@ -179,7 +158,7 @@
     <div class="wrap">
       <p class="eyebrow"><span class="no">04</span>FULL LIST</p>
       <h2 class="section-title">完整清單</h2>
-      <p class="section-lede">點列蓋章；按「地圖」跳到那個位置。</p>
+      <p class="section-lede">點選地點，在地圖上查看介紹。</p>
       <div class="list-tools">
         <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋地名、市町村或關鍵字" aria-label="搜尋地點"></label>
         <span class="legend" id="list-count"></span>
@@ -365,27 +344,11 @@ const PLAN = [
    extra:['縣廳前／Palette Kumoji／國際通／牧志','午餐：琉球新麵 通堂（小禄本店）','之後前往機場；⚠️ 航班時間待補']}
 ];
 
-/* 之後可把確定的名單填在這裡，第一次開啟就會是已蓋章狀態 */
-const DEFAULT_VISITED = [
-  /* 北部 */
-  'churaumi','kouri','nakijin','sesoko','manza','ryukyumura','maeda','nedo','ie',
-  /* 中部 */
-  'zanpa','zakimi','yachimun','american','kadena','nakagusuku','katsuren','kaichu','urasoe','nishihara',
-  /* 南部・那霸 */
-  'shuri','kokusai','kencho','airport','senaga','heiwa','himeyuri','sefa','chinen','gyokusendo',
-  /* 離島：只去過座間味 */
-  'zamami'
-];
-
 /* ================= state ================= */
-const KEY='okinawa-visited-v2';
+// The old browser-only visit list remains untouched for reference in Stamp Atlas.
 const byId = {};
 PLACES.forEach(p=>byId[p.id]=p);
-let visited = new Set();
-try{
-  const raw=localStorage.getItem(KEY);
-  visited = raw ? new Set(JSON.parse(raw)) : new Set(DEFAULT_VISITED);
-}catch(e){ visited = new Set(DEFAULT_VISITED); }
+const visited = new Set();
 
 let regionFilter='all';
 let visitFilter='all';
@@ -774,8 +737,8 @@ function renderDetail(){
   if(!p){
     box.innerHTML = '<div class="kicker">選擇一個標記</div>'
       + '<h3 style="font-size:24px">還沒有選地點</h3>'
-      + '<p class="empty-note">白點還沒去過，紅點已蓋章。點一個標記，看介紹並蓋章。</p>'
-      + '<div class="actions"><a class="gbtn" href="#list">看完整清單 ↓</a><span class="gbtn" style="cursor:default;border-style:dashed">已走過 '+visited.size+' 個</span></div>';
+      + '<p class="empty-note">點一個標記，看看這裡的介紹。</p>'
+      + '<div class="actions"><a class="gbtn" href="#list">看完整清單 ↓</a></div>';
     return;
   }
   const isV = visited.has(p.id);
@@ -789,12 +752,10 @@ function renderDetail(){
     + (day ? '<div class="plan-note">2027 行程 Day '+(PLAN.indexOf(day)+1)+'（'+day.d+'）會經過這裡</div>' : '')
     + '<div class="foot">'
     + '<div class="actions">'
-    + '<button class="stamp-btn" id="stamp-btn" aria-pressed="'+isV+'">'+(isV?'✓ 已蓋章，來過這裡':'◎ 蓋章：我去過這裡')+'</button>'
+    + '<a class="gbtn" href="/personal/travel/map/?category=okinawa">前往沖繩戳章 ↗</a>'
     + '<a class="gbtn" href="https://www.google.com/maps/search/?api=1&query='+p.lat+','+p.lng+'" target="_blank" rel="noopener noreferrer">Google 地圖 ↗</a>'
     + '</div>'
-    + '<div class="stamp'+(isV?' on':'')+'" aria-hidden="true"><span>沖縄<small>来訪</small>VISITED</span></div>'
     + '</div>';
-  el('stamp-btn').onclick = ()=>toggleVisited(p.id);
 }
 function showCluster(ids){
   activeId = null;
@@ -813,8 +774,8 @@ function updateSidenav(){
   const list = el('sidenav-list');
   const scope = visiblePlaces();
   el('sidenav-title').textContent = regionFilter==='all' ? VIEWS[viewName].label+'的地點' : REGIONS[regionFilter].zh+'的地點';
-  el('sidenav-count').textContent = scope.filter(p=>visited.has(p.id)).length+' / '+scope.length;
-  list.innerHTML = scope.length ? scope.map(p=>'<button data-nav="'+p.id+'" class="'+(visited.has(p.id)?'v':'')+'"><i class="b"></i>'+p.short+'</button>').join('') : '<p class="empty-note" role="status">此區域沒有符合蓋章條件的地點，試試「全部」。</p>';
+  el('sidenav-count').textContent = scope.length+' 個地點';
+  list.innerHTML = scope.length ? scope.map(p=>'<button data-nav="'+p.id+'" class="'+(visited.has(p.id)?'v':'')+'"><i class="b"></i>'+p.short+'</button>').join('') : '<p class="empty-note" role="status">此區域暫無地點。</p>';
   list.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>selectPlace(b.dataset.nav));
 }
 function selectPlace(id, opts){
@@ -838,48 +799,11 @@ function selectPlace(id, opts){
   }
 }
 
-/* ================= visited ================= */
-function saveVisited(){
-  try{ localStorage.setItem(KEY, JSON.stringify([...visited])); }catch(e){}
-}
-function toggleVisited(id){
-  if(visited.has(id)) visited.delete(id);
-  else visited.add(id);
-  saveVisited();
-  updateAll();
-  if(activeId===id) renderDetail();
-}
+/* Update the map and itinerary after changing the selected view. */
 function updateAll(){
-  const total = PLACES.length;
-  const n = visited.size;
-  el('cnt-main').textContent = n;
-  el('cnt-top').textContent = n;
-  el('bar-fill').style.width = (n/total*100).toFixed(1)+'%';
-  const tw = el('cnt-top');
-  if(tw && tw.parentElement.lastElementChild) tw.parentElement.lastElementChild.textContent = ' / '+total;
-  document.querySelectorAll('.rcard').forEach(c=>{
-    const r = c.dataset.r;
-    const list = PLACES.filter(p=>p.region===r);
-    const v = list.filter(p=>visited.has(p.id)).length;
-    c.querySelector('.cnt b').style.width = (v/list.length*100)+'%';
-    c.querySelector('.cnt span').textContent = v+' / '+list.length+' 已走過';
-  });
-  document.querySelectorAll('.row').forEach(row=>{
-    const id = row.dataset.id;
-    const on = visited.has(id);
-    row.classList.toggle('v', on);
-    row.setAttribute('aria-pressed', String(on));
-    row.querySelector('.state').textContent = on ? '已去過' : '';
-  });
-  el('list-count').textContent = '已走過 '+n+' / '+total+'（'+(n/total*100).toFixed(0)+'%）';
-  document.querySelectorAll('.day .stops [data-stop]').forEach(b=>{
-    const on = visited.has(b.dataset.stop);
-    b.classList.toggle('nu', !on);
-    b.title = on ? '去過' : '還沒去過';
-  });
-  if(activeId&&!visiblePlaces().some(p=>p.id===activeId)){activeId=null;clusterGroup=[];renderDetail();}
   renderPins();
   updateSidenav();
+  el('list-count').textContent = PLACES.length+' 個地點';
 }
 
 /* ================= UI build ================= */
@@ -919,7 +843,7 @@ function buildRegions(){
       + '<h3>'+r.zh+'</h3>'
       + '<div class="ja">'+r.ja+'</div>'
       + '<p>'+r.blurb+'</p>'
-      + '<div class="cnt"><i><b></b></i><span>0 / '+list.length+' 已走過</span></div>'
+      + '<div class="cnt"><span>'+list.length+' 個地點</span></div>'
       + '</button>';
   }).join('');
   wrap.querySelectorAll('.rcard').forEach(card=>{
@@ -938,7 +862,7 @@ function buildPlan(){
     + '<h4>'+d.title+'</h4>'
     + '<div class="stay">'+d.stay+'</div>'
     + '<ul>'+d.extra.map(t=>'<li>'+t+'</li>').join('')+'</ul>'
-    + '<div class="stops">'+d.stops.map(id=>'<button data-stop="'+id+'" class="'+(visited.has(id)?'':'nu')+'" title="'+(visited.has(id)?'去過':'還沒去過')+'">'+byId[id].short+'</button>').join('')+'</div>'
+    + '<div class="stops">'+d.stops.map(id=>'<button data-stop="'+id+'">'+byId[id].short+'</button>').join('')+'</div>'
     + '</article>').join('');
   el('plan-grid').querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>{
     regionFilter='all';
@@ -966,10 +890,10 @@ function buildList(){
       inner += '<div class="grp"><h3>'+city+'<span>'+cities[city].length+' 個</span></h3><div class="rows">'
         + cities[city].map(p=>{
             const on = visited.has(p.id);
-            return '<div class="row'+(on?' v':'')+'" data-id="'+p.id+'" role="button" tabindex="0" aria-pressed="'+on+'">'
-              + '<span class="tick" aria-hidden="true">✓</span>'
+            return '<div class="row'+(on?' v':'')+'" data-id="'+p.id+'" role="button" tabindex="0">'
+
               + '<span class="nm"><b>'+p.zh+'</b><small>'+p.ja+' · '+TYPES[p.type].zh+'</small></span>'
-              + '<span class="state"></span>'
+
               + '<button class="go" data-go="'+p.id+'" title="在地圖上看">地圖</button>'
               + '</div>';
           }).join('')
@@ -982,10 +906,11 @@ function buildList(){
   wrap.querySelectorAll('.row').forEach(row=>{
     row.addEventListener('click', ev=>{
       if(ev.target.closest('[data-go]')) return;
-      toggleVisited(row.dataset.id);
+      selectPlace(row.dataset.id,{scroll:true});
     });
     row.addEventListener('keydown', ev=>{
-      if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); toggleVisited(row.dataset.id); }
+      if(ev.target.closest('[data-go]')) return;
+      if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectPlace(row.dataset.id,{scroll:true}); }
     });
   });
   wrap.querySelectorAll('[data-go]').forEach(b=>b.onclick=ev=>{
@@ -1020,25 +945,6 @@ function toast(msg){
   clearTimeout(t._t);
   t._t = setTimeout(()=>t.classList.remove('on'), 2200);
 }
-function copyList(){
-  const v = PLACES.filter(p=>visited.has(p.id));
-  const nv = PLACES.filter(p=>!visited.has(p.id));
-  let txt = '我的沖繩清單（'+v.length+' / '+PLACES.length+'）\n';
-  txt += '\n【去過】\n' + (v.length ? v.map(p=>'・'+p.city+'｜'+p.zh).join('\n') : '（尚未標記）');
-  txt += '\n\n【還沒去】\n' + nv.map(p=>'・'+p.city+'｜'+p.zh).join('\n');
-  const done=()=>toast('已複製清單，可以貼給我了');
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(done).catch(()=>{fallbackCopy(txt,done)});
-  }else fallbackCopy(txt,done);
-}
-function fallbackCopy(txt,cb){
-  const ta=document.createElement('textarea');
-  ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); cb(); }catch(e){ toast('複製失敗，請手動選取'); }
-  ta.remove();
-}
-
 /* ================= wiring ================= */
 document.addEventListener('DOMContentLoaded', ()=>{
   el('region-filter').innerHTML='<option value="all">全部區域（目前地圖）</option>'+Object.entries(REGIONS).map(([k,r])=>'<option value="'+k+'">'+r.zh+'</option>').join('');
@@ -1069,11 +975,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     el('route-toggle').setAttribute('aria-pressed', String(routeOn));
     if(routeOn){setRegion('all');setView('main');}
     renderRoute();
-  };
-  el('copy-list').onclick = copyList;
-  el('reset-all').onclick = ()=>{
-    if(!confirm('要清除所有蓋章紀錄嗎？')) return;
-    visited.clear(); saveVisited(); updateAll(); renderDetail(); toast('已清除全部紀錄');
   };
   el('search').addEventListener('input', e=>{ query = e.target.value; applySearch(); });
   window.historyContext=AtlasHistory.mount({
