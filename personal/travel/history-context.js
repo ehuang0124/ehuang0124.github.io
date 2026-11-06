@@ -40,8 +40,6 @@
         + '<button type="button" data-history-toggle aria-pressed="true">◆ 重大事件（共九處）</button>'
         + (map === 'east-japan' ? '<button type="button" data-gateway-toggle aria-pressed="true">◇ 地區過渡參考</button>' : '')
         + '</div>'
-        + (map === 'east-japan' ? '<p class="gateway-note">關西（近畿） ← 中部（東海） → 關東。<strong>關東與關西不直接接壤</strong>；◇ 標出箱根、不破關與鈴鹿峠等交通門戶，不是共同邊界或行政界線。此圖採近畿含三重的分組；關西的文化範圍並無唯一界定。</p>' : '')
-        + '<p class="history-note">◆ 為三張地圖精選的九處重大戰役／事件；座標為代表地點，不是戰場範圍。此參考圖層依區域篩選，不受旅行路線或蓋章條件限制，也不更動既有紀錄。</p>'
         + '<div class="history-list"></div><div class="history-detail" role="status" aria-live="polite"></div>';
       config.host.append(panel);
       const toggle = panel.querySelector('[data-history-toggle]');

@@ -135,10 +135,8 @@
   </div>
   <a href="/personal/travel/">← 旅行地圖索引</a> · <a href="/personal/travel/kyushu/">接續：九州｜立誓走向世界的日本 ↗</a><br>
   <details class="credits">
-    <summary>資料與圖片來源</summary>
-    歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
-    地圖：Natural Earth 10m 向量圖資 · 照片：Wikimedia Commons<br>
-    封面：三保松原與富士山／<a href="https://commons.wikimedia.org/wiki/File:Mount_Fuji_and_Miho_no_Matsubara_20170211.jpg" target="_blank" rel="noopener noreferrer">Suicasmo</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。
+    <summary>圖片來源</summary>
+    三保松原與富士山／<a href="https://commons.wikimedia.org/wiki/File:Mount_Fuji_and_Miho_no_Matsubara_20170211.jpg" target="_blank" rel="noopener noreferrer">Suicasmo</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。
   </details>
 </div>
 </footer>
@@ -291,7 +289,7 @@ function drawTimeline(){
 /* ===== 地圖 ===== */
 function buildMap(){
   const mapEl=el('map');
-  if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖圖資載入失敗';return}
+  if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖載入失敗';return}
 
   let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="group" aria-label="東日本地圖">';
   s+='<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#28594a" flood-opacity="0.18"/></filter></defs>';

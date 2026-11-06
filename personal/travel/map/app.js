@@ -26,15 +26,15 @@
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
   const CATEGORIES = {
-    countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
-    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
-    na: { title:'北美區', map:'03 / NORTH AMERICA', note:'州界依美國人口普查局示意；公園標記為代表位置。', regions:[
+    countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', regions:CONTINENTS, initial:'392' },
+    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', regions:CONTINENTS, initial:'tokyo-jp' },
+    na: { title:'北美區', map:'03 / NORTH AMERICA', regions:[
       {id:'all',label:'全部北美'}, {id:'us',label:'美國'}, {id:'ca',label:'加拿大'},
       {id:'na-us-west',label:'美國・西岸'}, {id:'na-us-mountain',label:'美國・山地沙漠'}, {id:'na-us-midwest',label:'美國・中西部'}, {id:'na-us-east',label:'美國・東岸南方'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'},
       {id:'na-ca-pacific',label:'加拿大・太平洋沿岸'}, {id:'na-ca-rockies',label:'加拿大・洛磯草原'}, {id:'na-ca-central',label:'加拿大・安大略魁北克'}, {id:'na-ca-atlantic',label:'加拿大・大西洋沿岸'}, {id:'na-ca-north',label:'加拿大・北方領地'}
     ], initial:'yell' },
-    jp: { title:'日本國家公園', map:'04 / JAPAN', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
-    okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', note:'地點座標為概略位置；離島可由分區或清單定位。', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
+    jp: { title:'日本國家公園', map:'04 / JAPAN', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
+    okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
   };
   const WORLD_AREA = { AS:[24,-15,179,78], EU:[-25,29,50,75], AF:[-25,-37,54,38], NA:[-170,0,-50,83], SA:[-85,-56,-30,14], OC:[94,-52,180,16], AN:[68,-58,82,-49] };
   const collator = new Intl.Collator('zh-Hant', { numeric:true });
@@ -365,7 +365,6 @@
     $('.intro .eyebrow').textContent = spec.map + ' ・ STAMP ATLAS';
     $('#board-title').textContent = spec.title;
     $('#map-caption').textContent = spec.map;
-    $('#index-note').textContent = spec.note;
     $('#add-city').hidden = category !== 'cities';
     const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : category === 'okinawa' ? '點選沖繩地點標記' : '點選國家公園標記';
     svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
@@ -1054,8 +1053,66 @@
     event.currentTarget.setAttribute('aria-pressed',String(visitedOnly));
     renderMap();renderDirectory(true);
   });
+  // The stamped month chooser shares the native field as its single source of truth.
+  const datePicker = $('#date-stamp-picker');
+  const datePickerToggle = $('#date-picker-toggle');
+  const datePickerPanel = $('#date-picker-panel');
+  const dateYear = $('#date-year');
+  const dateMonths = $('#date-months');
+  const currentYear = Number(today.slice(0, 4));
+  dateYear.max = currentYear;
+  let pickerYear = currentYear;
+  function renderDatePicker() {
+    dateYear.value = pickerYear;
+    $('#date-year-prev').disabled = pickerYear <= 1;
+    $('#date-year-next').disabled = pickerYear >= currentYear;
+    dateMonths.replaceChildren();
+    for (let month = 1; month <= 12; month++) {
+      const value = `${String(pickerYear).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = `${String(month).padStart(2, '0')}月`;
+      button.dataset.month = value;
+      button.disabled = value > today;
+      button.setAttribute('aria-label', `${pickerYear}年${month}月`);
+      button.setAttribute('aria-pressed', String(dateInput.value === value));
+      dateMonths.append(button);
+    }
+  }
+  function closeDatePicker(returnFocus = false) {
+    datePickerPanel.hidden = true;
+    datePickerToggle.setAttribute('aria-expanded', 'false');
+    if (returnFocus) datePickerToggle.focus();
+  }
+  datePickerToggle.addEventListener('click', () => {
+    if (!datePickerPanel.hidden) { closeDatePicker(); return; }
+    pickerYear = validDate(dateInput.value) ? Number(dateInput.value.slice(0, 4)) : currentYear;
+    renderDatePicker();
+    datePickerPanel.hidden = false;
+    datePickerToggle.setAttribute('aria-expanded', 'true');
+  });
+  $('#date-year-prev').addEventListener('click', () => { if (pickerYear > 1) { pickerYear--; renderDatePicker(); } });
+  $('#date-year-next').addEventListener('click', () => { if (pickerYear < currentYear) { pickerYear++; renderDatePicker(); } });
+  dateYear.addEventListener('change', () => {
+    const year = Number(dateYear.value);
+    if (Number.isInteger(year) && year >= 1 && year <= currentYear) pickerYear = year;
+    renderDatePicker();
+  });
+  dateMonths.addEventListener('click', event => {
+    const button = event.target.closest('button[data-month]');
+    if (!button || button.disabled) return;
+    dateInput.value = button.dataset.month;
+    dateInput.dispatchEvent(new Event('change', {bubbles:true}));
+    closeDatePicker(true);
+  });
+  document.addEventListener('click', event => { if (!datePicker.contains(event.target)) closeDatePicker(); });
+  mobileStampDialog.addEventListener('close', () => closeDatePicker());
+  datePicker.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !datePickerPanel.hidden) { event.preventDefault(); event.stopPropagation(); closeDatePicker(true); }
+  });
   dateInput.addEventListener('change',() => {
     const valid = validDate(dateInput.value) && dateInput.checkValidity();
+    if (!datePickerPanel.hidden) { pickerYear = valid ? Number(dateInput.value.slice(0, 4)) : currentYear; renderDatePicker(); }
     dateInput.setAttribute('aria-invalid',String(!valid));
     companionDraft.clear();
     if (!visitsOf(selectedPlace()).length) $('#stamp-face-date').textContent = printedDate(valid ? dateInput.value : '');
@@ -1115,8 +1172,6 @@
     if (!button) return;
     const place = selectedPlace(), date = button.dataset.date;
     if (!editable()) {openAccountDialog('登入後才能修改戳章。');return;}
-    // Removing a stamp is destructive and synced, so it is always confirmed.
-    if (!confirm(`要移除「${place.zh}」${printedDate(date)} 的戳章嗎？移除後無法復原。`)) return;
     if (cloudMode()) {
       const id = myStampId(place, date);
       atlasAccount.rows = atlasAccount.rows.filter(row => !(row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === date));

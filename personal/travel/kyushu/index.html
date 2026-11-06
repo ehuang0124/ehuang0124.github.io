@@ -141,11 +141,6 @@
     <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
   </div>
   <a href="/personal/travel/">← 旅行地圖索引</a> · <a href="/personal/travel/east-japan/">前段：東海道｜城與街道之間 ↗</a>
-  <details class="credits">
-    <summary>資料與圖片來源</summary>
-    歷史資料：<a href="https://www.japan.travel/en/spot/602/" target="_blank" rel="noopener">仙巖園／JNTO</a> · <a href="https://nagasakidejima.jp/english/history/" target="_blank" rel="noopener">出島官方</a> · <a href="https://www.discover-nagasaki.com/en/sightseeing/101" target="_blank" rel="noopener">長崎觀光</a> · <a href="https://www.miyazaki-city.tourism.or.jp/en/see-and-do/10056" target="_blank" rel="noopener">飫肥城／宮崎市觀光</a><br>
-    地圖：Natural Earth 向量圖資 · 照片：Wikimedia Commons
-  </details>
 </div>
 </footer>
 
@@ -268,7 +263,7 @@ function drawTimeline(){
 /* ===== 地圖 ===== */
 function buildMap(){
   const mapEl=el('map');
-  if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖圖資載入失敗';return}
+  if(!LAND||!LAND.length){el('map-fallback').style.display='flex';el('map-fallback').textContent='地圖載入失敗';return}
 
   const W=780,H=1000;
   let s='<svg id="mapsvg" viewBox="'+BASE.x+' '+BASE.y+' '+BASE.w+' '+BASE.h+'" preserveAspectRatio="xMidYMid meet" role="group" aria-label="九州地圖">';
