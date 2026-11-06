@@ -1,5 +1,6 @@
 /* Run from the repository root: node scripts/test-tea-quiz.cjs */
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
@@ -93,5 +94,8 @@ const { pathToFileURL } = require('node:url');
   /* 引擎不再生產任何文案：一筆結果只有茶款、分數、細項、角色與信心標記 */
   const shape = recommend(answer([1, 2, 2, 0, 4, 1, 0])).results.map((r) => Object.keys(r).sort().join(','));
   assert.ok(shape.every((keys) => keys === 'confidence,parts,role,score,tea'), `unexpected result shape: ${shape[0]}`);
+  const css = fs.readFileSync(path.join(__dirname, '../personal/tea-quiz/tea.css'), 'utf8');
+  assert.match(css, /#app:focus[\s\S]*?#app:focus-visible[\s\S]*?\{[^}]*outline:\s*none/, 'programmatic #app focus must not draw a page border');
+  assert.match(css, /\[tabindex="-1"\]:focus-visible[\s\S]*?\{[^}]*outline:\s*none/, 'tabindex="-1" targets must not draw a focus-visible outline');
   console.log(`PASS: ${TEAS.length} teas, 6 wakoucha, ${combinations} deterministic answer combinations, ${topHits.size} top-match styles; one-sentence known-for lines, no recommendation rationale, routing, caffeine and v2 sharing checked.`);
 })().catch((error) => { console.error(error); process.exitCode = 1; });
