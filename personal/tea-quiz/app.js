@@ -33,15 +33,6 @@ const S = {
     value1: '不用懂茶名：7 題問你想要的稠滑、甘甜、澀度與香氣。',
     value2: '三款茶，各自附上推薦原因、沖泡比例，還有在茶店說得出口的日文。',
     value3: '咖啡因只回答「含／經證實無／未知」，不估算、不猜。',
-    howTitle: '這個測驗怎麼運作',
-    how1Title: '先說口感，不是產地',
-    how1: '問你想要的稠滑、甘甜、澀度與香氣，而不是考你茶名。',
-    how2Title: '規則明確，結果可解釋',
-    how2: '同樣的答案永遠得到同樣的三款茶，每一款都說明「為什麼是它」。',
-    how3Title: '咖啡因不靠猜',
-    how3: '需要無咖啡因時，只給包裝明確標示的商品；焙茶、玄米茶不會被當成無咖啡因。',
-    noteTitle: '先說清楚',
-    note: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。這份測驗不是健康或醫療建議。',
     catalogLink: '看全部茶款 →',
     progress: (i, n) => `第 ${i} 題／共 ${n} 題`,
     qPrefix: 'QUESTION',
@@ -114,15 +105,6 @@ const S = {
     value1: 'No tea knowledge needed: 7 questions about texture, sweetness, astringency and aroma.',
     value2: 'Three teas, each with a reason, a brew ratio, and the words to ask for it in Japanese.',
     value3: 'Caffeine is answered as contains / verified caffeine-free / unknown — never guessed.',
-    howTitle: 'How it works',
-    how1Title: 'Taste first, region later',
-    how1: 'We ask about body, sweetness, astringency and aroma — not whether you know the tea names.',
-    how2Title: 'Fixed rules, explained results',
-    how2: 'The same answers always give the same three teas, and each card says why it is there.',
-    how3Title: 'No guessing on caffeine',
-    how3: 'If you need caffeine-free, you only get products labelled as such. Hōjicha and genmaicha are never treated as decaf.',
-    noteTitle: 'Read this first',
-    note: 'Flavour scores are editorial labels, not lab values. Caffeine figures are official reference infusions by tea category and cannot be read as what you ingest per cup. This is not health or medical advice.',
     catalogLink: 'See all 13 teas →',
     progress: (i, n) => `Question ${i} of ${n}`,
     qPrefix: 'QUESTION',
@@ -232,14 +214,6 @@ async function copy(text) {
     catch { say(t('copyFail')); }
     area.remove();
   }
-}
-
-let latticeSeq = 0;
-function lattice() {
-  const id = `tea-lattice-${latticeSeq += 1}`;
-  return el('div', { class: 'lattice', 'aria-hidden': 'true' },
-    el('div', { html: `<svg viewBox="0 0 780 14" preserveAspectRatio="none" role="presentation"><defs><pattern id="${id}" width="26" height="14" patternUnits="userSpaceOnUse"><path d="M0 7 L6.5 1 L13 7 L19.5 13 L26 7" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs><rect width="780" height="14" fill="url(#${id})"/></svg>` })
-  );
 }
 
 function tasteTags(tea) {
@@ -402,30 +376,12 @@ function viewLanding() {
       el('div', { html: cupArt() }),
       el('figcaption', {}, t('heroCap'))
     ),
-    // 首頁僅保留一條簡短指引，不重複下方「怎麼運作」的說明
     el('ul', { class: 'value-list' },
       ['value1', 'value2', 'value3'].map((key) => el('li', {}, t(key)))
     )
   );
 
-  const how = el('section', {},
-    lattice(),
-    el('h2', {}, t('howTitle')),
-    el('div', { style: 'display:grid;gap:10px;margin-top:14px' },
-      [['how1Title', 'how1'], ['how2Title', 'how2'], ['how3Title', 'how3']].map(([title, body]) =>
-        el('div', { class: 'card' },
-          el('h3', { style: 'font-size:16px;margin-bottom:4px' }, t(title)),
-          el('p', { class: 'small muted', style: 'margin:0' }, t(body))
-        )
-      )
-    ),
-    el('div', { class: 'notice', style: 'margin-top:18px' },
-      el('b', {}, `${t('noteTitle')} — `), t('note')
-    ),
-    el('p', { class: 'small', style: 'margin-top:16px' }, el('a', { href: '#/teas' }, t('catalogLink')))
-  );
-
-  app.replaceChildren(hero, how);
+  app.replaceChildren(hero);
 }
 
 function cupArt() {
