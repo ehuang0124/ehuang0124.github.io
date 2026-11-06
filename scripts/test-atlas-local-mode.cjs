@@ -52,7 +52,9 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assertCount('.map-country', 240);
   assertCount('.place-item', 240);
   assert.equal($('#place-name').textContent, '日本');
-  assert.equal($('#visit-date').getAttribute('type'), 'month');
+  assert.equal($('#visit-date').getAttribute('type'), 'hidden');
+  assertCount('input[type="month"], input[type="date"]', 0, 'only the custom month picker is available');
+  assert.equal($('#visit-date-label').htmlFor, 'date-picker-toggle');
   // Since the hover-label change, static labels live in #map-tooltip instead.
   assertCount('#map-svg text, #map-svg title', 0, 'no baked-in map labels');
   assert.equal($('#map-tooltip').hidden, true, 'the tooltip starts hidden');

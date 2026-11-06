@@ -10,6 +10,14 @@ const path = require('node:path');
 const { chromium } = require('playwright-core');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
+
+// Use the same single month picker as a traveller, not a native input or DOM assignment.
+async function chooseVisitMonth(page, month) {
+  await page.locator('#date-picker-toggle').click();
+  await page.locator('#date-year').fill(month.slice(0, 4));
+  await page.locator('#date-year').press('Tab');
+  await page.locator(`#date-months button[data-month="${month}"]`).click();
+}
 // The page requires a signed-in traveller before stamping. Browser tests use a
 // disposable passphrase served in place of config.js, so the real one never
 // appears in this file.
@@ -86,7 +94,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.place-item').count(),240);
       assert(await page.locator('#destination-index').isVisible());
       assert.equal(await page.locator('#place-name').textContent(),'日本');
-      assert.equal(await page.locator('#visit-date').getAttribute('type'),'month');
+      assert.equal(await page.locator('#visit-date').getAttribute('type'),'hidden');
+      assert.equal(await page.locator('input[type="month"], input[type="date"]').count(),0);
       assert.equal(await page.locator('#map-svg text, #map-svg title').count(),0);
       assert.equal(await page.locator('.map-country.selected.done').count(),0);
       assert.equal(await page.locator('#board-total').textContent(),'240');
@@ -105,7 +114,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('#tab-countries').getAttribute('aria-current'), 'true');
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#collection-menu').evaluate(el => el.open), false);
-      await page.locator('#visit-date').fill('2099-01');
+      // The UI disables future months; inject one to exercise the write guard.
+      await page.locator('#visit-date').evaluate(el => { el.value = '2099-01'; el.dispatchEvent(new Event('change', {bubbles:true})); });
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'0');
       assert((await page.locator('#stamp-feedback').textContent()).includes('不能晚於本月'));
@@ -134,14 +144,14 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       // No sign-in, no ink: the stamp button is locked for a fresh visitor.
       assert.equal(await page.locator('#sign-in').isVisible(),true,'the sign-in control lives in the top bar');
       assert.equal(await page.locator('#stamp-button').getAttribute('data-locked'),'true');
-      await page.locator('#visit-date').fill('2023-03');
+      await chooseVisitMonth(page, '2023-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#account-dialog').evaluate(el => el.open),true);
       assert.equal(await page.locator('#passport-count').textContent(),'0');
       await page.locator('#account-dialog-close').click();
       await ensureSignedIn();
       assert.equal(await page.locator('#stamp-button').getAttribute('data-locked'),'false');
-      await page.locator('#visit-date').fill('2023-03');
+      await chooseVisitMonth(page, '2023-03');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'1');
       assert.equal(await page.locator('.map-country.selected.done').count(),1);
@@ -156,7 +166,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#history-list li').count(),1);
       assert((await page.locator('#stamp-feedback').textContent()).includes('這個月已蓋過章'));
-      await page.locator('#visit-date').fill('2024-05');
+      await chooseVisitMonth(page, '2024-05');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#history-list li').count(),2);
       page.once('dialog', dialog => dialog.dismiss());
@@ -200,7 +210,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#place-name').textContent(),'巴黎');
       assert((await page.locator('#plate-motif').textContent()).includes('艾菲爾鐵塔'));
-      await page.locator('#visit-date').fill('2022-10');
+      await chooseVisitMonth(page, '2022-10');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'2');
       assert.equal(await page.locator('.map-point.done').count(),1);
@@ -232,7 +242,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await onShape('.map-us-state[data-id="state-ca"]', 'click');
       assert.equal(await page.locator('#place-name').textContent(),'加利福尼亞州');
       assert.equal(await page.locator('.map-us-state.selected').count(),1);
-      await page.locator('#visit-date').fill('2024-06');
+      await chooseVisitMonth(page, '2024-06');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('.map-us-state.done').count(),1);
       page.once('dialog', dialog => dialog.accept());
@@ -285,7 +295,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('#city-dialog').evaluate(el => el.open),false);
       assert.equal(await page.locator('#place-name').textContent(),'臺南');
       assert.equal(await page.locator('#board-total').textContent(),'172');
-      await page.locator('#visit-date').fill('2021-01');
+      await chooseVisitMonth(page, '2021-01');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#passport-count').textContent(),'3');
       const downloadPromise = page.waitForEvent('download');

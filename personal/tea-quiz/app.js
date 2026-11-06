@@ -1,7 +1,9 @@
 /* Japanese Tea Finder — app shell
- *
+
  * 五個畫面：首頁、Quiz、結果、茶款詳情（dialog）、探索目錄。
+
  * 沒有後端、沒有帳號、不蒐集個資；分享只把答案編碼放進網址。
+
  */
 
 import { TEAS, TEA_FAMILIES, FAMILY_IMAGES, CAFFEINE_REFERENCE } from './data.js';
@@ -76,7 +78,7 @@ const S = {
     time: '時間',
     g: 'g',
     ml: 'mL',
-    sec: '秒',
+    sec: 's',
     catalogTitle: '直接探索茶種',
     catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
     filterAll: '全部',
@@ -200,6 +202,9 @@ function el(tag, attrs = {}, ...children) {
     else if (key === 'text') node.textContent = value;
     else if (key === 'style') node.style.cssText = value;
     else if (key.startsWith('on') && typeof value === 'function') node.addEventListener(key.slice(2), value);
+    else if (key === 'href' || key === 'src' || key === 'alt' || key === 'width' || key === 'height' || key === 'loading' || key === 'decoding' || key === 'target' || key === 'rel' || key === 'role' || key === 'aria-label' || key === 'aria-pressed' || key === 'aria-hidden' || key === 'aria-labelledby' || key === 'aria-describedby' || key === 'aria-current' || key === 'aria-live' || key === 'tabindex' || key === 'data-lang' || key === 'data-view' || key === 'data-step' || key === 'onclick' || key === 'onchange' || key === 'onfocus' || key === 'onblur' || key === 'onpointerdown' || key === 'onpointerup' || key === 'onpointercancel' || key === 'onkeydown') {
+      node.setAttribute(key, value);
+    }
     else node.setAttribute(key, value === true ? '' : String(value));
   });
   children.flat().forEach((child) => {
@@ -284,7 +289,7 @@ function caffeineBlock(tea) {
       el('ul', { class: 'small', style: 'margin:0;padding-left:18px' }, reference),
       el('p', { class: 'small', style: 'margin:8px 0 0' }, t('refNote')),
       el('p', { class: 'small', style: 'margin:8px 0 0' },
-        el('a', { href: 'https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html', target: '_blank', rel: 'noreferrer' }, '農林水産省')
+        el('a', { href: 'https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html', target: '_blank', rel: 'noreferrer' }, '農林水產省')
       )
     )
   );
@@ -315,6 +320,23 @@ function purchaseBlock(tea) {
   );
 }
 
+function sourceName(url) {
+  const host = new URL(url).hostname;
+  const names = {
+    'www.maff.go.jp': '農林水產省', 'www.oguri-farm.com': '小栗農園',
+    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',
+    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'
+  };
+  return names[host] || host;
+}
+function sourceBlock(tea) {
+  return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },
+    `${t('sourceLabel')}：`,
+    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),
+    ` ・ ${t('editorialNote')}`
+  );
+}
+
 /* Approximate locations, not boundaries or a claim about an individual product. */
 const ORIGINS = {
   T01: [[136.55, 34.96]], T02: [[130.44, 31.38]], T03: [[130.56, 33.21]],
@@ -334,21 +356,32 @@ function originMap(tea, variant = 'sheet') {
   const pin = variant === 'card' ? 9 : 3;
   const markers = points.map(([lon, lat]) => {
     const x = ((lon - 128) * 10).toFixed(1), y = ((46 - lat) * 12.5).toFixed(1);
-    return `<circle cx="${x}" cy="${y}" r="${halo}" class="map-halo"/><circle cx="${x}" cy="${y}" r="${pin}" class="map-pin"/>`;
+    return `<circle cx=\"${x}\" cy=\"${y}\" r=\"${halo}\" class=\"map-halo\"/><circle cx=\"${x}\" cy=\"${y}\" r=\"${pin}\" class=\"map-pin\"/>`;
   }).join('');
   const region = L(tea.regionZh, tea.regionEn);
+  const note = points.length ? L('圓點為概略位置', 'Dots show approximate locations')
+    : tea.id === 'T11' ? L('日本各地，無單一產地', 'Made across Japan; no single origin')
+    : L('產地依商品標示，未標點', 'Origin varies by product; no location marked');
+  /* 卡面沒有多餘行數，但「位置是概略的」這句話不能只留給螢幕閱讀器 */
+  const shortNote = points.length ? L('位置為概略', 'approximate location')
+    : tea.id === 'T11' ? L('日本各地', 'made across Japan')
+    : L('依商品標示', 'per product label');
   const art = el('div', {
     class: 'map-art',
     'aria-hidden': card ? null : 'true',
     role: card ? 'img' : null,
-    'aria-label': card ? t('originAria', region) : null,
-    html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>`
+    'aria-label': card ? t('originAria', region, note) : null,
+    html: `<svg viewBox=\"0 0 180 200\"><path d=\"${JAPAN_PATH}\" class=\"map-land\"/>${markers}</svg>`
   });
-  const caption = el('figcaption', {},
-    el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
-    el('strong', {}, region));
-  if (card) caption.append(el('small', { class: 'map-meta' }, TEA_FAMILIES[tea.family][state.lang]));
-  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' }, art, caption);
+  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' },
+    art,
+    el('figcaption', {},
+      el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
+      el('strong', {}, region),
+      card
+        ? el('small', { class: 'map-meta' }, `${TEA_FAMILIES[tea.family][state.lang]} ・ ${shortNote}`)
+        : el('small', {}, note))
+  );
 }
 
 /* ---------------- 茶款詳情 ---------------- */
@@ -387,7 +420,8 @@ function teaDetails(tea, fromResult = false) {
       el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
       tasteRows(tea.taste)),
     ...caffeineAndBrew,
-    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea))
+    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
+    sourceBlock(tea)
   ];
 }
 
@@ -768,7 +802,11 @@ function viewResults(code) {
       el('p', { class: 'deck-guide' }, t('deckGuide')),
       stage,
       deck.status,
-      indicators
+      indicators,
+      /* 回到首頁的按鈕：放在結果頁最下方，讓使用者看完推薦後可以立刻回到 landing page */
+      el('div', { class: 'actions center', style: 'margin-top:22px' },
+        el('a', { class: 'btn secondary', href: '#/' }, t('backHome'))
+      )
     )
   );
 

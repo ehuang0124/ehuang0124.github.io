@@ -61,7 +61,7 @@
   })();
   const todayDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   function validDate(month) {
-    if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month > today) return false;
+    if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month < '0001-01' || month > today) return false;
     return true;
   }
   function normalizedMonth(value) {
@@ -322,7 +322,6 @@
   const tooltip = $('#map-tooltip');
   const dateInput = $('#visit-date');
   const list = $('#place-list');
-  dateInput.max = today;
   dateInput.value = today;
   $('#graticule').setAttribute('d', world.graticule);
   let category = 'countries';
@@ -1126,36 +1125,49 @@
     event.currentTarget.setAttribute('aria-pressed',String(visitedOnly));
     renderMap();renderDirectory(true);
   });
-  // The stamped month chooser shares the native field as its single source of truth.
+  // One custom picker; the hidden field holds the canonical YYYY-MM value.
+  // Validate explicitly: hidden inputs do not participate in native validation.
   const datePicker = $('#date-stamp-picker');
   const datePickerToggle = $('#date-picker-toggle');
   const datePickerPanel = $('#date-picker-panel');
+  const dateValue = $('#visit-date-value');
   const dateYear = $('#date-year');
   const dateMonths = $('#date-months');
   const currentYear = Number(today.slice(0, 4));
   dateYear.max = currentYear;
   let pickerYear = currentYear;
+  function renderDateValue() {
+    const valid = validDate(dateInput.value);
+    const [year, month] = dateInput.value.split('-');
+    dateValue.textContent = valid ? `${year} 年 ${Number(month)} 月` : '選擇月份';
+    datePickerToggle.setAttribute('aria-invalid', String(!valid));
+    return valid;
+  }
+  renderDateValue();
   function renderDatePicker() {
     dateYear.value = pickerYear;
     $('#date-year-prev').disabled = pickerYear <= 1;
     $('#date-year-next').disabled = pickerYear >= currentYear;
-    dateMonths.replaceChildren();
     for (let month = 1; month <= 12; month++) {
       const value = `${String(pickerYear).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = `${String(month).padStart(2, '0')}月`;
+      // Keep the buttons stable when a year edit commits during Tab navigation.
+      let button = dateMonths.children[month - 1];
+      if (!button) {
+        button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = `${String(month).padStart(2, '0')}月`;
+        dateMonths.append(button);
+      }
       button.dataset.month = value;
       button.disabled = value > today;
       button.setAttribute('aria-label', `${pickerYear}年${month}月`);
       button.setAttribute('aria-pressed', String(dateInput.value === value));
-      dateMonths.append(button);
     }
   }
   function closeDatePicker(returnFocus = false) {
     datePickerPanel.hidden = true;
     datePickerToggle.setAttribute('aria-expanded', 'false');
-    if (returnFocus) datePickerToggle.focus();
+    if (returnFocus) datePickerToggle.focus({preventScroll:true});
   }
   datePickerToggle.addEventListener('click', () => {
     if (!datePickerPanel.hidden) { closeDatePicker(); return; }
@@ -1163,6 +1175,8 @@
     renderDatePicker();
     datePickerPanel.hidden = false;
     datePickerToggle.setAttribute('aria-expanded', 'true');
+    // Focus a month, not the year input, so opening never summons a phone keyboard.
+    (dateMonths.querySelector('[aria-pressed="true"]:not(:disabled)') || dateMonths.querySelector('button:not(:disabled)')).focus();
   });
   $('#date-year-prev').addEventListener('click', () => { if (pickerYear > 1) { pickerYear--; renderDatePicker(); } });
   $('#date-year-next').addEventListener('click', () => { if (pickerYear < currentYear) { pickerYear++; renderDatePicker(); } });
@@ -1179,14 +1193,18 @@
     closeDatePicker(true);
   });
   document.addEventListener('click', event => { if (!datePicker.contains(event.target)) closeDatePicker(); });
+  // Close after keyboard navigation, not during pointer-induced blur: shrinking
+  // the mobile postcard before pointerup could turn an inside click into a backdrop click.
+  document.addEventListener('keyup', event => {
+    if (event.key === 'Tab' && !datePicker.contains(document.activeElement)) closeDatePicker();
+  });
   mobileStampDialog.addEventListener('close', () => closeDatePicker());
   datePicker.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !datePickerPanel.hidden) { event.preventDefault(); event.stopPropagation(); closeDatePicker(true); }
   });
   dateInput.addEventListener('change',() => {
-    const valid = validDate(dateInput.value) && dateInput.checkValidity();
+    const valid = renderDateValue();
     if (!datePickerPanel.hidden) { pickerYear = valid ? Number(dateInput.value.slice(0, 4)) : currentYear; renderDatePicker(); }
-    dateInput.setAttribute('aria-invalid',String(!valid));
     companionDraft.clear();
     if (!visitsOf(selectedPlace()).length) $('#stamp-face-date').textContent = printedDate(valid ? dateInput.value : '');
     // A stored month carries its own companions; a new month starts empty.
@@ -1205,10 +1223,9 @@
   let syncNotice = null;
   $('#stamp-button').addEventListener('click', () => {
     const date = dateInput.value;
-    if (!validDate(date) || !dateInput.checkValidity()) {dateInput.setAttribute('aria-invalid','true');showMessage('請選擇有效月份（不能晚於本月）。','error');dateInput.focus();return;}
+    if (!renderDateValue()) {showMessage('請選擇有效月份（不能晚於本月）。','error');datePickerToggle.focus();return;}
     if (!editable()) {openAccountDialog('登入後才能蓋章。');return;}
     if (stamping) return;
-    dateInput.setAttribute('aria-invalid','false');
     const place = selectedPlace();
     const stamps = ownVisits(place);
     if (stamps.includes(date)) {showMessage('這個月已蓋過章。','error');return;}
@@ -1245,8 +1262,6 @@
     if (!button) return;
     const place = selectedPlace(), date = button.dataset.date;
     if (!editable()) {openAccountDialog('登入後才能修改戳章。');return;}
-    // Removing a stamp is destructive and synced, so it is always confirmed.
-    if (!confirm(`要移除「${place.zh}」${printedDate(date)} 的戳章嗎？移除後無法復原。`)) return;
     if (cloudMode()) {
       const id = myStampId(place, date);
       atlasAccount.rows = atlasAccount.rows.filter(row => !(row.userId === atlasAccount.user?.id && row.placeKey === place.key && row.month === date));
