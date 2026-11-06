@@ -27,14 +27,14 @@ The landing page is built on the 長崎 tourism brand rather than on the washi-a
 
 Because the page runs on its own theme, `landing.css` declares page-local `--ng-*` tokens and does **not** read `--mag-*`; `magazine.css` still drives the three itinerary pages and the atlas. Corners on the landing page are 8–16 px, and the only shadow is the soft lift under the postcard.
 
-Sections run 0101–0105: 目次, 三つの旅 (three photographic cards plus a 推し POINT callout), the 青島 quote band, 旅の断片, 旅のたより, and 型錄.
+Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, three photographic cards plus a Stamp Atlas callout), the 青島 quote band, 旅の断片, 寄一封明信片, and 型錄.
 
 Two motifs are deliberately kept and theirs is a narrow brief:
 
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
 - **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
 
-The closing 型錄 section is an editorial index of the three trip features (photo plate, oversized issue number, route line): eight palette entries with token names, the twelve-icon grid, the type scale, and the layout rules (24 px icon grid, 1.5 stroke, outline only, lattice reserved for separators). It is written against the same `--ng-*` tokens the page uses, so editing them changes the guide too.
+The closing 型錄 section indexes the three trip features only (the Stamp Atlas map is reachable from the nav, category bar, postcard section and the callout). Each entry is an editorial spread: alternating photo/copy sides, an offset colour frame, an oversized hollow issue number, a vertical 第 0X 帖 tab, a date line, a route line and a pill link. The palette, icon grid and type rules live in `spec.md`.
 
 Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. `--ng-sans` and `--ng-grotesk` fall back to **Noto Sans JP / Noto Sans TC** (with Archivo first for Latin) because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets.
 
