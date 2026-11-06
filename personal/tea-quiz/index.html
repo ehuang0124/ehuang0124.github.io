@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用 7 題找出適合你的日本茶：口感、鮮味、澀度、香氣與咖啡因需求，得到 3 款可解釋的推薦、沖泡方式與在茶店說得出口的日文。">
+  <meta name="theme-color" content="#F7F5EE">
+  <title>日本茶風味診斷 — Japanese Tea Finder</title>
+  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=Noto+Serif+TC:wght@500;600&display=swap">
+  <link rel="stylesheet" href="/personal/tea-quiz/tea.css">
+</head>
+<body>
+  <div class="lang-switch" role="group" aria-label="Language / 語言">
+    <button type="button" data-lang="zh" aria-pressed="true" lang="zh-Hant">繁中</button>
+    <button type="button" data-lang="en" aria-pressed="false" lang="en">EN</button>
+  </div>
+
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Eva Huang</a></li>
+        <li><a href="/personal/travel/">Travel</a></li>
+        <li aria-current="page">日本茶風味診斷</li>
+      </ol>
+    </nav>
+
+    <div class="brand-head">
+      <span class="brand-mark"><span class="dot" aria-hidden="true"></span>Japanese Tea Finder</span>
+    </div>
+  </div>
+
+  <main id="app" class="wrap" tabindex="-1"></main>
+
+  <footer class="site">
+    <div class="wrap">
+      <p id="foot-note">風味分數為產品設計用的編輯標籤，並非化驗值；咖啡因數字為農林水產省標準浸出液的類別參考值。</p>
+      <p><a href="https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html" target="_blank" rel="noreferrer">農林水產省：食品中のカフェイン</a> · <a href="/personal/travel/">Travel</a> · <a href="/">Eva Huang</a></p>
+    </div>
+  </footer>
+
+  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+    <div class="sheet-head">
+      <div>
+        <div class="rc-ja" id="sheet-ja"></div>
+        <h2 id="sheet-title"></h2>
+      </div>
+      <button type="button" class="sheet-close" id="sheet-close" aria-label="關閉">×</button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/personal/tea-quiz/app.js"></script>
+</body>
+</html>
