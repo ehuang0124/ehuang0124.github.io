@@ -48,7 +48,6 @@ const S = {
     top2: '相似路線',
     top3: '另一種相近風格',
     roleExplore: '探索推薦',
-    whyTitle: '推薦原因',
     flavourTitle: '風味標籤',
     caffeineTitle: '咖啡因',
     brewTitle: '建議沖泡',
@@ -78,7 +77,6 @@ const S = {
     g: 'g',
     ml: 'mL',
     sec: '秒',
-    perLabel: '每份',
     catalogTitle: '直接探索茶種',
     catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
     filterAll: '全部',
@@ -97,7 +95,7 @@ const S = {
     prevTea: '上一款',
     nextTea: '下一款',
     shareShort: '分享茶譜',
-    fullInfo: '完整資訊',
+    fullInfo: '茶款詳情',
     guideTitle: '三張卡牌怎麼看',
     roleHintTop1: '七個維度都最靠近你的答案',
     roleHintTop2: '同一條路線的第二個選擇',
@@ -106,7 +104,6 @@ const S = {
     deckStatus: (i, n, name) => `第 ${i} 款，共 ${n} 款：${name}`,
     goTo: (i, name) => `看第 ${i} 款：${name}`,
     imgAlt: (family) => `${family}茶湯的水彩插畫，一杯放在米紙上的茶`,
-    recNote: '推薦只依你剛才的答案與茶款標籤比對；資料庫裡的風味分數是編輯假設，尚未經大規模品飲校準。',
     cultivarLabel: '品種',
     backHome: '回首頁',
     langLabel: '語言',
@@ -135,7 +132,6 @@ const S = {
     top2: 'Similar route',
     top3: 'A neighbouring style',
     roleExplore: 'Sideways pick',
-    whyTitle: 'Why this one',
     flavourTitle: 'Flavour tags',
     caffeineTitle: 'Caffeine',
     brewTitle: 'How to brew',
@@ -165,7 +161,6 @@ const S = {
     g: 'g',
     ml: 'mL',
     sec: 's',
-    perLabel: 'per serving',
     catalogTitle: 'Browse the teas',
     catalogLede: `${TEAS.length} teas ordered by texture, including ${TEAS.filter((tea) => tea.family === 'wakoucha').length} wakoucha from light honeyed cups to milk-tea styles.`,
     filterAll: 'All',
@@ -184,7 +179,7 @@ const S = {
     prevTea: 'Previous',
     nextTea: 'Next',
     shareShort: 'Share',
-    fullInfo: 'Full detail',
+    fullInfo: 'Tea details',
     guideTitle: 'How to read the three cards',
     roleHintTop1: 'Closest to all seven of your answers',
     roleHintTop2: 'The second choice on the same route',
@@ -193,7 +188,6 @@ const S = {
     deckStatus: (i, n, name) => `Tea ${i} of ${n}: ${name}`,
     goTo: (i, name) => `Show tea ${i}: ${name}`,
     imgAlt: (family) => `Watercolour illustration of a cup of ${family} tea on cream paper`,
-    recNote: 'Recommendations compare your answers with editorial flavour labels only; those scores have not yet been calibrated by large-scale tasting.',
     cultivarLabel: 'Cultivar',
     backHome: 'Home',
     langLabel: 'Language',
@@ -376,12 +370,17 @@ function originMap(tea) {
 }
 
 /* ---------------- 茶款詳情 ---------------- */
-function openTea(id, reasons = null) {
+function openTea(id, { fromResult = false } = {}) {
   const tea = TEAS.find((x) => x.id === id);
   if (!tea) return;
   document.getElementById('sheet-title').textContent = L(tea.nameZh, tea.nameEn);
   document.getElementById('sheet-ja').textContent = tea.nameJa;
   const body = document.getElementById('sheet-body');
+  // 結果卡牌開啟的詳情維持精簡；從茶款目錄進入時仍保留這些資料。
+  const caffeineAndBrew = fromResult ? [] : [
+    el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
+    el('div', { class: 'rc-section' }, el('h4', {}, t('brewTitle')), brewBlock(tea))
+  ];
   body.replaceChildren(...[
     el('figure', { class: 'sheet-media' },
       el('img', {
@@ -393,20 +392,16 @@ function openTea(id, reasons = null) {
     el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
     el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
     el('p', { class: 'rc-cultivar' }, t('cultivarLabel'), ' · ', el('span', { lang: 'ja' }, tea.cultivar)),
-    reasons ? el('div', { class: 'rc-section' },
-      el('h4', {}, t('whyTitle')),
-      el('ul', { class: 'reasons' }, reasons.map((r) => el('li', {}, r.text)))) : null,
     originMap(tea),
     el('p', { class: 'small muted' }, L(tea.processingZh, tea.processingEn)),
     el('div', { class: 'rc-section' }, el('h4', {}, t('flavourTitle')),
       el('div', { class: 'tags', style: 'margin-bottom:8px' }, tasteTags(tea)),
       el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
       tasteRows(tea.taste)),
-    el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
-    el('div', { class: 'rc-section' }, el('h4', {}, t('brewTitle')), brewBlock(tea)),
+    ...caffeineAndBrew,
     el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
     sourceBlock(tea)
-  ].filter(Boolean));
+  ]);
   openSheet();
 }
 
@@ -638,9 +633,8 @@ function roleLabel(role) {
 
 /* ---------------- 結果 ----------------
  * 一次只呈現一張卡牌：整頁停在一個視窗高度內，不必往下滑。
- * 由下方按鈕（上一款／下一款／1·2·3）逐張看完 Top 3，
- * 卡面只放「為什麼是這款」的資訊；咖啡因、完整沖泡、購買用語與產地圖
- * 留在「完整資訊」的詳情層，避免把卡牌擠成一長條。
+ * 由下方按鈕（上一款／下一款／1·2·3）逐張看完 Top 3；
+ * 卡牌聚焦茶名、茶類、風味與香氣，讓結果保持簡潔。
  */
 const deck = {
   total: 0,
@@ -665,18 +659,8 @@ function familyImage(tea) {
   return FAMILY_IMAGES[tea.family] || FAMILY_IMAGES.sencha;
 }
 
-function brewSummary(tea) {
-  const b = tea.brew;
-  if (b.method === 'label' || (!b.grams && !b.ml)) return L('依包裝標示沖泡', 'Brew as labelled');
-  return [
-    b.grams ? `${b.grams} ${t('g')}` : null,
-    b.ml ? `${b.ml} ${t('ml')}` : null,
-    b.temp ? `${b.temp}°C` : null
-  ].filter(Boolean).join(' · ');
-}
-
 function profileCard(row, index) {
-  const { tea, reasons, role } = row;
+  const { tea, role } = row;
   const titleId = `pc-title-${index}`;
   return el('article', {
     class: `profile-card${index === 0 ? ' top' : ''}`,
@@ -696,16 +680,14 @@ function profileCard(row, index) {
       el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),
       el('p', { class: 'pc-role' }, roleHint(role)),
       el('p', { class: 'pc-meta' },
-        `${L(tea.regionZh, tea.regionEn)} ・ ${TEA_FAMILIES[tea.family][state.lang]} ・ ${caffeineStatusLabel(tea)}`),
+        `${L(tea.regionZh, tea.regionEn)} ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
       el('p', { class: 'pc-copy' }, L(tea.copyZh, tea.copyEn)),
-      el('ul', { class: 'reasons pc-reasons' }, reasons.slice(0, 2).map((r) => el('li', {}, r.text))),
       el('div', { class: 'tags pc-tags' }, tasteTags(tea).slice(0, 3)),
       el('div', { class: 'aroma-tags pc-aroma' },
         tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
       el('div', { class: 'pc-foot' },
-        el('button', { type: 'button', class: 'btn secondary small', onclick: () => openTea(tea.id, reasons) },
-          t('fullInfo'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
-        el('span', { class: 'pc-brew' }, brewSummary(tea))
+        el('button', { type: 'button', class: 'btn secondary small', onclick: () => openTea(tea.id, { fromResult: true }) },
+          t('fullInfo'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'))
       )
     )
   );
@@ -881,7 +863,6 @@ function openProfile(report) {
       }, t('restart'))
     ),
     el('p', { class: 'tiny muted', style: 'margin-top:10px' }, t('shareHint')),
-    el('div', { class: 'notice', style: 'margin-top:16px' }, t('recNote')),
     el('p', { style: 'margin:14px 0 0' },
       el('a', { href: '#/teas', onclick: () => closeSheet() }, t('catalogLink')))
   );

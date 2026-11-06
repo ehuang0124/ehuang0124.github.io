@@ -425,8 +425,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .pc-role { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--jf-gold-ink); }
 .pc-meta { margin: 4px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--jf-muted); }
 .pc-copy { margin: 7px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--jf-ink-soft); }
-.pc-reasons { margin: 8px 0 0; gap: 4px; }
-.pc-reasons li { font-size: 13.5px; line-height: 1.55; }
 .pc-tags { margin: 8px 0 0; gap: 5px; }
 .pc-tags .tag { font-size: 11px; padding: 1px 7px; line-height: 1.6; }
 .pc-aroma { margin: 5px 0 0; font-size: 11.5px; }
@@ -440,7 +438,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
   padding-top: 12px;
 }
 .pc-foot .btn { min-height: 40px; }
-.pc-brew { font-family: var(--jf-mono); font-size: 11.5px; letter-spacing: .02em; color: var(--jf-muted); }
 
 /* 導覽：上一款／第幾款／下一款 */
 .deck-nav {
@@ -526,10 +523,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
   text-transform: uppercase;
   color: var(--jf-muted);
 }
-.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
-.reasons li { position: relative; padding-left: 18px; font-size: 14px; color: var(--jf-ink-soft); }
-.reasons li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; background: var(--jf-gold); transform: rotate(45deg); }
-
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
   display: inline-flex;
@@ -547,7 +540,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 9px; font-size: 12px; color: var(--jf-matcha-deep); }
 .aroma-tags span::before { content: "◇"; margin-right: 4px; color: var(--jf-gold-ink); }
 
-/* 咖啡因標示 */
+/* 目錄詳情保留咖啡因與沖泡資料；結果卡牌與其詳情不顯示這些欄位 */
 .caffeine { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--jf-radius); background: var(--jf-warn-bg); border: 1px solid var(--jf-warn-line); }
 .caffeine .status { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #6B5222; }
 .caffeine .status .dot { width: 9px; height: 9px; border-radius: 50%; background: #B4762A; flex: none; }
@@ -558,7 +551,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .caffeine.free .note { color: var(--jf-matcha-deep); }
 .caffeine a { color: inherit; }
 
-/* 沖泡 */
 .brew { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; }
 .brew div { padding: 9px 10px; border-radius: 8px; background: var(--jf-paper-2); text-align: center; }
 .brew b { display: block; font: 600 16px/1.2 var(--jf-serif); color: var(--jf-ink); }
@@ -842,7 +834,7 @@ body[data-view="quiz"] .quiz-nav {
   .deck-nav .btn { min-width: 48px; min-height: 44px; padding: 0 12px; }
 }
 @media (max-height: 760px) {
-  /* 矮一點的視窗先收掉描述句：推薦原因才是要讀的內容 */
+  /* 矮一點的視窗先收掉描述句，替卡牌資訊與操作留空間 */
   body[data-view="result"] .pc-copy { display: none; }
   .pc-media { height: clamp(96px, 21svh, 170px); }
   .pc-foot { padding-top: 10px; }
