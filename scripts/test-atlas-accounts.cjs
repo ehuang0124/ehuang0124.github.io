@@ -550,7 +550,47 @@ async function main() {
     assert.equal(page.window.TravelAtlasAccount.user.id, traveller.id, 'the same browser keeps the same traveller');
     assert.equal(server.tables.logins.length, 2, 'each sign-in is logged');
     assert.equal(server.calls.filter(call => call.op === 'rpc').at(-1).name, 'atlas_login');
-    console.log('PASS creation and login: invite only on creation, login log, identity, companion stamping, cloud delete');
+
+    // Profile section: email is shown read-only, the display name can change,
+    // and a signed-in traveller can ask for a password-reset mail.
+    click(page.window, page.$('#account-menu-button'));
+    await page.settle();
+    assert.equal(page.$('#account-profile-name').textContent, 'Eva Huang', 'the profile shows the display name');
+    assert.equal(page.$('#account-profile-email').textContent, 'eva-approved@example.com', 'the profile shows the sign-in email');
+    assert.equal(page.$('#profile-name-input').value, 'Eva Huang', 'the rename field starts from the current name');
+    assert.equal(page.$('#profile-reset-password').hidden, false, 'cloud travellers can request a reset from the profile');
+    page.$('#profile-name-input').value = '   ';
+    input(page.window, page.$('#profile-name-input'));
+    click(page.window, page.$('#profile-save'));
+    await page.settle();
+    assert(page.$('#profile-feedback').textContent.includes('不能是空白'), 'a blank name is refused');
+    assert.equal(server.tables.profiles.find(row => row.id === traveller.id).display_name, 'Eva Huang', 'a blank name writes nothing');
+    page.$('#profile-name-input').value = 'Eva H.';
+    input(page.window, page.$('#profile-name-input'));
+    click(page.window, page.$('#profile-save'));
+    await page.settle(); await page.settle();
+    assert.equal(server.tables.profiles.find(row => row.id === traveller.id).display_name, 'Eva H.', 'the new name reaches the profile row');
+    assert.equal(page.window.TravelAtlasAccount.user.name, 'Eva H.', 'the session carries the new name');
+    assert.equal(page.$('#account-name').textContent, 'Eva H.', 'the chip shows the new name');
+    assert.equal(page.$('#account-profile-name').textContent, 'Eva H.');
+    assert(page.$('#profile-feedback').textContent.includes('Eva H.'), 'the save is confirmed in the menu');
+    assert.equal(page.$('#account-menu').hidden, false, 'the menu stays open after saving');
+    const resetCalls = server.calls.filter(call => call.op === 'resetPasswordForEmail').length;
+    click(page.window, page.$('#profile-reset-password'));
+    await page.settle();
+    const profileReset = server.calls.filter(call => call.op === 'resetPasswordForEmail').at(-1);
+    assert.equal(server.calls.filter(call => call.op === 'resetPasswordForEmail').length, resetCalls + 1, 'the profile reset sends one mail');
+    assert.equal(profileReset.payload.email, 'eva-approved@example.com', 'the reset goes to the signed-in address');
+    assert(profileReset.payload.options.redirectTo.startsWith('https://eva.example/personal/travel/map/'), 'the profile reset link returns to this page');
+    assert(page.$('#profile-feedback').textContent.includes('重設密碼的信已寄到'), 'the profile confirms the reset mail');
+    // Restore the name other scenarios expect.
+    page.$('#profile-name-input').value = 'Eva Huang';
+    input(page.window, page.$('#profile-name-input'));
+    click(page.window, page.$('#profile-save'));
+    await page.settle(); await page.settle();
+    assert.equal(page.window.TravelAtlasAccount.user.name, 'Eva Huang');
+    click(page.window, page.$('#account-menu-button'));
+    console.log('PASS profile: email shown, display name editable and saved, signed-in password reset');
   }
 
   // Personal passwords protect an account even when the invite is known.
@@ -853,10 +893,11 @@ async function main() {
     click(page.window, page.$('#account-login'));
     // Without an address the page explains what to fill in and sends nothing.
     page.$('#account-email').value = '';
+    const resetsBefore = server.calls.filter(call => call.op === 'resetPasswordForEmail').length;
     click(page.window, page.$('#account-forgot'));
     await page.settle();
     assert(page.$('#account-error').textContent.includes('電子郵件'), 'the page asks for the address');
-    assert.equal(server.calls.some(call => call.op === 'resetPasswordForEmail'), false, 'nothing is sent without an address');
+    assert.equal(server.calls.filter(call => call.op === 'resetPasswordForEmail').length, resetsBefore, 'nothing is sent without an address');
     // With the address a reset mail is requested, in plain language.
     page.$('#account-email').value = 'eva-approved@example.com';
     click(page.window, page.$('#account-forgot'));
@@ -865,7 +906,8 @@ async function main() {
     assert.equal(request.payload.email, 'eva-approved@example.com');
     assert(request.payload.options.redirectTo.startsWith('https://eva.example/personal/travel/map/'), 'the link returns to this page');
     assert.equal(request.payload.options.redirectTo.includes('?'), false, 'the link carries no query string');
-    assert(page.$('#account-error').textContent.includes('信已寄出'), 'the page says the mail was sent');
+    assert(page.$('#account-status').textContent.includes('信已寄出'), 'the page says the mail was sent');
+    assert.equal(page.$('#account-error').textContent, '', 'a sent reset mail is not shown as an error');
     console.log('PASS reset request: entry only on login, address required, link returns to the page');
   }
   {
@@ -921,6 +963,17 @@ async function main() {
     await page.settle();
     assert(page.$('#stamp-feedback').textContent.includes('已記錄'), 'demo stamps are recorded locally');
     assert(page.$('#friends-tabs').textContent.length > 0, 'demo exposes companions');
+    click(page.window, page.$('#account-menu-button'));
+    await page.settle();
+    assert.equal(page.$('#account-profile-email').textContent, '示範帳號（沒有電子郵件）', 'demo travellers are told there is no email');
+    assert.equal(page.$('#profile-reset-password').hidden, true, 'demo travellers get no reset mail');
+    page.$('#profile-name-input').value = '示範 Eva';
+    input(page.window, page.$('#profile-name-input'));
+    click(page.window, page.$('#profile-save'));
+    await page.settle();
+    assert.equal(page.window.TravelAtlasAccount.user.name, '示範 Eva', 'a demo rename applies immediately');
+    assert.equal(page.$('#account-name').textContent, '示範 Eva');
+    assert(page.$('#profile-feedback').textContent.includes('示範 Eva'));
     console.log('PASS demo: local sign-in, seeded trips, stamping, companions');
   }
 
