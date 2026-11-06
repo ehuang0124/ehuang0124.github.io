@@ -28,6 +28,10 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
     window.HTMLDialogElement.prototype.close = function(){ this.open = false; this.dispatchEvent(new window.Event('close')); };
   }
   window.BroadcastChannel = class { postMessage(){} addEventListener(){} close(){} };
+  // Removing a stamp asks first; the test drives the answer.
+  const confirmations = [];
+  let confirmAnswer = true;
+  window.confirm = message => { confirmations.push(message); return confirmAnswer; };
   const store = new Map([['eva.travel.stamp-atlas.v1', JSON.stringify({version:1,visits:{'us:yell':['2023-03'],'ca:banff':['2024-06']},customCities:[]})]]);
   Object.defineProperty(window,'localStorage',{value:{getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k),clear:()=>store.clear(),key:i=>[...store.keys()][i]??null,get length(){return store.size}},configurable:true});
   // CONFIG_OVERRIDE: this test supplies its own config so it never depends on
@@ -99,8 +103,14 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assertCount('#history-list li', 2);
   const stored = JSON.parse(window.localStorage.getItem('eva.travel.stamp-atlas.v1'));
   assert.deepEqual(stored.visits['countries:158'], ['2023-03','2024-05']);
+  // A removal must be confirmed: cancelling leaves the record untouched.
+  confirmAnswer = false;
   click($('#history-list button[data-date="2023-03"]')); await wait();
-  assertCount('#history-list li', 1);
+  assertCount('#history-list li', 2, 'cancelling the confirmation keeps both months');
+  confirmAnswer = true;
+  click($('#history-list button[data-date="2023-03"]')); await wait();
+  assertCount('#history-list li', 1, 'confirming removes one month');
+  assert(confirmations.at(-1).includes('2023.03'), 'the confirmation names the month being removed');
   // tabs and regions
   click($('#tab-na')); await wait();
   assert.equal($('#tab-count-na').textContent, '2 / 162', 'legacy us:/ca: keys are counted in the North America layer');
@@ -111,6 +121,30 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   click($('#tab-cities')); await wait();
   $('#place-search').value = 'Portland'; input($('#place-search')); await wait();
   assert.equal($('.place-item .city-code').textContent, 'PDX');
+  // A search term is an index over every category, and a result that belongs to
+  // another layer is still reachable from the tab you are on.
+  $('#place-search').value = '優勝美地'; input($('#place-search')); await wait();
+  const crossResults = $$('#place-list button[data-place]');
+  assert.equal(crossResults.length, 1, 'the term reaches a place on another layer');
+  assert(crossResults[0].textContent.includes('優勝美地'));
+  click(crossResults[0]); await wait();
+  assert.equal(d.body.dataset.atlasTheme, 'na', 'selecting it follows the place into its own tab');
+  assert($('#place-name').textContent.includes('優勝美地'));
+  assert.equal($('#place-search').value, '優勝美地', 'the typed term survives the jump');
+  // Nothing found: the empty state offers to add the typed name as a city, and
+  // the form opens with the name already filled in.
+  $('#place-search').value = 'zzzz'; input($('#place-search')); await wait();
+  assert.equal($$('#place-list button[data-place]').length, 0);
+  const addOwn = $('#place-list button[data-add-city]');
+  assert(addOwn, 'a missing destination can be added from the empty state');
+  assert(addOwn.textContent.includes('zzzz'));
+  click(addOwn); await wait();
+  assert.equal($('#city-dialog').open, true);
+  assert.equal($('#city-name').value, 'zzzz', 'the typed name is carried into the form');
+  click($('#city-cancel')); await wait();
+  click($('#tab-cities')); await wait();
+  assert.equal(d.body.dataset.atlasTheme, 'cities');
+  assert.equal($('#place-search').value, '', 'changing tab clears the index term');
   // custom city
   $('#place-search').value = ''; input($('#place-search')); await wait();
   click($('#add-city')); await wait();
