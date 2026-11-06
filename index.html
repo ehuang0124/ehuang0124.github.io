@@ -3,327 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Eva Huang researches AI evaluation, human preference, and public interest technology at the intersection of computer science and political science.">
-  <meta name="theme-color" content="#DCDEDD">
-  <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
-  <title>Eva Huang — Public interest technology &amp; AI research</title>
+  <meta name="description" content="Eva Huang on technology, public life, and belonging.">
+  <meta name="theme-color" content="#fffdf5">
+  <title>Eva Huang</title>
   <style>
-    :root {
-      /* Japanese traditional nezumi (mouse-gray) palette */
-      --shiro-nezumi: #DCDEDD; /* 白鼠 — page background */
-      --gin-nezumi: #AEAEB0;   /* 銀鼠 — mid gray */
-      --su-nezumi: #9FA0A0;    /* 素鼠 — soft gray */
-      --ai-nezumi: #6C848D;    /* 藍鼠 — blue-gray accent */
-      --ben-nezumi: #4E484B;   /* 弁鼠 — dark ink */
-      --beni-nezumi: #524748;  /* 紅消鼠 — muted red-brown accent */
-
-      --ink: var(--ben-nezumi);
-      --ink-soft: rgba(78, 72, 75, .72);
-      --line: rgba(78, 72, 75, .22);
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-    }
-
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-
     body {
       margin: 0;
-      color: var(--ink);
-      background: var(--shiro-nezumi);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.65;
+      background: #fffdf5;
+      color: #34392f;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      font-size: clamp(18px, 2.3vw, 21px);
+      line-height: 1.75;
       -webkit-font-smoothing: antialiased;
     }
-
-    .shell {
-      width: min(680px, calc(100% - 48px));
-      margin-inline: auto;
+    main {
+      width: min(620px, calc(100% - 48px));
+      margin: clamp(64px, 13vh, 140px) auto 64px;
     }
-
-    a { color: var(--ai-nezumi); text-underline-offset: 3px; }
-    a:hover { color: var(--beni-nezumi); }
-
-    header .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 10px 24px;
-      padding: 28px 0 0;
-      font-size: 14px;
-    }
-
-    .brand {
-      color: var(--ink);
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .nav-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 18px;
-    }
-
-    .nav-links a { color: var(--ink-soft); text-decoration: none; }
-    .nav-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-
-    main { padding: 56px 0 32px; }
-
     h1 {
-      margin: 0 0 18px;
-      font-family: var(--serif);
-      font-size: clamp(34px, 6vw, 46px);
-      font-weight: 600;
+      margin: 0 0 32px;
+      font-size: clamp(40px, 7vw, 56px);
+      font-weight: 400;
+      letter-spacing: -.035em;
       line-height: 1.15;
-      letter-spacing: -.01em;
     }
-
-    h2 {
-      margin: 52px 0 14px;
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 600;
+    p { margin: 0 0 24px; }
+    a {
+      color: #52652e;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 5px;
     }
-
-    h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    p { margin: 0 0 14px; text-wrap: pretty; }
-    .lede { color: var(--ink-soft); font-size: 17px; }
-
-    .headshot {
-      margin: 26px 0 8px;
-    }
-
-    .headshot img {
-      width: 148px;
-      height: auto;
-      border-radius: 6px;
-      display: block;
-    }
-
-    .headshot figcaption {
-      margin-top: 6px;
-      color: var(--ink-soft);
-      font-size: 13px;
-    }
-
-    .focus-list,
-    .work-sublist {
-      margin: 0 0 14px;
-      padding-left: 0;
-      list-style: none;
-    }
-
-    .focus-list li,
-    .work-sublist li {
-      margin: 0 0 10px;
-      padding-left: 18px;
-      position: relative;
-      text-wrap: pretty;
-    }
-
-    .focus-list li::before,
-    .work-sublist li::before {
-      content: "—";
-      position: absolute;
-      left: 0;
-      color: var(--su-nezumi);
-    }
-
-    .work-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .work-list > li {
-      padding: 16px 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .work-title {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 10px;
-      align-items: baseline;
-    }
-
-    .work-list p { margin: 6px 0 0; }
-
-    .work-sublist {
-      margin: 8px 0 0;
-      font-size: 15px;
-    }
-
-    .work-sublist li {
-      margin: 0 0 8px;
-    }
-
-    .work-sublist li:last-child {
-      margin-bottom: 0;
-    }
-
-    footer {
-      padding: 28px 0 44px;
-      border-top: 1px solid var(--line);
-      color: var(--ink-soft);
-      font-size: 13px;
-    }
-
-    .footer-bottom {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px 20px;
-    }
-
-    .footer-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
-    .footer-links a { color: var(--ink-soft); text-decoration: none; }
-    .footer-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #293c10; }
+    a:focus-visible { outline: 2px solid #52652e; outline-offset: 6px; }
   </style>
 </head>
 <body>
-  <header class="shell">
-    <nav class="nav" aria-label="Main navigation">
-      <a class="brand" href="#top">Eva Huang</a>
-      <div class="nav-links">
-        <a href="#focus">Focus</a>
-        <a href="#research">Research</a>
-        <a href="#work">Systems</a>
-        <a href="#service">Service</a>
-        <a href="#books">Books</a>
-        <a href="/writing/">Writing</a>
-        <a href="mailto:ehuang0124@gmail.com">Email</a>
-      </div>
-    </nav>
-  </header>
-
-  <main class="shell" id="main">
-    <section id="top">
-      <h1>Technology for the public interest.</h1>
-      <p class="lede">I research how AI systems can align with human preference and democratic values — using AI evaluation, mixed methods, and political science. Computer Science + Political Science.</p>
-      <figure class="headshot">
-        <img src="assets/eva-huang.jpg" alt="Eva Huang sitting in a mountain meadow" width="1350" height="1800">
-        <figcaption>Eva Huang outdoors in a mountain meadow.</figcaption>
-      </figure>
-      <p><a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub</a> · <a href="https://www.linkedin.com/in/ehuang42/" target="_blank" rel="noreferrer">LinkedIn</a> · <a href="mailto:ehuang0124@gmail.com">ehuang0124@gmail.com</a></p>
-    </section>
-
-    <section id="focus">
-      <h2>Research focus</h2>
-      <ul class="focus-list">
-        <li><strong>Public interest technology</strong> — how AI systems can serve the common good and democratic values.</li>
-        <li><strong>AI evaluation + human preference</strong> — measuring whether models behave the way people actually want them to.</li>
-        <li><strong>Mixed methods + political science</strong> — combining computational analysis with fieldwork, interviews, and institutional study.</li>
-      </ul>
-    </section>
-
-    <section id="research">
-      <h2>Research &amp; coursework</h2>
-      <ul class="work-list">
-        <li>
-          <div class="work-title"><h3>AI evaluation &amp; human preference (LMArena)</h3></div>
-          <p>Examines how crowd-sourced pairwise preferences on LMArena evaluate open-ended language model behavior, and where arena voting aligns with or falls short of trustworthiness criteria under the NIST AI Risk Management Framework (criterion coverage, validity, and reliability). Includes large-scale screening of 137,293 real-world conversations from the French public <em>compar:IA</em> arena corpus—isolating 8,739 civic and political prompts—to study how raters judge models on contested public-interest topics. <a href="https://github.com/ehuang0124/evaluation" target="_blank" rel="noreferrer">Repository</a></p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Tech, democracy &amp; media</h3></div>
-          <p>Two institutional case studies on how technical architecture and public governance jointly shape democratic legitimacy:</p>
-          <ul class="work-sublist">
-            <li><strong>Electronic voting machines</strong> — Analyzed two decades of U.S. direct-recording electronic (DRE) voting systems, Help America Vote Act certification gaps, disability accessibility mandates, and voter-verified paper audit trails—showing how security, usability, and unequal precinct administration mediate public trust.</li>
-            <li><strong>Taiwan's COVID-19 response</strong> — Examined digital contact tracing, electronic quarantine enforcement, and state–civic data integration during the pandemic, evaluating privacy, surveillance, and civil-liberties tradeoffs alongside democratic accountability.</li>
-          </ul>
-        </li>
-        <li>
-          <div class="work-title"><h3>AI-assisted trade skills for workforce development (BenchMate)</h3></div>
-          <p>Conducted qualitative interviews, contextual inquiries, and apprenticeship ecosystem research (grounded in U.S. Department of Labor and BLS data) to study barriers in hands-on technical learning. Co-built <strong>BenchMate</strong>, an instructor-in-the-loop system that converts shop demonstrations, equipment manuals, and safety SOPs into step-by-step multimodal guides with page-cited safety checks—expanding training capacity for makerspaces, community colleges, and reentry workforce programs. <a href="https://github.com/Ne8ula/ps103_2026" target="_blank" rel="noreferrer">Repository</a></p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Recruitment fraud labeler on Bluesky</h3></div>
-          <p>Built a Bluesky moderation labeler to surface recruitment fraud, impersonated employers, and deceptive employment schemes targeting job seekers—exploring how user-subscribed, decentralized labeling separates safety signaling from centralized takedowns while managing false-positive risk.</p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Internet law</h3></div>
-          <p>Doctrinal study of platform governance and speech regulation across U.S. and European legal frameworks—covering First Amendment scrutiny, intermediary liability under CDA Section 230 and the EU Digital Services Act, generative AI defamation and authorship, DMCA §512 safe harbors and fair use, Fourth Amendment surveillance limits, and anonymous online speech.</p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Southeast Asian migrant cultural + spatial analysis in Taiwan</h3></div>
-          <p>Selected for the National Geographic Olympiad. Combined GIS spatial mapping, field observation, questionnaires, and first-person interviews across five community sites in New Taipei, Taoyuan, Keelung, and Yilan—finding that independent bookstores and mutual-aid spaces build everyday belonging while creating platforms for cross-cultural understanding. <a href="https://docs.google.com/presentation/d/0BzW7Mt3pnvR8VnlrOXJBY19FTHc/edit?usp=drive_link&amp;ouid=101359900920162144873&amp;resourcekey=0-9OkbSZs-mfs8n-ovzbCMqw&amp;rtpof=true&amp;sd=true" target="_blank" rel="noreferrer">Research deck</a></p>
-        </li>
-      </ul>
-    </section>
-
-    <section id="work">
-      <h2>Infrastructure &amp; community systems</h2>
-      <ul class="work-list">
-        <li>
-          <div class="work-title"><h3>Trust Platform | Salesforce</h3></div>
-          <p>Built and operated foundational cloud infrastructure systems supporting critical public-sector, civic, and enterprise workloads at global scale—partnering with 200+ engineering teams and training 300+ developers on platform reliability and policy governance. <a href="https://www.salesforce.com/platform/infrastructure/" target="_blank" rel="noreferrer">Platform overview</a></p>
-          <ul class="work-sublist">
-            <li><strong>3PP security &amp; reliability automation</strong> — Automated security compliance, vulnerability governance, and safe deployment guardrails for third-party infrastructure software, pairing stronger default policy enforcement with evidence-based exception review.</li>
-            <li><strong>DDoS debugging &amp; GSLB regional failover</strong> — Debugged and mitigated live connection-saturation DDoS incidents targeting public-sector tenants, implemented self-serve rate-limiting protections, and led Global Server Load Balancing (GSLB) regional failover and resilience exercises across multi-region data centers.</li>
-            <li><strong>GovCloud &amp; FedRAMP compliance environments</strong> — Engineered compliant cloud infrastructure and strict tenant-isolation boundaries within GovCloud and FedRAMP-regulated environments supporting government agencies and digital public services.</li>
-          </ul>
-        </li>
-        <li>
-          <div class="work-title"><h3>Local business engagement &amp; community commerce | WishMobile</h3></div>
-          <p>Worked with independent small and medium-sized businesses in neighborhood wellness and recreation to lower barriers to digital adoption. Mapped day-to-day merchant workflows and replaced high-friction phone verification with accessible web, calendar, and map-based discovery—helping local operators strengthen recurring customer engagement and attract new community patrons. <a href="https://global.wishmobile.com/" target="_blank" rel="noreferrer">Project website</a></p>
-        </li>
-      </ul>
-    </section>
-
-    <section id="service">
-      <h2>Mentorship, nonprofit &amp; speaking</h2>
-      <ul class="work-list">
-        <li>
-          <div class="work-title"><h3>Beyond Taiwan</h3></div>
-          <p>Co-founded a volunteer-led nonprofit expanding global higher-education access and career mentorship for underrepresented Taiwanese public-school students. Authored mentor handbooks and training curricula as the network grew to 500+ community members and 200+ workshop participants; personally mentored eight students over five years and piloted a human-in-the-loop AI synthesis workflow (~200 applications per cohort) to support equitable pairing.</p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Patina</h3></div>
-          <p>Mentor for college students and junior technologists entering engineering and product roles in New York City. Co-facilitated cohort workshops on leadership values, interpersonal communication, and workplace allyship, and designed a structured Mentorship Pods model—small mentor–mentee groups with midpoint check-ins and exit reflections—to strengthen peer belonging and retention.</p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Northwestern University — Integrated Marketing Program</h3></div>
-          <p>Delivered an invited graduate workshop for Northwestern University's Integrated Marketing course on personal branding, cultivating a public voice across disciplines, and the editorial and audience-building craft of publishing literary books.</p>
-        </li>
-      </ul>
-    </section>
-
-    <section id="books">
-      <h2>Books &amp; literary awards</h2>
-      <ul class="work-list">
-        <li>
-          <div class="work-title"><h3>《太陽雨》 (<em>Sunny Rain</em>)</h3></div>
-          <p>Published full-length essay collection exploring transpacific migration, public housing and urban renewal displacement in Taipei, and everyday belonging across Taiwanese and American cities. Currently developing a second travel-literature manuscript, <em>《經過的方式》 (Ways of Passing By)</em>. <a href="/writing/">Writing archive (2N)</a></p>
-        </li>
-        <li>
-          <div class="work-title"><h3>Literary awards &amp; public essays</h3></div>
-          <p>Awarded Second Prize in Essay at the 2022 Taichung Literature Award (<em>臺中文學獎散文第二名</em>) for <a href="/writing/2022/11/亞超/">〈亞超〉 (<em>Asian Supermarket</em>)</a>, and Honorable Mentions at the 2024 North America Wen-Yuan Literary Awards (<em>北美洲文苑文學獎</em>) for <a href="/writing/2025/03/霧的練習/">〈霧的練習〉</a> and <a href="/writing/2025/03/提燈蜡蟬-lantern-fly/">〈提燈蜡蟬〉</a>. Cultural and urban commentary published in CommonWealth <em>Opinion</em> (<em>《天下獨立評論》</em>) and <em>Unitas</em> (<em>《聯合文學》</em>).</p>
-        </li>
-      </ul>
-    </section>
+  <main>
+    <h1>Eva Huang</h1>
+    <p>I work at the intersection of technology and public life, drawing on computer science and political science to explore how AI systems can better reflect human preferences and democratic values.</p>
+    <p>My research focuses on AI evaluation and public interest technology. I combine computational analysis with interviews and institutional study, asking what we measure, whose perspectives count, and how technical choices shape everyday life.</p>
+    <p>Previously, I built cloud infrastructure at Salesforce. Beyond engineering, I have worked on education access and mentorship for Taiwanese students, helping people find their way across unfamiliar institutions and possibilities.</p>
+    <p>I also write essays about migration, cities, and belonging. My collection, <em>《太陽雨》 (Sunny Rain)</em>, follows life between Taiwan and the United States. A second manuscript, <em>《經過的方式》 (Ways of Passing By)</em>, is in progress.</p>
+    <p>Across research and writing, I return to questions of trust, place, and how we live together in community.</p>
+    <p><a href="/writing/">My writing</a></p>
   </main>
-
-  <footer>
-    <div class="shell footer-bottom">
-      <span>© <span id="year"></span> Eva Huang</span>
-      <div class="footer-links">
-        <a href="mailto:ehuang0124@gmail.com">Email</a>
-        <a href="https://github.com/ehuang0124" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="https://www.linkedin.com/in/ehuang42/" target="_blank" rel="noreferrer">LinkedIn</a>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
 </body>
 </html>
