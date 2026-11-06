@@ -632,8 +632,19 @@ function roleLabel(role) {
   return t('roleExplore');
 }
 
-/* 一次顯示一張完整茶款詳情，左右滑動切換推薦。 */
-const deck = { total: 0, index: 0, cards: [], dots: [], status: null, results: [] };
+/* 三張完整茶款詳情疊成一副牌；拖曳最上層，後面的卡會同時往前補位。 */
+const deck = {
+  total: 0,
+  index: 0,
+  cards: [],
+  dots: [],
+  status: null,
+  results: [],
+  stage: null,
+  drag: null,
+  animating: false,
+  timer: null
+};
 
 /* 茶種的飲品插畫：認茶類用，不是某一支商品的實拍照 */
 function familyImage(tea) {
@@ -658,7 +669,7 @@ function profileCard(row, index) {
   );
 }
 
-/* 只換卡牌，不重繪整頁：按鈕與焦點都留著，鍵盤使用者不會被丟回頁首 */
+/* 只換卡牌，不重繪整頁：按鈕與焦點都留著，鍵盤使用者不會被丟回頁首。 */
 function setStep(index) {
   if (!deck.total) return;
   const next = Math.max(0, Math.min(deck.total - 1, index));
@@ -680,35 +691,216 @@ function setStep(index) {
     dot.classList.toggle('is-active', i === next);
   });
 
+  paintStack();
   const row = deck.results[next];
   deck.status.textContent = t('deckStatus', next + 1, deck.total, L(row.tea.nameZh, row.tea.nameEn));
 }
 
+/* depth 0 是最上層；其餘兩張保留在畫面中，而不是 display:none。
+   拖曳進度會讓第二張升至頂部、第三張升至第二層，放手時沒有突兀跳位。 */
+function paintStack(progress = 0) {
+  const p = Math.max(0, Math.min(1, progress));
+  deck.cards.forEach((card, i) => {
+    const depth = (i - deck.index + deck.total) % deck.total;
+    const visualDepth = Math.max(0, depth - p);
+    const tilt = i % 2 ? 1.2 : -1.4;
+    card.dataset.depth = String(depth);
+    card.style.zIndex = String(deck.total - depth);
+    card.style.setProperty('--stack-y', `${visualDepth * 12}px`);
+    card.style.setProperty('--stack-scale', String(1 - visualDepth * 0.035));
+    card.style.setProperty('--stack-rotate', `${visualDepth * tilt}deg`);
+  });
+}
+
+function clearDragStyles(card) {
+  card.style.removeProperty('--drag-x');
+  card.style.removeProperty('--drag-y');
+  card.style.removeProperty('--drag-rotate');
+}
+
+function releasePointer(drag) {
+  if (!drag || !deck.stage || !drag.captured) return;
+  if (deck.stage.hasPointerCapture(drag.id)) deck.stage.releasePointerCapture(drag.id);
+}
+
+function resetDrag() {
+  const drag = deck.drag;
+  if (!drag) return;
+  deck.drag = null;
+  releasePointer(drag);
+  drag.card.classList.remove('is-dragging');
+  clearDragStyles(drag.card);
+  paintStack();
+}
+
+function animateSwipe(direction, dragY = 0) {
+  if (!deck.total || deck.animating) return;
+  const target = deck.index + (direction < 0 ? 1 : -1);
+  if (target < 0 || target >= deck.total) {
+    resetDrag();
+    return;
+  }
+
+  const card = deck.cards[deck.index];
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  deck.drag = null;
+  deck.animating = true;
+  card.classList.remove('is-dragging');
+
+  if (reducedMotion) {
+    clearDragStyles(card);
+    setStep(target);
+    deck.animating = false;
+    return;
+  }
+
+  card.classList.add('is-leaving');
+  const width = Math.max(deck.stage.clientWidth, 280);
+  const exitY = Math.max(-90, Math.min(90, dragY * 0.25));
+
+  /* 鍵盤切換也先讓瀏覽器畫出起始位置，再將最上層拋出。 */
+  requestAnimationFrame(() => {
+    if (!card.isConnected) return;
+    card.style.setProperty('--drag-x', `${direction * (width + 140)}px`);
+    card.style.setProperty('--drag-y', `${exitY}px`);
+    card.style.setProperty('--drag-rotate', `${direction * 20}deg`);
+    paintStack(1);
+  });
+
+  deck.timer = window.setTimeout(() => {
+    if (!card.isConnected) { deck.animating = false; return; }
+    card.classList.add('is-resetting');
+    setStep(target);
+    clearDragStyles(card);
+    void card.offsetWidth;
+    requestAnimationFrame(() => {
+      card.classList.remove('is-resetting', 'is-leaving');
+      deck.animating = false;
+    });
+  }, 290);
+}
+
+function moveDeck(delta) {
+  if (deck.animating) return;
+  const target = deck.index + delta;
+  if (target < 0 || target >= deck.total) return;
+  animateSwipe(delta > 0 ? -1 : 1);
+}
+
 function buildDeck(report) {
+  window.clearTimeout(deck.timer);
   deck.total = report.results.length;
   deck.results = report.results;
   deck.cards = report.results.map((row, i) => profileCard(row, i));
+  deck.drag = null;
+  deck.animating = false;
 
   deck.dots = report.results.map(() => el('span', { class: 'deck-indicator' }));
   deck.status = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
 
   const stage = el('div', { class: 'deck', role: 'group', 'aria-label': t('deckAria'), tabindex: '0' }, deck.cards);
-  let start = null;
+  deck.stage = stage;
+
   stage.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || deck.animating || deck.drag) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    start = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    const card = event.target.closest('.profile-card');
+    if (card !== deck.cards[deck.index]) return;
+    /* 按鈕與連結保留原本的點擊，不被拖曳手勢搶走。 */
+    if (event.target.closest('button, a, input, select, textarea, summary')) return;
+    deck.drag = {
+      id: event.pointerId,
+      card,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastTime: event.timeStamp,
+      dx: 0,
+      dy: 0,
+      velocity: 0,
+      axis: null,
+      captured: false
+    };
+    if (event.pointerType === 'mouse') {
+      stage.setPointerCapture(event.pointerId);
+      deck.drag.captured = true;
+    }
   });
+
+  stage.addEventListener('pointermove', (event) => {
+    const drag = deck.drag;
+    if (!drag || drag.id !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+
+    if (!drag.axis) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 7) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        deck.drag = null;
+        releasePointer(drag);
+        return;
+      }
+      drag.axis = 'x';
+      drag.card.classList.add('is-dragging');
+      if (!drag.captured) {
+        stage.setPointerCapture(event.pointerId);
+        drag.captured = true;
+      }
+    }
+    if (drag.axis !== 'x') return;
+    event.preventDefault();
+
+    const elapsed = Math.max(1, event.timeStamp - drag.lastTime);
+    const velocity = (event.clientX - drag.lastX) / elapsed;
+    drag.velocity = drag.velocity * 0.65 + velocity * 0.35;
+    drag.lastX = event.clientX;
+    drag.lastTime = event.timeStamp;
+    drag.dx = dx;
+    drag.dy = dy;
+
+    const rotation = Math.max(-18, Math.min(18, dx * 0.055));
+    drag.card.style.setProperty('--drag-x', `${dx}px`);
+    drag.card.style.setProperty('--drag-y', `${dy * 0.22}px`);
+    drag.card.style.setProperty('--drag-rotate', `${rotation}deg`);
+    paintStack(Math.abs(dx) / Math.max(1, stage.clientWidth * 0.72));
+  });
+
   stage.addEventListener('pointerup', (event) => {
-    if (!start || start.id !== event.pointerId) return;
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    start = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.2) setStep(deck.index + (dx < 0 ? 1 : -1));
+    const drag = deck.drag;
+    if (!drag || drag.id !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    deck.drag = null;
+    releasePointer(drag);
+    drag.card.classList.remove('is-dragging');
+
+    if (drag.axis !== 'x') {
+      clearDragStyles(drag.card);
+      return;
+    }
+
+    const direction = dx < 0 ? -1 : 1;
+    const hasDestination = direction < 0 ? deck.index < deck.total - 1 : deck.index > 0;
+    const threshold = Math.min(110, stage.clientWidth * 0.28);
+    const fastEnough = Math.abs(drag.velocity) > 0.55 && Math.abs(dx) > 24 && Math.sign(drag.velocity) === direction;
+    const shouldSwipe = hasDestination && (Math.abs(dx) >= threshold || fastEnough);
+    if (shouldSwipe) {
+      animateSwipe(direction, dy);
+    } else {
+      clearDragStyles(drag.card);
+      paintStack();
+    }
   });
-  stage.addEventListener('pointercancel', () => { start = null; });
+
+  stage.addEventListener('pointercancel', resetDrag);
+  stage.addEventListener('lostpointercapture', (event) => {
+    /* 觸控原目標把 capture 交給 stage 時也會 bubbling 這個事件；那不是手勢取消。 */
+    if (deck.drag?.id === event.pointerId && !stage.hasPointerCapture(event.pointerId)) resetDrag();
+  });
+  stage.addEventListener('dragstart', (event) => event.preventDefault());
+
   const indicators = el('div', { class: 'deck-indicators', 'aria-hidden': 'true' }, deck.dots);
   return { stage, indicators };
-
 }
 
 function viewResults(code) {
@@ -930,8 +1122,8 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (location.hash.startsWith('#/result') && deck.total) {
-    if (event.key === 'ArrowLeft') { event.preventDefault(); setStep(deck.index - 1); }
-    if (event.key === 'ArrowRight') { event.preventDefault(); setStep(deck.index + 1); }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); moveDeck(-1); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); moveDeck(1); }
   }
 });
 
