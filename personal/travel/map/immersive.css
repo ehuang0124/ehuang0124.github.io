@@ -86,3 +86,26 @@ body[data-atlas-theme="okinawa"] .choice-arrow{color:inherit}
   .collection-menu-inner{background-attachment:scroll}
   .collection-menu-heading{margin:32px 0 20px}
 }
+
+/* An on-demand, OFL-licensed fallback covers arbitrary account initials,
+   including characters missing from the site's small editorial CJK subset. */
+body{
+  --ng-sans:"Noto Sans JP","Noto Sans TC","Atlas Sans TC","Noto Sans TC Variable","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+  --ng-grotesk:"Archivo","Noto Sans JP","Noto Sans TC","Atlas Sans TC","Noto Sans TC Variable",Arial,sans-serif;
+  --sans:var(--ng-sans);--serif:var(--ng-sans);--mono:var(--ng-grotesk);
+}
+.stamp-signatures{margin:-6px 0 17px}
+.stamp-signatures-label{display:block;margin-bottom:7px;color:var(--ng-ink-soft);font-size:11px;font-weight:700}
+.stamp-signature-list{display:flex;flex-wrap:wrap;gap:7px}
+.stamp-signature{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 9px 4px 4px;border:1px solid #efc8c9;border-radius:8px;background:#fff8f6;color:var(--ng-ink-soft);font-size:11px;font-weight:700}
+.signature-seal{display:grid;place-items:center;width:28px;height:28px;flex:none;border:2px double #aa263b;border-radius:50%;color:#a92339;font:900 14px/1 var(--ng-sans);transform:rotate(-8deg)}
+.signature-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-seal,.state-imprint{pointer-events:none}
+.map-seal-outer{fill:color-mix(in srgb,var(--family-tint,#c9202f) var(--tile-solid,75%),var(--ng-white));stroke:var(--ng-white);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.map-seal-inner{fill:none;stroke:var(--family-ink,#7b1825);stroke-width:.7;stroke-dasharray:1.5 1;vector-effect:non-scaling-stroke}
+.map-seal-initial{fill:var(--family-ink,#7b1825);font-family:var(--ng-sans);font-weight:900}
+.place-item.done .item-status{font-family:var(--ng-sans);font-weight:900}
+#account-dialog p.verification-status{
+  margin:0 0 14px;padding:11px 13px;border-left:3px solid #287b65;border-radius:var(--ng-r-sm);
+  background:#eaf7f0;color:#195640;font-size:12px;line-height:1.7;
+}

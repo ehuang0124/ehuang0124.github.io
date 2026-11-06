@@ -3,11 +3,10 @@
 // Transport only: this module owns sign-in, the cloud rows, and realtime events.
 // app.js owns the map and the local record model.
 //
-// Supabase Auth handles personal passwords and confirms email ownership. Only
-// account creation redeems the shared invite in Postgres (`atlas_redeem_code`)
-// after that confirmation to create the profile required by Row Level Security.
-// Returning-user `atlas_login` requires confirmation and an existing profile,
-// records the login, and never checks an invite or approves an account.
+// Supabase Auth handles personal passwords and email confirmation. A verified
+// account must still redeem the shared invite in Postgres before a profile is
+// created. Returning-user `atlas_login` requires that profile and never grants
+// approval. Neither the password nor the invite is saved by this page.
 //
 // When no Supabase project is configured the module falls back to the
 // browser-only `localGate` passphrase in config.js.
@@ -25,6 +24,7 @@
   // Legacy generated credentials are no longer used or retained.
   const DEVICE_KEY = 'eva.travel.atlas.device.v1';
   let authenticating = false;
+  let recoveryFlow = false;
   const TRAVELLER_NAME_KEY = 'eva.travel.atlas.name.v1';
   const DEMO_USERS = [
     { id:'demo-eva', name:'Eva Huang' },
@@ -380,28 +380,44 @@
     },
     async refresh() { return syncPull(); },
     signIn,
-    resendVerification,
     signOut,
     enterDemo,
     exitDemo,
     async init() {
       if (initialised) return;
       initialised = true;
+      // An explicitly requested demo must never contact the configured project.
+      const demoRequested = Boolean(config.demoMode) || new URLSearchParams(location.search).has('demo');
+      if (demoRequested) {
+        state.mode = 'demo';
+        state.connection = 'online';
+        startDemoChannel();
+        profilesLoadDemo();
+        await syncPull();
+        const id = demoSession();
+        if (id) enterDemo(id);
+        emit('ready', status());
+        return;
+      }
       if (isConfigured()) {
+        // Capture the recovery type before the Auth client consumes the hash.
+        recoveryFlow = recoveryLink();
         try { localStorage.removeItem(DEVICE_KEY); } catch { /* ignore */ }
         state.mode = 'cloud';
         state.connection = 'connecting';
         if (!window.supabase?.createClient) { setConnection('error'); return; }
         client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
-          auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce' }
+          // The email link may open on another device/browser. The implicit callback
+          // can complete there without a browser-specific PKCE verifier.
+          auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'implicit' }
         });
         client.auth.onAuthStateChange((event, session) => {
           if (authenticating) return;
           // A recovery link proves the address; it only asks for a new password.
-          if (event === 'PASSWORD_RECOVERY') { emit('recovery', true); return; }
+          if (event === 'PASSWORD_RECOVERY') { recoveryFlow = true; emit('recovery', true); return; }
           if (!session?.user) { setUser(null); return; }
           // A refreshed token for the traveller already on screen changes nothing.
-          if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id) return;
+          if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id && session.user.email_confirmed_at) return;
           resolveSession(session);
         });
         const { data } = await client.auth.getSession();
@@ -409,27 +425,12 @@
         setConnection('online');
         // A link that carries the recovery type opens the reset view even if
         // the exchange completes after the page has already rendered.
-        if (recoveryLink()) setTimeout(() => emit('recovery', true), 0);
+        if (recoveryFlow) setTimeout(() => emit('recovery', true), 0);
         // Every visitor loads the public atlas, signed in or not.
         await syncPull();
         startPolling();
         window.addEventListener('online', () => { refreshConnection(); flush(); syncPull(); });
         document.addEventListener('visibilitychange', () => { if (!document.hidden) { syncPull(); flush(); } });
-        emit('ready', status());
-        return;
-      }
-      // Demo mode is opt-in: config.demoMode, or ?demo=1 on the page URL.
-      const demoRequested = Boolean(config.demoMode) || new URLSearchParams(location.search).has('demo');
-      if (demoRequested) {
-        state.mode = 'demo';
-        state.connection = 'online';
-        startDemoChannel();
-        profilesLoadDemo();
-        // Load the shared demo atlas before announcing readiness, so a visitor
-        // sees the same collection as a signed-in traveller.
-        await syncPull();
-        const id = demoSession();
-        if (id) enterDemo(id);
         emit('ready', status());
         return;
       }
@@ -463,33 +464,6 @@
   api.setDiscoverable = setDiscoverable;
 
   // ---------- auth ----------
-  function emailRedirectTo() {
-    const url = new URL(location.href);
-    url.hash = '';
-    for (const key of ['code', 'error', 'error_code', 'error_description']) url.searchParams.delete(key);
-    return url.toString();
-  }
-  function hasVerifiedEmail(user) { return Boolean(user?.email_confirmed_at); }
-  function isEmailNotConfirmed(error) {
-    return /email_confirmation_required|email[ _]not[ _]confirmed|confirm your email/i.test(`${error?.message || error || ''} ${error?.code || ''}`);
-  }
-  function verificationRequired(email) { return { ok:true, verificationRequired:true, email }; }
-  async function resendVerification(email) {
-    if (!client) return { ok:false, reason:'驗證信暫時無法寄出，請稍後再試。' };
-    const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, reason:'請輸入有效的電子郵件。' };
-    try {
-      const { error } = await client.auth.resend({
-        type:'signup', email:address,
-        options:{ emailRedirectTo:emailRedirectTo() }
-      });
-      if (error) return { ok:false, reason:signInErrorText(error) };
-      return { ok:true };
-    } catch (error) {
-      console.warn('verification resend failed', error);
-      return { ok:false, reason:signInErrorText(error) };
-    }
-  }
   // Anyone can open the page source, so failures are answered in plain
   // language. Setup steps, keys and file paths stay in the repo, never here.
   function signInErrorText(error) {
@@ -498,8 +472,11 @@
     if (/already registered|user_already_exists|email_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
     if (/weak_password|password.*(short|least|weak)/i.test(text)) return '密碼太短，請換一組超過 6 個字元的密碼。';
     if (/rate.limit|too many requests|over_.*rate_limit/i.test(text)) return '登入或註冊太頻繁，請稍後再試。';
-    if (isEmailNotConfirmed(error)) {
-      return '這個電子郵件還沒驗證，請先開啟信箱中的驗證連結。';
+    if (/email_confirmation_required|email not confirmed|email_not_confirmed|confirm your email/i.test(text)) {
+      return '請先點擊驗證信中的連結，驗證信箱後再繼續。';
+    }
+    if (/email_address_not_authorized|error sending confirmation email|email.*(not authorized|sending|blocked)/i.test(text)) {
+      return '驗證信暫時無法寄出，請稍後再試或聯絡網站擁有者。';
     }
     if (/signups? (are )?(not allowed|disabled)|signup.*disabl/i.test(text)) {
       return '目前還不能建立帳號，請聯絡網站擁有者。';
@@ -523,21 +500,59 @@
       case 'no_code_set':
         return '目前還不能建立帳號，請聯絡網站擁有者。';
       case 'not_approved': return '帳號尚未完成建立，請切換至「建立帳號」並輸入邀請碼。';
-      case 'email_unverified': return '這個電子郵件還沒驗證，請先開啟信箱中的驗證連結。';
+      case 'email_unverified': return '請先點擊驗證信中的連結，驗證信箱後再繼續。';
       case 'no_session': return '登入狀態已失效，請重新整理再試。';
       default: return '登入失敗，請稍後再試。';
     }
   }
+  function confirmationRedirect() {
+    // Do not carry filters, demo flags or authentication tokens into the email.
+    const url = new URL(location.href);
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  }
+  async function confirmationEnabled() {
+    // Fail closed before creating an Auth user if the project would silently
+    // auto-confirm arbitrary addresses. The settings endpoint is public.
+    try {
+      const response = await fetch(`${config.supabaseUrl}/auth/v1/settings`, {
+        headers:{ apikey:config.supabaseAnonKey }
+      });
+      if (!response.ok) throw new Error(`auth settings HTTP ${response.status}`);
+      const settings = await response.json();
+      return settings.mailer_autoconfirm === false;
+    } catch (error) {
+      console.warn('could not check email confirmation', error);
+      return null;
+    }
+  }
+  const validEmail = address => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address);
+  async function resendVerification(email) {
+    if (state.mode !== 'cloud' || !client) return { ok:false, reason:'登入服務暫時無法使用，請稍後再試。' };
+    const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!validEmail(address)) return { ok:false, field:'#account-email', reason:'請輸入有效的電子郵件。' };
+    try {
+      const { error } = await client.auth.resend({ type:'signup', email:address, options:{ emailRedirectTo:confirmationRedirect() } });
+      if (error) return { ok:false, reason:signInErrorText(error) };
+      // Avoid revealing whether an address already has an account.
+      return { ok:true, reason:'如果信箱仍待驗證，驗證信已寄出。請查看收件匣與垃圾郵件。' };
+    } catch (error) {
+      console.warn('verification email could not be resent', error);
+      return { ok:false, reason:signInErrorText(error) };
+    }
+  }
+  api.resendVerification = resendVerification;
+
   async function signIn({ code, name, email, password, createAccount = false } = {}) {
     if (state.mode === 'demo') { enterDemo('demo-eva'); return { ok:true }; }
-    // No backend: the dialog collects the browser-only passphrase instead.
     if (state.mode === 'local') return localSignIn(code);
     if (!client) return { ok:false, reason:'登入服務暫時無法使用，請稍後再試。' };
     const value = typeof code === 'string' ? code.trim() : '';
     const traveller = typeof name === 'string' ? name.trim().slice(0, 40) : '';
     if (createAccount && !value) return { ok:false, field:'#access-code', reason:'請輸入邀請碼。' };
     const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, field:'#account-email', reason:'請輸入有效的電子郵件。' };
+    if (!validEmail(address)) return { ok:false, field:'#account-email', reason:'請輸入有效的電子郵件。' };
     if (typeof password !== 'string' || !password) return { ok:false, field:'#account-password', reason:'請輸入個人密碼。' };
     if (password.length <= 6) return { ok:false, field:'#account-password', reason:'密碼需超過 6 個字元。' };
     if (createAccount && !traveller) return { ok:false, field:'#traveller-name', reason:'請輸入顯示名稱。' };
@@ -549,38 +564,47 @@
     setConnection('connecting');
     let accepted = false;
     try {
+      if (createAccount) {
+        const enabled = await confirmationEnabled();
+        if (enabled !== true) {
+          return { ok:false, reason:enabled === false
+            ? '目前還不能建立帳號，請聯絡網站擁有者。'
+            : '網路連線似乎有問題，請檢查網路後再試。' };
+        }
+      }
       // Never reuse an existing session as proof of the typed password.
       let response = createAccount
-        ? await client.auth.signUp({ email:address, password, options:{ emailRedirectTo:emailRedirectTo() } })
+        ? await client.auth.signUp({ email:address, password, options:{ emailRedirectTo:confirmationRedirect() } })
         : await client.auth.signInWithPassword({ email:address, password });
-      // A previous attempt may have left an unapproved Auth account. Prove
-      // the same personal password before resuming it; this also distinguishes
-      // an existing account from a new signup waiting for email verification.
       const duplicate = createAccount && (
         /already registered|user_already_exists|email_exists/i.test(`${response.error?.message || ''} ${response.error?.code || ''}`)
-        || (Array.isArray(response.data?.user?.identities) && response.data.user.identities.length === 0)
+        || (!response.error && !response.data?.session && Array.isArray(response.data?.user?.identities) && response.data.user.identities.length === 0)
       );
+      // A previously verified but unapproved account can finish after a bad
+      // invite, but only after proving its own password. Auth deliberately
+      // obfuscates duplicate signups when confirmation is enabled.
       if (duplicate) response = await client.auth.signInWithPassword({ email:address, password });
       if (response.error) {
-        if (isEmailNotConfirmed(response.error)) return verificationRequired(address);
-        return { ok:false, reason:signInErrorText(response.error) };
+        const unverified = /email_confirmation_required|email not confirmed|email_not_confirmed|confirm your email/i.test(`${response.error.message || ''} ${response.error.code || ''}`);
+        return { ok:false, needsVerification:unverified, reason:signInErrorText(response.error) };
       }
       const attempt = { session:response.data?.session };
-      if (!attempt.session?.user) {
-        if (createAccount) return verificationRequired(address);
-        return { ok:false, reason:signInErrorText({ message:'email_confirmation_required' }) };
+      if (createAccount && !duplicate && !attempt.session?.user) {
+        // No password, invite or token is retained while waiting for the email.
+        writeJSON(TRAVELLER_NAME_KEY, traveller);
+        return { ok:false, pendingVerification:true, reason:'如果信箱可註冊，驗證信已寄出。請點擊信中連結，再以原帳密和邀請碼完成建立；若已註冊請直接登入。' };
       }
-      // Auth sessions alone never approve a traveller. Email ownership must
-      // be confirmed before the invite can create the profile required by RLS.
-      if (!hasVerifiedEmail(attempt.session.user)) return verificationRequired(address);
+      if (!attempt.session?.user) return { ok:false, reason:'登入狀態已失效，請重新整理再試。' };
+      // Even if configuration changes between the settings check and signup,
+      // a newly issued immediate session must not skip the confirmation step.
+      if (createAccount && !duplicate) return { ok:false, reason:'目前還不能建立帳號，請聯絡網站擁有者。' };
       if (createAccount) {
         const { data:existingProfile, error:profileError } = await client.from('profiles')
           .select('id').eq('id', attempt.session.user.id).maybeSingle();
         if (profileError) return { ok:false, reason:signInErrorText(profileError) };
         if (existingProfile) return { ok:false, reason:'這個電子郵件已註冊，請改用登入。' };
       }
-      // Only account creation redeems an invite. Returning accounts must
-      // already have an approved profile; atlas_login never creates one.
+      // The database independently checks email confirmation and the invite.
       const { data, error } = createAccount
         ? await client.rpc('atlas_redeem_code', {
           p_code:value, p_name:traveller,
@@ -596,8 +620,7 @@
       const result = Array.isArray(data) ? data[0] : data;
       if (!result || result.ok !== true) {
         setConnection('online');
-        if (result?.reason === 'email_unverified') return verificationRequired(address);
-        return { ok:false, reason: codeErrorText(result?.reason) };
+        return { ok:false, needsVerification:result?.reason === 'email_unverified', reason: codeErrorText(result?.reason) };
       }
       const profile = {
         id: String(result.user_id || attempt.session.user.id),
@@ -616,12 +639,9 @@
       emit('status', status());
       return { ok:true };
     } catch (error) {
-      // Raw detail stays in the console; the page answers in plain language.
       console.warn('sign-in failed', error);
       return { ok:false, reason:signInErrorText(error) };
     } finally {
-      // A failed invite must not leave an approved account unlocked by an
-      // auth event emitted before redemption completed.
       if (!accepted) {
         try { await client.auth.signOut(); } catch { /* remain read-only */ }
         setUser(null);
@@ -632,14 +652,22 @@
   }
   // A session only means something once the code has produced a profile row.
   let resolveSeq = 0;
+  let notifiedUnapprovedId = null;
+  let notifiedUnverifiedId = null;
   async function resolveSession(session) {
     const seq = ++resolveSeq;
     if (!session?.user) { setUser(null); return; }
-    if (!hasVerifiedEmail(session.user)) {
+    // Never present an unverified session as an editable traveller, even if a
+    // stale profile exists. Recovery links keep priority over this prompt.
+    if (!session.user.email_confirmed_at) {
       setUser(null);
-      emit('registration', { stage:'verify', email:session.user.email || '' });
+      if (!recoveryFlow && notifiedUnverifiedId !== session.user.id) {
+        notifiedUnverifiedId = session.user.id;
+        emit('registration', { stage:'verify', email:session.user.email || '' });
+      }
       return;
     }
+    notifiedUnverifiedId = null;
     if (state.user?.id === session.user.id) return;
     const { data, error } = await client.from('profiles')
       .select('id,display_name,avatar_url,discoverable')
@@ -651,13 +679,17 @@
       if (isSetupError(error)) emit('error', error.message);
       return;
     }
-    // Verified email, but no approved traveller profile yet: keep the atlas
-    // read-only and ask for the personal password and invite to finish setup.
+    // Following a confirmation link creates a session, not a profile. Keep
+    // the visitor read-only and guide them back to the invite step.
     if (!data) {
       setUser(null);
-      emit('registration', { stage:'complete', email:session.user.email || '' });
+      if (!recoveryFlow && session.user.email_confirmed_at && notifiedUnapprovedId !== session.user.id) {
+        notifiedUnapprovedId = session.user.id;
+        emit('verification-complete', { email:session.user.email || '' });
+      }
       return;
     }
+    notifiedUnapprovedId = null;
     const profile = profileFromRow(data);
     profiles.set(profile.id, profile);
     setUser({ id:profile.id, name:profile.name, avatar:profile.avatar, email:'' });
@@ -708,8 +740,10 @@
     const { error } = await client.auth.updateUser({ password });
     if (error) return { ok:false, reason:'failed' };
     const { data } = await client.auth.getSession();
+    // Do not let the confirmation/invite prompt replace an active reset view.
     await resolveSession(data?.session || null);
-    return { ok:true };
+    recoveryFlow = false;
+    return { ok:true, needsApproval:!state.user, email:data?.session?.user?.email || '' };
   }
   api.requestPasswordReset = requestPasswordReset;
   api.updatePassword = updatePassword;

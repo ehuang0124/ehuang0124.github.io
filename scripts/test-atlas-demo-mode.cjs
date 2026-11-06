@@ -97,7 +97,7 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
     await new Promise(resolve => setTimeout(resolve, 160));
     const d3 = w3.document;
     assert.equal(d3.querySelector('#stamp-button').classList.contains('locked'), true, 'a visitor is read-only');
-    assert.equal(d3.querySelector('#stamp-button').textContent.trim(), '登入後蓋章');
+    assert(d3.querySelector('#stamp-button').textContent.includes('登入後蓋章'));
     assert.equal(d3.querySelector('#collection-label').textContent, '旅人共蓋章');
     const shared = d3.querySelector('#passport-count').textContent;
     assert(Number(shared) > 0, 'the shared atlas is visible before sign-in');

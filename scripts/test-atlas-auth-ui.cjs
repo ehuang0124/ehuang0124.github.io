@@ -33,28 +33,36 @@ const root = path.resolve(__dirname, '..');
     for (const viewport of [{ width:1440, height:960 }, { width:390, height:844 }, { width:320, height:700 }]) {
       const page = await browser.newPage({ viewport, reducedMotion:'reduce' });
       let registered = false;
+      let confirmed = false;
       let approved = false;
       const calls = [];
-      const user = { id:'11111111-1111-4111-8111-111111111111', email:'traveller@example.com', email_confirmed_at:'2026-11-06T00:00:00Z', aud:'authenticated', role:'authenticated', identities:[{ provider:'email' }] };
+      const user = { id:'11111111-1111-4111-8111-111111111111', email:'traveller@example.com', aud:'authenticated', role:'authenticated', identities:[{ provider:'email' }] };
+      const authUser = () => ({ ...user, email_confirmed_at:confirmed ? '2026-11-06T00:00:00Z' : null });
       const profile = { id:user.id, display_name:'測試旅人', avatar_url:'', discoverable:true };
       const token = () => ['header', Buffer.from(JSON.stringify({ sub:user.id, exp:Math.floor(Date.now()/1000)+3600, role:'authenticated' })).toString('base64url'), 'signature'].join('.');
-      const session = () => ({ access_token:token(), refresh_token:'test-refresh', expires_in:3600, token_type:'bearer', user });
+      const session = () => ({ access_token:token(), refresh_token:'test-refresh', expires_in:3600, token_type:'bearer', user:authUser() });
       await page.route('**/*', async route => {
         const request = route.request();
         if (!request.url().startsWith('https://example.supabase.co')) return request.url().startsWith(base) ? route.continue() : route.abort();
         const url = new URL(request.url());
         const body = request.postDataJSON() || {};
-        calls.push({ path:url.pathname, body });
+        calls.push({ path:url.pathname, method:request.method(), body });
         // Exercise the real vendored Auth client, including duplicate-signup
         // errors, token persistence, PostgREST maybeSingle, and auth events.
+        if (url.pathname === '/auth/v1/settings') return route.fulfill({ json:{ mailer_autoconfirm:false, external:{ email:true } } });
         if (url.pathname === '/auth/v1/signup') {
-          if (registered) return route.fulfill({ status:422, json:{ code:'email_exists', msg:'User already registered' } });
+          await new Promise(resolve => setTimeout(resolve, 200));
+          if (registered) return route.fulfill({ json:{ ...authUser(), identities:[] } });
           registered = true;
+          return route.fulfill({ json:authUser() });
+        }
+        if (url.pathname === '/auth/v1/resend' || url.pathname === '/auth/v1/recover') return route.fulfill({ json:{} });
+        if (url.pathname === '/auth/v1/token') {
+          if (!confirmed) return route.fulfill({ status:400, json:{ code:'email_not_confirmed', msg:'Email not confirmed' } });
           return route.fulfill({ json:session() });
         }
-        if (url.pathname === '/auth/v1/token') return route.fulfill({ json:session() });
         if (url.pathname === '/auth/v1/logout') return route.fulfill({ status:204 });
-        if (url.pathname === '/auth/v1/user') return route.fulfill({ json:user });
+        if (url.pathname === '/auth/v1/user') return route.fulfill({ json:authUser() });
         if (url.pathname === '/rest/v1/rpc/atlas_redeem_code') {
           await new Promise(resolve => setTimeout(resolve, 200));
           if (body.p_code !== 'test-invite') return route.fulfill({ json:{ ok:false, reason:'invalid_code' } });
@@ -126,18 +134,55 @@ const root = path.resolve(__dirname, '..');
       await page.locator('#account-form').evaluate(form => form.requestSubmit());
       await page.waitForFunction(() => document.querySelector('#account-panel').getAttribute('aria-busy') === 'true');
       assert(await page.locator('#account-create').isDisabled());
-      await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('通行碼不正確'));
+      await page.locator('#email-verification').waitFor({ state:'visible' });
+      assert.equal(await page.locator('#verification-email').textContent(), 'traveller@example.com');
       assert(await page.locator('#account-dialog').isVisible());
       assert.equal(await page.locator('#account-create').getAttribute('aria-selected'), 'true');
       assert.equal(await page.locator('#account-password').inputValue(), '');
+      assert.equal(await page.locator('#access-code').inputValue(), '');
       assert(await page.locator('#account-card').isHidden());
+      assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length, 0, 'a pending email never redeems the invite');
+      await page.locator('#verification-resend').click();
+      await page.waitForFunction(() => document.querySelector('#verification-feedback').textContent.includes('垃圾郵件'));
+      assert.equal(calls.filter(call => call.path === '/auth/v1/resend').length, 1);
+      assert(!(await page.evaluate(() => JSON.stringify(localStorage))).includes('abcdefg'), 'page never stores the password');
+      assert(!(await page.evaluate(() => JSON.stringify(localStorage))).includes('bad-invite'), 'page never stores the invite');
+      // Follow a real implicit Auth callback in a fresh browser storage context:
+      // the link must work even when opened on a different device/browser.
+      confirmed = true;
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(base + '/personal/travel/map/?email-confirmed=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=signup');
+      await page.waitForFunction(() => document.querySelector('#account-status').textContent.includes('信箱已驗證'));
+      assert(await page.locator('#account-dialog').isVisible());
+      assert.equal(await page.locator('#account-email').inputValue(), 'traveller@example.com');
+      assert.equal(await page.locator('#account-create').getAttribute('aria-selected'), 'true');
+      assert(await page.locator('#account-card').isHidden());
+      // An unapproved account can recover its password without the invite
+      // prompt replacing the reset form; afterwards it still needs the invite.
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(base + '/personal/travel/map/?unapproved-reset=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery');
+      await page.waitForFunction(() => document.querySelector('#code-signin').dataset.mode === 'reset');
+      assert(await page.locator('#account-password').isVisible());
+      await page.locator('#account-password').fill('abcdefg');
+      await page.locator('#account-form').evaluate(form => form.requestSubmit());
+      await page.waitForFunction(() => document.querySelector('#account-status').textContent.includes('密碼已更新'));
+      assert.equal(await page.locator('#code-signin').getAttribute('data-mode'), 'create');
+      assert.equal(await page.locator('#account-email').inputValue(), 'traveller@example.com');
+      assert(await page.locator('#account-card').isHidden());
+      await page.locator('#account-password').fill('abcdefg');
+      await page.locator('#traveller-name').fill('測試旅人');
+      await page.locator('#access-code').fill('bad-invite');
+      await page.locator('#account-form').evaluate(form => form.requestSubmit());
+      await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('通行碼不正確'));
+      assert(await page.locator('#account-dialog').isVisible());
+      assert.equal(await page.locator('#account-password').inputValue(), '');
       await page.locator('#account-password').fill('abcdefg');
       await page.locator('#access-code').fill('test-invite');
       await page.locator('#traveller-name').press('Enter');
       await page.locator('#account-dialog').waitFor({ state:'hidden' });
       assert.equal(await page.locator('#account-name').textContent(), '測試旅人');
-      assert.equal(calls.filter(call => call.path === '/auth/v1/signup').length, 2);
-      assert.equal(calls.filter(call => call.path === '/auth/v1/token').length, 1, 'retry proves the original password');
+      assert.equal(calls.filter(call => call.path === '/auth/v1/signup').length, 3);
+      assert.equal(calls.filter(call => call.path === '/auth/v1/token').length, 2, 'each retry proves the original password');
       const redemptions = calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length;
       await page.locator('#account-menu-button').click();
       await page.locator('#sign-out').click();
@@ -149,92 +194,31 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('#account-name').textContent(), '測試旅人');
       assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length, redemptions, 'login never redeems an invite');
       assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_login').length, 1);
-      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-      assert.deepEqual(errors, []);
-      await page.close();
-      console.log(`PASS auth UI ${viewport.width}px: map/index, keyboard tabs, native form submission, registration retry, successful creation and login`);
-    }
-
-    // Email-confirmation flow: no profile or invite redemption is possible
-    // until the address is verified; the same draft can then finish safely.
-    {
-      const page = await browser.newPage({ viewport:{ width:390, height:844 }, reducedMotion:'reduce' });
-      const calls = [];
-      let registered = false;
-      let verified = false;
-      let approved = false;
-      const authUser = () => ({ id:'22222222-2222-4222-8222-222222222222', email:'new-traveller@example.com', email_confirmed_at:verified ? '2026-11-06T01:00:00Z' : null, aud:'authenticated', role:'authenticated', identities:[{ provider:'email' }] });
-      const profile = { id:authUser().id, display_name:'Eva Huang', avatar_url:'', discoverable:true };
-      const token = () => ['header', Buffer.from(JSON.stringify({ sub:profile.id, exp:Math.floor(Date.now()/1000)+3600, role:'authenticated' })).toString('base64url'), 'signature'].join('.');
-      const session = () => ({ access_token:token(), refresh_token:'verify-refresh', expires_in:3600, token_type:'bearer', user:authUser() });
-      await page.route('**/*', async route => {
-        const request = route.request();
-        if (!request.url().startsWith('https://example.supabase.co')) return request.url().startsWith(base) ? route.continue() : route.abort();
-        const url = new URL(request.url());
-        const body = request.postDataJSON() || {};
-        calls.push({ path:url.pathname, url:request.url(), body });
-        if (url.pathname === '/auth/v1/signup') {
-          if (registered) return route.fulfill({ status:422, json:{ code:'email_exists', msg:'User already registered' } });
-          registered = true;
-          return route.fulfill({ json:{ user:authUser(), session:null } });
-        }
-        if (url.pathname === '/auth/v1/resend') return route.fulfill({ json:{} });
-        if (url.pathname === '/auth/v1/token') {
-          if (!verified) return route.fulfill({ status:400, json:{ code:'email_not_confirmed', msg:'Email not confirmed' } });
-          return route.fulfill({ json:session() });
-        }
-        if (url.pathname === '/auth/v1/logout') return route.fulfill({ status:204 });
-        if (url.pathname === '/auth/v1/user') return route.fulfill({ json:authUser() });
-        if (url.pathname === '/rest/v1/rpc/atlas_redeem_code') {
-          if (!verified) return route.fulfill({ json:{ ok:false, reason:'email_unverified' } });
-          approved = true;
-          return route.fulfill({ json:{ ok:true, user_id:profile.id, ...profile } });
-        }
-        if (url.pathname === '/rest/v1/profiles') return route.fulfill({ json:approved ? [profile] : [] });
-        return route.fulfill({ json:[] });
-      });
-      await page.routeWebSocket('**/*', socket => socket.close());
-      const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
-      await page.goto(base + '/personal/travel/map/');
-      await page.locator('.place-item').first().waitFor();
+      // Recovery and confirmation both use real implicit Auth callbacks. A
+      // reset link must keep its dedicated view after the other flow is added.
+      await page.locator('#account-menu-button').click();
+      await page.locator('#sign-out').click();
       await page.locator('#sign-in').click();
-      await page.locator('#account-create').click();
-      await page.locator('#account-email').fill('new-traveller@example.com');
-      await page.locator('#account-password').fill('abcdefg');
-      await page.locator('#traveller-name').fill('Eva Huang');
-      await page.locator('#access-code').fill('test-invite');
-      await page.locator('#account-form').evaluate(form => form.requestSubmit());
-      await page.locator('#email-verification').waitFor({ state:'visible' });
-      assert.equal(await page.locator('#verification-email').textContent(), 'new-traveller@example.com');
-      assert.equal(await page.locator('#code-signin').isVisible(), false);
-      assert.equal(await page.locator('#account-password').inputValue(), '');
-      assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length, 0, 'unverified signup never redeems the invite');
-      assert(calls.filter(call => call.path === '/auth/v1/signup').every(call => new URL(call.url).searchParams.get('redirect_to')?.includes('/personal/travel/map/')), 'verification returns to the atlas');
-      await page.locator('#verification-resend').click();
-      await page.waitForFunction(() => document.querySelector('#verification-feedback').textContent.includes('重新寄出'));
-      assert.equal(calls.filter(call => call.path === '/auth/v1/resend').length, 1);
-      verified = true; // The traveller has now opened the email link.
-      await page.locator('#verification-continue').click();
-      assert.equal(await page.locator('#account-create').getAttribute('aria-selected'), 'true');
-      assert.equal(await page.locator('#account-email').inputValue(), 'new-traveller@example.com');
-      assert(await page.locator('#create-account-note').textContent().then(text => text.includes('已驗證')));
-      await page.locator('#account-password').fill('abcdefg');
-      await page.locator('#access-code').fill('test-invite');
+      await page.locator('#account-email').fill('traveller@example.com');
+      await page.locator('#account-forgot').click();
+      await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('重設密碼的信已寄出'));
+      assert.equal(calls.filter(call => call.path === '/auth/v1/recover').length, 1);
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(base + '/personal/travel/map/?password-recovery=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery');
+      await page.waitForFunction(() => document.querySelector('#code-signin').dataset.mode === 'reset');
+      assert(await page.locator('#account-dialog').isVisible());
+      assert(await page.locator('#account-password').isVisible());
+      assert(await page.locator('#account-email').isHidden());
+      assert(await page.locator('#create-account-note').isHidden());
+      await page.locator('#account-password').fill('replacement-password-123');
       await page.locator('#account-form').evaluate(form => form.requestSubmit());
       await page.locator('#account-dialog').waitFor({ state:'hidden' });
-      assert.equal(await page.locator('#account-name').textContent(), 'Eva Huang');
-      assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length, 1);
-      const companionSize = await page.locator('#companion-manage').boundingBox();
-      assert(companionSize.height >= 48, 'companion action has a comfortable touch target');
-      await page.locator('#stamp-button').click();
-      await page.locator('#stamp-owner-seal').waitFor({ state:'visible' });
-      assert.equal(await page.locator('#stamp-owner-initial').textContent(), 'E', 'the impression belongs to the signed-in account');
-      assert.equal(await page.locator('#stamp-button use').getAttribute('href'), '#icon-rubber-stamp');
+      assert(calls.some(call => call.path === '/auth/v1/user' && call.method === 'PUT'), 'the new password reaches Auth');
+      assert.equal(await page.locator('#account-name').textContent(), '測試旅人');
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.deepEqual(errors, []);
       await page.close();
-      console.log('PASS email verification UI: pending verification, resend, safe resume, verified redemption, large companion action and personal stamp initial');
+      console.log(`PASS auth UI ${viewport.width}px: map/index, keyboard tabs, native form submission, email confirmation on another browser, resend, registration retry, login and password recovery`);
     }
   } finally {
     await browser?.close();

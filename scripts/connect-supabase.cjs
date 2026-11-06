@@ -61,10 +61,11 @@ async function check(url, key) {
     else {
       const body = await settings.json();
       report.push(['auth', 'OK', '']);
-      // Personal email/password registration requires the Email provider and
-      // an ownership-confirmation message before the atlas profile is approved.
+      // Registration must require confirmation; the page fails closed if
+      // addresses would be auto-confirmed.
       report.push(['Email 登入', body?.external?.email ? '已開啟' : '未開啟', body?.external?.email ? '' : '到 Authentication → Sign In / Providers → Email 開啟。']);
-      report.push(['Email 驗證', body?.mailer_autoconfirm ? '未開啟' : '已開啟', body?.mailer_autoconfirm ? '同頁開啟「Confirm email」，新帳號須先驗證信箱。' : '']);
+      const confirmation = body?.mailer_autoconfirm;
+      report.push(['確認信', confirmation === false ? '已開啟' : confirmation === true ? '未開啟' : '無法確認', confirmation === false ? '' : '部署新版並設定 SMTP 後，開啟「Confirm email」。']);
     }
   } catch (error) {
     report.push(['auth', '連不上', `${error.message}（請確認網路與專案網址）`]);
@@ -143,9 +144,9 @@ async function check(url, key) {
   console.log(`  supabaseAnonKey: ${rawKey.slice(0, 12)}…${rawKey.slice(-6)}（公開金鑰，權限由 RLS 控管）`);
   console.log(`
 接著確認這三件事（都只要做一次）：\n\n  1. 資料表    https://supabase.com/dashboard/project/${ref}/sql/new
-     貼上 personal/travel/map/supabase/setup.sql 全文並 Run（既有專案也要重跑以新增 atlas_login）。\n\n  2. 帳號服務  Authentication → Sign In / Providers
-     Email: 開啟；同頁開啟「Confirm email」。
-     （新帳號先驗證電子郵件，再以個人密碼與邀請碼完成建立；Auth Settings 的最低密碼長度設為 7。）\n\n  3. 通行碼    同一頁的 SQL Editor：
+     貼上 personal/travel/map/supabase/setup.sql 全文並 Run（既有專案也要更新驗證保護）。\n\n  2. 帳號服務  Authentication → Sign In / Providers
+     Email: 開啟；先設定自訂 SMTP，部署新版後開啟「Confirm email」。
+     （先驗證信箱，再用邀請碼完成建立；Auth Settings 的最低密碼長度設為 7。）\n\n  3. 通行碼    同一頁的 SQL Editor：
        select public.atlas_rotate_code('你的通行碼');
      之後要換碼，重跑這一行就好。\n\n設定完成後：${SITE_URL} 右上角會出現「帳號登入」；
 每次登入都寫進 Supabase 的 atlas_logins（Table Editor 就看得到）。
