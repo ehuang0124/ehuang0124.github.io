@@ -417,7 +417,7 @@
           if (event === 'PASSWORD_RECOVERY') { recoveryFlow = true; emit('recovery', true); return; }
           if (!session?.user) { setUser(null); return; }
           // A refreshed token for the traveller already on screen changes nothing.
-          if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id) return;
+          if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id && session.user.email_confirmed_at) return;
           resolveSession(session);
         });
         const { data } = await client.auth.getSession();
@@ -653,9 +653,21 @@
   // A session only means something once the code has produced a profile row.
   let resolveSeq = 0;
   let notifiedUnapprovedId = null;
+  let notifiedUnverifiedId = null;
   async function resolveSession(session) {
     const seq = ++resolveSeq;
     if (!session?.user) { setUser(null); return; }
+    // Never present an unverified session as an editable traveller, even if a
+    // stale profile exists. Recovery links keep priority over this prompt.
+    if (!session.user.email_confirmed_at) {
+      setUser(null);
+      if (!recoveryFlow && notifiedUnverifiedId !== session.user.id) {
+        notifiedUnverifiedId = session.user.id;
+        emit('registration', { stage:'verify', email:session.user.email || '' });
+      }
+      return;
+    }
+    notifiedUnverifiedId = null;
     if (state.user?.id === session.user.id) return;
     const { data, error } = await client.from('profiles')
       .select('id,display_name,avatar_url,discoverable')

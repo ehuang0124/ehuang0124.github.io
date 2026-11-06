@@ -453,13 +453,14 @@ async function main() {
     page.$('#access-code').value = 'not-the-code';
     click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
-    assert(page.$('#account-status').textContent.includes('驗證信'), 'signup first requests email verification');
+    assert.equal(page.$('#email-verification').hidden, false, 'signup first requests email verification');
     assert.equal(server.tables.profiles.length, 2, 'unverified signup creates no profile');
     assert.equal(server.calls.filter(call => call.name === 'atlas_redeem_code').length, 0, 'invite is not redeemed before confirmation');
     assert.equal(page.$('#account-password').value, '');
     assert.equal(page.$('#access-code').value, '');
-    assert.equal(page.$('#account-resend').hidden, false);
+    assert.equal(page.$('#verification-resend').hidden, false);
     server.verify('eva@example.com');
+    click(page.window, page.$('#verification-continue'));
     page.$('#account-password').value = 'personal-password-123';
     page.$('#access-code').value = 'not-the-code';
     click(page.window, page.$('#code-signin-submit'));
@@ -475,9 +476,10 @@ async function main() {
     page.$('#access-code').value = 'travel2n';
     click(page.window, page.$('#code-signin-submit'));
     await page.settle(); await page.settle();
-    assert(page.$('#account-status').textContent.includes('驗證信'));
+    assert.equal(page.$('#email-verification').hidden, false);
     assert.equal(page.$('#account-card').hidden, true, 'still read-only before verification');
     server.verify('eva-approved@example.com');
+    click(page.window, page.$('#verification-continue'));
     page.$('#account-password').value = 'personal-password-123';
     page.$('#access-code').value = 'travel2n';
     click(page.window, page.$('#code-signin-submit'));

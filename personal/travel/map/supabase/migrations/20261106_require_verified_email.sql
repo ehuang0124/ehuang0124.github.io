@@ -1,7 +1,6 @@
--- Require confirmed email in addition to an approved profile. Idempotent;
--- does not change existing users, invitations, stamps or custom cities.
--- Auth's Confirm email setting must ALSO be enabled; auto-confirming an
--- arbitrary address makes email_confirmed_at meaningless.
+-- Require email ownership before approving or using a traveller account.
+-- Existing approved users with confirmed addresses are unaffected.
+-- Safe to rerun; this replaces functions only and does not alter travel data.
 
 create or replace function public.atlas_is_traveller()
 returns boolean
@@ -11,9 +10,11 @@ security definer
 set search_path = public, extensions, pg_temp
 as $$
   select exists (
-    select 1 from public.profiles p
-    join auth.users u on u.id = p.id
-    where p.id = auth.uid() and u.email_confirmed_at is not null
+    select 1
+      from public.profiles as p
+      join auth.users as u on u.id = p.id
+     where p.id = auth.uid()
+       and u.email_confirmed_at is not null
   );
 $$;
 
@@ -43,10 +44,10 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
-
-  -- An authenticated session and a correct invite are not sufficient: the
-  -- email address must be verified before a public profile can be created.
-  if not exists (select 1 from auth.users where id = v_uid and email_confirmed_at is not null) then
+  if not exists (
+    select 1 from auth.users
+     where id = v_uid and email_confirmed_at is not null
+  ) then
     return jsonb_build_object('ok', false, 'reason', 'email_unverified');
   end if;
 
@@ -123,7 +124,10 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
-  if not exists (select 1 from auth.users where id = v_uid and email_confirmed_at is not null) then
+  if not exists (
+    select 1 from auth.users
+     where id = v_uid and email_confirmed_at is not null
+  ) then
     return jsonb_build_object('ok', false, 'reason', 'email_unverified');
   end if;
   select * into v_profile from public.profiles where id = v_uid;
@@ -146,10 +150,3 @@ $$;
 
 revoke all on function public.atlas_login(text) from public, anon;
 grant execute on function public.atlas_login(text) to authenticated;
-
-drop policy if exists "own profile update" on public.profiles;
-create policy "own profile update"
-  on public.profiles for update
-  to authenticated
-  using (auth.uid() = id and public.atlas_is_traveller())
-  with check (auth.uid() = id and public.atlas_is_traveller());

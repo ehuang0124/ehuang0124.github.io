@@ -26,8 +26,18 @@
   <script src="./app.js" defer></script>
   <script src="/personal/travel/navigation.js" defer></script>
 </head>
-<body class="ng-body">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="stamp-rough" x="-12%" y="-12%" width="124%" height="124%"><feTurbulence type="fractalNoise" baseFrequency=".028" numOctaves="2" seed="8" result="ink-noise"/><feDisplacementMap in="SourceGraphic" in2="ink-noise" scale="1.7" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
+<body class="ng-body" data-atlas-theme="countries">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="stamp-rough" x="-12%" y="-12%" width="124%" height="124%"><feTurbulence type="fractalNoise" baseFrequency=".028" numOctaves="2" seed="8" result="ink-noise"/><feDisplacementMap in="SourceGraphic" in2="ink-noise" scale="1.7" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <symbol id="icon-rubber-stamp" viewBox="0 0 24 24">
+        <path d="M8 11V9c0-.8.3-1.5.8-2.1.4-.5.7-1 .7-1.6a2.5 2.5 0 0 1 5 0c0 .6.3 1.1.7 1.6.5.6.8 1.3.8 2.1v2M6 15v-1a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1M4 21v-4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4ZM4 18h16"/>
+      </symbol>
+      <symbol id="icon-companions" viewBox="0 0 24 24">
+        <circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19M15 5.4a3 3 0 0 1 0 5.2M16 13.4a4.5 4.5 0 0 1 4.5 4.5V19"/>
+      </symbol>
+    </defs>
+  </svg>
   <a class="skip-link" href="#main">跳至旅行地圖</a>
   <nav class="crumbs" aria-label="Breadcrumb">
     <ol>
@@ -90,9 +100,9 @@
               <div class="stamp-panel-top"><span>目的地</span></div>
               <div class="stamp-panel-inner">
                 <div class="place-heading"><h2 class="place-name-line"><span id="place-flag" class="place-flag" aria-hidden="true"></span><span id="place-name">日本</span><span id="place-code" hidden></span></h2><p id="place-en">JAPAN</p><p id="place-location">亞洲 · 國家與地區</p><p id="legacy-note" class="legacy-note" hidden></p></div>
-                <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 58" aria-hidden="true"></svg><span class="stamp-face-initial" id="stamp-face-initial" hidden></span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div><div class="plate-caption"><span id="plate-motif" class="plate-motif">日本 · 富士山</span><span class="plate-scale" role="img" aria-label="單色墨色四階"><i></i><i></i><i></i><i></i></span><span id="plate-kind" class="plate-kind">風景</span></div></div>
+                <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 58" aria-hidden="true"></svg><svg class="stamp-tool-icon stamp-preview-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-owner-seal" id="stamp-owner-seal" hidden><b id="stamp-owner-initial"></b><small>TRIP</small></span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div><div class="plate-caption"><span id="plate-motif" class="plate-motif">日本 · 富士山</span><span class="plate-scale" role="img" aria-label="單色墨色四階"><i></i><i></i><i></i><i></i></span><span id="plate-kind" class="plate-kind">風景</span></div></div>
                 <div class="stamp-signatures" id="stamp-signatures" hidden><span class="stamp-signatures-label">誰蓋過章</span><div id="stamp-signature-list" class="stamp-signature-list"></div></div>
-                <div class="stamp-fields"><label for="visit-date">到訪月份</label><input type="month" id="visit-date" required><div class="companion-block" id="companion-block"><div class="companion-head"><span id="companion-label">同行旅伴 <small>選填</small></span></div><button type="button" id="companion-manage" class="companion-manage" aria-haspopup="dialog" aria-controls="companion-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.5a5.5 5.5 0 0 1 11 0V19M18 8v6m-3-3h6"/></svg><span id="companion-action-label">標記同行旅伴</span><span class="companion-arrow" aria-hidden="true">→</span></button><div id="companion-chips" class="companion-chips" aria-label="選擇同行的旅伴"></div><p id="companion-note" class="companion-note">登入後可以標記一起旅行的朋友。</p></div><button type="button" id="stamp-button" class="stamp-button"><svg class="stamp-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5a3 3 0 1 1 6 0c0 1.5-.8 2.4-1.3 3.5l.8 3c.2.8 1 1.4 1.8 1.6 1.4.3 2.2 1.4 2.2 2.8v1.1H5.5v-1.1c0-1.4.8-2.5 2.2-2.8.8-.2 1.6-.8 1.8-1.6l.8-3C9.8 6.9 9 6 9 4.5Z"/><path d="M4 19h16v2H4z"/></svg><span>蓋下這一章</span><span aria-hidden="true">↗</span></button><p id="stamp-feedback" class="stamp-feedback" role="status" aria-live="polite"></p></div>
+                <div class="stamp-fields"><label for="visit-date">到訪月份</label><input type="month" id="visit-date" required><div class="companion-block" id="companion-block"><div class="companion-head"><span id="companion-label">同行旅伴</span><button type="button" id="companion-manage" class="companion-manage" aria-haspopup="dialog" aria-controls="companion-dialog"><svg class="companion-manage-icon" aria-hidden="true"><use href="#icon-companions"/></svg><span id="companion-manage-label">標記旅伴</span><span class="companion-manage-plus" aria-hidden="true">＋</span></button></div><div id="companion-chips" class="companion-chips" aria-label="選擇同行的旅伴"></div><p id="companion-note" class="companion-note">登入後可以標記一起旅行的朋友。</p></div><button type="button" id="stamp-button" class="stamp-button"><svg class="stamp-tool-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-button-label">蓋下這一章</span><span class="stamp-button-arrow" aria-hidden="true">↗</span></button><p id="stamp-feedback" class="stamp-feedback" role="status" aria-live="polite"></p></div>
                 <div class="stamp-history" id="stamp-history" hidden><div class="history-title"><strong>到訪紀錄</strong><span id="history-count"></span></div><ul id="history-list"></ul></div>
                 <button type="button" id="delete-city" class="delete-city" hidden>移除這座自訂城市</button>
               </div>
@@ -144,14 +154,20 @@
   <dialog id="account-dialog" aria-labelledby="account-dialog-title"><form id="account-form" novalidate><div class="dialog-top account-dialog-top"><button type="button" id="account-dialog-close" aria-label="關閉帳號視窗">×</button></div><h2 id="account-dialog-title">登入</h2><p id="account-sync-note" class="account-note" hidden></p><p id="account-error" class="form-error" role="alert"></p><p id="account-status" class="verification-status" role="status" aria-live="polite" hidden></p><div id="local-signin" class="local-signin" hidden><label class="account-field" for="passphrase">旅行通行碼<input id="passphrase" type="password" autocomplete="current-password" placeholder="輸入通行碼"></label><button type="submit" id="local-signin-submit" class="dialog-submit">登入 <span aria-hidden="true">↗</span></button><p class="account-note">通行碼由網站擁有者保管；不知道通行碼時，請向網站擁有者索取。</p></div><div id="code-signin" class="local-signin" data-mode="login" hidden>
 <div class="account-modes" role="tablist" aria-label="帳號操作"><button type="button" role="tab" id="account-login" aria-selected="true" aria-controls="account-panel" tabindex="0">登入</button><button type="button" role="tab" id="account-create" aria-selected="false" aria-controls="account-panel" tabindex="-1">建立帳號</button></div>
 <div id="account-panel" class="account-fields" role="tabpanel" aria-labelledby="account-login" aria-describedby="account-error">
-<p id="account-create-hint" class="account-create-hint" hidden>先驗證信箱，再以邀請碼完成帳號建立。</p>
 <label class="account-field" for="account-email">電子郵件<input id="account-email" type="email" autocomplete="username" placeholder="you@example.com" required></label>
 <label class="account-field" for="account-password">個人密碼<input id="account-password" type="password" autocomplete="current-password" placeholder="超過 6 個字元" minlength="7" required></label>
 <button type="button" id="account-forgot" class="account-forgot" hidden>忘記密碼？</button>
 <label class="account-field" for="access-code" hidden>邀請碼<input id="access-code" type="password" autocomplete="off" placeholder="向網站擁有者索取" disabled></label>
 <label class="account-field" for="traveller-name" hidden>顯示名稱<input id="traveller-name" type="text" maxlength="40" autocomplete="nickname" placeholder="例如：Eva Huang" disabled></label>
+<p id="create-account-note" class="account-note" hidden>送出後會收到驗證信；點擊信中的連結，再回來完成帳號建立。</p>
 <button type="submit" id="code-signin-submit" class="dialog-submit">登入 <span aria-hidden="true">↗</span></button>
-<button type="button" id="account-resend" class="verification-resend" hidden>重寄驗證信</button>
-</div></div><button type="button" id="account-demo" class="account-demo" hidden>以示範旅人身分登入</button><p id="backend-note" class="account-note"></p></form></dialog>
+</div></div><div id="email-verification" class="email-verification" hidden>
+<div class="verification-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><span>EMAIL CHECK / 必要步驟</span></div>
+<p class="verification-lede"><strong id="verification-email"></strong> 尚待驗證，請查看信箱並點擊驗證連結，再回來完成帳號建立。</p>
+<ol class="verification-steps"><li>開啟電子郵件中的驗證連結。</li><li>回到這裡，重新輸入個人密碼與邀請碼。</li></ol>
+<button type="button" id="verification-continue" class="dialog-submit">我已完成驗證 <span aria-hidden="true">↗</span></button>
+<button type="button" id="verification-resend" class="verification-resend">重新寄送驗證信</button>
+<p id="verification-feedback" class="account-note" role="status" aria-live="polite"></p>
+</div><button type="button" id="account-demo" class="account-demo" hidden>以示範旅人身分登入</button><p id="backend-note" class="account-note"></p></form></dialog>
 </body>
 </html>

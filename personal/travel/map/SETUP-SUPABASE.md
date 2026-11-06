@@ -2,12 +2,14 @@
 
 目標：`https://ehuang0124.github.io/personal/travel/map/` 右上角出現「帳號登入」。使用個人電子郵件與密碼登入後就能蓋章；邀請碼只在建立帳號時使用；訪客看得到全部戳章但不能改。每次登入都會寫進 Supabase，你可以看到是誰、什麼時候、用什麼裝置登入。
 
-**既有專案升級：** 已於 2026-11-05 美東時間（2026-11-06 UTC）套用
-[`20261106_require_verified_email.sql`](supabase/migrations/20261106_require_verified_email.sql)，不會刪除帳號或戳章。
-部署前還需套用 [`20261106_stamp_guards.sql`](supabase/migrations/20261106_stamp_guards.sql)
-（或重跑 [`supabase/setup.sql`](supabase/setup.sql)），新增旅伴與記錄保護。兩者可重複執行。
-目前尚未設定自訂 SMTP，確認信尚未啟用。既有自動確認帳號不會追補驗證；
-請完成步驟 3 並部署新版，新的帳號才會驗證信箱。Auth 最低密碼長度仍須設為 **7**。
+**既有專案升級：** 目前專案已套用
+[`20261106_require_verified_email.sql`](supabase/migrations/20261106_require_verified_email.sql)，也已開啟 **Confirm email**，不會刪除帳號或戳章。
+但尚未設定自訂 SMTP，預設服務只能寄給專案團隊成員，一般旅人可能無法收到驗證信或重設密碼信，請優先完成步驟 3。
+
+正式部署前還需依序套用 [`20261106_stamp_guards.sql`](supabase/migrations/20261106_stamp_guards.sql) 與
+[`20261107_verified_write_guards.sql`](supabase/migrations/20261107_verified_write_guards.sql)
+（或重跑 [`supabase/setup.sql`](supabase/setup.sql)），新增旅伴和已驗證帳號的寫入保護；兩份 migration 都可重複執行。
+既有自動確認帳號不會追補驗證；Auth 最低密碼長度仍須設為 **7**。
 
 ---
 
@@ -40,8 +42,8 @@
 1. **Authentication → SMTP Settings**：設定可寄給一般旅人的自訂 SMTP。
    預設寄信服務只能寄給專案團隊成員，且有嚴格寄信上限；不是一般訪客註冊的正式方案。
    SMTP 供應商、寄件網域及憑證請在後台設定，**不要放進網站或聊天**。
-2. **Authentication → Sign In / Providers → Email**：開啟 Email。部署新版網頁後，立即開啟 **Confirm email**。
-   新版在確認信未啟用時會拒絕建立帳號，避免繞過驗證；不要先對舊版網頁開啟確認信。
+2. **Authentication → Sign In / Providers → Email**：開啟 Email 與 **Confirm email**。目前專案已開啟 Confirm email；新專案請先設定 SMTP、部署新版網頁，再啟用確認信。
+   新版在確認信未啟用時會拒絕建立帳號，避免繞過驗證。
 3. **Authentication → URL Configuration**：允許 `https://ehuang0124.github.io/personal/travel/map/` 作為 Redirect URL。
 4. **Authentication → Settings → Password security**：最低密碼長度設為 **7**。
 

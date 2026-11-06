@@ -15,14 +15,14 @@ const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoM
 const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
-function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null } = {}) {
-  const state = { session: null, rpcCalls: [], signupCalls:0, resendCalls:0 };
+function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null, initialSession = null, profileResponse = null } = {}) {
+  const state = { session: initialSession, rpcCalls: [], signupCalls:0, resendCalls:0 };
   const chain = () => {
     const builder = {
       select() { return builder; }, order() { return builder; }, limit() { return builder; },
       eq() { return builder; }, in() { return builder; }, update() { return builder; },
       delete() { return builder; }, upsert() { return builder; },
-      maybeSingle() { return Promise.resolve({ data:null, error:null }); },
+      maybeSingle() { return Promise.resolve(profileResponse || { data:null, error:null }); },
       single() { return Promise.resolve({ data:null, error:null }); },
       then(resolveFn, rejectFn) { return Promise.resolve({ data:[], error:null }).then(resolveFn, rejectFn); }
     };
@@ -214,21 +214,34 @@ async function load({ config = CLOUD, clientOptions, autoConfirm = false, url = 
   {
     const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[{ provider:'email' }] }, session:null }, error:null } } });
     await page.signIn();
-    assert(page.$('#account-status').textContent.includes('驗證信'));
+    assert.equal(page.$('#email-verification').hidden, false);
     assert.equal(page.$('#account-card').hidden, true);
     assert.equal(page.$('#account-password').value, '');
     assert.equal(page.$('#access-code').value, '');
     assert.equal(page.fake.state.rpcCalls.length, 0);
-    page.click(page.$('#account-resend')); await wait();
+    page.click(page.$('#verification-resend')); await wait();
     assert.equal(page.fake.state.resendCalls, 1);
-    assert(page.$('#account-status').textContent.includes('垃圾郵件'));
+    assert(page.$('#verification-feedback').textContent.includes('垃圾郵件'));
   }
   {
     const page = await load({ clientOptions:{ signInError:{ message:'Email not confirmed', code:'email_not_confirmed' } } });
     await page.signIn({ createAccount:false });
-    assert(page.$('#account-error').textContent.includes('驗證信'));
-    assert.equal(page.$('#account-resend').hidden, false);
+    assert.equal(page.$('#email-verification').hidden, false);
+    assert.equal(page.$('#verification-resend').hidden, false);
     assert.equal(page.fake.state.rpcCalls.length, 0);
+  }
+  // A stale session with an approved profile but no confirmed email never
+  // appears as an editable traveller, even if a token exists locally.
+  {
+    const page = await load({ clientOptions:{
+      initialSession:{ access_token:'token', user:{ id:'old-profile', email:'stale@example.com', email_confirmed_at:null } },
+      profileResponse:{ data:{ id:'old-profile', display_name:'Stale', discoverable:true }, error:null }
+    } });
+    assert.equal(page.$('#account-card').hidden, true);
+    assert.equal(page.window.TravelAtlasAccount.user, null);
+    assert.equal(page.$('#email-verification').hidden, false);
+    assert.equal(page.$('#verification-email').textContent, 'stale@example.com');
+    assert.deepEqual(page.errors, []);
   }
   // Do not create even a provisional Auth user if confirmation is disabled.
   {

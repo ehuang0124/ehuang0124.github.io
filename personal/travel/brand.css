@@ -42,6 +42,20 @@
   --ng-graticule:#a9bcc9;
   --ng-hill:#b9c2c8;
   --ng-grey-strong:#77776f;
+
+  /* Bright, single-hue atlas chapters. Okinawa intentionally stays unchanged. */
+  --ng-atlas-world:#ef765c;
+  --ng-atlas-world-ink:#9e4033;
+  --ng-atlas-world-map:#fbe8df;
+  --ng-atlas-cities:#4b86e8;
+  --ng-atlas-cities-ink:#285da9;
+  --ng-atlas-cities-map:#e6f0ff;
+  --ng-atlas-na:#ee9a45;
+  --ng-atlas-na-ink:#98541f;
+  --ng-atlas-na-map:#fff0dc;
+  --ng-atlas-jp:#55b97b;
+  --ng-atlas-jp-ink:#28784b;
+  --ng-atlas-jp-map:#e6f6e8;
   --ng-r-sm:8px;
   --ng-r:12px;
   --ng-r-lg:16px;

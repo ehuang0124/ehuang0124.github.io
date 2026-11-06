@@ -407,10 +407,11 @@
   function renderStampSignatures(place) {
     const authors = stampAuthors(place);
     const primary = authors[0];
-    const mark = $('#stamp-face-initial');
+    const mark = $('#stamp-owner-seal');
     mark.hidden = !primary;
-    mark.textContent = primary?.initial || '';
+    $('#stamp-owner-initial').textContent = primary?.initial || '';
     mark.title = primary ? `${primary.name} 的印記` : '';
+    $('#stamp-face').classList.toggle('personalized', Boolean(primary));
     const wrapper = $('#stamp-signatures');
     const list = $('#stamp-signature-list');
     wrapper.hidden = !authors.length;
@@ -562,14 +563,16 @@
       chips.replaceChildren();
       manage.hidden = false;
       manage.disabled = false;
-      $('#companion-action-label').textContent = '登入後標記旅伴';
+      $('#companion-manage-label').textContent = '登入後標記旅伴';
+      $('.companion-manage-plus').textContent = '＋';
       note.textContent = '登入後可以標記一起旅行的朋友。';
       return;
     }
     manage.hidden = false;
     manage.disabled = !editable();
     const ids = activeCompanionIds();
-    $('#companion-action-label').textContent = ids.length ? `編輯旅伴（${ids.length}）` : '標記同行旅伴';
+    $('#companion-manage-label').textContent = ids.length ? `編輯同行旅伴（${ids.length}）` : '標記旅伴';
+    $('.companion-manage-plus').textContent = ids.length ? '→' : '＋';
     renderCompanionChips(ids);
     if (!others.length) note.textContent = '目前沒有可標記的旅伴；其他旅人建立帳號並開放被標記後，就可以選擇。';
     else if (!ids.length) note.textContent = '你可以標記這趟旅程的同行者，蓋章後會一起顯示在共同旅程裡。';
@@ -764,7 +767,7 @@
     });
   }
   // A small double-ringed ink seal represents each actual stamp owner. We
-  // visitors see up to three owners on crowded maps; details list every visible owner.
+  // Visitors see up to three owners on crowded maps; details list every visible owner.
   function appendMapSeals(parent, place, scale) {
     const authors = stampAuthors(place).slice(0, 3);
     authors.forEach((author, index) => {
@@ -1165,10 +1168,29 @@
   const accountMenu = $('#account-menu');
   const accountMenuButton = $('#account-menu-button');
 
+  let verificationAddress = '';
+  function showEmailVerification(email) {
+    verificationAddress = String(email || verificationAddress || '').trim();
+    $('#local-signin').hidden = true;
+    $('#code-signin').hidden = true;
+    $('#account-demo').hidden = true;
+    $('#email-verification').hidden = false;
+    $('#account-sync-note').hidden = true;
+    $('#account-dialog-title').textContent = '驗證電子郵件';
+    $('#verification-email').textContent = verificationAddress;
+    $('#verification-feedback').textContent = '';
+    $('#account-error').textContent = '';
+    $('#account-status').hidden = true;
+    if (!accountDialog.open) accountDialog.showModal();
+    setTimeout(() => $('#verification-continue')?.focus(), 0);
+  }
   function openAccountDialog(message = '', view = 'login') {
     const cloud = atlasAccount.mode === 'cloud';
     const local = atlasAccount.mode === 'local';
+    const creating = cloud && view === 'create';
     const gate = Boolean(account?.localGateAvailable?.());
+    $('#email-verification').hidden = true;
+    $('#verification-feedback').textContent = '';
     const localBlock = $('#local-signin');
     if (localBlock) localBlock.hidden = !(local && gate);
     // Open returning-user login by default; registration and a password reset
@@ -1187,22 +1209,25 @@
       : atlasAccount.mode === 'demo'
         ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
         : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
-    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = view === 'reset' ? '重設密碼' : '登入';
+    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = view === 'reset' ? '重設密碼' : creating ? '建立帳號' : '登入';
     if ($('#account-sync-note')) {
       $('#account-sync-note').textContent = view === 'reset' ? '設定新密碼後，就能用新密碼登入。' : signInNote;
       $('#account-sync-note').hidden = view === 'reset' ? false : cloud;
     }
     $('#account-error').textContent = message;
     $('#account-status').hidden = true;
-    $('#account-resend').hidden = true;
     // Only explain the missing sign-in method when nothing more specific happened.
     if (local && !gate && !message) {
       $('#account-error').textContent = '目前還不能登入，請向網站擁有者取得登入方式。';
     }
     if (!accountDialog.open) accountDialog.showModal();
-    if (cloud && view === 'reset') setTimeout(() => $('#account-password')?.focus(), 60);
-    else if (cloud) setTimeout(() => $('#account-email')?.focus(), 60);
-    else if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 60);
+    if (cloud) setTimeout(() => $(view === 'reset' || creating ? '#account-password' : '#account-email')?.focus(), 0);
+    else if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 0);
+  }
+  function showRegistrationCompletion(email) {
+    openAccountDialog('', 'create');
+    if (email) $('#account-email').value = String(email);
+    $('#create-account-note').textContent = '開啟驗證連結後，請輸入個人密碼與邀請碼，完成帳號建立。';
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
@@ -1527,6 +1552,11 @@
       atlasAccount.mode = account.mode;
       openAccountDialog('', 'reset');
     });
+    account.on('registration', detail => {
+      atlasAccount.mode = account.mode;
+      if (detail?.stage === 'complete') showRegistrationCompletion(detail.email);
+      else if (detail?.stage === 'verify') showEmailVerification(detail.email);
+    });
     account.on('error', message => {
       // For the owner, the raw detail is in the console; the page stays plain.
       if (message) console.warn('account transport error', message);
@@ -1572,7 +1602,6 @@
     if (atlasAccount.mode !== 'cloud' || $('#code-signin-submit')?.disabled) return;
     $('#account-error').textContent = '';
     showAccountStatus('');
-    $('#account-resend').hidden = true;
     const submit = $('#code-signin-submit');
     const creating = $('#code-signin').dataset.mode === 'create';
     submit.disabled = true;
@@ -1601,38 +1630,19 @@
     // Keep a locally invalid form editable; clear the password after any
     // request actually reached Auth, regardless of success or failure.
     if (!result?.field) $('#account-password').value = '';
-    if (result?.pendingVerification) {
+    if (result?.pendingVerification || result?.needsVerification) {
+      // Neither secret is retained while waiting for email confirmation.
       $('#access-code').value = '';
-      showAccountStatus(result.reason);
-      $('#account-resend').hidden = false;
+      showEmailVerification(result.email || $('#account-email').value);
       return;
     }
     if (!result || result.ok !== true) {
-      if (result?.needsVerification) $('#account-resend').hidden = false;
       showAccountError(result?.reason || '無法登入。', result?.field || (creating ? '#access-code' : '#account-password'));
       return;
     }
     $('#access-code').value = '';
     accountDialog.close();
   }
-  $('#account-resend').addEventListener('click', async () => {
-    const button = $('#account-resend');
-    if (button.disabled) return;
-    button.disabled = true;
-    button.textContent = '寄送中…';
-    $('#account-error').textContent = '';
-    showAccountStatus('');
-    try {
-      const result = await account?.resendVerification?.($('#account-email').value);
-      if (result?.ok) showAccountStatus(result.reason);
-      else showAccountError(result?.reason || '驗證信暫時無法寄出，請稍後再試。', result?.field);
-    } catch {
-      showAccountError('驗證信暫時無法寄出，請稍後再試。');
-    } finally {
-      button.disabled = false;
-      button.textContent = '重寄驗證信';
-    }
-  });
   // Three views share the same fields: returning-user login, account creation,
   // and the password reset a recovery link opens.
   let accountView = 'login';
@@ -1658,6 +1668,8 @@
       $(id).disabled = !creating;
       $(id).required = creating;
     }
+    $('#create-account-note').hidden = !creating;
+    if (creating) $('#create-account-note').textContent = '送出後會收到驗證信；點擊信中的連結，再回來完成帳號建立。';
     // A reset only collects the new password: the address came from the link.
     const emailField = $('#account-email');
     if (emailField) {
@@ -1670,8 +1682,7 @@
       $('#account-password').value = '';
       $('#access-code').value = '';
     }
-    $('#account-create-hint').hidden = !creating;
-    if (changed) { showAccountStatus(''); $('#account-resend').hidden = true; }
+    if (changed) showAccountStatus('');
     $('#account-password').autocomplete = creating || reset ? 'new-password' : 'current-password';
     $('#account-dialog-title').textContent = reset ? '重設密碼' : creating ? '建立帳號' : '登入';
     $('#code-signin-submit').textContent = reset ? '更新密碼 ↗' : creating ? '建立帳號 ↗' : '登入 ↗';
@@ -1726,6 +1737,23 @@
   accountDialog.addEventListener('close', () => {
     $('#account-password').value = '';
     $('#access-code').value = '';
+  });
+  $('#verification-continue').addEventListener('click', () => {
+    showRegistrationCompletion(verificationAddress);
+  });
+  $('#verification-resend').addEventListener('click', async () => {
+    const button = $('#verification-resend');
+    const feedback = $('#verification-feedback');
+    button.disabled = true;
+    feedback.textContent = '正在重新寄送…';
+    try {
+      const result = await account?.resendVerification?.(verificationAddress);
+      feedback.textContent = result?.reason || (result?.ok ? '如果信箱仍待驗證，驗證信已寄出。請查看收件匣與垃圾郵件。' : '暫時無法寄送，請稍後再試。');
+    } catch {
+      feedback.textContent = '暫時無法寄送，請稍後再試。';
+    } finally {
+      button.disabled = false;
+    }
   });
   $('#account-form').addEventListener('submit', event => {
     event.preventDefault();

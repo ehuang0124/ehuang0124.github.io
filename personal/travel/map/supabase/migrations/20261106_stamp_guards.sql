@@ -73,11 +73,6 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
-  -- This SECURITY DEFINER function writes outside ordinary RLS, so it must
-  -- independently enforce the same confirmed, approved traveller gate.
-  if not public.atlas_is_traveller() then
-    return jsonb_build_object('ok', false, 'reason', 'not_approved');
-  end if;
   select * into v_row from public.stamps where id = p_stamp_id;
   if not found then
     return jsonb_build_object('ok', false, 'reason', 'not_found');

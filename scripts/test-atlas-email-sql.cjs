@@ -24,10 +24,20 @@ const { pgcrypto } = require('@electric-sql/pglite/contrib/pgcrypto');
     const dir = path.join(__dirname, '../personal/travel/map/supabase');
     const setup = fs.readFileSync(path.join(dir, 'setup.sql'), 'utf8');
     const migration = fs.readFileSync(path.join(dir, 'migrations/20261106_require_verified_email.sql'), 'utf8');
+    const writeGuards = fs.readFileSync(path.join(dir, 'migrations/20261107_verified_write_guards.sql'), 'utf8');
+    const oldStampGuards = fs.readFileSync(path.join(dir, 'migrations/20261106_stamp_guards.sql'), 'utf8');
     await db.exec(setup);
     await db.exec(setup);
     await db.exec(migration);
     await db.exec(migration);
+    // Simulate an existing deployment with the old policy and leave RPC so
+    // the follow-up is responsible for adding both verified-email guards.
+    await db.exec(oldStampGuards);
+    await db.exec(`drop policy if exists "own profile update" on public.profiles;
+      create policy "own profile update" on public.profiles for update to authenticated
+      using (auth.uid() = id) with check (auth.uid() = id);`);
+    await db.exec(writeGuards);
+    await db.exec(writeGuards);
     await db.exec(`
       grant usage on schema public to anon, authenticated;
       grant select, insert, update, delete on public.profiles, public.stamps, public.custom_cities to anon, authenticated;
