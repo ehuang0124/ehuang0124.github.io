@@ -290,6 +290,21 @@ a{color:inherit}
 .map-us-state.selected{fill:var(--ng-navy-soft);stroke:var(--ng-navy);stroke-width:2}
 .map-us-state.selected.done{fill:var(--ng-red);stroke:#ffffff}
 
+/* Japan parks layer: prefecture fills grouped into the nine regions, with a
+   heavier seam where those regions meet on land. Not stamp targets. */
+.map-jp-layer{display:none}
+.map-jp-layer.active{display:block}
+.map-jp-prefecture{fill:var(--ng-paper);stroke:rgba(18,49,75,.42);stroke-width:.85;stroke-linejoin:round;vector-effect:non-scaling-stroke;cursor:default;transition:fill .16s,stroke .16s}
+.map-jp-prefecture[data-tone="0"]{fill:color-mix(in srgb,var(--ng-red) 8%,var(--ng-paper))}
+.map-jp-prefecture[data-tone="1"]{fill:color-mix(in srgb,var(--ng-red) 18%,var(--ng-paper))}
+.map-jp-prefecture[data-tone="2"]{fill:color-mix(in srgb,var(--ng-red) 30%,var(--ng-paper))}
+.map-jp-prefecture[data-tone="3"]{fill:color-mix(in srgb,var(--ng-red) 46%,var(--ng-paper))}
+.map-jp-prefecture.region-hot{fill:color-mix(in srgb,var(--ng-red) 36%,var(--ng-paper));stroke:var(--ng-red);stroke-width:1.15}
+.map-jp-prefecture.hot{stroke:var(--ng-navy);stroke-width:1.8}
+.map-jp-region{fill:none;stroke:var(--ng-navy);stroke-width:1.75;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.map-jp-region.region-hot{stroke:var(--ng-red);stroke-width:2.25}
+.map-country.covered{fill:none;stroke:none;pointer-events:none}
+
 [data-family="asia"]{--family-tint:#c9202f;--family-deep:#8f1b26;--family-ink:#4f1015}
 [data-family="europe"]{--family-tint:#3f6fa8;--family-deep:#2b4f7a;--family-ink:#17304c}
 [data-family="africa"]{--family-tint:#b8862a;--family-deep:#8a6118;--family-ink:#4f370c}
