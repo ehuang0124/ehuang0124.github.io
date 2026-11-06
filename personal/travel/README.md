@@ -89,9 +89,11 @@ No production build step or runtime dependency is introduced. Install test tools
 npm install --prefix /tmp/atlas-test-deps playwright-core
 NODE_PATH=/tmp/atlas-test-deps/node_modules CHROMIUM_PATH=/path/to/chromium \
   node scripts/test-interactive-regions.cjs
+NODE_PATH=/tmp/atlas-test-deps/node_modules CHROMIUM_PATH=/path/to/chromium \
+  node scripts/test-travel-landing.cjs
 ```
 
-Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. They cover all regions at desktop/mobile widths, timeline/marker filtering, cards/projection synchronization, reset/route behavior, visited intersections, empty states, saved stamps, itinerary jumps and keyboard focus.
+Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. The landing test covers filled photos, text spacing, route wrapping, keyboard links and longer copy across desktop and mobile widths. The region tests cover timeline/marker filtering, cards/projection synchronization, reset/route behavior, visited intersections, empty states, saved stamps, itinerary jumps and keyboard focus.
 
 ## Historical context and the Kanto/Kansai question
 

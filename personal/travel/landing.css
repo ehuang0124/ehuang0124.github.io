@@ -285,13 +285,13 @@
    Editorial spreads instead of a table: photo and copy trade sides, the
    frame is offset like a printed plate, the number sits oversized behind
    the crop, and the vertical tab keeps the magazine rail rhythm. */
-.ng-lead-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(26px,4.4vw,58px)}
+.ng-lead-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(34px,5vw,64px)}
 .ng-lead{position:relative}
 .ng-lead > a{
   display:grid;
   grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);
   gap:clamp(20px,4vw,58px);
-  align-items:center;
+  align-items:stretch;
   padding:clamp(4px,1vw,10px) 0;
   text-decoration:none;color:inherit;
 }
@@ -301,14 +301,15 @@
 .ng-lead:nth-child(even){margin-left:clamp(0px,3vw,48px)}
 .ng-lead:nth-child(odd){margin-right:clamp(0px,3vw,48px)}
 
-/* photo plate */
+/* Photo plate: keep the width tied to its grid column when longer copy
+   stretches the row, and let the crop fill the resulting height. */
 .ng-lead-fig{
-  position:relative;margin:0;
-  aspect-ratio:4/5;
+  position:relative;width:100%;min-width:0;margin:0;
+  aspect-ratio:3/4;
   isolation:isolate;
 }
-.ng-lead:nth-child(2) .ng-lead-fig{aspect-ratio:1}
-.ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:16/11}
+.ng-lead:nth-child(2) .ng-lead-fig{aspect-ratio:7/8}
+.ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:6/5}
 .ng-lead-frame{
   position:absolute;inset:0;z-index:-1;
   border:1px solid color-mix(in srgb,var(--cat-accent) 46%,transparent);
@@ -317,7 +318,7 @@
   transition:transform .35s cubic-bezier(.24,.8,.3,1);
 }
 .ng-lead-pic{
-  display:block;position:relative;height:100%;
+  display:block;position:absolute;inset:0;
   overflow:hidden;border-radius:14px;
   background:var(--ng-paper-deep);
 }
@@ -349,11 +350,11 @@
 }
 
 /* copy column */
-.ng-lead-copy{display:flex;flex-direction:column;min-width:0;padding-right:clamp(0px,2vw,26px)}
+.ng-lead-copy{display:flex;flex-direction:column;align-self:center;min-width:0;padding-right:clamp(0px,2vw,26px)}
 .ng-lead:nth-child(even) .ng-lead-copy{padding-right:0;padding-left:clamp(0px,2vw,26px)}
 .ng-lead-date{
   display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-  margin:0 0 clamp(10px,1.4vw,16px);
+  margin:0 0 clamp(16px,1.8vw,22px);
   font-family:var(--ng-grotesk);font-weight:700;
   font-size:clamp(17px,2.1vw,23px);letter-spacing:.04em;
   color:var(--cat-accent);
@@ -365,28 +366,31 @@
   color:var(--ng-muted);
   padding-left:10px;border-left:1px solid var(--ng-line);
 }
-.ng-lead-title{margin:0 0 clamp(10px,1.4vw,14px)}
+.ng-lead-title{margin:0 0 clamp(16px,2vw,24px)}
 .ng-lead-title b{
   display:block;
   font-family:var(--ng-sans);font-weight:900;
   font-size:clamp(24px,3.4vw,40px);line-height:1.24;letter-spacing:.01em;
 }
 .ng-lead-title em{
-  display:block;margin-top:8px;font-style:normal;
+  display:block;margin-top:10px;font-style:normal;
   font-family:var(--ng-grotesk);font-weight:700;font-size:10px;
   letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
 }
 .ng-lead-desc{
-  margin:0 0 clamp(12px,1.6vw,18px);max-width:32em;
-  font-size:12.5px;line-height:2.05;color:var(--ng-ink-soft);
+  margin:0 0 clamp(20px,2vw,28px);max-width:32em;
+  font-size:clamp(14px,1.05vw,15px);line-height:2.1;letter-spacing:.025em;
+  color:var(--ng-ink-soft);
 }
 .ng-lead-route{
-  display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;
-  margin:0 0 clamp(14px,1.8vw,20px);padding-top:clamp(10px,1.4vw,14px);
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;
+  margin:0 0 clamp(20px,2.2vw,28px);padding-top:clamp(16px,1.8vw,22px);
   border-top:1px solid var(--ng-line-soft);
-  font-family:var(--ng-sans);font-weight:700;font-size:11.5px;letter-spacing:.04em;
+  font-family:var(--ng-sans);font-weight:700;font-size:12.5px;letter-spacing:.04em;
   color:var(--ng-ink);
 }
+/* Keep each arrow with its destination when the route wraps. */
+.ng-lead-route span{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
 .ng-lead-route i{font-style:normal;color:var(--cat-accent);opacity:.7;font-size:11px}
 .ng-lead-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto}
 .ng-lead-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -416,14 +420,14 @@
 @media(max-width:1000px){
   .ng-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ng-lead > a,
-  .ng-lead:nth-child(even) > a{grid-template-columns:1fr;gap:clamp(18px,3vw,26px);align-items:start}
+  .ng-lead:nth-child(even) > a{grid-template-columns:1fr;gap:clamp(24px,3.2vw,32px);align-items:start}
   .ng-lead:nth-child(even) .ng-lead-fig{order:1}
   .ng-lead:nth-child(even) .ng-lead-copy{order:2;padding-left:0}
   .ng-lead:nth-child(even),
   .ng-lead:nth-child(odd){margin-inline:0}
   .ng-lead-fig,
   .ng-lead:nth-child(2) .ng-lead-fig,
-  .ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:16/10}
+  .ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:3/2}
   .ng-lead-copy,
   .ng-lead:nth-child(even) .ng-lead-copy{padding-right:0}
 }
@@ -446,11 +450,18 @@
   .ng-shot,.ng-shot:nth-child(3){transform:none}
   .ng-shot,.ng-shot:nth-child(2),.ng-shot:nth-child(3),.ng-shot:nth-child(4){scroll-snap-align:start}
   .ng-shot-media{aspect-ratio:4/5}
+  .ng-lead-fig,
+  .ng-lead:nth-child(2) .ng-lead-fig,
+  .ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:4/3}
   .ng-lead-title b{font-size:clamp(23px,7vw,30px)}
   .ng-lead-foot{justify-content:flex-start}
   .ng-lead-go{margin-left:auto}
   .ng-lead-num{font-size:clamp(58px,17vw,88px);bottom:-12px}
   .ng-callout-go{width:100%;justify-content:center}
+}
+@media(max-width:380px){
+  .ng-lead-route{gap:6px 7px;font-size:11.5px}
+  .ng-lead-route span{gap:7px}
 }
 @media(prefers-reduced-motion:reduce){
   .ng-card:hover{transform:none}
