@@ -40,7 +40,7 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   const passphraseHash = crypto.createHash('sha256').update(passphrase).digest('hex');
   const configSource = window => window.eval(`window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:false,localGate:{name:"Eva Huang",passphraseHash:"${passphraseHash}"}};`);
   const inject = f => f === 'config.js' ? configSource(window) : window.eval(fs.readFileSync(path.join(mapDir,f),'utf8'));
-  for (const f of ['vendor/supabase.js','config.js','account.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(f);
+  for (const f of ['vendor/supabase.js','config.js','account.js','palette.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(f);
   await wait();
   const d = window.document, $ = s => d.querySelector(s), $$ = s => [...d.querySelectorAll(s)];
   const click = n => n.dispatchEvent(new window.MouseEvent('click',{bubbles:true,cancelable:true}));

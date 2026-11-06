@@ -110,10 +110,9 @@ body{
 .signature-seal{display:grid;place-items:center;width:28px;height:28px;flex:none;border:2px double #aa263b;border-radius:50%;color:#a92339;font:900 14px/1 var(--ng-sans);transform:rotate(-8deg)}
 .signature-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .map-seal,.state-imprint{pointer-events:none}
-.map-seal-outer{fill:#fffaf6;stroke:#a92339;stroke-width:1.5;vector-effect:non-scaling-stroke}
-.map-seal-inner{fill:none;stroke:#a92339;stroke-width:.7;stroke-dasharray:1.5 1;vector-effect:non-scaling-stroke}
-.map-seal-initial{fill:#a92339;font-family:var(--ng-sans);font-weight:900}
-.map-point.done .point-outer,.map-point.done .point-center{opacity:0}
+.map-seal-outer{fill:color-mix(in srgb,var(--family-tint,#c9202f) var(--tile-solid,75%),var(--ng-white));stroke:var(--ng-white);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.map-seal-inner{fill:none;stroke:var(--family-ink,#7b1825);stroke-width:.7;stroke-dasharray:1.5 1;vector-effect:non-scaling-stroke}
+.map-seal-initial{fill:var(--family-ink,#7b1825);font-family:var(--ng-sans);font-weight:900}
 .place-item.done .item-status{font-family:var(--ng-sans);font-weight:900}
 #account-dialog p.verification-status{
   margin:0 0 14px;padding:11px 13px;border-left:3px solid #287b65;border-radius:var(--ng-r-sm);

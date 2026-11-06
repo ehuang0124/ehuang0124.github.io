@@ -25,7 +25,7 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
   // CONFIG_OVERRIDE: demo behaviour is asserted here regardless of the checked-in flag.
   const configSource = win => win.eval('window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:true};');
   const inject = (win, file) => file === 'config.js' ? configSource(win) : win.eval(fs.readFileSync(path.join(mapDir, file),'utf8'));
-  for (const f of ['vendor/supabase.js','config.js','account.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(window, f);
+  for (const f of ['vendor/supabase.js','config.js','account.js','palette.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(window, f);
   await wait();
   const d=window.document, $=s=>d.querySelector(s), $$=s=>[...d.querySelectorAll(s)];
   const click=n=>n.dispatchEvent(new window.MouseEvent('click',{bubbles:true,cancelable:true}));
@@ -71,7 +71,7 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
   w2.BroadcastChannel = window.BroadcastChannel;
   Object.defineProperty(w2,'localStorage',{value:window.localStorage,configurable:true});
   Object.defineProperty(w2,'sessionStorage',{value:window.sessionStorage,configurable:true});
-  for (const f of ['vendor/supabase.js','config.js','account.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(w2, f);
+  for (const f of ['vendor/supabase.js','config.js','account.js','palette.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(w2, f);
   await new Promise(r=>setTimeout(r,60));
   const d2=w2.document;
   assert.equal(d2.querySelector('#account-name').textContent, '陳柏宇', 'second tab restores the session');
@@ -93,7 +93,7 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
     const freshStore = new Map();
     Object.defineProperty(w3,'localStorage',{value:{getItem:k=>freshStore.has(k)?freshStore.get(k):null,setItem:(k,v)=>freshStore.set(k,String(v)),removeItem:k=>freshStore.delete(k),clear:()=>freshStore.clear(),key:i=>[...freshStore.keys()][i]??null,get length(){return freshStore.size}},configurable:true});
     Object.defineProperty(w3,'sessionStorage',{value:{getItem:()=>null,setItem(){},removeItem(){}},configurable:true});
-    for (const f of ['vendor/supabase.js','config.js','account.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(w3, f);
+    for (const f of ['vendor/supabase.js','config.js','account.js','palette.js','world.js','places.js','okinawa-places.js','us-states.js','app.js']) inject(w3, f);
     await new Promise(resolve => setTimeout(resolve, 160));
     const d3 = w3.document;
     assert.equal(d3.querySelector('#stamp-button').classList.contains('locked'), true, 'a visitor is read-only');

@@ -88,7 +88,7 @@ async function load({ config = CLOUD, clientOptions, autoConfirm = false, url = 
   const fake = makeClient(clientOptions);
   window.supabase = { createClient: () => fake.client };
   window.fetch = async () => ({ ok:true, json:async () => ({ mailer_autoconfirm:autoConfirm }) });
-  for (const file of ['config.js', 'account.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'app.js']) {
+  for (const file of ['config.js', 'account.js', 'palette.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'app.js']) {
     window.eval(file === 'config.js' ? config : fs.readFileSync(path.join(mapDir, file), 'utf8'));
   }
   await wait();

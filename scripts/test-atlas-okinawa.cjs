@@ -18,7 +18,7 @@ const pause = () => new Promise(r => setTimeout(r, 30));
   w.localStorage.setItem('okinawa-visited-v2', JSON.stringify(['churaumi','shuri']));
   w.localStorage.setItem('eva.travel.stamp-atlas.v1', JSON.stringify({version:1,visits:{'okinawa:shuri':['2024-03']},customCities:[]}));
   w.TravelAtlasConfig = {supabaseUrl:'',supabaseAnonKey:'',demoMode:false,localGate:{name:'Test',passphraseHash:''}};
-  for (const f of ['account.js','world.js','places.js','okinawa-places.js','us-states.js','stamp-art.js','app.js']) w.eval(fs.readFileSync(path.join(dir,f),'utf8'));
+  for (const f of ['account.js','palette.js','world.js','places.js','okinawa-places.js','us-states.js','stamp-art.js','app.js']) w.eval(fs.readFileSync(path.join(dir,f),'utf8'));
   await pause();
   assert.deepEqual(errors, []);
   assert.equal(d.body.dataset.atlasTheme, 'okinawa');
