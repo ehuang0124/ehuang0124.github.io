@@ -69,20 +69,18 @@
       <span class="ng-credit">表紙写真：宮崎・青島 / 松岡明芳（CC BY-SA 4.0）</span>
     </section>
 
-    <!-- 観光案内 — 只保留對應三帖的導覽 -->
-    <nav id="journeys" class="ng-catnav" aria-label="頁面分類">
+    <!-- 頁面分類 — 只有這頁自己的段落；共用導覽載入後會把它收進唯一的選單，
+         這裡保留的是沒有 JavaScript 時的段落索引 -->
+    <nav class="ng-catnav" data-page-sections aria-label="頁面分類">
       <div class="ng-shell ng-catnav-in">
-        <a class="ng-cat" href="#guide"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-camera"/></svg><span>三帖</span></a>
-        <a class="ng-cat" href="/personal/travel/east-japan/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg><span>東海道</span></a>
-        <a class="ng-cat" href="/personal/travel/kyushu/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-ferry"/></svg><span>九州</span></a>
-        <a class="ng-cat" href="/personal/travel/okinawa/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg><span>沖繩</span></a>
-        <a class="ng-cat" href="/personal/travel/map/"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg><span>世界蓋章</span></a>
-        <a class="ng-cat" href="#postcard"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg><span>明信片</span></a>
+        <a class="ng-cat" href="#guide"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pagoda"/></svg><span>三帖</span></a>
+        <a class="ng-cat" href="#moments"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-camera"/></svg><span>旅の断片</span></a>
+        <a class="ng-cat" href="#postcard"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg><span>明信片</span></a>
       </div>
     </nav>
 
     <!-- 0101 刊物主旨 -->
-    <section class="ng-section" aria-labelledby="preface-title">
+    <section class="ng-section" id="journeys" aria-labelledby="preface-title">
       <div class="ng-shell">
         <div class="ng-head">
           <div>
@@ -98,7 +96,7 @@
     <div class="ng-geo-divider" aria-hidden="true"><span></span><i></i><b></b><i></i><span></span></div>
 
     <!-- 0103 旅の断片 — 保留，作為三帖的照片索引 -->
-    <section class="ng-section" aria-labelledby="moments-title">
+    <section class="ng-section" id="moments" aria-labelledby="moments-title">
       <div class="ng-shell">
         <div class="ng-head">
           <div>
