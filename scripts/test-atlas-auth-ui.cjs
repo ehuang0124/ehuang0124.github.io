@@ -92,6 +92,12 @@ const root = path.resolve(__dirname, '..');
       assert(point, 'a map destination has a clickable visible point');
       await page.mouse.click(point.x, point.y);
       assert((await page.locator('#place-name').textContent()).includes('中國'));
+      // On narrow screens a place selection opens the postcard dialog; close it
+      // before continuing with the account flow behind it.
+      if (await page.locator('#mobile-stamp-dialog').evaluate(dialog => dialog.open)) {
+        await page.locator('#mobile-stamp-close').click();
+        await page.locator('#mobile-stamp-dialog').waitFor({ state:'hidden' });
+      }
       await page.locator('#sign-in').click();
       assert.equal(await page.getByRole('tablist', { name:'帳號操作' }).count(), 1);
       assert.equal(await page.getByRole('tab', { name:'登入', exact:true }).getAttribute('aria-selected'), 'true');
@@ -201,7 +207,8 @@ const root = path.resolve(__dirname, '..');
       await page.locator('#sign-in').click();
       await page.locator('#account-email').fill('traveller@example.com');
       await page.locator('#account-forgot').click();
-      await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('重設密碼的信已寄出'));
+      await page.waitForFunction(() => document.querySelector('#account-status').textContent.includes('重設密碼的信已寄出'));
+      assert.equal(await page.locator('#account-error').textContent(), '', 'a sent reset mail is not shown as an error');
       assert.equal(calls.filter(call => call.path === '/auth/v1/recover').length, 1);
       await page.evaluate(() => localStorage.clear());
       await page.goto(base + '/personal/travel/map/?password-recovery=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery');
