@@ -197,6 +197,19 @@ function mapLink(e){return 'https://www.google.com/maps/search/?api=1&query='+en
 function embedLink(e){return 'https://maps.google.com/?q='+encodeURIComponent(e.spot+' '+e.where+' 日本')}
 
 /* ===== 地區導覽 ===== */
+/* 選完縣市後把頁面帶到下方的故事區塊；內容已經看得到時就不打斷閱讀。 */
+function revealRegionContent(){
+  const content=el('region-content');
+  if(!content)return;
+  const header=document.querySelector('.ng-header');
+  const offset=(header?header.offsetHeight:0)+16;
+  const rect=content.getBoundingClientRect();
+  const visible=Math.min(rect.bottom,window.innerHeight)-Math.max(rect.top,offset);
+  if(visible>=Math.min(rect.height,window.innerHeight-offset)*.6)return;
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:rect.top+window.scrollY-offset,behavior:reduce?'auto':'smooth'});
+}
+
 function drawRegions(){
   el('region-tabs').innerHTML=Object.entries(REGIONS).map(([key,r],index)=>
     '<button type="button" class="region-tab" data-region="'+key+'" aria-pressed="'+(selectedRegion===key)+'" aria-controls="region-content">'+
@@ -205,8 +218,10 @@ function drawRegions(){
   el('region-tabs').querySelectorAll('button').forEach(button=>button.onclick=()=>{
     selectedRegion=button.dataset.region;
     drawRegions();
-    // 重繪後把焦點留在使用者選擇的地區。
-    el('region-tabs').querySelector('[data-region="'+selectedRegion+'"]').focus();
+    // 重繪後把焦點留在使用者選擇的縣市，再帶到下方的故事區塊。
+    const tab=el('region-tabs').querySelector('[data-region="'+selectedRegion+'"]');
+    if(tab)tab.focus({preventScroll:true});
+    revealRegionContent();
   });
   const region=REGIONS[selectedRegion];
   const stories=events.filter(e=>region.groups.includes(e.group));

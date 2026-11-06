@@ -40,6 +40,12 @@ const root = path.resolve(__dirname, '..');
         await page.goto(`${url}/personal/travel/${name}/`);
         const total = Object.values(regions).reduce((sum, n) => sum + n, 0);
         assert.equal(await page.locator('.event').count(), total);
+        // Choosing a region brings the page to the story block below the tabs.
+        await page.locator(`.region-tab[data-region="${Object.keys(regions)[1]}"]`).click();
+        await page.waitForFunction(() => {
+          const top = document.getElementById('region-content').getBoundingClientRect().top;
+          return top >= document.querySelector('.ng-header').offsetHeight - 1 && top < innerHeight;
+        });
         const historyCount=name==='east-japan'?5:2;
         assert.equal(await page.locator('.history-marker').count(),historyCount);
         assert.equal(await page.evaluate(() => AtlasHistory.events.length),9);
