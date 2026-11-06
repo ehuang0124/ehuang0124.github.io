@@ -430,40 +430,40 @@
   api.setDiscoverable = setDiscoverable;
 
   // ---------- auth ----------
-  // Supabase errors are terse and English. Turn the ones that mean "one more
-  // switch in the dashboard" into that switch.
+  // Anyone can open the page source, so failures are answered in plain
+  // language. Setup steps, keys and file paths stay in the repo, never here.
   function signInErrorText(error) {
     const text = `${error?.message || error || ''} ${error?.code || ''}`;
     if (/invalid login credentials|invalid_credentials/i.test(text)) return '電子郵件或個人密碼不正確。';
     if (/already registered|user_already_exists|email_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
-    if (/weak_password|password.*(short|least|weak)/i.test(text)) return '密碼需超過 6 個字元；請在 Supabase → Authentication → Settings → Password security 將最低長度設為 7。';
+    if (/weak_password|password.*(short|least|weak)/i.test(text)) return '密碼太短，請換一組超過 6 個字元的密碼。';
     if (/rate.limit|too many requests|over_.*rate_limit/i.test(text)) return '登入或註冊太頻繁，請稍後再試。';
     if (/email_confirmation_required|email not confirmed|confirm your email/i.test(text)) {
-      return '這個專案還要求確認信：Supabase → Authentication → Sign In / Providers → Email → 關閉「Confirm email」後再試。';
+      return '這個電子郵件目前還不能用來建立帳號，請聯絡網站擁有者。';
     }
     if (/signups? (are )?(not allowed|disabled)|signup.*disabl/i.test(text)) {
-      return 'Supabase 目前不開放建立帳號：Authentication → Sign In / Providers → Email 要開啟（本頁使用個人電子郵件與密碼建立旅人帳號）。';
+      return '目前還不能建立帳號，請聯絡網站擁有者。';
     }
     if (/invalid api key|no api key|invalid jwt|jwt expired/i.test(text)) {
-      return 'anon key 不正確或已失效：請換上 Project Settings → API 的 anon public key，或重跑 scripts/connect-supabase.cjs。';
+      return '登入服務暫時無法使用，請稍後再試。';
     }
     if (/does not exist|42P01|schema cache|PGRST202|function.*not found/i.test(text)) {
-      return '資料表或函式還沒建立：到 Supabase SQL Editor 執行 personal/travel/map/supabase/setup.sql。';
+      return '登入服務暫時無法使用，請稍後再試。';
     }
     if (/failed to fetch|networkerror|load failed|err_name_not_resolved/i.test(text)) {
-      return '連不到 Supabase：確認網路可用，且 config.js 的 supabaseUrl 正確。';
+      return '網路連線似乎有問題，請檢查網路後再試。';
     }
-    return `登入失敗：${error?.message || '請稍後再試。'}`;
+    return '登入失敗，請稍後再試。';
   }
   function codeErrorText(reason) {
     switch (reason) {
       case 'invalid_code': return '通行碼不正確。';
-      case 'missing_code': return '請輸入通行碼。';
-      case 'throttled': return '嘗試次數太多，請 15 分鐘後再試。';
+      case 'missing_code': return '請輸入邀請碼。';
+      case 'throttled': return '嘗試次數太多，請稍後再試。';
       case 'no_code_set':
-        return '這個專案還沒設定通行碼：在 Supabase SQL Editor 執行 select public.atlas_rotate_code(\'新的通行碼\');';
+        return '目前還不能建立帳號，請聯絡網站擁有者。';
       case 'not_approved': return '帳號尚未完成建立，請切換至「建立帳號」並輸入邀請碼。';
-      case 'no_session': return '登入工作階段已失效，請重新整理再試。';
+      case 'no_session': return '登入狀態已失效，請重新整理再試。';
       default: return '登入失敗，請稍後再試。';
     }
   }
@@ -471,7 +471,7 @@
     if (state.mode === 'demo') { enterDemo('demo-eva'); return { ok:true }; }
     // No backend: the dialog collects the browser-only passphrase instead.
     if (state.mode === 'local') return localSignIn(code);
-    if (!client) return { ok:false, reason:'這個頁面還沒有連接 Supabase 專案。' };
+    if (!client) return { ok:false, reason:'登入服務暫時無法使用，請稍後再試。' };
     const value = typeof code === 'string' ? code.trim() : '';
     const traveller = typeof name === 'string' ? name.trim().slice(0, 40) : '';
     if (createAccount && !value) return { ok:false, field:'#access-code', reason:'請輸入邀請碼。' };
@@ -545,6 +545,8 @@
       emit('status', status());
       return { ok:true };
     } catch (error) {
+      // Raw detail stays in the console; the page answers in plain language.
+      console.warn('sign-in failed', error);
       return { ok:false, reason:signInErrorText(error) };
     } finally {
       // A failed invite must not leave an approved account unlocked by an

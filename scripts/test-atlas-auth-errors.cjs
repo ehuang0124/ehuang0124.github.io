@@ -1,6 +1,6 @@
-// Regression: a failed sign-in must explain the next click, not show a raw
-// Supabase string. Every case below drives the real page against a stub client
-// and checks what a person actually sees.
+// Regression: a failed sign-in must be answered in plain language, never with
+// a raw backend string or a setup instruction. Every case below drives the
+// real page against a stub client and checks what a person actually sees.
 //
 // Run: NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-auth-errors.cjs
 const assert = require('node:assert/strict');
@@ -15,7 +15,7 @@ const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoM
 const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
-function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null } } = {}) {
+function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null } = {}) {
   const state = { session: null, rpcCalls: [] };
   const chain = () => {
     const builder = {
@@ -39,6 +39,7 @@ function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null,
         return { data:{ user:state.session.user, session:state.session }, error:null };
       },
       async signInWithPassword() {
+        if (signInError) return { data:{ user:null, session:null }, error: signInError };
         state.session = { access_token:'token', user:{ id:'user-personal' } };
         return { data:{ session:state.session, user:state.session.user }, error:null };
       },
@@ -104,6 +105,19 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
 }
 
 (async () => {
+  // 0. A wrong password says so in plain words; the dialog stays open and the
+  // form is usable again — this is the failure a returning traveller hits most.
+  {
+    const page = await load({ clientOptions:{ signInError:{ message:'Invalid login credentials', code:'invalid_credentials' } } });
+    await page.signIn({ createAccount:false });
+    assert(page.$('#account-error').textContent.includes('電子郵件或個人密碼不正確'), 'a wrong password is named plainly');
+    assert.equal(page.$('#account-dialog').open, true, 'the dialog stays open');
+    assert.equal(page.$('#code-signin-submit').disabled, false, 'the form is usable again');
+    assert.equal(page.$('#account-password').value, '', 'the password is cleared');
+    assert.equal(page.fake.state.session, null, 'no session is kept');
+    assert.deepEqual(page.errors, []);
+  }
+
   // 1. A wrong code is refused by Postgres; the page says so in Chinese.
   {
     const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'invalid_code' }, error:null } } });
@@ -119,25 +133,27 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
   {
     const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'throttled' }, error:null } } });
     await page.signIn();
-    assert(page.$('#account-error').textContent.includes('15 分鐘'), 'throttling explains the wait');
+    assert(page.$('#account-error').textContent.includes('稍後再試'), 'throttling asks the traveller to wait');
     assert.deepEqual(page.errors, []);
   }
 
-  // 3. No code set yet names the exact SQL to run.
+  // 3. No code set yet: plain language, no SQL on the page.
   {
     const page = await load({ clientOptions:{ rpc:{ data:{ ok:false, reason:'no_code_set' }, error:null } } });
     await page.signIn();
-    assert(page.$('#account-error').textContent.includes('atlas_rotate_code'), 'the missing code names the rotation call');
+    assert(page.$('#account-error').textContent.includes('網站擁有者'), 'a missing code points at the owner, not at SQL');
+    assert(!/atlas_rotate_code|SQL/i.test(page.$('#account-error').textContent), 'no setup detail leaks to the page');
     assert.deepEqual(page.errors, []);
   }
 
-  // 4. Missing tables/functions point at setup.sql.
+  // 4. Missing tables/functions: plain language, no file paths on the page.
   {
     const page = await load({
       clientOptions:{ rpc:{ data:null, error:{ message:'Could not find the function public.atlas_redeem_code', code:'PGRST202' } } }
     });
     await page.signIn();
-    assert(page.$('#account-error').textContent.includes('setup.sql'), 'a missing function names setup.sql');
+    assert(page.$('#account-error').textContent.includes('登入服務暫時無法使用'), 'a missing function is a plain outage message');
+    assert(!/setup\.sql|PGRST202|atlas_/i.test(page.$('#account-error').textContent), 'no setup detail leaks to the page');
     assert.deepEqual(page.errors, []);
   }
 
@@ -161,11 +177,12 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
     assert.deepEqual(page.errors, []);
   }
 
-  // Returning login has its own backend setup hint and approval boundary.
+  // Returning login has its own plain outage message and approval boundary.
   {
     const page = await load({ clientOptions:{ rpc:{ data:null, error:{ message:'Could not find the function public.atlas_login', code:'PGRST202' } } } });
     await page.signIn({ createAccount:false });
-    assert(page.$('#account-error').textContent.includes('setup.sql'));
+    assert(page.$('#account-error').textContent.includes('登入服務暫時無法使用'));
+    assert(!/setup\.sql|PGRST202|atlas_/i.test(page.$('#account-error').textContent), 'no setup detail leaks to the page');
     assert.equal(page.$('#account-dialog').open, true);
     assert.equal(page.fake.state.session, null);
     assert.equal(page.fake.state.rpcCalls.at(-1).name, 'atlas_login');
@@ -204,7 +221,7 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
     assert.deepEqual(page.errors, []);
   }
 
-  console.log('PASS sign-in errors: wrong code, throttling, missing code, missing setup, offline, login function, unapproved login');
+  console.log('PASS sign-in errors: wrong password, wrong code, throttling, missing code, missing setup, offline, login function, unapproved login');
   process.exit(0);
 })().catch(error => {
   console.error(error);
