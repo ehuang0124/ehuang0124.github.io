@@ -3,11 +3,10 @@
 // Transport only: this module owns sign-in, the cloud rows, and realtime events.
 // app.js owns the map and the local record model.
 //
-// Sign-in is a shared access code checked by Postgres. The code is not in this
-// file: `atlas_redeem_code()` compares it against a bcrypt hash and, only on a
-// match, creates the traveller's profile row (which is what Row Level Security
-// uses to allow writes) and appends a row to `atlas_logins` so the site owner
-// can see who signed in, when, and from which browser and address.
+// Supabase Auth handles personal passwords. Only account creation redeems
+// the shared invite in Postgres (`atlas_redeem_code`) to create the profile
+// required by Row Level Security. Returning-user `atlas_login` requires that
+// profile, records the login, and never checks an invite or approves an account.
 //
 // When no Supabase project is configured the module falls back to the
 // browser-only `localGate` passphrase in config.js.
@@ -437,7 +436,7 @@
     const text = `${error?.message || error || ''} ${error?.code || ''}`;
     if (/invalid login credentials|invalid_credentials/i.test(text)) return '電子郵件或個人密碼不正確。';
     if (/already registered|user_already_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
-    if (/weak_password|password.*(short|least|weak)/i.test(text)) return '請設定至少 12 個字元的個人密碼；Supabase → Authentication → Settings 可設定密碼規則。';
+    if (/weak_password|password.*(short|least|weak)/i.test(text)) return '密碼需超過 6 個字元；請在 Supabase → Authentication → Settings → Password security 將最低長度設為 7。';
     if (/rate.limit|too many requests|over_.*rate_limit/i.test(text)) return '登入或註冊太頻繁，請稍後再試。';
     if (/email_confirmation_required|email not confirmed|confirm your email/i.test(text)) {
       return '這個專案還要求確認信：Supabase → Authentication → Sign In / Providers → Email → 關閉「Confirm email」後再試。';
@@ -463,6 +462,7 @@
       case 'throttled': return '嘗試次數太多，請 15 分鐘後再試。';
       case 'no_code_set':
         return '這個專案還沒設定通行碼：在 Supabase SQL Editor 執行 select public.atlas_rotate_code(\'新的通行碼\');';
+      case 'not_approved': return '帳號尚未完成建立，請切換至「建立帳號」並輸入邀請碼。';
       case 'no_session': return '登入工作階段已失效，請重新整理再試。';
       default: return '登入失敗，請稍後再試。';
     }
@@ -474,11 +474,11 @@
     if (!client) return { ok:false, reason:'這個頁面還沒有連接 Supabase 專案。' };
     const value = typeof code === 'string' ? code.trim() : '';
     const traveller = typeof name === 'string' ? name.trim().slice(0, 40) : '';
-    if (!value) return { ok:false, reason:'請輸入通行碼。' };
+    if (createAccount && !value) return { ok:false, reason:'請輸入邀請碼。' };
     const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, reason:'請輸入有效的電子郵件。' };
     if (typeof password !== 'string' || !password) return { ok:false, reason:'請輸入個人密碼。' };
-    if (createAccount && password.length < 12) return { ok:false, reason:'個人密碼至少需要 12 個字元。' };
+    if (password.length <= 6) return { ok:false, reason:'密碼需超過 6 個字元。' };
     if (createAccount && !traveller) return { ok:false, reason:'請輸入顯示名稱。' };
     if (authenticating) return { ok:false, reason:'登入中，請稍候。' };
     authenticating = true;
@@ -489,23 +489,33 @@
     let accepted = false;
     try {
       // Never reuse an existing session as proof of the typed password.
-      const response = createAccount
+      let response = createAccount
         ? await client.auth.signUp({ email:address, password })
         : await client.auth.signInWithPassword({ email:address, password });
+      // A bad invite leaves an unapproved Auth account. Allow its owner to
+      // retry creation, but only after proving the same personal password.
+      if (createAccount && /already registered|user_already_exists/i.test(`${response.error?.message || ''} ${response.error?.code || ''}`)) {
+        response = await client.auth.signInWithPassword({ email:address, password });
+      }
       if (response.error) return { ok:false, reason:signInErrorText(response.error) };
       const attempt = { session:response.data?.session };
       if (!attempt.session?.user) return { ok:false, reason:signInErrorText({ message:'email_confirmation_required' }) };
-      // Keep the traveller's existing name when signing in; the redemption
-      // function uses this name when it updates the profile.
-      const { data:existingProfile, error:profileError } = await client.from('profiles')
-        .select('id,display_name').eq('id', attempt.session.user.id).maybeSingle();
-      if (profileError) return { ok:false, reason:signInErrorText(profileError) };
-      // The code itself is checked in Postgres, never in this file.
-      const { data, error } = await client.rpc('atlas_redeem_code', {
-        p_code: value,
-        p_name: existingProfile?.display_name || traveller,
-        p_user_agent: String(navigator.userAgent || '').slice(0, 300)
-      });
+      if (createAccount) {
+        const { data:existingProfile, error:profileError } = await client.from('profiles')
+          .select('id').eq('id', attempt.session.user.id).maybeSingle();
+        if (profileError) return { ok:false, reason:signInErrorText(profileError) };
+        if (existingProfile) return { ok:false, reason:'這個電子郵件已註冊，請改用登入。' };
+      }
+      // Only account creation redeems an invite. Returning accounts must
+      // already have an approved profile; atlas_login never creates one.
+      const { data, error } = createAccount
+        ? await client.rpc('atlas_redeem_code', {
+          p_code:value, p_name:traveller,
+          p_user_agent:String(navigator.userAgent || '').slice(0, 300)
+        })
+        : await client.rpc('atlas_login', {
+          p_user_agent:String(navigator.userAgent || '').slice(0, 300)
+        });
       if (error) {
         setConnection('error');
         return { ok:false, reason: signInErrorText(error) };
