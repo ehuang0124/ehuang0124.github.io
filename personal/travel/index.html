@@ -51,7 +51,7 @@
         </p>
         <h1 class="ng-title" id="page-title">
           <span class="ng-title-main">日本のどこへ、いつ行く？</span>
-          <span class="ng-title-sub"><i>〜</i>まとめ<i>〜</i>　日本三旅と世界蓋章</span>
+          <span class="ng-title-sub"><i>〜</i>まとめ<i>〜</i>　世界蓋章と日本三旅</span>
         </h1>
         <div class="ng-lattice ng-lattice--hero" aria-hidden="true">
           <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
@@ -87,10 +87,24 @@
             <p class="ng-head-top"><span class="ng-head-no">0101</span>Contents</p>
             <h2 id="toc-title">目次</h2>
           </div>
-          <p>三張日本行程地圖，加一張世界蓋章地圖。<b>點進任一張</b>就從這一頁離開，回到你自己的紀錄。</p>
+          <p>先一張<b>世界蓋章地圖</b>，再分次列出三趟日本旅行——每一趟的路線、時間軸與可蓋章的互動地圖都獨立成頁。</p>
         </div>
 
         <ol class="ng-toc">
+          <li class="ng-toc-atlas">
+            <a href="/personal/travel/map/">
+              <span class="ng-toc-no">00</span>
+              <span class="ng-toc-main">
+                <span class="ng-toc-title"><b>世界蓋章</b><em>Stamp Atlas</em></span>
+                <span class="ng-toc-route">世界各國 ・ 主要城市 ・ 美國與加拿大州省 ・ 日本國家公園</span>
+                <span class="ng-toc-meta">
+                  <span>記錄方式<b>到訪月份蓋章</b></span>
+                  <span>戳章<b>依地點作圖</b></span>
+                </span>
+              </span>
+              <span class="ng-toc-go">打開地圖 <i>→</i></span>
+            </a>
+          </li>
           <li>
             <a href="/personal/travel/east-japan/">
               <span class="ng-toc-no">01</span>
@@ -134,20 +148,6 @@
                 </span>
               </span>
               <span class="ng-toc-go">看地圖 <i>→</i></span>
-            </a>
-          </li>
-          <li>
-            <a href="/personal/travel/map/">
-              <span class="ng-toc-no">04</span>
-              <span class="ng-toc-main">
-                <span class="ng-toc-title"><b>世界蓋章地圖</b><em>Stamp Atlas</em></span>
-                <span class="ng-toc-route">世界各國 ・ 主要城市 ・ 美國與加拿大州省 ・ 日本國家公園</span>
-                <span class="ng-toc-meta">
-                  <span>記錄方式<b>到訪月份蓋章</b></span>
-                  <span>戳章<b>依地點作圖</b></span>
-                </span>
-              </span>
-              <span class="ng-toc-go">打開地圖 <i>→</i></span>
             </a>
           </li>
         </ol>
@@ -341,58 +341,85 @@
       <div class="ng-shell">
         <div class="ng-head ng-head-side">
           <div>
-            <p class="ng-head-top"><span class="ng-head-no">0105</span>Style Guide</p>
+            <p class="ng-head-top"><span class="ng-head-no">0105</span>Catalogue</p>
             <h2 id="guide-title">型錄</h2>
           </div>
-          <p>這一頁的規矩寫在這裡：<b>白紙、五種墨、十二個圖示</b>，還有字與字之間的距離。分類顏色與菱格紋都從同一組變數長出來。</p>
+          <p>所有地圖的索引：<b>世界蓋章</b>在最上，下面按行程日期排列每一次旅行特輯；每個特輯的文案從該次旅行的標題抽出來。</p>
         </div>
 
-        <div class="ng-guide">
-          <section class="ng-guide-block" aria-labelledby="palette-title">
-            <h3 id="palette-title">色<em>Palette</em></h3>
-            <ul class="ng-palette">
-              <li><span class="ng-sw" style="--sw:#ffffff"></span><span><b>白</b><code>#FFFFFF ・ --ng-white</code></span></li>
-              <li><span class="ng-sw" style="--sw:#f6f5f1"></span><span><b>生成り</b><code>#F6F5F1 ・ --ng-paper</code></span></li>
-              <li><span class="ng-sw" style="--sw:#1c1c1c"></span><span><b>墨</b><code>#1C1C1C ・ --ng-ink</code></span></li>
-              <li><span class="ng-sw" style="--sw:#c9202f"></span><span><b>長崎レッド</b><code>#C9202F ・ --ng-red</code></span></li>
-              <li><span class="ng-sw" style="--sw:#a3162a"></span><span><b>茜</b><code>#A3162A ・ --ng-red-dark</code></span></li>
-              <li><span class="ng-sw" style="--sw:#12314b"></span><span><b>長崎藍</b><code>#12314B ・ --ng-navy</code></span></li>
-              <li><span class="ng-sw" style="--sw:#c2a05c"></span><span><b>金茶</b><code>#C2A05C ・ --ng-gold</code></span></li>
-              <li><span class="ng-sw" style="--sw:#e2e0d8"></span><span><b>罫線</b><code>#E2E0D8 ・ --ng-line</code></span></li>
-            </ul>
-            <p class="ng-guide-rule">白と生成りを地に、墨と長崎レッドで組む。藍と金茶は差し色で、面いっぱいには使わない。</p>
-          </section>
+        <ol class="ng-catlog">
+          <li class="ng-cat-item ng-cat-atlas">
+            <a href="/personal/travel/map/">
+              <span class="ng-cat-mark">
+                <svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg>
+              </span>
+              <span class="ng-cat-main">
+                <span class="ng-cat-kicker"><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg>00 ・ 推し POINT ・ Stamp Atlas</span>
+                <span class="ng-cat-title"><b>世界蓋章</b><em>Stamp Atlas</em></span>
+                <span class="ng-cat-desc">世界旅行地圖——到訪月份蓋一枚戳，圖樣依地點而定；同一個地方再去一次，蓋的還是同一枚。</span>
+                <span class="ng-cat-meta">
+                  <span>記錄<b>到訪月份</b></span>
+                  <span>戳章<b>依地點作圖</b></span>
+                  <span>範圍<b>世界各國／城市／州省／日本國立公園</b></span>
+                </span>
+              </span>
+              <span class="ng-cat-go">打開地圖 <i>→</i></span>
+            </a>
+          </li>
 
-          <section class="ng-guide-block" aria-labelledby="icons-title">
-            <h3 id="icons-title">図<em>Icons</em></h3>
-            <ul class="ng-icons">
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-torii"/></svg>神社</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pagoda"/></svg>五重塔</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>城</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-mountain"/></svg>山</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg>海</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-train"/></svg>鐵道</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-ferry"/></svg>渡船</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-onsen"/></svg>溫泉</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-food"/></svg>食</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-camera"/></svg>写真</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>地點</li>
-              <li><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-postmark"/></svg>郵戳</li>
-            </ul>
-            <p class="ng-guide-rule">アイコンは 24px グリッド、線幅 1.5、面は塗らない。菱格紋と同じ太さで並べる。</p>
-          </section>
+          <li class="ng-cat-item ng-cat-journey" style="--cat-accent:var(--ng-navy)">
+            <a href="/personal/travel/east-japan/">
+              <span class="ng-cat-no">01</span>
+              <span class="ng-cat-main">
+                <span class="ng-cat-kicker">旅行特輯 ・ 第 01 號 ・ 12.06 — 12.17</span>
+                <span class="ng-cat-title"><b>東日本的幕末之旅</b><em>East Japan ・ 黒船から維新へ</em></span>
+                <span class="ng-cat-desc">黑船來航到江戶無血開城——下田、東海道、伊勢參宮街道，一路往西走到名古屋，再轉新幹線接續九州。</span>
+                <span class="ng-cat-chips">
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-train"/></svg>鐵道</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pagoda"/></svg>神社</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>15 篇</span>
+                </span>
+              </span>
+              <span class="ng-cat-go">看地圖 <i>→</i></span>
+            </a>
+          </li>
 
-          <section class="ng-guide-block" aria-labelledby="type-title">
-            <h3 id="type-title">字<em>Type</em></h3>
-            <div class="ng-type">
-              <p class="ng-type-row"><span>見出し ・ Headline</span><b class="ng-type-h1">日本三旅</b><i>58 / 1.10</i></p>
-              <p class="ng-type-row"><span>中見出し ・ Subhead</span><b class="ng-type-h2">三つの旅</b><i>36 / 1.30</i></p>
-              <p class="ng-type-row"><span>本文 ・ Body</span><b class="ng-type-body">走過的每一站，都留在自己的地圖上。</b><i>14 / 1.90</i></p>
-              <p class="ng-type-row"><span>ラベル ・ Label</span><b class="ng-type-label">Contents</b><i>9 / .26em</i></p>
-            </div>
-            <p class="ng-guide-rule">ゴシック体で組む。写真とカードは 8〜16px の丸み、罫線は 1px、影は弱く。菱格紋は見出しと余白の区切りにだけ使う。</p>
-          </section>
-        </div>
+          <li class="ng-cat-item ng-cat-journey" style="--cat-accent:var(--ng-red)">
+            <a href="/personal/travel/kyushu/">
+              <span class="ng-cat-no">02</span>
+              <span class="ng-cat-main">
+                <span class="ng-cat-kicker">旅行特輯 ・ 第 02 號 ・ 12.18 — 12.27</span>
+                <span class="ng-cat-title"><b>九州的幕末之旅</b><em>Kyushu ・ 幕末紀行</em></span>
+                <span class="ng-cat-desc">長崎開港、薩摩的工業與城山之戰——柳川水路、荷蘭坂、櫻島與日向海岸，港口把世界帶進了九州。</span>
+                <span class="ng-cat-chips">
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-ferry"/></svg>渡船</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-onsen"/></svg>溫泉</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>11 篇</span>
+                </span>
+              </span>
+              <span class="ng-cat-go">看地圖 <i>→</i></span>
+            </a>
+          </li>
+
+          <li class="ng-cat-item ng-cat-journey" style="--cat-accent:var(--ng-gold)">
+            <a href="/personal/travel/okinawa/">
+              <span class="ng-cat-no">03</span>
+              <span class="ng-cat-main">
+                <span class="ng-cat-kicker">旅行特輯 ・ 第 03 號 ・ 2027.01.07 — 01.10</span>
+                <span class="ng-cat-title"><b>沖繩・島與海之旅</b><em>Okinawa ・ 島と海の記録</em></span>
+                <span class="ng-cat-desc">御城、陶窯、山原森林與離島渡船——49 個地點分成十個旅行區域，每個區域各自有一條可以走完的路線。</span>
+                <span class="ng-cat-chips">
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-wave"/></svg>海</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>御城</span>
+                  <span><svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-pin"/></svg>49 個地點</span>
+                </span>
+              </span>
+              <span class="ng-cat-go">看地圖 <i>→</i></span>
+            </a>
+          </li>
+        </ol>
+
+        <p class="ng-cat-note">設計規範（icon 格線、筆觸、色票與級數）記載於 repo 內 <code>personal/travel/spec.md</code>；此頁不重複印刷式樣張。</p>
       </div>
     </section>
   </main>
