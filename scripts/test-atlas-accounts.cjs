@@ -33,7 +33,7 @@ function createServer() {
   const uuid = prefix => `${prefix}-${String(nextId++).padStart(4, '0')}`;
   function addUser({ name, email, sub }) {
     const id = sub || uuid('user');
-    users.set(id, { id, email: email || `${name}@example.com`, user_metadata:{ full_name:name, avatar_url:`https://img.example/${id}.png` } });
+    users.set(id, { id, email: email || `${name}@example.com`, email_confirmed_at:'2026-11-06T00:00:00Z', user_metadata:{ full_name:name, avatar_url:`https://img.example/${id}.png` } });
     return users.get(id);
   }
   function signInAs(id) {
