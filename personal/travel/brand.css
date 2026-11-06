@@ -717,7 +717,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 #atlas .map-legend i{border-color:var(--ng-ink);background:var(--ng-white)}
 #atlas .map-legend i.v{background:var(--ng-red);border-color:var(--ng-red)}
 #atlas .map-legend i.p{border-color:var(--ng-gold)}
-#atlas .map-credit{font-family:var(--ng-grotesk);font-weight:600;color:var(--ng-muted)}
 .map-zoom button{
   border:1px solid var(--ng-line);
   border-radius:var(--ng-r-sm);

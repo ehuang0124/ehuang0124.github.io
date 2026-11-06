@@ -196,3 +196,7 @@ reminders are browser-local and are not part of atlas backup or cloud sync.
 Run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-okinawa.cjs`
 to check the deep link, collection switcher, regional filtering, search, old-list
 reminders and persisted Okinawa stamps.
+
+### Mobile postcard
+
+On screens up to 840px, selecting a map destination or an index result opens the existing stamp panel in a postcard-style modal over the map. Its airmail border and ink accents follow the destination's continent palette; the month, companion and history controls remain the same as on desktop. Close it with the × button, Escape, or by tapping outside. On small screens with unusually tall content the dialog can scroll. Desktop keeps the side panel. The browser regression script is `scripts/test-mobile-postcard.cjs`.

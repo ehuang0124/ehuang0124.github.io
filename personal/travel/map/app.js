@@ -487,6 +487,7 @@
     $('#place-en').textContent = place.en === place.zh ? '' : place.en.toUpperCase();
     $('#place-location').textContent = areaLabel(place);
     paint($('.place-heading'), place);
+    paint(mobileStampDialog, place);
     const legacyNote = $('#legacy-note');
     legacyNote.hidden = place.category !== 'okinawa' || !legacyOkinawaVisits().includes(place.id);
     legacyNote.textContent = legacyNote.hidden ? '' : '舊版沖繩清單曾標記或預設為去過（未記錄月份）。請確認後選擇實際到訪月份，再蓋章保存。';
@@ -895,6 +896,27 @@
     tooltip.style.top = `${top}px`;
   }
   function hideTooltip() { tooltip.hidden = true; }
+  // Reuse the real detail panel and its controls in a mobile postcard dialog.
+  const mobileStampDialog = $('#mobile-stamp-dialog');
+  const stampPanel = $('.stamp-panel');
+  const panelSlot = document.createComment('stamp panel');
+  stampPanel.before(panelSlot);
+  const mobileLayout = matchMedia('(max-width: 840px)');
+  function openMobileStamp() {
+    if (!mobileLayout.matches) return;
+    mobileStampDialog.append(stampPanel);
+    if (!mobileStampDialog.open) mobileStampDialog.showModal();
+    $('#mobile-stamp-close').focus({preventScroll:true});
+  }
+  function restoreStampPanel() { panelSlot.after(stampPanel); }
+  $('#mobile-stamp-close').addEventListener('click', () => mobileStampDialog.close());
+  mobileStampDialog.addEventListener('close', restoreStampPanel);
+  mobileStampDialog.addEventListener('click', event => {
+    if (event.target === mobileStampDialog) mobileStampDialog.close();
+  });
+  mobileLayout.addEventListener('change', () => {
+    if (!mobileLayout.matches && mobileStampDialog.open) mobileStampDialog.close();
+  });
   function selectPlace(id,focus = false,fromIndex = false) {
     const place = catalogue[category].find(p => p.id === id);
     if (!place) return;
@@ -905,8 +927,11 @@
     renderMap();
     renderDirectory();
     hideTooltip();
-    if (fromIndex) {
-      const target = matchMedia('(max-width: 840px)').matches ? $('.stamp-panel') : $('.atlas-grid');
+    if (mobileLayout.matches) {
+      if (fromIndex) surface.scrollIntoView({block:'center',behavior:'instant'});
+      openMobileStamp();
+    } else if (fromIndex) {
+      const target = $('.atlas-grid');
       target.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
     }
   }
@@ -1153,7 +1178,8 @@
     selectedByCategory.cities = raw.id;
     updateCategoryUI();renderRegions();renderDetail();focusPlace(selectedPlace());renderMap();renderDirectory(true);
     showMessage('城市已加入；選月份蓋章。','success');
-    $('.stamp-panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'start'});
+    if (mobileLayout.matches) openMobileStamp();
+    else $('.stamp-panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'start'});
   });
   $('#delete-city').addEventListener('click',() => {
     const place = selectedPlace();
