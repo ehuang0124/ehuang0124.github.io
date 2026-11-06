@@ -429,6 +429,50 @@
       return Array.isArray(saved) ? saved : [];
     } catch { return []; }
   }
+  // The impression is derived from the stamp owner, never from companions.
+  // Use a grapheme (not a UTF-16 code unit), so Chinese and accented names work.
+  function nameInitial(name) {
+    const clean = String(name || '').trim().replace(/^[\s\p{P}\p{S}]+/u, '');
+    if (!clean) return '旅';
+    const first = typeof Intl.Segmenter === 'function'
+      ? new Intl.Segmenter(undefined, { granularity:'grapheme' }).segment(clean)[Symbol.iterator]().next().value?.segment
+      : Array.from(clean)[0];
+    return (first || '旅').toLocaleUpperCase();
+  }
+  function stampAuthors(place) {
+    if (!isStamped(place)) return [];
+    if (!cloudMode()) {
+      const name = atlasAccount.user?.name || window.TravelAtlasConfig?.localGate?.name || '旅人';
+      return [{ id:'local', name, initial:nameInitial(name) }];
+    }
+    const ids = [...new Set(scopeRows(place).map(row => row.userId))];
+    return ids.map(id => {
+      const name = atlasAccount.profiles.get(id)?.name || (id === atlasAccount.user?.id ? atlasAccount.user.name : '旅人');
+      return { id, name, initial:nameInitial(name) };
+    }).sort((a,b) => Number(b.id === atlasAccount.user?.id) - Number(a.id === atlasAccount.user?.id) || collator.compare(a.name,b.name));
+  }
+  function renderStampSignatures(place) {
+    const authors = stampAuthors(place);
+    const primary = authors[0];
+    const mark = $('#stamp-owner-seal');
+    mark.hidden = !primary;
+    $('#stamp-owner-initial').textContent = primary?.initial || '';
+    mark.title = primary ? `${primary.name} 的印記` : '';
+    $('#stamp-face').classList.toggle('personalized', Boolean(primary));
+    const wrapper = $('#stamp-signatures');
+    const list = $('#stamp-signature-list');
+    wrapper.hidden = !authors.length;
+    list.replaceChildren();
+    authors.forEach(author => {
+      const person = makeElement('span', 'stamp-signature');
+      const seal = makeElement('span', 'signature-seal', author.initial);
+      seal.setAttribute('aria-hidden', 'true');
+      person.append(seal, makeElement('span', 'signature-name', author.name));
+      person.setAttribute('aria-label', `${author.name} 的印記`);
+      list.append(person);
+    });
+    return primary;
+  }
   function renderDetail() {
     const place = selectedPlace();
     if (!place) return;
@@ -451,17 +495,17 @@
     legacyNote.hidden = place.category !== 'okinawa' || !legacyOkinawaVisits().includes(place.id);
     legacyNote.textContent = legacyNote.hidden ? '' : '舊版沖繩清單曾標記或預設為去過（未記錄月份）。請確認後選擇實際到訪月份，再蓋章保存。';
     const face = $('#stamp-face');
-    const hasOwnStamp = signedIn() && ownVisits(place).length > 0;
-    const ownerName = String(atlasAccount.user?.name || '旅').trim();
-    const ownerInitial = ([...ownerName][0] || '旅').toUpperCase();
     face.classList.toggle('pending', stamps.length === 0);
-    face.classList.toggle('personalized', hasOwnStamp);
     face.classList.toggle('long-name', [...place.zh].length > 6);
-    $('#stamp-owner-seal').hidden = !hasOwnStamp;
-    $('#stamp-owner-initial').textContent = hasOwnStamp ? ownerInitial : '';
     $('#stamp-face-name').textContent = place.zh;
+    const primary = renderStampSignatures(place);
     renderStampArt(place);
-    $('#stamp-face-date').textContent = printedDate(stamps.at(-1) || (validDate(dateInput.value) ? dateInput.value : ''));
+    // The date printed beside the featured initial must belong to that same
+    // traveller, even when someone else visited more recently.
+    const primaryMonth = cloudMode() && primary
+      ? scopeRows(place).filter(row => row.userId === primary.id).map(row => row.month).sort().at(-1)
+      : stamps.at(-1);
+    $('#stamp-face-date').textContent = printedDate(primaryMonth || (validDate(dateInput.value) ? dateInput.value : ''));
     const history = $('#stamp-history');
     history.hidden = stamps.length === 0;
     $('#history-count').textContent = cloudMode() ? `${stamps.length} 個月份 · ${scopeRows(place).length} 枚戳章` : `${stamps.length} 枚戳章`;
@@ -553,31 +597,32 @@
     });
   }
   function renderCompanionControls(place) {
-    const block = $('#companion-block');
     const chips = $('#companion-chips');
     const manage = $('#companion-manage');
     const note = $('#companion-note');
-    const others = cloudMode() ? [...new Set(atlasAccount.profiles.keys())].filter(id => id !== atlasAccount.user?.id) : [];
+    const others = cloudMode() ? [...atlasAccount.profiles.values()].filter(profile => profile.id !== atlasAccount.user?.id && profile.discoverable !== false) : [];
     if (!cloudMode()) {
       chips.replaceChildren();
       manage.hidden = true;
-      note.textContent = '登入後可以標記一起旅行的朋友。';
-      if (signedIn()) note.textContent = '';
+      note.textContent = '此瀏覽器的個人紀錄無法標記旅伴。';
       return;
     }
     if (!signedIn()) {
       chips.replaceChildren();
-      manage.hidden = true;
+      manage.hidden = false;
+      manage.disabled = false;
+      $('#companion-manage-label').textContent = '登入後標記旅伴';
+      $('.companion-manage-plus').textContent = '＋';
       note.textContent = '登入後可以標記一起旅行的朋友。';
       return;
     }
     manage.hidden = false;
     manage.disabled = !editable();
     const ids = activeCompanionIds();
-    $('#companion-manage-label').textContent = ids.length ? '編輯同行旅伴' : '標記旅伴';
+    $('#companion-manage-label').textContent = ids.length ? `編輯同行旅伴（${ids.length}）` : '標記旅伴';
     $('.companion-manage-plus').textContent = ids.length ? '→' : '＋';
     renderCompanionChips(ids);
-    if (!others.length) note.textContent = '目前還沒有其他旅人登入過這個地圖；他們登入後就能一起標記。';
+    if (!others.length) note.textContent = '目前沒有可標記的旅伴；其他旅人建立帳號並開放被標記後，就可以選擇。';
     else if (!ids.length) note.textContent = '你可以標記這趟旅程的同行者，蓋章後會一起顯示在共同旅程裡。';
     else note.textContent = '';
   }
@@ -648,7 +693,7 @@
       const flag = flagImage(place);
       if (flag) name.append(flag);
       name.append(document.createTextNode(place.zh));
-      if (category === 'cities' && place.code) {
+      if (place.category === 'cities' && place.code) {
         const code = makeElement('span', 'city-code', place.code);
         code.setAttribute('aria-label', `城市代碼 ${place.code}`);
         name.append(code);
@@ -657,7 +702,7 @@
       if (place.category === 'okinawa') {
         if (legacyOkinawaVisits().includes(place.id)) info.append(makeElement('small', 'legacy-label', '舊清單：曾標記或預設（月份未記錄）'));
       }
-      button.append(info, makeElement('span', 'item-status', isStamped(place) ? '✳' : '·'));
+      button.append(info, makeElement('span', 'item-status', isStamped(place) ? (stampAuthors(place)[0]?.initial || '旅') : '·'));
       button.lastElementChild.setAttribute('aria-hidden', 'true');
       fragment.append(button);
     });
@@ -774,33 +819,55 @@
       path.classList.toggle('relevant', category === 'na' && (country.iso === 'US' || country.iso === 'CA') || (category === 'jp' || category === 'okinawa') && country.iso === 'JP');
     });
   }
+  // A small double-ringed ink seal represents each actual stamp owner.
+  // Visitors see up to three owners on crowded maps; details list every visible owner.
+  function appendMapSeals(parent, place, scale) {
+    const authors = stampAuthors(place).slice(0, 3);
+    authors.forEach((author, index) => {
+      const x = place.x + (index - (authors.length - 1) / 2) * 15 / scale;
+      const y = place.y;
+      const seal = makeSvg('g', { class:'map-seal', 'data-author-id':author.id, 'aria-hidden':'true' });
+      seal.append(makeSvg('circle', { class:'map-seal-outer', cx:x, cy:y, r:8.4/scale }));
+      seal.append(makeSvg('circle', { class:'map-seal-inner', cx:x, cy:y, r:6.4/scale }));
+      const initial = makeSvg('text', { class:'map-seal-initial', x, y:y + .3/scale, 'font-size':9/scale, 'text-anchor':'middle', 'dominant-baseline':'central' });
+      initial.textContent = author.initial;
+      seal.append(initial);
+      parent.append(seal);
+    });
+  }
   function renderMarkers() {
     const fragment = document.createDocumentFragment();
     const scale = Math.min((svg.clientWidth || 800) / view.w,(svg.clientHeight || 500) / view.h);
     if (category === 'countries') {
-      // The large impression lives on the postcard; little postmarks live on
-      // the map itself so visited countries look collected, not just coloured.
       for (const place of catalogue.countries.filter(p => matchesRegion(p) && isStamped(p))) {
-        const mark = makeSvg('g',{class:'country-imprint','aria-hidden':'true'});
+        const mark = makeSvg('g',{class:'country-imprint','data-place-key':place.key,'aria-hidden':'true'});
         paint(mark, place);
-        mark.append(makeSvg('circle',{class:'imprint-outer',cx:place.x,cy:place.y,r:7/scale}));
-        mark.append(makeSvg('circle',{class:'imprint-inner',cx:place.x,cy:place.y,r:4.6/scale}));
-        mark.append(makeSvg('circle',{class:'imprint-dot',cx:place.x,cy:place.y,r:1.4/scale}));
+        appendMapSeals(mark, place, scale);
         fragment.append(mark);
       }
     } else {
+      // State outlines are selectable shapes, but deserve the same owner seal.
+      if (category === 'na') {
+        for (const place of catalogue.na.filter(p => p.isState && matchesRegion(p) && isStamped(p))) {
+          const mark = makeSvg('g', {class:'state-imprint', 'data-place-key':place.key, 'aria-hidden':'true'});
+          paint(mark, place);
+          appendMapSeals(mark, place, scale);
+          fragment.append(mark);
+        }
+      }
       const points = catalogue[category].filter(place => !place.isState && matchesRegion(place) && (!visitedOnly || isStamped(place)));
       points.sort((a,b) => Number(a.id === selectedPlace().id) - Number(b.id === selectedPlace().id));
       const radius = 4.5 / scale;
       for (const place of points) {
-        // Keep circles small on screen at every zoom, but make their pointer target comfortable.
-        const group = makeSvg('g', {class:`map-point${isStamped(place) ? ' done' : ''}${selectedPlace().id === place.id ? ' selected' : ''}`, 'data-id':place.id});
+        const stamped = isStamped(place);
+        const group = makeSvg('g', {class:`map-point${stamped ? ' done' : ''}${selectedPlace().id === place.id ? ' selected' : ''}`, 'data-id':place.id});
         paint(group, place);
-        group.append(makeSvg('circle',{class:'point-hit',cx:place.x,cy:place.y,r:14/scale}));
+        const hitRadius = stamped ? Math.max(14, stampAuthors(place).slice(0,3).length * 8) : 14;
+        group.append(makeSvg('circle',{class:'point-hit',cx:place.x,cy:place.y,r:hitRadius/scale}));
         group.append(makeSvg('circle',{class:'point-halo',cx:place.x,cy:place.y,r:radius*2.5}));
-        group.append(makeSvg('circle',{class:'point-stamp',cx:place.x,cy:place.y,r:radius*1.65}));
         group.append(makeSvg('circle',{class:'point-outer',cx:place.x,cy:place.y,r:radius}));
         group.append(makeSvg('circle',{class:'point-center',cx:place.x,cy:place.y,r:Math.max(radius*.21,.2)}));
+        if (stamped) appendMapSeals(group, place, scale);
         group.addEventListener('pointerenter',event => showTooltip(place,event));
         group.addEventListener('pointermove',event => showTooltip(place,event));
         group.addEventListener('pointerleave',hideTooltip);
@@ -815,7 +882,8 @@
     const dates = visitsOf(place);
     const name = category === 'cities' && place.code ? `${place.zh} · ${place.code}` : place.zh;
     const details = `${name} · ${areaLabel(place)}`;
-    return dates.length ? `${details} · ${printedDate(dates.at(-1))}` : details;
+    const names = stampAuthors(place).map(author => author.name);
+    return dates.length ? `${details} · ${printedDate(dates.at(-1))}${names.length ? ` · 蓋章：${names.join('、')}` : ''}` : details;
   }
   function showTooltip(place,event) {
     if (!place) return;
@@ -1002,8 +1070,9 @@
     }
     stamping = true;
     const button = $('#stamp-button');
+    button.disabled = true;
     button.setAttribute('aria-busy', 'true');
-    const release = () => { stamping = false; button.removeAttribute('aria-busy'); };
+    const release = () => { stamping = false; button.disabled = false; button.removeAttribute('aria-busy'); };
     const pending = { id:`pending-${Date.now()}`, userId:atlasAccount.user.id, placeKey:place.key, month:date, companions, pending:true };
     atlasAccount.rows.push(pending);
     optimisticRows.set(`${pending.userId}|${pending.placeKey}|${pending.month}`, pending);
@@ -1169,6 +1238,7 @@
     $('#verification-email').textContent = verificationAddress;
     $('#verification-feedback').textContent = '';
     $('#account-error').textContent = '';
+    $('#account-status').hidden = true;
     if (!accountDialog.open) accountDialog.showModal();
     setTimeout(() => $('#verification-continue')?.focus(), 0);
   }
@@ -1203,6 +1273,7 @@
       $('#account-sync-note').hidden = view === 'reset' ? false : cloud;
     }
     $('#account-error').textContent = message;
+    $('#account-status').hidden = true;
     // Only explain the missing sign-in method when nothing more specific happened.
     if (local && !gate && !message) {
       $('#account-error').textContent = '目前還不能登入，請向網站擁有者取得登入方式。';
@@ -1214,7 +1285,7 @@
   function showRegistrationCompletion(email) {
     openAccountDialog('', 'create');
     if (email) $('#account-email').value = String(email);
-    $('#create-account-note').textContent = '電子郵件已驗證。請輸入個人密碼與邀請碼，完成帳號建立。';
+    $('#create-account-note').textContent = '開啟驗證連結後，請輸入個人密碼與邀請碼，完成帳號建立。';
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
@@ -1255,16 +1326,18 @@
     if (atlasAccount.mode === 'demo') return '資料來源：示範資料';
     return '資料來源：此瀏覽器';
   }
-  const STAMP_BUTTON_MARKUP = '<svg class="stamp-tool-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-button-label">蓋下這一章</span><span class="stamp-button-arrow" aria-hidden="true">↗</span>';
+  const STAMP_BUTTON_MARKUP = $('#stamp-button').innerHTML;
   function applyPermission() {
     const locked = !editable();
     const button = $('#stamp-button');
     button.classList.toggle('locked', locked);
-    button.setAttribute('aria-disabled', String(locked));
+    // The locked-looking button is still an enabled action: it opens login.
+    button.removeAttribute('aria-disabled');
     button.title = locked ? '登入後才能蓋章' : '';
-    // eslint-disable-next-line no-unsafe-innerhtml -- static markup, no user input
-    if (locked) button.textContent = '登入後蓋章';
-    else if (button.dataset.locked === 'true') button.innerHTML = STAMP_BUTTON_MARKUP;
+    // Restore the same stamp-shaped icon in both states (static markup only).
+    if (button.dataset.locked !== String(locked)) {
+      button.innerHTML = locked ? STAMP_BUTTON_MARKUP.replace('蓋下這一章', '登入後蓋章') : STAMP_BUTTON_MARKUP;
+    }
     button.dataset.locked = String(locked);
     $('#stamp-feedback').classList.toggle('locked', locked);
   }
@@ -1510,10 +1583,22 @@
     account.on('cities', () => { applyAccount(); refreshAll(); });
     account.on('profiles', () => {
       atlasAccount.profiles = account.profiles();
-      if (signedIn()) { renderCompanionControls(selectedPlace()); renderFriends(); }
+      renderDetail();
+      renderMap();
+      renderDirectory();
+      if (signedIn()) renderFriends();
       renderAccount();
     });
+    account.on('verification-complete', ({ email }) => {
+      atlasAccount.mode = account.mode;
+      openAccountDialog();
+      setAccountMode(true);
+      if (email) $('#account-email').value = email;
+      showAccountStatus('信箱已驗證！請輸入原本的密碼、顯示名稱與邀請碼，完成帳號建立。');
+      setTimeout(() => $('#account-password')?.focus(), 80);
+    });
     account.on('status', status => {
+      atlasAccount.mode = status.mode;
       atlasAccount.connection = status.connection;
       atlasAccount.pending = status.pending;
       atlasAccount.realtime = status.realtime;
@@ -1525,9 +1610,11 @@
     });
     // A recovery link opens the same dialog on its reset view.
     account.on('recovery', () => {
+      atlasAccount.mode = account.mode;
       openAccountDialog('', 'reset');
     });
     account.on('registration', detail => {
+      atlasAccount.mode = account.mode;
       if (detail?.stage === 'complete') showRegistrationCompletion(detail.email);
       else if (detail?.stage === 'verify') showEmailVerification(detail.email);
     });
@@ -1552,6 +1639,12 @@
     field?.focus();
     if (selectText) field?.select?.();
   }
+  function showAccountStatus(message) {
+    const status = $('#account-status');
+    status.textContent = message;
+    status.hidden = !message;
+    if (message) status.scrollIntoView?.({ block:'nearest' });
+  }
   // Browser-only sign-in: the passphrase is checked against localGate in config.js.
   async function submitLocalPassphrase() {
     const input = $('#passphrase');
@@ -1569,6 +1662,7 @@
   async function submitAccessCode() {
     if (atlasAccount.mode !== 'cloud' || $('#code-signin-submit')?.disabled) return;
     $('#account-error').textContent = '';
+    showAccountStatus('');
     const submit = $('#code-signin-submit');
     const creating = $('#code-signin').dataset.mode === 'create';
     submit.disabled = true;
@@ -1597,7 +1691,9 @@
     // Keep a locally invalid form editable; clear the password after any
     // request actually reached Auth, regardless of success or failure.
     if (!result?.field) $('#account-password').value = '';
-    if (result?.verificationRequired) {
+    if (result?.pendingVerification || result?.needsVerification) {
+      // Neither secret is retained while waiting for email confirmation.
+      $('#access-code').value = '';
       showEmailVerification(result.email || $('#account-email').value);
       return;
     }
@@ -1647,6 +1743,7 @@
       $('#account-password').value = '';
       $('#access-code').value = '';
     }
+    if (changed) showAccountStatus('');
     $('#account-password').autocomplete = creating || reset ? 'new-password' : 'current-password';
     $('#account-dialog-title').textContent = reset ? '重設密碼' : creating ? '建立帳號' : '登入';
     $('#code-signin-submit').textContent = reset ? '更新密碼 ↗' : creating ? '建立帳號 ↗' : '登入 ↗';
@@ -1687,6 +1784,13 @@
       return;
     }
     $('#account-password').value = '';
+    if (result.needsApproval) {
+      setAccountView('create');
+      if (result.email) $('#account-email').value = result.email;
+      showAccountStatus('密碼已更新。請輸入新密碼、顯示名稱與邀請碼，完成帳號建立。');
+      $('#account-password').focus();
+      return;
+    }
     accountDialog.close();
     applyAccount();
     refreshAll('密碼已更新，可以繼續使用這個地圖。', 'success');
@@ -1705,7 +1809,7 @@
     feedback.textContent = '正在重新寄送…';
     try {
       const result = await account?.resendVerification?.(verificationAddress);
-      feedback.textContent = result?.ok ? '驗證信已重新寄出，請稍候片刻再查看信箱。' : (result?.reason || '暫時無法寄送，請稍後再試。');
+      feedback.textContent = result?.reason || (result?.ok ? '如果信箱仍待驗證，驗證信已寄出。請查看收件匣與垃圾郵件。' : '暫時無法寄送，請稍後再試。');
     } catch {
       feedback.textContent = '暫時無法寄送，請稍後再試。';
     } finally {
@@ -1790,7 +1894,7 @@
     const ids = new Set(activeCompanionIds());
     const others = [...atlasAccount.profiles.values()].filter(profile => profile.id !== atlasAccount.user?.id && profile.discoverable !== false);
     if (!others.length) {
-      const empty = makeElement('p', 'companion-empty', '還沒有其他旅人登入過。把這個頁面分享給他們，登入後就能一起標記。');
+      const empty = makeElement('p', 'companion-empty', '目前沒有可標記的旅伴；其他旅人建立帳號並開放被標記後，就可以選擇。');
       container.append(empty);
     }
     others.sort((a,b) => collator.compare(a.name, b.name)).forEach(profile => {

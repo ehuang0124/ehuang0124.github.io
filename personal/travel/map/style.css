@@ -424,7 +424,7 @@ a{color:inherit}
 .stamp-button.locked{background:var(--ng-line);border-color:var(--ng-line);color:#ffffff}
 .stamp-button.locked:hover{background:var(--ng-line)}
 .stamp-button[aria-disabled="true"]{letter-spacing:.02em}
-.demo-switch{display:none;align-items:center;gap:7px;border-top:1px solid var(--ng-line);margin-top:5px;padding-top:8px;cursor:default}
+.demo-switch{display:flex;align-items:center;gap:7px;border-top:1px solid var(--ng-line);margin-top:5px;padding-top:8px;cursor:default}
 .demo-switch[hidden]{display:none!important}
 .demo-switch select{flex:1;min-width:0;height:26px;border:1px solid var(--ng-line);background:white;color:var(--ng-ink-soft);font-size:10.5px;padding:0 4px}
 .stamp-history li{flex-wrap:wrap}

@@ -27,6 +27,9 @@ const { PGlite } = require('@electric-sql/pglite');
         avatar_url text default '',
         discoverable boolean not null default true
       );
+      create function public.atlas_is_traveller() returns boolean language sql stable security definer as $$
+        select exists (select 1 from public.profiles where id = auth.uid());
+      $$;
       create table public.stamps (
         id uuid primary key default gen_random_uuid(),
         user_id uuid not null,
@@ -44,6 +47,9 @@ const { PGlite } = require('@electric-sql/pglite');
     const migration = fs.readFileSync(migrationPath, 'utf8').replace(/^notify pgrst.*$/m, '');
     await db.exec(migration);
     await db.exec(migration); // Safe to rerun on an existing project.
+    const followUp = fs.readFileSync(path.join(__dirname, '../personal/travel/map/supabase/migrations/20261107_verified_write_guards.sql'), 'utf8').replace(/^notify pgrst.*$/m, '');
+    await db.exec(followUp);
+    await db.exec(followUp);
 
     const alice = '00000000-0000-4000-8000-00000000000a';
     const bob = '00000000-0000-4000-8000-00000000000b';

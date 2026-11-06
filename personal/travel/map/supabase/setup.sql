@@ -163,6 +163,11 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
+  -- This SECURITY DEFINER function writes outside ordinary RLS, so it must
+  -- independently enforce the same confirmed, approved traveller gate.
+  if not public.atlas_is_traveller() then
+    return jsonb_build_object('ok', false, 'reason', 'not_approved');
+  end if;
   select * into v_row from public.stamps where id = p_stamp_id;
   if not found then
     return jsonb_build_object('ok', false, 'reason', 'not_found');
@@ -404,8 +409,8 @@ drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update"
   on public.profiles for update
   to authenticated
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
+  using (auth.uid() = id and public.atlas_is_traveller())
+  with check (auth.uid() = id and public.atlas_is_traveller());
 
 -- ---------------------------------------------------------------- stamps -----
 alter table public.stamps enable row level security;
