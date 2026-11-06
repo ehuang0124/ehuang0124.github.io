@@ -487,21 +487,23 @@
 }
 
 /* ---------- 冬日特集 2026–2027 — 日本三帖 editorial layer ---------- */
-  /* 冬日特集 2026-2027 — 日本三帖 editorial layer */
   .ng-hero--winter .ng-eyebrow{
+    margin-bottom:12px;
     letter-spacing:.14em;
-    padding:7px 16px 7px 14px;
+    line-height:1.35;
+    padding:5px 14px 5px 11px;
     background:rgba(255,255,255,.15);
     border-color:rgba(255,255,255,.38);
   }
   .ng-title-trilogy{
-    display:flex;flex-direction:column;gap:10px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:6px;
   }
   .ng-title-kicker{
     display:inline-block;
     font-family:var(--ng-grotesk);
     font-weight:700;
     font-size:10px;
+    line-height:1.35;
     letter-spacing:.32em;
     text-transform:uppercase;
     color:rgba(255,255,255,.88);
@@ -512,20 +514,36 @@
     opacity:.9;
   }
   .ng-title-main--large{
-    font-size:clamp(44px,6.2vw,72px);
-    line-height:1.02;
+    font-size:clamp(38px,min(5.6vw,7.4svh),64px);
+    line-height:1.04;
     letter-spacing:.06em;
   }
   .ng-title-sub--lede{
-    margin-top:18px;
-    font-size:clamp(18px,2.4vw,26px);
+    margin-top:6px;
+    font-size:clamp(16px,min(2.1vw,3svh),23px);
+    line-height:1.35;
     font-weight:700;
     letter-spacing:.14em;
     color:var(--ng-gold);
     text-shadow:0 2px 18px rgba(0,0,0,.32);
     border-top:1px solid rgba(255,255,255,.32);
     display:inline-block;
-    padding-top:14px;
+    padding-top:10px;
+  }
+  .ng-hero--winter .ng-lattice--hero{
+    margin-top:12px;
+    max-width:240px;
+  }
+  .ng-hero--winter .ng-lede{
+    margin-top:12px;
+    max-width:39em;
+    line-height:1.85;
+  }
+  .ng-hero--winter .ng-hero-meta{
+    margin-top:14px;
+  }
+  .ng-hero--winter .ng-chip{
+    line-height:1.35;
   }
   /* 三帖 — editorial index */
   .ng-trilogy{
@@ -640,19 +658,68 @@
     .ng-trilogy-item{grid-template-columns:56px minmax(0,1fr);gap:14px;padding:22px 18px}
     .ng-trilogy-go{grid-column:2;justify-self:start;margin-top:4px}
     .ng-trilogy-no b{width:38px;height:38px;font-size:10px}
-    .ng-title-main--large{font-size:clamp(36px,9vw,48px)}
+    .ng-title-main--large{font-size:clamp(32px,min(8.6vw,6.8svh),44px)}
   }
 
 /* Cover reading cue and quiet geometric chapter break. */
-#journeys,#guide{scroll-margin-top:100px}
-.ng-hero--winter{min-height:clamp(580px,82svh,850px)}
+#journeys{scroll-margin-top:72px}
+#guide,#postcard{scroll-margin-top:96px}
+.ng-hero--winter{min-height:clamp(360px,calc(100svh - 176px),540px)}
 .ng-hero--winter .ng-hero-media img{object-position:65% 48%}
-.ng-hero--winter .ng-hero-in{padding-bottom:110px}
-.ng-scroll{position:absolute;bottom:34px;left:max(24px,calc((100vw - var(--ng-shell))/2));display:flex;align-items:center;gap:18px;color:var(--ng-white);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.16em;z-index:3}
-.ng-scroll b{display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;width:42px;height:42px;font-size:23px;transition:transform .2s}
-.ng-scroll:hover b{transform:translateY(4px)}
+.ng-hero--winter .ng-hero-in{padding:clamp(22px,3svh,38px) 0 clamp(68px,8svh,80px)}
+.ng-scroll{
+  position:absolute;
+  bottom:clamp(18px,2.4svh,24px);
+  left:max(calc(clamp(32px,5vw,64px) / 2),calc((100% - var(--ng-shell)) / 2));
+  display:inline-flex;align-items:center;gap:12px;
+  color:var(--ng-white);text-decoration:none;
+  font-size:11px;font-weight:700;line-height:1;letter-spacing:.16em;
+  text-shadow:0 1px 10px rgba(4,10,16,.5);
+  z-index:3;
+}
+.ng-scroll b{
+  display:grid;place-items:center;
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.58);
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(3px);
+  font-size:18px;line-height:1;
+  transition:transform .2s,background .2s,border-color .2s;
+}
+.ng-scroll:hover b,.ng-scroll:focus-visible b{
+  transform:translateY(4px);
+  background:var(--ng-red);
+  border-color:var(--ng-red);
+}
 .ng-geo-divider{display:flex;align-items:center;justify-content:center;gap:18px;width:min(88%,1000px);margin:72px auto 4px;color:var(--ng-navy)}
 .ng-geo-divider span{height:1px;flex:1;background:var(--ng-line)}
 .ng-geo-divider i{width:16px;height:16px;border:1px solid currentColor;transform:rotate(45deg)}
 .ng-geo-divider b{width:24px;height:24px;background:var(--ng-red);transform:rotate(45deg)}
-@media(max-width:760px){.ng-title-kicker{font-size:9px;letter-spacing:.14em}.ng-hero--winter .ng-hero-in{padding-bottom:115px}.ng-hero--winter{min-height:680px}.ng-geo-divider{margin-top:48px}}
+@media(max-width:1000px){#journeys{scroll-margin-top:58px}}
+@media(max-width:760px){
+  .ng-title-kicker{font-size:9px;letter-spacing:.14em}
+  .ng-hero--winter{min-height:clamp(340px,calc(100svh - 156px),470px)}
+  .ng-hero--winter .ng-hero-in{padding:20px 0 74px}
+  .ng-hero--winter .ng-lede{margin-top:10px;font-size:12.5px;line-height:1.75}
+  .ng-hero--winter .ng-hero-meta{margin-top:12px}
+  .ng-hero--winter .ng-credit{bottom:6px;line-height:1.3}
+  .ng-scroll{bottom:24px;gap:10px}
+  .ng-scroll b{width:34px;height:34px;font-size:17px}
+  .ng-geo-divider{margin-top:48px}
+}
+@media(max-height:700px){
+  .ng-hero--winter{min-height:clamp(320px,calc(100svh - 140px),440px)}
+  .ng-hero--winter .ng-hero-in{padding:16px 0 58px}
+  .ng-hero--winter .ng-eyebrow{margin-bottom:8px;padding:4px 12px 4px 10px}
+  .ng-title-trilogy{gap:4px}
+  .ng-title-sub--lede{margin-top:2px;padding-top:7px}
+  .ng-hero--winter .ng-lattice--hero{margin-top:8px;max-width:200px}
+  .ng-hero--winter .ng-lede{margin-top:8px;line-height:1.7}
+  .ng-hero--winter .ng-hero-meta{margin-top:10px}
+  .ng-scroll{bottom:14px}
+  .ng-scroll b{width:32px;height:32px;font-size:16px}
+}
+@media(max-width:760px) and (max-height:700px){
+  .ng-hero--winter .ng-hero-in{padding:16px 0 66px}
+  .ng-scroll{bottom:22px}
+}
