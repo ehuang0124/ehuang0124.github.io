@@ -479,14 +479,14 @@ function viewQuiz() {
     const id = `${q.id}-${option.id}`;
     const checked = state.answers[q.id] === option.id;
     const input = el('input', { type: 'radio', name: q.id, id, value: option.id, checked: checked || null });
-    /* 選了就記住，但不自動跳題：使用者可以回頭改答案、慢慢看，
-       也不會在螢幕閱讀器下發生非預期的頁面切換。 */
+    /* 選了就記住，並直接跳轉到下一題（不需按下一題按鈕）。
+       使用者可以回頭改答案，但在選取時會立即切換畫面。
+       螢幕閱讀器會跟著新的題目標題。 */
     input.addEventListener('change', () => {
       state.answers[q.id] = option.id;
       persist();
       syncChecked();
-      const next = app.querySelector('.quiz-nav .btn:last-child');
-      if (next) next.disabled = false;
+      advance(); // 直接跳轉到下一題
     });
     /* 整個選項就是一顆按鈕：不畫圓形 radio、不標 A/B/C，點下去就選好了。 */
     const label = el('label', { class: 'option', for: id },
@@ -531,10 +531,11 @@ function viewQuiz() {
       q.optional
         ? el('button', { type: 'button', class: 'skip', onclick: advance }, t('skip'))
         : el('span', { class: 'skip', style: 'text-decoration:none' }, ''),
+      // 選項按下會自動跳轉，此按鈕隱藏（不需手動按下一題）
       el('button', {
-        type: 'button',
-        class: 'btn',
-        disabled: canProceed ? null : true,
+        type: 'button', class: 'btn',
+        disabled: true,
+        style: 'display:none',
         onclick: () => (isLast ? finish() : advance())
       }, isLast ? t('seeResult') : t('next'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, isLast ? '✦' : '→'))
     )
