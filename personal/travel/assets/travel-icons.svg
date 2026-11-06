@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true" focusable="false">
   <!-- Editorial line icons for the travel magazine. 24×24, 1.5 stroke, no fill.
-       Reference with: <svg class="an-i" aria-hidden="true"><use href="/personal/travel/assets/travel-icons.svg#an-torii"/></svg>
+       Reference with: <svg class="an-i" aria-hidden="true"></svg>
        Stroke and fill are inherited, so one SVG element styles every icon. -->
   <symbol id="an-torii" viewBox="0 0 24 24">
     <path d="M2.8 5.6h18.4M4.9 9.7h14.2M6.5 5.6v13.8M17.5 5.6v13.8M10.1 9.7v9.7M13.9 9.7v9.7"/>
@@ -40,5 +40,10 @@
   <symbol id="an-postmark" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="8.6"/>
     <path d="M6.8 10.4c1.7-1.6 3.5-1.6 5.2 0s3.5 1.6 5.2 0M6.8 14c1.7-1.6 3.5-1.6 5.2 0s3.5 1.6 5.2 0"/>
+  </symbol>
+  <symbol id="an-lattice" viewBox="0 0 240 24">
+    <!-- Interlocking diamond chain from the 長崎 tourist-brand lockup.
+         240 × 24 grid; stroke and fill inherit from the referencing <svg>. -->
+    <path d="M0 12 12 2 24 12 12 22ZM24 12 36 2 48 12 36 22ZM48 12 60 2 72 12 60 22ZM72 12 84 2 96 12 84 22ZM96 12 108 2 120 12 108 22ZM120 12 132 2 144 12 132 22ZM144 12 156 2 168 12 156 22ZM168 12 180 2 192 12 180 22ZM192 12 204 2 216 12 204 22ZM216 12 228 2 240 12 228 22Z"/>
   </symbol>
 </svg>
