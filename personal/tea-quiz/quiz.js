@@ -171,27 +171,9 @@ function diversify(ranked, prefs, count = 3) {
   return picks;
 }
 
-/* 結果卡不解釋「為什麼推薦這款」：貼近理由與分數對照已整段移除。
- * 剩下唯一與答案有關的句子是 methodNote —— 依選定的喝法給這款茶的沖泡方式。 */
-export function methodNote(tea, method, lang = 'zh') {
-  const b = tea.brew;
-  if (b.method === 'label') return lang === 'zh' ? '你選了自己的喝法；這款請依商品包裝標示沖泡。' : 'Follow the product label for your chosen way of drinking.';
-  if (method === 'milk') {
-    if (tea.family === 'wakoucha') return lang === 'zh'
-      ? `你想做奶茶：先用 ${b.grams} g 茶葉、${Math.round(b.ml / 2)} mL 熱水沖濃，再加入溫牛奶；從少量奶開始，保留茶香。`
-      : `For milk tea, start with ${b.grams} g leaf and ${Math.round(b.ml / 2)} mL hot water, then add a little warm milk. Increase milk to taste.`;
-    return lang === 'zh' ? `你想做奶茶：先用 ${b.grams} g 抹茶刷勻，再慢慢加入牛奶，從少量奶開始。` : `For milk tea, whisk ${b.grams} g matcha first, then gradually add milk to taste.`;
-  }
-  if (method === 'cold') return tea.family === 'matcha'
-    ? (lang === 'zh' ? '冷飲抹茶不是浸泡茶葉：用少量冷水刷勻，再加入冷水與冰塊。' : 'Cold matcha is not steeped: whisk with a little cold water, then add cold water and ice.')
-    : (lang === 'zh' ? `你想冷泡：${b.grams} g 茶葉加 ${b.ml} mL 冷水，冷藏 4–6 小時後濾出茶葉，當天喝完。` : `For cold brew, refrigerate ${b.grams} g leaf in ${b.ml} mL cold water for 4–6 hours. Strain and drink that day.`);
-  if (method === 'whisk' || tea.family === 'matcha') return lang === 'zh'
-    ? `你想慢慢品茶：${b.grams} g 抹茶過篩，加 ${b.ml} mL、${b.temp}°C 的水，刷出細緻泡沫。`
-    : `For a mindful bowl, sift ${b.grams} g matcha, add ${b.ml} mL water at ${b.temp}°C and whisk to a fine froth.`;
-  return lang === 'zh'
-    ? `照你的喝法，先試 ${b.grams} g 茶葉、${b.ml} mL 水、${b.temp}°C、${b.seconds} 秒，再依口感微調。`
-    : `For your chosen cup, start with ${b.grams} g leaf, ${b.ml} mL water at ${b.temp}°C for ${b.seconds} seconds; then adjust to taste.`;
-}
+/* 結果卡不解釋「為什麼推薦這款」，也不在結果路徑顯示咖啡因與沖泡資訊，
+ * 所以貼近理由、分數對照與依喝法生成的沖泡句都已整段移除。
+ * 這個模組只負責：題目、偏好向量、確定性評分、風味輪廓與分享編碼。 */
 export function profileFor(prefs) {
   const t = prefs.target;
   if (prefs.method === 'milk') return { zh: '茶香奶茶型', en: 'Tea-forward Milk Tea', code: 'milk' };
@@ -206,7 +188,7 @@ export function profileFor(prefs) {
   if (t.sweetness >= 3.5) return { zh: '甘甜圓潤型', en: 'Sweet & Round', code: 'sweet' };
   return { zh: '均衡日常型', en: 'Balanced Everyday', code: 'balanced' };
 }
-export function recommend(input = {}, lang = 'zh') {
+export function recommend(input = {}) {
   const answers = sanitizeAnswers(input);
   const prefs = buildPreference(answers);
   const eligible = prefs.caffeine === 'strict' ? TEAS.filter((t) => t.caffeine.status === 'verified_free') : TEAS;
@@ -216,7 +198,7 @@ export function recommend(input = {}, lang = 'zh') {
   const results = diversify(ranked, prefs).map((row, index) => ({
     ...row,
     role: index === 0 ? 'top1' : index === 1 ? 'top2' : row.tea.family === ranked[0].tea.family ? 'top3' : 'explore',
-    brewNote: methodNote(row.tea, prefs.method, lang), confidence: row.tea.confidence
+    confidence: row.tea.confidence
   }));
   return { empty: false, prefs, profile: profileFor(prefs), hardFiltered, results, ranked: ranked.map((r) => ({ id: r.tea.id, score: r.score })) };
 }

@@ -47,9 +47,9 @@ const { pathToFileURL } = require('node:url');
     if (route.top) assert.equal(report.results[0].tea.id, route.top, route.name);
     if (route.family) assert.ok(report.results.every((r) => r.tea.family === route.family), route.name);
     for (const row of report.results) {
-      /* 卡面不再解釋推薦原因；留下來的只有依喝法生成的沖泡句 */
+      /* 結果路徑不解釋推薦原因，也不再輸出沖泡句；卡牌只講這款茶以什麼聞名 */
       assert.equal(row.reasons, undefined, `${route.name}: no recommendation rationale`);
-      assert.ok(row.brewNote && !/undefined|null|NaN/.test(row.brewNote), route.name);
+      assert.equal(row.brewNote, undefined, `${route.name}: no brewing note`);
       assert.ok(row.tea.knownForZh.length > 12 && row.tea.knownForEn.length > 12, route.name);
     }
   }
@@ -80,7 +80,6 @@ const { pathToFileURL } = require('node:url');
       report.results.forEach((r) => allHits.add(r.tea.id));
       if (answers.q5 === 'milk' && answers.q7 !== 'strict') {
         assert.ok(report.results.every((r) => r.tea.family === 'wakoucha'));
-        assert.ok(report.results.every((r) => !r.brewNote.includes('抹茶')));
       }
       if (answers.q7 === 'strict') assert.ok(report.results.every((r) => r.tea.caffeine.status === 'verified_free'));
       return;
@@ -91,7 +90,8 @@ const { pathToFileURL } = require('node:url');
   assert.equal(combinations, 18000);
   for (const tea of TEAS.filter((t) => t.family === 'wakoucha')) assert.ok(allHits.has(tea.id), `${tea.id} must be reachable`);
   assert.ok(topHits.size >= 14, `unexpectedly narrow recommendation coverage: ${topHits.size}`);
-  const english = recommend(answer([1, 2, 2, 0, 4, 1, 0]), 'en');
-  assert.ok(english.results.every((r) => r.brewNote && !/[\u4e00-\u9fff]/.test(r.brewNote)), 'EN brewing note stays in English');
-  console.log(`PASS: ${TEAS.length} teas, 6 wakoucha, ${combinations} deterministic answer combinations, ${topHits.size} top-match styles; one-sentence known-for lines, brewing notes, routing, caffeine and v2 sharing checked.`);
+  /* 引擎不再生產任何文案：一筆結果只有茶款、分數、細項、角色與信心標記 */
+  const shape = recommend(answer([1, 2, 2, 0, 4, 1, 0])).results.map((r) => Object.keys(r).sort().join(','));
+  assert.ok(shape.every((keys) => keys === 'confidence,parts,role,score,tea'), `unexpected result shape: ${shape[0]}`);
+  console.log(`PASS: ${TEAS.length} teas, 6 wakoucha, ${combinations} deterministic answer combinations, ${topHits.size} top-match styles; one-sentence known-for lines, no recommendation rationale, routing, caffeine and v2 sharing checked.`);
 })().catch((error) => { console.error(error); process.exitCode = 1; });

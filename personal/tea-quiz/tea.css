@@ -510,6 +510,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 }
 .pc-tags { margin: 10px 0 0; gap: 5px; }
 .pc-tags .tag { font-size: 11px; padding: 1px 7px; line-height: 1.6; }
+.pc-aroma { margin: 6px 0 0; font-size: 11.5px; }
 .pc-foot {
   display: flex;
   flex-wrap: wrap;
@@ -520,7 +521,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
   padding-top: 12px;
 }
 .pc-foot .btn { min-height: 40px; }
-.pc-brew { font-family: var(--jf-mono); font-size: 11.5px; letter-spacing: .02em; color: var(--jf-muted); }
 
 /* 導覽：一列 —— ← ／ 1·2·3 ／ →（最後一張變成分享） */
 .deck-nav {
@@ -638,7 +638,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 9px; font-size: 12px; color: var(--jf-matcha-deep); }
 .aroma-tags span::before { content: "◇"; margin-right: 4px; color: var(--jf-gold-ink); }
 
-/* 咖啡因標示 */
+/* 目錄詳情保留咖啡因與沖泡資料；結果卡牌與其詳情不顯示這些欄位 */
 .caffeine { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--jf-radius); background: var(--jf-warn-bg); border: 1px solid var(--jf-warn-line); }
 .caffeine .status { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #6B5222; }
 .caffeine .status .dot { width: 9px; height: 9px; border-radius: 50%; background: #B4762A; flex: none; }
@@ -649,7 +649,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .caffeine.free .note { color: var(--jf-matcha-deep); }
 .caffeine a { color: inherit; }
 
-/* 沖泡 */
 .brew { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; }
 .brew div { padding: 9px 10px; border-radius: 8px; background: var(--jf-paper-2); text-align: center; }
 .brew b { display: block; font: 600 16px/1.2 var(--jf-serif); color: var(--jf-ink); }
@@ -661,7 +660,6 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 /* 分享列 */
 
 /* 免責 / 空狀態 */
-.notice { border-left: 3px solid var(--jf-gold); padding: 10px 0 10px 14px; color: var(--jf-ink-soft); font-size: 13.5px; }
 .empty { text-align: center; padding: 34px 20px; border: 1px dashed var(--jf-line-strong); border-radius: var(--jf-radius-lg); background: var(--jf-card); }
 .empty h2 { margin-bottom: 8px; }
 
@@ -951,19 +949,21 @@ body[data-view="quiz"] .quiz-nav {
   .nav-round.share .deck-btn-text { display: none; }
 }
 @media (max-height: 760px) {
-  /* 矮視窗先收風味標籤與插畫高度：「以什麼聞名」與產地圖要留著 */
-  .pc-tags { display: none; }
+  /* 矮視窗先收香氣與插畫高度：「以什麼聞名」和產地小地圖要留著 */
+  .pc-aroma { display: none; }
   .pc-media { height: clamp(96px, 21svh, 170px); }
   .pc-foot { padding-top: 10px; }
 }
 @media (max-height: 620px) {
   body[data-view="result"] .crumbs { display: none; }
+  .pc-tags { display: none; }
   .pc-media { height: 84px; }
   .origin-map.mini { margin-top: 8px; padding: 6px 9px; }
   .pc-foot { padding-top: 8px; }
 }
 @media (min-width: 760px) and (max-height: 760px) {
-  /* 桌機雙欄有橫向空間，把風味標籤放回來 */
+  /* 桌機雙欄有縱向空間，把香氣與風味標籤放回來 */
+  .pc-aroma { display: flex; }
   .pc-tags { display: flex; }
   .pc-media { height: auto; }
 }
