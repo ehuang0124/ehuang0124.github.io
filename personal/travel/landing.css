@@ -1,516 +1,624 @@
-/* Landing page layout for /personal/travel/ — issue cover, photo features,
-   a postcard, and the printed style guide. Consumes the --mag-* tokens from
-   magazine.css; no page-local colour values beyond token mixes. */
+/* Landing page for /personal/travel/ — a Nagasaki-style tourism feature.
+   Type is Japanese gothic (not Mincho), the ground is white, and the signature
+   diamond-lattice motif comes from the 長崎 tourist brand lockup.
+   Page-local theme only: the shared magazine tokens in magazine.css still
+   drive the itinerary pages. */
 
-/* ---------- icons (shared sprite: assets/travel-icons.svg) ---------- */
+/* ---------- theme ---------- */
+.ng-body{
+  --ng-white:#ffffff;
+  --ng-paper:#f6f5f1;
+  --ng-paper-deep:#ecebe5;
+  --ng-ink:#1c1c1c;
+  --ng-ink-soft:#4c4c49;
+  --ng-muted:#8b8b85;
+  --ng-line:#e2e0d8;
+  --ng-line-soft:#eeece5;
+  --ng-red:#c9202f;
+  --ng-red-dark:#a3162a;
+  --ng-navy:#12314b;
+  --ng-navy-soft:#e8eef3;
+  --ng-gold:#c2a05c;
+  --ng-sans:"Noto Sans JP","Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+  --ng-grotesk:"Archivo","Noto Sans JP","Noto Sans TC",Arial,sans-serif;
+  margin:0;
+  background:var(--ng-white);
+  color:var(--ng-ink);
+  font-family:var(--ng-sans);
+  font-size:14px;
+  line-height:1.9;
+  -webkit-text-size-adjust:100%;
+}
+.ng-body *{box-sizing:border-box}
+.ng-body img{max-width:100%}
+.ng-shell{width:min(100% - clamp(32px,5vw,64px),1200px);margin-inline:auto}
+.ng-body ::selection{background:rgba(201,32,47,.14)}
+
+/* icons (shared sprite: assets/travel-icons.svg) */
 .an-i{
-  width:16px;height:16px;
-  flex:none;
+  width:16px;height:16px;flex:none;
   fill:none;stroke:currentColor;stroke-width:1.5;
   stroke-linecap:round;stroke-linejoin:round;
   vertical-align:-.18em;
 }
 
-/* ---------- cover · 表紙 ---------- */
-.lp-cover{
-  position:relative;
-  isolation:isolate;
-  display:flex;
-  align-items:flex-end;
-  min-height:clamp(452px,72vh,660px);
-  overflow:hidden;
-  background:var(--mag-ai);
-  color:var(--mag-card);
+/* ---------- header ---------- */
+.ng-header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--ng-line);
+  backdrop-filter:saturate(1.4) blur(8px);
 }
-.lp-cover-media{position:absolute;inset:0;z-index:-2}
-.lp-cover-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 58%}
-.lp-cover:after{
-  content:"";
-  position:absolute;inset:0;z-index:-1;
-  background:
-    linear-gradient(180deg,rgba(16,23,28,.42) 0%,rgba(16,23,28,.12) 30%,rgba(14,19,23,.82) 100%),
-    linear-gradient(90deg,rgba(14,19,23,.55) 0%,rgba(14,19,23,0) 62%);
+.ng-header-in{
+  display:flex;align-items:center;justify-content:space-between;gap:16px 28px;
+  min-height:70px;flex-wrap:wrap;
 }
-.lp-cover-frame{position:absolute;inset:12px;z-index:1;border:1px solid rgba(255,253,248,.34);pointer-events:none}
-.lp-cover-in{
-  position:relative;z-index:2;
-  width:min(100% - var(--mag-gutter) * 2,var(--mag-w));
-  margin-inline:auto;
-  padding:clamp(26px,4vw,46px) 0 clamp(24px,3.4vw,40px);
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:end;
-  gap:clamp(18px,3vw,40px);
-}
-.lp-kicker{
-  display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;
-  margin:0;
-  font-family:var(--mag-mono);font-size:10px;font-weight:600;
-  letter-spacing:.3em;text-transform:uppercase;
-  color:#f4dcc0;
-}
-.lp-kicker b{color:#fffdf8;font-weight:600}
-.lp-kicker i{width:26px;height:1px;background:rgba(255,253,248,.5);font-style:normal}
-.lp-title{
-  margin:14px 0 0;
-  font-family:var(--mag-serif);font-weight:500;
-  font-size:clamp(44px,8.4vw,96px);
-  line-height:1.04;
-  letter-spacing:.1em;
-  text-shadow:0 3px 34px rgba(0,0,0,.34);
-}
-.lp-title-jp{
-  display:block;
-  margin-bottom:clamp(10px,1.6vw,18px);
-  font-family:var(--mag-mincho);font-weight:500;
-  font-size:clamp(12px,1.5vw,15px);
-  letter-spacing:.64em;
-  color:#f1dcc0;
-  text-shadow:none;
-}
-.lp-lede{
-  margin:clamp(14px,2vw,20px) 0 0;
-  max-width:32em;
-  font-size:12.5px;line-height:2.1;
-  color:rgba(255,253,248,.86);
-}
-.lp-cover-chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}
-.lp-cover-chips .lp-chip{
-  border-color:rgba(255,253,248,.42);
-  color:rgba(255,253,248,.92);
-  background:rgba(255,253,248,.07);
-  backdrop-filter:blur(2px);
-}
-.lp-rail{
-  align-self:stretch;display:flex;align-items:flex-start;
-  color:rgba(255,253,248,.74);
-}
-.lp-rail .mag-tate{border-left:1px solid rgba(255,253,248,.32);padding-left:12px;height:100%}
-.lp-seal{
-  position:absolute;z-index:3;
-  left:clamp(20px,4vw,52px);
-  top:clamp(22px,4vw,46px);
-  width:clamp(66px,7vw,86px);aspect-ratio:1;
+.ng-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ng-ink)}
+.ng-brand-mark{
+  width:34px;height:34px;flex:none;
   display:grid;place-items:center;
-  border:2px solid rgba(240,225,205,.82);
-  border-radius:50%;
-  color:rgba(247,232,212,.92);
-  font-family:var(--mag-mincho);font-size:clamp(19px,2.2vw,26px);letter-spacing:.1em;
-  transform:rotate(-7deg);
-  mix-blend-mode:screen;
-  pointer-events:none;
+  background:var(--ng-red);color:#fff;
+  border-radius:8px;
+  font-family:var(--ng-sans);font-weight:900;font-size:16px;line-height:1;
 }
-.lp-seal:before{
-  content:"";position:absolute;inset:5px;
-  border:1px dashed rgba(240,225,205,.5);border-radius:50%;
+.ng-brand-txt b{
+  display:block;
+  font-family:var(--ng-sans);font-weight:900;font-size:16px;letter-spacing:.12em;line-height:1.2;
 }
-.lp-credit{
-  position:absolute;z-index:3;right:16px;bottom:10px;
-  font-family:var(--mag-mono);font-size:8.5px;letter-spacing:.12em;
-  color:rgba(255,253,248,.62);
+.ng-brand-txt span{
+  display:block;margin-top:3px;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:8.5px;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--ng-muted);
 }
+.ng-nav{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.ng-nav a{
+  font-family:var(--ng-sans);font-weight:700;font-size:12.5px;letter-spacing:.04em;
+  color:var(--ng-ink-soft);text-decoration:none;padding:4px 0;
+  border-bottom:2px solid transparent;
+}
+.ng-nav a:hover{color:var(--ng-red);border-bottom-color:var(--ng-red)}
 
-/* ---------- issue strip ---------- */
-.lp-issue{
-  border-bottom:1px solid var(--mag-line);
-  background:var(--mag-paper-deep);
+/* ---------- chrome bits ---------- */
+.ng-crumbs{
+  border-bottom:1px solid var(--ng-line-soft);
+  background:var(--ng-white);
+  font-family:var(--ng-sans);font-size:10.5px;color:var(--ng-muted);
 }
-.lp-issue-in{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px 26px;flex-wrap:wrap;
-  padding:12px 0;
-  font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--mag-muted);
+.ng-crumbs ol{
+  list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;
+  margin:0 auto;padding:9px 0;
 }
-.lp-issue-in span b{color:var(--mag-ink);font-weight:600}
-.lp-issue-in .lp-issue-live{color:var(--mag-shu)}
+.ng-crumbs li{display:flex;align-items:center;gap:10px}
+.ng-crumbs li + li:before{content:"›";opacity:.5}
+.ng-crumbs a{color:inherit;text-decoration:none}
+.ng-crumbs a:hover{color:var(--ng-red);text-decoration:underline;text-underline-offset:3px}
 
-/* ---------- section scaffolding ---------- */
-.lp-section{padding:clamp(48px,6.4vw,80px) 0 0}
-.lp-head{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,.66fr);
-  align-items:end;
-  gap:clamp(14px,3vw,46px);
-  margin-bottom:clamp(20px,3vw,32px);
-  border-top:1px solid var(--mag-ink);
-  padding-top:14px;
+/* ---------- hero / title ---------- */
+.ng-hero{
+  position:relative;isolation:isolate;
+  display:flex;align-items:flex-end;
+  min-height:clamp(440px,66vh,600px);
+  overflow:hidden;background:var(--ng-navy);
+  color:#fff;
 }
-.lp-head-no{
-  display:flex;align-items:baseline;gap:12px;
-  margin:0 0 10px;
-  font-family:var(--mag-mono);font-size:10px;letter-spacing:.28em;
-  text-transform:uppercase;color:var(--mag-shu);font-weight:700;
+.ng-hero-media{position:absolute;inset:0;z-index:-2}
+.ng-hero-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 56%}
+.ng-hero:after{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:
+    linear-gradient(180deg,rgba(10,18,26,.30) 0%,rgba(10,18,26,.10) 28%,rgba(8,14,20,.80) 100%),
+    linear-gradient(90deg,rgba(8,14,20,.62) 0%,rgba(8,14,20,.34) 46%,rgba(8,14,20,.04) 78%);
 }
-.lp-head-no em{font-style:normal;color:var(--mag-muted);font-weight:600;letter-spacing:.24em}
-.lp-head h2{margin:0;font-family:var(--mag-serif);font-weight:500;font-size:clamp(26px,3.4vw,42px);line-height:1.26;letter-spacing:.08em}
-.lp-head p{margin:0;font-size:12px;line-height:2;color:var(--mag-ink-soft)}
-.lp-head p b{font-weight:600;color:var(--mag-ink)}
-
-/* ---------- index (目次) ---------- */
-.lp-index .mag-toc .toc-title{font-size:clamp(21px,2.4vw,28px)}
-
-/* ---------- features · 三つの旅 ---------- */
-.lp-features{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:clamp(14px,2.4vw,26px);
+.ng-hero-in{
+  position:relative;z-index:2;
+  width:min(100% - clamp(32px,5vw,64px),1200px);
+  margin-inline:auto;
+  padding:clamp(30px,5vw,64px) 0 clamp(26px,3.4vw,42px);
 }
-.lp-feat{
-  --accent:var(--mag-ai);
-  position:relative;
-  display:flex;flex-direction:column;
-  min-width:0;
-  border:1px solid var(--mag-line);
-  background:var(--mag-card);
-  text-decoration:none;color:inherit;
-  transition:border-color .2s,transform .2s;
-}
-.lp-feat:nth-child(2){margin-top:clamp(0px,2.6vw,34px)}
-.lp-feat:hover{border-color:var(--accent);transform:translateY(-3px)}
-.lp-feat-media{position:relative;overflow:hidden;background:var(--mag-paper-deep);aspect-ratio:5/6}
-.lp-feat-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
-.lp-feat:hover .lp-feat-media img{transform:scale(1.035)}
-.lp-feat-no{
-  position:absolute;left:0;top:0;z-index:2;
-  padding:7px 11px;
-  background:var(--accent);color:var(--mag-card);
-  font-family:var(--mag-mono);font-size:10px;font-weight:700;letter-spacing:.18em;
-}
-.lp-feat-season{
-  position:absolute;right:0;bottom:0;z-index:2;
-  padding:5px 10px;
-  background:rgba(20,24,26,.62);color:rgba(255,253,248,.94);
-  font-family:var(--mag-mono);font-size:9px;letter-spacing:.16em;
-}
-.lp-feat-body{display:flex;flex-direction:column;gap:9px;padding:16px 16px 18px;flex:1}
-.lp-feat h3{
-  margin:0;
-  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-  font-family:var(--mag-serif);font-weight:500;font-size:clamp(20px,2.2vw,25px);
-  letter-spacing:.08em;line-height:1.3;
-}
-.lp-feat h3 em{
-  font-style:normal;font-family:var(--mag-mono);font-size:9px;font-weight:600;
-  letter-spacing:.26em;text-transform:uppercase;color:var(--mag-muted);
-}
-.lp-feat-route{margin:0;font-family:var(--mag-mincho);font-size:11.5px;letter-spacing:.06em;color:var(--mag-ink-soft);line-height:1.75}
-.lp-feat-desc{margin:0;font-size:11.5px;line-height:1.95;color:var(--mag-muted)}
-.lp-chipline{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
-.lp-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 9px;
-  border:1px solid var(--mag-line);
+.ng-eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  margin:0 0 18px;padding:6px 14px 6px 10px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.34);
   border-radius:999px;
-  font-family:var(--mag-mono);font-size:9px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;
-  color:var(--mag-ink-soft);
+  font-family:var(--ng-sans);font-weight:700;font-size:10.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:#fff;
+  backdrop-filter:blur(3px);
+}
+.ng-eyebrow .an-i{width:15px;height:15px}
+.ng-title{margin:0;font-family:var(--ng-sans);font-weight:900;letter-spacing:.01em}
+.ng-title-main{
+  display:block;
+  font-size:clamp(32px,4.7vw,58px);
+  line-height:1.1;
+  letter-spacing:.03em;
+  text-shadow:0 3px 30px rgba(0,0,0,.35);
+}
+.ng-title-sub{
+  display:block;
+  margin-top:14px;
+  font-size:clamp(14px,1.9vw,21px);
+  font-weight:700;
+  letter-spacing:.1em;
+  color:#fff;
+  text-shadow:0 2px 18px rgba(0,0,0,.4);
+}
+.ng-title-sub i{font-style:normal;color:var(--ng-gold);margin:0 .5em}
+.ng-lede{
+  margin:20px 0 0;max-width:34em;
+  font-size:13px;line-height:2.05;font-weight:500;
+  color:rgba(255,255,255,.92);
+  text-shadow:0 1px 14px rgba(4,10,16,.55);
+}
+.ng-hero-meta{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 0}
+.ng-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;
+  border-radius:999px;
+  border:1px solid var(--ng-line);
+  background:var(--ng-white);
+  font-family:var(--ng-sans);font-weight:700;font-size:10.5px;
+  letter-spacing:.06em;color:var(--ng-ink-soft);
   white-space:nowrap;
 }
-.lp-chip .an-i{width:13px;height:13px;stroke-width:1.6}
-.lp-feat-foot{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  margin-top:2px;padding-top:11px;
-  border-top:1px solid var(--mag-line-soft);
-  font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--mag-muted);
+.ng-chip .an-i{width:13px;height:13px;color:var(--ng-red)}
+.ng-hero .ng-chip{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.4);
+  color:#fff;
 }
-.lp-feat-foot b{color:var(--accent);font-weight:700}
+.ng-hero .ng-chip .an-i{color:var(--ng-gold)}
+.ng-credit{
+  position:absolute;right:16px;bottom:10px;z-index:3;
+  font-family:var(--ng-sans);font-size:8.5px;letter-spacing:.08em;
+  color:rgba(255,255,255,.65);
+}
 
-/* atlas ticket row under the three trips */
-.lp-atlas{
+/* ---------- lattice motif (from the 長崎 lockup) ---------- */
+.ng-lattice{display:block;color:var(--ng-gold);opacity:.95}
+.ng-lattice svg{
+  display:block;width:100%;height:auto;
+  fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:miter;
+}
+.ng-lattice--hero{margin:22px 0 0;max-width:300px;color:#fff;opacity:.8}
+
+/* ---------- category nav ---------- */
+.ng-catnav{background:var(--ng-paper);border-bottom:1px solid var(--ng-line)}
+.ng-catnav-in{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:1px;background:var(--ng-line);border-left:1px solid var(--ng-line);border-right:1px solid var(--ng-line);
+}
+.ng-cat{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  padding:16px 8px 14px;
+  background:var(--ng-paper);
+  text-decoration:none;color:var(--ng-ink-soft);
+  font-family:var(--ng-sans);font-weight:700;font-size:11px;letter-spacing:.04em;
+  transition:background .18s,color .18s;
+}
+.ng-cat:hover{background:#fff;color:var(--ng-red)}
+.ng-cat .an-i{width:22px;height:22px;color:var(--ng-red);stroke-width:1.4}
+.ng-cat span{white-space:nowrap}
+
+/* ---------- section heads ---------- */
+.ng-section{padding:clamp(44px,6vw,76px) 0 0}
+.ng-head{
+  margin:0 0 clamp(20px,3vw,30px);
+  padding-bottom:14px;
+  border-bottom:1px solid var(--ng-line);
+}
+.ng-head-top{
+  display:flex;align-items:center;gap:12px;
+  margin:0 0 10px;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:10px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--ng-muted);
+}
+.ng-head-no{
+  display:inline-grid;place-items:center;
+  padding:3px 7px;border-radius:4px;
+  background:var(--ng-red);color:#fff;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;letter-spacing:.1em;
+}
+.ng-head h2{
+  margin:0;
+  font-family:var(--ng-sans);font-weight:900;
+  font-size:clamp(24px,3.2vw,36px);
+  line-height:1.3;letter-spacing:.04em;
+}
+.ng-head h2 em{
+  font-style:normal;
+  margin-left:12px;
+  font-family:var(--ng-grotesk);font-weight:700;
+  font-size:.36em;letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
+  vertical-align:.28em;
+}
+.ng-head-side{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.78fr);
+  gap:clamp(14px,3vw,44px);align-items:end;
+}
+.ng-head-side p{margin:0;font-size:12.5px;line-height:2;color:var(--ng-ink-soft)}
+.ng-head-side p b{font-weight:700;color:var(--ng-ink)}
+.ng-head-side p a{color:var(--ng-red);text-decoration:none;border-bottom:1px solid rgba(201,32,47,.35)}
+.ng-head-side p a:hover{border-bottom-color:var(--ng-red)}
+
+/* ---------- index ---------- */
+.ng-toc{list-style:none;margin:0;padding:0}
+.ng-toc li{border-bottom:1px solid var(--ng-line-soft)}
+.ng-toc a{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  gap:clamp(14px,2.6vw,28px);align-items:center;
+  padding:clamp(16px,2.2vw,24px) 4px;
+  text-decoration:none;color:inherit;border-radius:10px;
+  transition:background .18s;
+}
+.ng-toc a:hover{background:var(--ng-paper)}
+.ng-toc-no{
+  display:inline-grid;place-items:center;
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--ng-line);
+  background:#fff;color:var(--ng-red);
+  font-family:var(--ng-grotesk);font-weight:700;font-size:12px;
+}
+.ng-toc-main{min-width:0}
+.ng-toc-title{display:block}
+.ng-toc-title b{
+  font-family:var(--ng-sans);font-weight:900;font-size:clamp(18px,2.2vw,24px);letter-spacing:.04em;
+}
+.ng-toc-title em{
+  font-style:normal;margin-left:10px;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
+}
+.ng-toc-route{display:block;margin-top:5px;font-size:11.5px;color:var(--ng-ink-soft);letter-spacing:.02em}
+.ng-toc-meta{
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ng-muted);
+}
+.ng-toc-meta b{
+  display:block;margin-top:2px;
+  font-family:var(--ng-sans);font-weight:700;font-size:12px;letter-spacing:.02em;color:var(--ng-ink);
+}
+.ng-toc-go{
+  align-self:center;white-space:nowrap;
+  font-family:var(--ng-sans);font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--ng-red);
+}
+.ng-toc-go i{font-style:normal;display:inline-block;transition:transform .2s}
+.ng-toc a:hover .ng-toc-go i{transform:translateX(5px)}
+
+/* ---------- feature cards ---------- */
+.ng-cards{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(14px,2.2vw,24px);
+}
+.ng-card{
+  display:flex;flex-direction:column;min-width:0;
+  background:var(--ng-white);
+  border:1px solid var(--ng-line);
+  border-radius:14px;
+  overflow:hidden;
+  text-decoration:none;color:inherit;
+  box-shadow:0 18px 30px -28px rgba(20,25,30,.55);
+  transition:transform .22s,box-shadow .22s,border-color .22s;
+}
+.ng-card:hover{
+  transform:translateY(-4px);
+  border-color:#d3d0c6;
+  box-shadow:0 26px 42px -30px rgba(20,25,30,.6);
+}
+.ng-card-media{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--ng-paper-deep)}
+.ng-card-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.ng-card:hover .ng-card-media img{transform:scale(1.04)}
+.ng-card-no{
+  position:absolute;left:12px;top:12px;
+  padding:4px 10px;border-radius:999px;
+  background:rgba(255,255,255,.94);
+  font-family:var(--ng-grotesk);font-weight:700;font-size:10px;letter-spacing:.14em;
+  color:var(--ng-red);
+}
+.ng-card-season{
+  position:absolute;right:12px;bottom:12px;
+  padding:4px 10px;border-radius:999px;
+  background:rgba(18,26,34,.62);color:#fff;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;letter-spacing:.1em;
+}
+.ng-card-body{display:flex;flex-direction:column;gap:9px;padding:16px 18px 18px;flex:1}
+.ng-card h3{
+  margin:0;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  font-family:var(--ng-sans);font-weight:900;font-size:clamp(18px,2vw,22px);letter-spacing:.04em;
+}
+.ng-card h3 em{
+  font-style:normal;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--ng-muted);
+}
+.ng-card-route{margin:0;font-size:11.5px;font-weight:700;color:var(--ng-red);letter-spacing:.02em}
+.ng-card-desc{margin:0;font-size:11.5px;line-height:1.95;color:var(--ng-ink-soft)}
+.ng-card-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.ng-card-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:2px;padding-top:11px;border-top:1px solid var(--ng-line-soft);
+  font-family:var(--ng-sans);font-weight:700;font-size:11px;letter-spacing:.04em;color:var(--ng-ink-soft);
+}
+.ng-card-foot b{color:var(--ng-red)}
+
+/* ---------- callout (推しPOINT pattern) ---------- */
+.ng-callout{
   display:flex;align-items:center;justify-content:space-between;
-  gap:clamp(14px,3vw,32px);flex-wrap:wrap;
+  gap:clamp(16px,3vw,34px);flex-wrap:wrap;
   margin-top:clamp(16px,2.4vw,26px);
   padding:clamp(18px,2.6vw,26px) clamp(18px,3vw,30px);
-  background:var(--mag-ink);
-  color:var(--mag-card);
-  text-decoration:none;
-  transition:background .2s;
+  background:var(--ng-paper);
+  border:1px solid var(--ng-line);
+  border-left:5px solid var(--ng-red);
+  border-radius:12px;
+  text-decoration:none;color:inherit;
+  transition:background .18s;
 }
-.lp-atlas:hover{background:#2b2925}
-.lp-atlas-copy{max-width:46rem}
-.lp-atlas-kicker{
+.ng-callout:hover{background:#fff}
+.ng-callout-copy{max-width:48rem}
+.ng-callout-tag{
+  display:inline-flex;align-items:center;gap:7px;
   margin:0 0 8px;
-  font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.3em;
-  text-transform:uppercase;color:var(--mag-kin);
+  font-family:var(--ng-sans);font-weight:700;font-size:10.5px;
+  letter-spacing:.12em;color:var(--ng-red);
 }
-.lp-atlas h3{margin:0;font-family:var(--mag-serif);font-weight:500;font-size:clamp(19px,2.3vw,27px);letter-spacing:.08em;color:var(--mag-card)}
-.lp-atlas p{margin:8px 0 0;font-size:11.5px;line-height:1.9;color:rgba(255,253,248,.72)}
-.lp-atlas-go{
-  display:flex;align-items:center;gap:14px;
-  font-family:var(--mag-mono);font-size:10px;letter-spacing:.24em;
-  text-transform:uppercase;color:var(--mag-card);white-space:nowrap;
+.ng-callout h3{margin:0;font-family:var(--ng-sans);font-weight:900;font-size:clamp(17px,2.1vw,23px);letter-spacing:.03em}
+.ng-callout p{margin:7px 0 0;font-size:11.5px;line-height:1.9;color:var(--ng-ink-soft)}
+.ng-callout-go{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:11px 20px;border-radius:999px;
+  background:var(--ng-red);color:#fff;
+  font-family:var(--ng-sans);font-weight:700;font-size:12px;letter-spacing:.05em;
+  white-space:nowrap;
 }
-.lp-atlas-go .an-i{width:24px;height:24px;stroke-width:1.2;color:var(--mag-kin)}
+.ng-callout-go .an-i{width:16px;height:16px;stroke-width:1.8}
 
-/* ---------- full-bleed quote band ---------- */
-.lp-band{
-  position:relative;
-  margin-top:clamp(48px,6.4vw,80px);
-  min-height:clamp(300px,42vh,430px);
+/* ---------- full-bleed band ---------- */
+.ng-band{
+  position:relative;margin-top:clamp(44px,6vw,72px);
+  min-height:clamp(280px,40vh,400px);
   display:flex;align-items:flex-end;
-  isolation:isolate;overflow:hidden;
-  background:var(--mag-ai);
+  isolation:isolate;overflow:hidden;background:var(--ng-navy);color:#fff;
 }
-.lp-band img{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover}
-.lp-band:after{
+.ng-band img{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover}
+.ng-band:after{
   content:"";position:absolute;inset:0;z-index:-1;
-  background:linear-gradient(180deg,rgba(14,20,24,.24) 0%,rgba(14,20,24,.76) 100%);
+  background:linear-gradient(180deg,rgba(10,18,26,.28) 0%,rgba(10,18,26,.78) 100%);
 }
-.lp-band-in{
-  width:min(100% - var(--mag-gutter) * 2,var(--mag-w));
-  margin-inline:auto;
-  padding:clamp(26px,4vw,44px) 0;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:18px;align-items:end;
-  color:var(--mag-card);
+.ng-band-in{
+  width:min(100% - clamp(32px,5vw,64px),1200px);
+  margin-inline:auto;padding:clamp(24px,4vw,40px) 0;
 }
-.lp-band blockquote{
-  margin:0;
-  font-family:var(--mag-serif);font-weight:500;
-  font-size:clamp(21px,2.9vw,34px);
-  line-height:1.62;letter-spacing:.08em;
-  max-width:24em;
-  text-shadow:0 2px 22px rgba(0,0,0,.3);
+.ng-band blockquote{
+  margin:0;max-width:26em;
+  font-family:var(--ng-sans);font-weight:900;
+  font-size:clamp(19px,2.7vw,30px);line-height:1.6;letter-spacing:.03em;
+  text-shadow:0 2px 20px rgba(0,0,0,.3);
 }
-.lp-band cite{
-  display:block;margin-top:14px;
-  font-style:normal;
-  font-family:var(--mag-mono);font-size:9.5px;letter-spacing:.2em;
-  text-transform:uppercase;color:rgba(255,253,248,.7);
+.ng-band cite{
+  display:block;margin-top:14px;font-style:normal;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;
+  letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.75);
 }
-.lp-band-num{
-  font-family:var(--mag-serif);font-size:clamp(40px,6vw,74px);
-  line-height:.9;color:rgba(255,253,248,.28);
+.ng-band .ng-lattice{margin-top:18px;max-width:180px;color:var(--ng-gold);opacity:.9}
+
+/* ---------- photo strip ---------- */
+.ng-strip{
+  display:flex;gap:clamp(8px,1.2vw,14px);
+  overflow-x:auto;padding-bottom:8px;
+  scroll-snap-type:x proximity;scrollbar-width:thin;
+}
+.ng-shot{flex:1 0 clamp(170px,20vw,238px);margin:0;min-width:0;scroll-snap-align:start}
+.ng-shot-media{
+  position:relative;display:block;overflow:hidden;
+  border-radius:12px;aspect-ratio:4/5;background:var(--ng-paper-deep);
+}
+.ng-shot-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.ng-shot:hover .ng-shot-media img{transform:scale(1.04)}
+.ng-shot-month{
+  position:absolute;left:10px;top:10px;
+  padding:3px 9px;border-radius:999px;
+  background:rgba(255,255,255,.94);color:var(--ng-red);
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;letter-spacing:.1em;
+}
+.ng-shot figcaption{
+  display:flex;align-items:center;gap:7px;margin-top:9px;
+  font-family:var(--ng-sans);font-weight:700;font-size:11px;color:var(--ng-ink-soft);
+}
+.ng-shot figcaption .an-i{color:var(--ng-red)}
+.ng-strip-note{
+  margin:12px 0 0;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ng-muted);
 }
 
-/* ---------- moments strip · 旅の断片 ---------- */
-.lp-moments{
-  display:flex;
-  gap:clamp(8px,1.2vw,14px);
-  overflow-x:auto;
-  padding-bottom:10px;
-  scroll-snap-type:x proximity;
-  scrollbar-width:thin;
-}
-.lp-moment{
-  flex:1 0 clamp(168px,20vw,236px);
-  scroll-snap-align:start;
-  margin:0;min-width:0;
-}
-.lp-moment-media{position:relative;overflow:hidden;background:var(--mag-paper-deep);aspect-ratio:4/5}
-.lp-moment-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
-.lp-moment:hover .lp-moment-media img{transform:scale(1.04)}
-.lp-moment-month{
-  position:absolute;left:0;top:0;
-  padding:4px 9px;
-  background:var(--mag-sakura);color:var(--mag-ink);
-  font-family:var(--mag-mono);font-size:9px;font-weight:700;letter-spacing:.14em;
-}
-.lp-moment figcaption{
-  display:flex;align-items:center;gap:7px;
-  margin-top:8px;
-  font-size:11px;letter-spacing:.05em;color:var(--mag-ink-soft);
-}
-.lp-moment figcaption .an-i{color:var(--mag-matcha)}
-.lp-moments-note{
-  margin:14px 0 0;
-  font-family:var(--mag-mono);font-size:9px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--mag-muted);
-}
-
-/* ---------- postcard · 旅のたより ---------- */
-.lp-letter{padding-top:clamp(48px,6.4vw,80px)}
-.lp-postcard{
-  padding:13px;
+/* ---------- postcard ---------- */
+.ng-postcard{
+  border-radius:16px;
+  padding:12px;
   background:
     repeating-linear-gradient(-45deg,
-      var(--mag-shu) 0 9px, transparent 9px 18px,
-      var(--mag-ai) 18px 27px, transparent 27px 36px);
-  box-shadow:0 22px 34px -30px rgba(29,28,25,.7);
+      var(--ng-red) 0 8px, transparent 8px 16px,
+      var(--ng-navy) 16px 24px, transparent 24px 32px);
+  box-shadow:0 24px 38px -34px rgba(20,25,30,.7);
 }
-.lp-postcard-in{
+.ng-postcard-in{
   position:relative;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) clamp(190px,26%,250px);
-  gap:clamp(18px,3vw,38px);
+  display:grid;grid-template-columns:minmax(0,1fr) clamp(180px,24%,240px);
+  gap:clamp(18px,3vw,36px);
   padding:clamp(20px,3vw,32px);
-  background:var(--mag-card);
-  border:1px solid var(--mag-line-soft);
+  background:var(--ng-white);
+  border-radius:9px;
 }
-.lp-postcard-in:before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(rgba(29,28,25,.05) .7px,transparent .9px) 0 0/9px 9px;
-  opacity:.7;
-}
-.lp-postcard-copy{position:relative;z-index:1;min-width:0}
-.lp-postcard-to{
-  margin:0 0 14px;
-  font-family:var(--mag-mono);font-size:9px;letter-spacing:.26em;
-  text-transform:uppercase;color:var(--mag-muted);line-height:2.1;
-}
-.lp-postcard-to b{display:block;color:var(--mag-ink);letter-spacing:.22em}
-.lp-postcard h3{
+.ng-postcard-to{
   margin:0 0 12px;
-  font-family:var(--mag-serif);font-weight:500;font-size:clamp(21px,2.6vw,30px);
-  letter-spacing:.06em;line-height:1.4;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);line-height:2;
 }
-.lp-postcard p{margin:0 0 12px;font-size:12px;line-height:2.05;color:var(--mag-ink-soft);max-width:38em}
-.lp-postcard .mag-btn{margin-top:6px}
-.lp-postcard-side{
-  position:relative;z-index:1;
+.ng-postcard-to b{display:block;color:var(--ng-ink);letter-spacing:.18em}
+.ng-postcard h3{
+  margin:0 0 12px;
+  font-family:var(--ng-sans);font-weight:900;font-size:clamp(19px,2.5vw,27px);
+  letter-spacing:.02em;line-height:1.45;
+}
+.ng-postcard p{margin:0 0 12px;font-size:12px;line-height:2;color:var(--ng-ink-soft);max-width:38em}
+.ng-postcard-btn{
+  display:inline-flex;align-items:center;gap:9px;
+  margin-top:4px;padding:11px 20px;border-radius:999px;
+  background:var(--ng-red);color:#fff;text-decoration:none;
+  font-family:var(--ng-sans);font-weight:700;font-size:12px;letter-spacing:.05em;
+  transition:background .18s;
+}
+.ng-postcard-btn:hover{background:var(--ng-red-dark)}
+.ng-postcard-side{
   display:flex;flex-direction:column;align-items:flex-end;gap:14px;
   padding-left:clamp(14px,2vw,24px);
-  border-left:1px solid var(--mag-line-soft);
+  border-left:1px solid var(--ng-line-soft);
 }
-.lp-stamp{
-  width:clamp(74px,9vw,92px);
-  aspect-ratio:5/6;
-  padding:5px;
-  background:var(--mag-card);
-  border:1px dashed rgba(179,64,44,.55);
-  box-shadow:0 1px 0 rgba(29,28,25,.06);
+.ng-stamp{
+  width:clamp(70px,8.4vw,86px);aspect-ratio:5/6;padding:5px;
+  background:#fff;border:1px dashed rgba(201,32,47,.55);border-radius:3px;
 }
-.lp-stamp-art{
-  display:block;width:100%;height:100%;
-  background:var(--mag-ai);
-  color:#f3e6cf;
-}
-.lp-stamp-art svg{display:block;width:100%;height:100%}
-.lp-postmark{
-  width:clamp(78px,9.6vw,98px);aspect-ratio:1;
+.ng-stamp-art{display:block;width:100%;height:100%;background:var(--ng-navy);color:#f1e4c8}
+.ng-stamp-art svg{display:block;width:100%;height:100%}
+.ng-postmark{
+  position:relative;
+  width:clamp(74px,9vw,94px);aspect-ratio:1;
   display:grid;place-items:center;text-align:center;
-  border:2px solid rgba(179,64,44,.72);
-  border-radius:50% 49% 51% 48%;
-  color:var(--mag-shu-dark);
-  font-family:var(--mag-mono);font-size:8px;font-weight:700;letter-spacing:.12em;line-height:1.7;
+  border:2px solid rgba(201,32,47,.7);border-radius:50% 49% 51% 48%;
+  color:var(--ng-red-dark);
+  font-family:var(--ng-grotesk);font-weight:700;font-size:8px;letter-spacing:.1em;line-height:1.7;
   transform:rotate(-11deg);
-  mix-blend-mode:multiply;
 }
-.lp-postmark:before{
-  content:"";position:absolute;width:inherit;aspect-ratio:1;
+.ng-postmark:before{
+  content:"";position:absolute;inset:5px;
   border:1px dashed currentColor;border-radius:50%;opacity:.5;
-  transform:scale(.86);
 }
-.lp-postmark b{display:block;font-family:var(--mag-serif);font-size:15px;letter-spacing:.1em}
-.lp-hanko{
+.ng-postmark b{display:block;font-family:var(--ng-sans);font-weight:900;font-size:14px;letter-spacing:.04em}
+.ng-hanko{
   align-self:flex-start;
-  width:clamp(52px,6.4vw,64px);aspect-ratio:1;
-  display:grid;place-items:center;
-  background:var(--mag-shu);
-  color:#fff6ef;
-  font-family:var(--mag-mincho);font-size:19px;letter-spacing:.04em;
-  transform:rotate(-6deg);
-  mix-blend-mode:multiply;
-  opacity:.92;
+  width:clamp(48px,6vw,58px);aspect-ratio:1;
+  display:grid;place-items:center;border-radius:8px;
+  background:var(--ng-red);color:#fff;
+  font-family:var(--ng-sans);font-weight:900;font-size:18px;
+  transform:rotate(-6deg);opacity:.94;
 }
-.lp-letter-note{
-  margin:14px 0 0;
-  font-size:11px;line-height:1.95;color:var(--mag-muted);
+.ng-postcard-note{
+  margin:12px 0 0;font-size:11px;line-height:1.9;color:var(--ng-muted);
 }
-.lp-letter-note a{color:var(--mag-shu);text-decoration:none;border-bottom:1px solid rgba(179,64,44,.35)}
-.lp-letter-note a:hover{border-bottom-color:var(--mag-shu)}
+.ng-postcard-note a{color:var(--ng-red);text-decoration:none;border-bottom:1px solid rgba(201,32,47,.35)}
 
-/* ---------- style guide · 型錄 ---------- */
-.lp-guide-grid{
-  display:grid;
-  grid-template-columns:minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,1fr);
-  gap:clamp(16px,2.6vw,30px);
+/* ---------- style guide ---------- */
+.ng-guide{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(14px,2.2vw,24px);
 }
-.lp-guide-block{
-  min-width:0;
-  padding:clamp(14px,2vw,20px);
-  background:var(--mag-card);
-  border:1px solid var(--mag-line);
+.ng-guide-block{
+  min-width:0;padding:clamp(16px,2.2vw,22px);
+  background:var(--ng-white);
+  border:1px solid var(--ng-line);border-radius:14px;
 }
-.lp-guide-block h3{
+.ng-guide-block h3{
   display:flex;align-items:baseline;gap:10px;
   margin:0 0 14px;padding-bottom:10px;
-  border-bottom:1px solid var(--mag-line-soft);
-  font-family:var(--mag-serif);font-weight:500;font-size:16px;letter-spacing:.14em;
+  border-bottom:1px solid var(--ng-line-soft);
+  font-family:var(--ng-sans);font-weight:900;font-size:15px;letter-spacing:.08em;
 }
-.lp-guide-block h3 em{
-  font-style:normal;font-family:var(--mag-mono);font-size:9px;font-weight:600;
-  letter-spacing:.24em;text-transform:uppercase;color:var(--mag-muted);
+.ng-guide-block h3 em{
+  font-style:normal;
+  font-family:var(--ng-grotesk);font-weight:700;font-size:9px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
 }
-.lp-palette{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.lp-palette li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:9px;align-items:start;font-size:11px}
-.lp-sw{
-  width:26px;height:26px;display:block;
+.ng-palette{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ng-palette li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:9px;align-items:start}
+.ng-sw{
+  width:26px;height:26px;display:block;border-radius:6px;
   background:var(--sw);
-  border:1px solid rgba(29,28,25,.3);
-  box-shadow:inset 0 0 0 1px rgba(255,253,248,.5);
+  border:1px solid rgba(28,28,28,.14);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);
 }
-.lp-palette b{display:block;font-family:var(--mag-serif);font-weight:500;font-size:12px;letter-spacing:.06em;line-height:1.5}
-.lp-palette code{
-  display:block;
-  font-family:var(--mag-mono);font-size:9px;letter-spacing:.08em;color:var(--mag-muted);
+.ng-palette b{display:block;font-family:var(--ng-sans);font-weight:700;font-size:11.5px;line-height:1.5;letter-spacing:.03em}
+.ng-palette code{
+  display:block;font-family:var(--ng-grotesk);font-weight:600;font-size:9px;
+  letter-spacing:.06em;color:var(--ng-muted);
 }
-.lp-icons{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.lp-icons li{
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:10px 4px 8px;
-  border:1px solid var(--mag-line-soft);
-  background:var(--mag-paper);
-  font-family:var(--mag-mono);font-size:8.5px;letter-spacing:.1em;
-  color:var(--mag-ink-soft);text-align:center;
+.ng-icons{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.ng-icons li{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:9px 3px 7px;border-radius:8px;
+  background:var(--ng-paper);
+  font-family:var(--ng-sans);font-weight:700;font-size:8.5px;
+  letter-spacing:.02em;color:var(--ng-ink-soft);text-align:center;
 }
-.lp-icons .an-i{width:22px;height:22px;color:var(--mag-ink)}
-.lp-type{display:grid;gap:12px}
-.lp-type-row{
-  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:baseline;
-  margin:0;padding-bottom:10px;border-bottom:1px solid var(--mag-line-soft);
+.ng-icons .an-i{width:21px;height:21px;color:var(--ng-red)}
+.ng-type{display:grid;gap:10px}
+.ng-type-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:baseline;
+  margin:0;padding-bottom:9px;border-bottom:1px solid var(--ng-line-soft);
 }
-.lp-type-row:last-of-type{border-bottom:0;padding-bottom:0}
-.lp-type-row span{
+.ng-type-row:last-of-type{border-bottom:0;padding-bottom:0}
+.ng-type-row span{
   grid-column:1 / -1;
-  font-family:var(--mag-mono);font-size:8.5px;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--mag-muted);
+  font-family:var(--ng-grotesk);font-weight:700;font-size:8.5px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ng-muted);
 }
-.lp-type-row b{font-weight:500;line-height:1.3;letter-spacing:.08em;font-family:var(--mag-serif)}
-.lp-type-row i{font-style:normal;font-family:var(--mag-mono);font-size:9px;color:var(--mag-shu);white-space:nowrap}
-.lp-type-h1{font-size:26px}
-.lp-type-h2{font-size:19px}
-.lp-type-body{font-family:var(--mag-sans)!important;font-size:12px;line-height:1.85;letter-spacing:.02em;color:var(--mag-ink-soft)}
-.lp-type-label{font-family:var(--mag-mono)!important;font-size:9px;letter-spacing:.34em;text-transform:uppercase;color:var(--mag-shu)}
-.lp-guide-rule{
-  margin:14px 0 0;padding-top:12px;
-  border-top:1px solid var(--mag-line-soft);
-  font-size:11px;line-height:1.95;color:var(--mag-ink-soft);
+.ng-type-row b{font-family:var(--ng-sans);font-weight:900;line-height:1.3;letter-spacing:.02em}
+.ng-type-row i{font-style:normal;font-family:var(--ng-grotesk);font-weight:700;font-size:9px;color:var(--ng-red);white-space:nowrap}
+.ng-type-h1{font-size:25px}
+.ng-type-h2{font-size:17px}
+.ng-type-body{font-family:var(--ng-sans)!important;font-weight:500!important;font-size:12px;line-height:1.85;color:var(--ng-ink-soft)}
+.ng-type-label{font-family:var(--ng-grotesk)!important;font-weight:700!important;font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--ng-red)}
+.ng-guide-rule{
+  margin:14px 0 0;padding-top:12px;border-top:1px solid var(--ng-line-soft);
+  font-size:11px;line-height:1.9;color:var(--ng-ink-soft);
 }
 
+/* ---------- footer ---------- */
+.ng-footer{
+  margin-top:clamp(48px,7vw,88px);
+  padding:clamp(26px,4vw,40px) 0 44px;
+  background:var(--ng-paper);
+  border-top:1px solid var(--ng-line);
+}
+.ng-footer-top{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px 26px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:1px solid var(--ng-line);
+  font-family:var(--ng-sans);font-weight:700;font-size:11.5px;color:var(--ng-ink-soft);
+}
+.ng-footer-top a{color:var(--ng-ink-soft);text-decoration:none}
+.ng-footer-top a:hover{color:var(--ng-red)}
+.ng-footer-notes{margin:16px 0 0;font-size:10.5px;line-height:1.95;color:var(--ng-muted)}
+.ng-footer .ng-lattice{max-width:120px;margin-bottom:16px;color:var(--ng-red);opacity:.5}
+
 /* ---------- responsive ---------- */
-@media(max-width:980px){
-  .lp-head{grid-template-columns:1fr;gap:12px}
-  .lp-features{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .lp-feat:nth-child(2){margin-top:0}
-  .lp-feat:nth-child(3){grid-column:1 / -1;flex-direction:row}
-  .lp-feat:nth-child(3) .lp-feat-media{flex:0 0 46%;aspect-ratio:4/3}
-  .lp-guide-grid{grid-template-columns:1fr}
+@media(max-width:1000px){
+  .ng-head-side{grid-template-columns:1fr;gap:12px}
+  .ng-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ng-guide{grid-template-columns:1fr}
+  .ng-catnav-in{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:760px){
-  .lp-cover-in{grid-template-columns:1fr}
-  .lp-rail{display:none}
-  .lp-seal{width:52px;top:16px;left:16px;font-size:15px}
-  .lp-title{letter-spacing:.06em}
-  .lp-credit{display:none}
-  .lp-features{grid-template-columns:1fr}
-  .lp-feat:nth-child(3){flex-direction:column}
-  .lp-feat:nth-child(3) .lp-feat-media{flex:none;aspect-ratio:4/3}
-  .lp-band-in{grid-template-columns:1fr}
-  .lp-band-num{display:none}
-  .lp-postcard-in{grid-template-columns:1fr}
-  .lp-postcard-side{
+  .ng-header-in{min-height:0;padding:10px 0;gap:8px 14px}
+  .ng-nav{gap:14px}
+  .ng-nav a{font-size:11.5px}
+  .ng-hero{min-height:clamp(380px,72vh,520px)}
+  .ng-title-main{letter-spacing:.02em}
+  .ng-credit{display:none}
+  .ng-cards{grid-template-columns:1fr}
+  .ng-toc a{grid-template-columns:auto minmax(0,1fr);gap:12px}
+  .ng-toc-go{display:none}
+  .ng-postcard-in{grid-template-columns:1fr}
+  .ng-postcard-side{
     flex-direction:row;align-items:center;justify-content:space-between;
-    padding-left:0;padding-top:14px;border-left:0;border-top:1px solid var(--mag-line-soft);
+    padding-left:0;padding-top:14px;border-left:0;border-top:1px solid var(--ng-line-soft);
   }
-  .lp-moments{grid-auto-columns:minmax(150px,1fr)}
-  .lp-palette{grid-template-columns:1fr}
-  .lp-icons{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ng-shot{flex-basis:clamp(150px,44vw,200px)}
+  .ng-palette{grid-template-columns:1fr}
+  .ng-callout-go{width:100%;justify-content:center}
 }
 @media(prefers-reduced-motion:reduce){
-  .lp-feat,.lp-feat-media img,.lp-moment-media img{transition:none!important}
-  .lp-feat:hover{transform:none}
+  .ng-body *{transition:none!important}
+  .ng-card:hover{transform:none}
 }

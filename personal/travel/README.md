@@ -2,13 +2,13 @@
 
 ## Magazine styling
 
-Every page under `personal/travel/` is laid out like a Japanese travel magazine (warm washi paper, 明朝 serif headlines, hairline rules, small tracked-out Latin labels, a vertical 縦書き rail on the cover). The shared layer is:
+Every page under `personal/travel/` is laid out like a Japanese travel magazine (warm washi paper, 明朝 serif headlines, hairline rules, small tracked-out Latin labels, a vertical 縦書き rail on the cover) — with one deliberate exception: the landing page follows the 長崎 tourism brand instead (white ground, gothic type, crimson accent, diamond lattice; see below). The shared layer is:
 
 | File | Scope |
 | --- | --- |
 | `magazine.css` | Design tokens (`--mag-*`), base paper texture, masthead, cover, section heads, 基本情報 tables, 目次 list, footer. Linked by every page. |
-| `landing.css` | Layout for the landing page (`index.html`) only: issue cover, photo feature cards, full-bleed quote band, moment strip, postcard, and the printed style guide. |
-| `assets/travel-icons.svg` | Shared 24×24 line-icon sprite (12 symbols: 神社 / 五重塔 / 城 / 山 / 海 / 鐵道 / 渡船 / 溫泉 / 食 / 寫真 / 地點 / 郵戳). Reference one with `<svg class="an-i"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>`; stroke and fill are inherited, so a single class themes every icon. |
+| `landing.css` | Landing page only (`index.html`): a page-local 長崎 theme (`--ng-*` tokens, gothic type, crimson and 藍 accents, diamond lattice) plus layout for the cover, the 観光案内 nav, 目次, feature cards, the quote band, 旅の断片, the postcard and the printed style guide. It does not consume `--mag-*`. |
+| `assets/travel-icons.svg` | Shared 24×24 line-icon sprite (13 symbols: 神社 / 五重塔 / 城 / 山 / 海 / 鐵道 / 渡船 / 溫泉 / 食 / 寫真 / 地點 / 郵戳, plus `an-lattice` — the 240×24 diamond chain used as the landing page's repeating motif). Reference one with `<svg class="an-i"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>`; stroke and fill are inherited, so a single class themes every icon. |
 | `itinerary.css` | Layout for the two 幕末 itinerary maps (East Japan, Kyushu): cover, prefecture cards, chronology, map panel, place panel. |
 | `okinawa/okinawa.css` | 沖繩 page layout only; tokens and shared pieces come from `magazine.css`. |
 | `map/style.css` | Stamp Atlas application CSS. Its `:root` aliases the old palette names to the `--mag-*` tokens, and a marked "magazine pass" block at the end keeps the atlas on the same paper. |
@@ -16,20 +16,31 @@ Every page under `personal/travel/` is laid out like a Japanese travel magazine 
 
 ## Landing page (`index.html`)
 
-The landing page is laid out as an issue of a Japanese travel magazine, in the photo-dense register of tourism features such as `at-nagasaki.jp`: a full-bleed cover with a vertical 縦書き rail and a 旅 seal, an issue strip, a compact 目次, three photographic 特集 cards (one accent colour each — 藍 for East Japan, 朱 for Kyushu, 金 for Okinawa), a stamp-atlas ticket row, a full-bleed quote band, a 旅の断片 photo strip, a postcard, and a 型錄 (style guide).
+The landing page is built on the 長崎 tourism brand rather than on the washi-and-明朝 register of the itinerary pages. Four things carry that reference:
+
+| Axis | What the page does |
+| --- | --- |
+| **Palette** | White ground, 生成り `#F6F5F1` for panels, 墨 `#1C1C1C` for text, and crimson `#C9202F` (長崎レッド) as the single accent, with 茜 `#A3162A`, 長崎藍 `#12314B` and 金茶 `#C2A05C` as secondary inks. |
+| **Type** | Gothic only — Noto Sans JP / Noto Sans TC for Japanese and Traditional Chinese, Archivo for tracked Latin micro-labels. Display type is weight 900; there is no 明朝 on this page. |
+| **Pattern** | The diamond lattice from the 長崎 tourist-brand lockup (`#an-lattice`, a 240×24 chain). It sits under the hero title, inside the 青島 band and above the footer stamp, and nowhere else. |
+| **Title** | A tracked micro-eyebrow (`観光特集 ・ 第 01 号 ・ 2026 冬`) over an oversized 900-weight gothic headline `日本のどこへ、いつ行く？`, with the 〜まとめ〜 subline below it. |
+
+Because the page runs on its own theme, `landing.css` declares page-local `--ng-*` tokens and does **not** read `--mag-*`; `magazine.css` still drives the three itinerary pages and the atlas. Corners on the landing page are 8–16 px, and the only shadow is the soft lift under the postcard.
+
+Sections run 0101–0105: 目次, 三つの旅 (three photographic cards plus a 推し POINT callout), the 青島 quote band, 旅の断片, 旅のたより, and 型錄.
 
 Two motifs are deliberately kept and theirs is a narrow brief:
 
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
 - **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
 
-The closing 型錄 section is the printed style guide: eight palette entries with token names, the twelve-icon set, the type scale, and the layout rules (square corners, hairlines, no shadows). It is generated from the same tokens the page uses, so editing `magazine.css` changes the guide too.
+The closing 型錄 section is the printed style guide: eight palette entries with token names, the twelve-icon grid, the type scale, and the layout rules (24 px icon grid, 1.5 stroke, outline only, lattice reserved for separators). It is written against the same `--ng-*` tokens the page uses, so editing them changes the guide too.
 
-Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. Two tokens were added for this page's section coding and for the 旅の断片 month chips: `--mag-sakura` (桜) and `--mag-matcha` (抹茶). `--mag-serif` and `--mag-sans` now fall back to **Shippori Mincho** before the generic serif/sans, because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets.
+Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. `--ng-sans` and `--ng-grotesk` fall back to **Noto Sans JP / Noto Sans TC** (with Archivo first for Latin) because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets.
 
-The design comp in `design/landing-page-comp.jpg` is a local render of the page at 1440 px; the stand-in photography used for that render is not part of the repository.
+The design comp in `design/landing-page-comp.jpg` is a local render of the page at 1440 px; the stand-in photography used for that render lives in `design/_assets/` and is git-ignored.
 
-Rules for future edits: page CSS consumes tokens instead of new hex values, headings stay `font-weight:500` serif, corners stay square, and decorative shadows are not reintroduced. Copy stays minimal — one page title, plus labels that identify content, report status, or explain a limitation. Every page keeps its own `hero-credit` / credits block for the Wikimedia Commons photo attributions that already ship with it.
+Rules for future edits: the itinerary pages keep `--mag-*` tokens, serif headings at weight 500 and square corners; the landing page keeps `--ng-*` tokens, gothic 900 headings, 長崎 red and the diamond lattice. Neither declares a hex value outside its own token block and the 型錄 palette. Decorative shadows stay out everywhere except the single postcard lift. Copy stays minimal — one page title, plus labels that identify content, report status, or explain a limitation. Every page keeps its own `hero-credit` / credits block for the Wikimedia Commons photo attributions that already ship with it.
 
 # Interactive map regions
 
