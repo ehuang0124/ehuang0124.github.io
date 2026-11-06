@@ -404,8 +404,7 @@ body[data-view="result"] #app { flex: 1 1 auto; min-height: 0; display: flex; fl
 .pc-copy { margin: 7px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--jf-ink-soft); }
 .pc-reasons { margin: 8px 0 0; gap: 4px; }
 .pc-reasons li { font-size: 13.5px; line-height: 1.55; }
-.pc-tags { margin: 8px 0 0; }
-.pc-tags { gap: 5px; }
+.pc-tags { margin: 8px 0 0; gap: 5px; }
 .pc-tags .tag { font-size: 11px; padding: 1px 7px; line-height: 1.6; }
 .pc-foot {
   display: flex;
