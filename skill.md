@@ -5,7 +5,8 @@ The copy axis for every page on this site is the journey itself — roads, seaso
 ## Never write
 
 - **Storage, sync, or cloud explainers.** No sentence may describe where records live, what syncs, or which mode the visitor is in — not in the account dialog, not in a footer `資料來源:` line, not in an import/export hint. This includes 「資料會同步到你的帳號，跨裝置都看得到。」, 「資料只存在此瀏覽器」, 「示範資料」, and their relatives. The page makes no storage claims at all, in any mode.
-- **Colour legends and swatch keys.** No 各大洲色調 key, no 美國州 key, no legend of what any colour family means — the map and the index swatches carry the colour system. The only legend kept is the stamp-state pair （尚未蓋章／已蓋章） and the drag hint （拖曳移動地圖）.
+- **Colour legends and swatch keys.** No 各大洲色調 key, no 美國州 key, no legend of what any colour family means — the map and the index swatches carry the colour system. The only legend kept is the stamp-state pair （尚未蓋章／已蓋章）; the drag hint （拖曳移動地圖） is gone.
+- **Data-source lines and hint microcopy.** No `資料來源：`, no `海岸線圖資：…`, no `地圖：Natural Earth 向量圖資`, no `歷史資料：…` link row, no `資料與圖片來源` block that says where facts or shapes came from. No small print that explains a drawing or a coordinate either: 「地點座標為概略位置，僅供旅行規劃參考。」, 「圓點為概略位置」, 「位置為概略」, 「國界為地理示意」, 「州界依…示意」, 「地圖形狀為地理示意」, 「標示旅行分區，非行政界線」, 「圖稿為編輯插畫，非官方國徽…」 — all out. A dot is read as an approximate position by being a dot; the page does not say so. Photo and font credits stay, because a licence requires them.
 - **Manual-style instruction sentences.** 「點一個事件，地圖會移到它發生的地方」, 「也可以直接點地圖標記；切換區域只留下該區的景點」, 「在地圖上找一個國家，或在下方搜尋它的名字」, 「座標選填；留空時以國家中心標示」. If the interface needs a sentence to be usable, the interface is wrong, not the visitor.
 - **Descriptions parked beside section headings.** A page gets one clear title; the heading carries it alone. No side descriptions beside section heads, no paragraph restating the heading.
 - **Decorative slogans.** 「COLLECT MOMENTS, NOT JUST PLACES.」, 「每一張地圖，都是一種走看世界的方式。」, 「WHERE TO NEXT?」 — taglines that say nothing about the journey are out.
@@ -20,7 +21,7 @@ The copy axis for every page on this site is the journey itself — roads, seaso
 - **Live status in its shortest form:** 待同步／已同步／未同步＋「重試」, 同步中（N 筆待上傳）, 離線, 連線異常，將自動重試， and the stamp feedback itself. Status is shown, never explained.
 - **Sign-in gates and empty states:** one short line saying what signing in enables (登入後才能蓋章, 登入後可以標記一起旅行的朋友) or what is empty (登入後，標記過旅伴的旅程會出現在這裡). No second sentence about why.
 - **Accessibility and safety text:** skip links, aria-labels, alt text, `role="alert"` errors, noscript notices, keyboard instructions for dialogs.
-- **Licence, photo, and font credits**, and **data-honesty disclaimers** in their shortest form: 「地點座標為概略位置，僅供旅行規劃參考。」, 「旅遊分區，不是古代三山疆界。」, approximate-boundary notes. Honesty is not optional; it is also never wordy.
+- **Licence, photo, and font credits** only. Data-honesty disclaimers on the page are retired: no approximate-location note, no approximate-boundary note, no 「旅遊分區，不是古代三山疆界。」. The drawing itself carries the approximation.
 - **Reset-view guidance** inside the 重設密碼 view (「設定新密碼後，就能用新密碼登入。」) — the one explanatory line a task-typed view keeps.
 
 ## Working rules

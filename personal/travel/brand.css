@@ -717,7 +717,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 #atlas .map-legend i{border-color:var(--ng-ink);background:var(--ng-white)}
 #atlas .map-legend i.v{background:var(--ng-red);border-color:var(--ng-red)}
 #atlas .map-legend i.p{border-color:var(--ng-gold)}
-#atlas .map-credit{font-family:var(--ng-grotesk);font-weight:600;color:var(--ng-muted)}
 .map-zoom button{
   border:1px solid var(--ng-line);
   border-radius:var(--ng-r-sm);
@@ -917,7 +916,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .map-topline{font-family:var(--ng-grotesk);font-weight:700;color:var(--ng-navy)}
 .map-topline-right{color:var(--ng-muted)}
 .map-legend{font-family:var(--ng-grotesk);font-weight:700;color:var(--ng-navy)}
-.map-instruction{font-family:var(--ng-grotesk);font-weight:700;color:var(--ng-muted)}
 .map-zoom button{
   border:1px solid var(--ng-line);
   border-radius:var(--ng-r-sm);
@@ -1021,7 +1019,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .place-item.done .item-info strong{color:var(--ng-red-dark)}
 .empty-results{color:var(--ng-muted)}
 .empty-results strong{font-family:var(--ng-sans);font-weight:900;color:var(--ng-ink-soft)}
-.directory-bottom p{color:var(--ng-muted)}
 .add-city{
   border:1px dashed rgba(201,32,47,.5);
   border-radius:999px;
@@ -1170,7 +1167,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
   background:var(--ng-red);border-color:var(--ng-red);color:var(--ng-white);
 }
 .history-list{border-top:1px solid var(--ng-line-soft)}
-.gateway-note{border-left:3px solid var(--ng-navy);color:var(--ng-ink-soft)!important}
 .history-detail h4{
   font-family:var(--ng-sans);font-weight:900;font-size:15px;letter-spacing:.02em;
 }

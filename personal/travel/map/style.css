@@ -134,7 +134,6 @@ a{color:inherit}
 .map-tooltip{position:absolute;z-index:10;padding:7px 10px;background:var(--ink);color:#ffffff;border-radius:2px;box-shadow:0 5px 16px rgba(33,48,43,.2);font-size:11px;line-height:1.4;white-space:normal;pointer-events:none;width:max-content;max-width:min(280px,calc(100% - 24px));overflow-wrap:anywhere}
 .map-legend{position:absolute;z-index:2;bottom:23px;left:25px;right:25px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:10px;color:var(--ng-ink-soft);pointer-events:none}
 .legend-pin{display:inline-block;width:9px;height:9px;background:#ffffff;border:1.5px solid var(--ng-navy);border-radius:50%;margin-right:5px;vertical-align:-1px}.legend-pin.done{background:var(--rust);border-color:#fff7e6}
-.map-instruction{margin-left:auto;font:9px var(--mono);letter-spacing:.05em;color:var(--ng-muted)}
 
 /* Rubber-stamp counter, modelled after the homepage ticket stamps */
 .stamp-panel{position:relative;display:flex;flex-direction:column;background:#ffffff;min-width:0}
@@ -219,7 +218,7 @@ a{color:inherit}
 .place-item.done .item-tone{opacity:1}
 .place-heading[data-family] .place-name-line:before{content:"";display:inline-block;width:10px;height:10px;margin-right:9px;border-radius:2px;vertical-align:2px;background:color-mix(in srgb,var(--family-tint) var(--tile-swatch),var(--ng-white))}
 .empty-results{grid-column:1/-1;padding:34px 8px;text-align:center;color:var(--ng-muted);font-size:12px}.empty-results strong{display:block;font:22px/1.5 var(--serif);color:var(--ng-ink-soft);margin-bottom:6px}
-.directory-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:15px;min-height:42px}.directory-bottom p{margin:0;font-size:10px;color:var(--ng-muted)}
+.directory-bottom{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px;padding-top:15px;min-height:42px}
 .add-city{border:1px dashed var(--ng-red);background:#ffffff;color:var(--rust-dark);border-radius:2px;padding:7px 12px;font-size:11px;font-weight:700}.add-city:hover{background:var(--ng-paper)}.empty-results .add-city{margin-top:10px;max-width:100%}
 
 /* Local backup, footer, and add-city dialogue */
@@ -256,8 +255,8 @@ a{color:inherit}
   .intro{display:block;padding:39px 0 31px}.intro .eyebrow{font-size:9px;letter-spacing:.13em}.intro h1{font-size:clamp(35px,8.7vw,48px);margin-top:17px}.intro-meta{margin-top:17px;font-size:9px}.postcard-art{display:none}
   .section-overline{font-size:8px;letter-spacing:.05em}.section-overline span:last-child{display:none}
   .category-tabs{margin-right:-16px}.category-tab{flex-basis:165px;min-height:72px}.board-heading{min-height:59px;padding:9px 14px}.board-heading-left{gap:7px;font-size:12px}.board-subtitle{font-size:9px;padding-left:8px}.board-total{font-size:12px}.board-total strong{font-size:16px}.board-total small{display:none}
-  .map-surface{height:350px}.map-topline{top:19px;left:19px;right:60px;font-size:8px}.map-topline-right{display:none}.map-zoom{top:16px;right:16px}.map-zoom button{width:30px;height:30px}.map-legend{bottom:19px;left:19px;right:19px;gap:8px;font-size:9px}.map-instruction{display:none}  .stamp-panel{display:flex}.stamp-panel-top{padding:12px 17px}.stamp-panel-inner{display:block;padding:21px 20px 24px}.place-heading h2{font-size:31px}.impression-paper{min-height:240px;margin:16px 0 18px;padding:8px 10px 40px}.stamp-face{width:150px;height:150px}.stamp-art{width:96px;height:56px}.plate-caption{left:11px;right:11px;bottom:9px;gap:6px}.plate-motif{font-size:9px}.stamp-fields{margin:0}.stamp-panel-foot{padding:11px 17px}.stamp-history{margin-top:16px}
-  .directory{padding:25px 17px 17px}.directory h2{font-size:25px}.directory-head{align-items:stretch}.directory-tools{width:100%}.search-field{flex:1;min-width:190px}.region-controls{margin:18px 0 13px;gap:6px}.region-controls button{font-size:10px}.directory-results span:last-child{display:none}.place-list{grid-template-columns:1fr;max-height:345px;gap:0}.place-item{min-height:52px}.directory-bottom p{line-height:1.7}
+  .map-surface{height:350px}.map-topline{top:19px;left:19px;right:60px;font-size:8px}.map-topline-right{display:none}.map-zoom{top:16px;right:16px}.map-zoom button{width:30px;height:30px}.map-legend{bottom:19px;left:19px;right:19px;gap:8px;font-size:9px}.stamp-panel{display:flex}.stamp-panel-top{padding:12px 17px}.stamp-panel-inner{display:block;padding:21px 20px 24px}.place-heading h2{font-size:31px}.impression-paper{min-height:240px;margin:16px 0 18px;padding:8px 10px 40px}.stamp-face{width:150px;height:150px}.stamp-art{width:96px;height:56px}.plate-caption{left:11px;right:11px;bottom:9px;gap:6px}.plate-motif{font-size:9px}.stamp-fields{margin:0}.stamp-panel-foot{padding:11px 17px}.stamp-history{margin-top:16px}
+  .directory{padding:25px 17px 17px}.directory h2{font-size:25px}.directory-head{align-items:stretch}.directory-tools{width:100%}.search-field{flex:1;min-width:190px}.region-controls{margin:18px 0 13px;gap:6px}.region-controls button{font-size:10px}.directory-results span:last-child{display:none}.place-list{grid-template-columns:1fr;max-height:345px;gap:0}.place-item{min-height:52px}
   .backup{grid-template-columns:1fr;margin-top:25px;padding:21px;gap:11px}.backup-icon{display:none}.backup h2{font-size:19px}.backup-actions{grid-column:1}.footer{font-size:8px;margin-top:24px;padding-bottom:30px}.footer span:last-child{display:none}
   #city-dialog{padding:20px 21px}
 }

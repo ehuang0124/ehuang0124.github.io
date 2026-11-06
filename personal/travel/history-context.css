@@ -39,12 +39,6 @@
 }
 .history-panel button:focus-visible{outline:2px solid var(--ng-red);outline-offset:3px}
 .history-panel p{margin:12px 0;max-width:92ch;font-size:11px;line-height:1.95;color:var(--ng-muted)}
-.history-note{font-size:10.5px}
-.gateway-note{
-  border-left:2px solid var(--ng-navy);
-  padding:2px 0 2px 12px;
-  color:var(--ng-ink-soft) !important;
-}
 .history-list{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));

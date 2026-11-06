@@ -81,9 +81,6 @@ const S = {
     catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
     filterAll: '全部',
     countLabel: (n) => `${n} 款茶`,
-    sourceLabel: '資料來源',
-    editorialNote: '風味分數為編輯假設，需經品飲校準。',
-    productDependent: '風味依商品而定，不以茶類名稱推定。',
     copied: '已複製',
     copyFail: '複製失敗，請手動選取',
     shareHint: '分享連結只包含你的答案，不含任何個人資料。',
@@ -96,7 +93,7 @@ const S = {
     prevTeaNamed: (name) => `上一款：${name}`,
     nextTeaNamed: (name) => `下一款：${name}`,
     deckNavAria: '推薦茶款導覽',
-    originAria: (region, note) => `日本地圖，標示${region}；${note}`,
+    originAria: (region) => `日本地圖，標示${region}`,
     shareShort: '分享茶譜',
     fullInfo: '茶款詳情',
     deckStatus: (i, n, name) => `第 ${i} 款，共 ${n} 款：${name}`,
@@ -104,8 +101,7 @@ const S = {
     imgAlt: (family) => `${family}茶湯的水彩插畫，一杯放在米紙上的茶`,
     cultivarLabel: '品種',
     backHome: '回首頁',
-    langLabel: '語言',
-    foot: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。'
+    langLabel: '語言'
   },
   en: {
     heroTitle: 'Find the Japanese tea<br>that fits <em>you</em>.',
@@ -163,9 +159,6 @@ const S = {
     catalogLede: `${TEAS.length} teas ordered by texture, including ${TEAS.filter((tea) => tea.family === 'wakoucha').length} wakoucha from light honeyed cups to milk-tea styles.`,
     filterAll: 'All',
     countLabel: (n) => `${n} teas`,
-    sourceLabel: 'Sources',
-    editorialNote: 'Flavour scores are editorial assumptions, to be calibrated by tasting.',
-    productDependent: 'Flavour depends on the product; a category name proves nothing.',
     copied: 'Copied',
     copyFail: 'Copy failed — please select manually',
     shareHint: 'The shared link contains only your answers, no personal data.',
@@ -178,7 +171,7 @@ const S = {
     prevTeaNamed: (name) => `Previous: ${name}`,
     nextTeaNamed: (name) => `Next: ${name}`,
     deckNavAria: 'Recommended teas',
-    originAria: (region, note) => `Map of Japan marking ${region}; ${note}`,
+    originAria: (region) => `Map of Japan marking ${region}`,
     shareShort: 'Share',
     fullInfo: 'Tea details',
     deckStatus: (i, n, name) => `Tea ${i} of ${n}: ${name}`,
@@ -186,8 +179,7 @@ const S = {
     imgAlt: (family) => `Watercolour illustration of a cup of ${family} tea on cream paper`,
     cultivarLabel: 'Cultivar',
     backHome: 'Home',
-    langLabel: 'Language',
-    foot: 'Flavour scores are editorial labels, not lab values. Caffeine figures are official reference infusions by category and are not a per-cup intake comparison.'
+    langLabel: 'Language'
   }
 };
 
@@ -323,23 +315,6 @@ function purchaseBlock(tea) {
   );
 }
 
-function sourceName(url) {
-  const host = new URL(url).hostname;
-  const names = {
-    'www.maff.go.jp': '農林水産省', 'www.oguri-farm.com': '小栗農園',
-    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',
-    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'
-  };
-  return names[host] || host;
-}
-function sourceBlock(tea) {
-  return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },
-    `${t('sourceLabel')}：`,
-    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),
-    ` ・ ${t('editorialNote')}`
-  );
-}
-
 /* Approximate locations, not boundaries or a claim about an individual product. */
 const ORIGINS = {
   T01: [[136.55, 34.96]], T02: [[130.44, 31.38]], T03: [[130.56, 33.21]],
@@ -350,8 +325,7 @@ const ORIGINS = {
   T17: [[135.94, 34.80]], T18: [[135.94, 34.80]]
 };
 /* 兩種尺寸：'sheet' 是詳情層的完整產地圖，'card' 是結果卡上的小圖示。
- * 卡面空間小：完整說明放進地圖的替代文字，可見文字只留產地、茶類與
- * 一句「位置為概略」，不另開一段（咖啡因不上結果卡）。 */
+ * 圓點本身就是概略位置，地圖不附任何說明小字；卡面只留產地與茶類。 */
 function originMap(tea, variant = 'sheet') {
   const card = variant === 'card';
   const points = ORIGINS[tea.id] || [];
@@ -363,29 +337,18 @@ function originMap(tea, variant = 'sheet') {
     return `<circle cx="${x}" cy="${y}" r="${halo}" class="map-halo"/><circle cx="${x}" cy="${y}" r="${pin}" class="map-pin"/>`;
   }).join('');
   const region = L(tea.regionZh, tea.regionEn);
-  const note = points.length ? L('圓點為概略位置', 'Dots show approximate locations')
-    : tea.id === 'T11' ? L('日本各地，無單一產地', 'Made across Japan; no single origin')
-    : L('產地依商品標示，未標點', 'Origin varies by product; no location marked');
-  /* 卡面沒有多餘行數，但「位置是概略的」這句話不能只留給螢幕閱讀器 */
-  const shortNote = points.length ? L('位置為概略', 'approximate location')
-    : tea.id === 'T11' ? L('日本各地', 'made across Japan')
-    : L('依商品標示', 'per product label');
   const art = el('div', {
     class: 'map-art',
     'aria-hidden': card ? null : 'true',
     role: card ? 'img' : null,
-    'aria-label': card ? t('originAria', region, note) : null,
+    'aria-label': card ? t('originAria', region) : null,
     html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>`
   });
-  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' },
-    art,
-    el('figcaption', {},
-      el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
-      el('strong', {}, region),
-      card
-        ? el('small', { class: 'map-meta' }, `${TEA_FAMILIES[tea.family][state.lang]} ・ ${shortNote}`)
-        : el('small', {}, note))
-  );
+  const caption = el('figcaption', {},
+    el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
+    el('strong', {}, region));
+  if (card) caption.append(el('small', { class: 'map-meta' }, TEA_FAMILIES[tea.family][state.lang]));
+  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' }, art, caption);
 }
 
 /* ---------------- 茶款詳情 ---------------- */
@@ -424,8 +387,7 @@ function teaDetails(tea, fromResult = false) {
       el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
       tasteRows(tea.taste)),
     ...caffeineAndBrew,
-    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
-    sourceBlock(tea)
+    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea))
   ];
 }
 
@@ -927,7 +889,6 @@ function setLang(lang) {
   document.querySelectorAll('.lang-switch button').forEach((button) => {
     button.setAttribute('aria-pressed', String(button.dataset.lang === lang));
   });
-  document.getElementById('foot-note').textContent = S[lang].foot;
   if (sheet.open || sheet.hasAttribute('open')) closeSheet();
   route();
   app.focus({ preventScroll: true });
