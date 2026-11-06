@@ -1,7 +1,9 @@
 /* Japanese Tea Finder — app shell
- *
+
  * 五個畫面：首頁、Quiz、結果、茶款詳情（dialog）、探索目錄。
+
  * 沒有後端、沒有帳號、不蒐集個資；分享只把答案編碼放進網址。
+
  */
 
 import { TEAS, TEA_FAMILIES, FAMILY_IMAGES, CAFFEINE_REFERENCE } from './data.js';
@@ -76,7 +78,7 @@ const S = {
     time: '時間',
     g: 'g',
     ml: 'mL',
-    sec: '秒',
+    sec: 's',
     catalogTitle: '直接探索茶種',
     catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
     filterAll: '全部',
@@ -208,6 +210,9 @@ function el(tag, attrs = {}, ...children) {
     else if (key === 'text') node.textContent = value;
     else if (key === 'style') node.style.cssText = value;
     else if (key.startsWith('on') && typeof value === 'function') node.addEventListener(key.slice(2), value);
+    else if (key === 'href' || key === 'src' || key === 'alt' || key === 'width' || key === 'height' || key === 'loading' || key === 'decoding' || key === 'target' || key === 'rel' || key === 'role' || key === 'aria-label' || key === 'aria-pressed' || key === 'aria-hidden' || key === 'aria-labelledby' || key === 'aria-describedby' || key === 'aria-current' || key === 'aria-live' || key === 'tabindex' || key === 'data-lang' || key === 'data-view' || key === 'data-step' || key === 'onclick' || key === 'onchange' || key === 'onfocus' || key === 'onblur' || key === 'onpointerdown' || key === 'onpointerup' || key === 'onpointercancel' || key === 'onkeydown') {
+      node.setAttribute(key, value);
+    }
     else node.setAttribute(key, value === true ? '' : String(value));
   });
   children.flat().forEach((child) => {
@@ -287,15 +292,7 @@ function caffeineBlock(tea) {
       ? el('p', { class: 'note' }, t('verified'))
       : null,
     el('details', { class: 'why' },
-      el('summary', {}, t('whyLabel')),
-      el('p', { class: 'small', style: 'margin-top:8px' }, t('refTitle')),
-      el('ul', { class: 'small', style: 'margin:0;padding-left:18px' }, reference),
-      el('p', { class: 'small', style: 'margin:8px 0 0' }, t('refNote')),
-      el('p', { class: 'small', style: 'margin:8px 0 0' },
-        el('a', { href: 'https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html', target: '_blank', rel: 'noreferrer' }, '農林水産省')
-      )
-    )
-  );
+      el('summary', {}, t('whyLabel')),\n      el('p', { class: 'small', style: 'margin-top:8px' }, t('refTitle')),\n      el('ul', { class: 'small', style: 'margin:0;padding-left:18px' }, reference),\n      el('p', { class: 'small', style: 'margin:8px 0 0' }, t('refNote')),\n      el('p', { class: 'small', style: 'margin:8px 0 0' },\n        el('a', { href: 'https://www.maff.go.jp/j/syouan/seisaku/risk_analysis/priority/hazard_chem/caffeine.html', target: '_blank', rel: 'noreferrer' }, '農林水產省')\n      )\n    )\n  );
 }
 
 function brewBlock(tea) {
@@ -313,31 +310,17 @@ function brewBlock(tea) {
 
 function purchaseBlock(tea) {
   const words = tea.purchaseJa.join(' ・ ');
-  return el('div', {},
-    el('p', { class: 'kw', style: 'margin:0 0 10px' }, tea.purchaseJa.map((w) => el('span', {}, w))),
-    el('button', {
-      type: 'button',
-      class: 'btn secondary small',
-      onclick: () => copy(words)
-    }, t('copyJa'))
-  );
+  return el('div', {},\n    el('p', { class: 'kw', style: 'margin:0 0 10px' }, tea.purchaseJa.map((w) => el('span', {}, w))),\n    el('button', {\n      type: 'button',\n      class: 'btn secondary small',\n      onclick: () => copy(words)\n    }, t('copyJa'))\n  );
 }
 
 function sourceName(url) {
   const host = new URL(url).hostname;
   const names = {
-    'www.maff.go.jp': '農林水産省', 'www.oguri-farm.com': '小栗農園',
-    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',
-    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'
-  };
+    'www.maff.go.jp': '農林水產省', 'www.oguri-farm.com': '小栗農園',\n    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',\n    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'\n  };
   return names[host] || host;
 }
 function sourceBlock(tea) {
-  return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },
-    `${t('sourceLabel')}：`,
-    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),
-    ` ・ ${t('editorialNote')}`
-  );
+  return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },\n    `${t('sourceLabel')}：`,\n    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),\n    ` ・ ${t('editorialNote')}`\n  );
 }
 
 /* Approximate locations, not boundaries or a claim about an individual product. */
@@ -360,7 +343,7 @@ function originMap(tea, variant = 'sheet') {
   const pin = variant === 'card' ? 9 : 3;
   const markers = points.map(([lon, lat]) => {
     const x = ((lon - 128) * 10).toFixed(1), y = ((46 - lat) * 12.5).toFixed(1);
-    return `<circle cx="${x}" cy="${y}" r="${halo}" class="map-halo"/><circle cx="${x}" cy="${y}" r="${pin}" class="map-pin"/>`;
+    return `<circle cx=\"${x}\" cy=\"${y}\" r=\"${halo}\" class=\"map-halo\"/><circle cx=\"${x}\" cy=\"${y}\" r=\"${pin}\" class=\"map-pin\"/>`;
   }).join('');
   const region = L(tea.regionZh, tea.regionEn);
   const note = points.length ? L('圓點為概略位置', 'Dots show approximate locations')
@@ -370,22 +353,8 @@ function originMap(tea, variant = 'sheet') {
   const shortNote = points.length ? L('位置為概略', 'approximate location')
     : tea.id === 'T11' ? L('日本各地', 'made across Japan')
     : L('依商品標示', 'per product label');
-  const art = el('div', {
-    class: 'map-art',
-    'aria-hidden': card ? null : 'true',
-    role: card ? 'img' : null,
-    'aria-label': card ? t('originAria', region, note) : null,
-    html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>`
-  });
-  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' },
-    art,
-    el('figcaption', {},
-      el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
-      el('strong', {}, region),
-      card
-        ? el('small', { class: 'map-meta' }, `${TEA_FAMILIES[tea.family][state.lang]} ・ ${shortNote}`)
-        : el('small', {}, note))
-  );
+  const art = el('div', {\n    class: 'map-art',\n    'aria-hidden': card ? null : 'true',\n    role: card ? 'img' : null,\n    'aria-label': card ? t('originAria', region, note) : null,\n    html: `<svg viewBox=\"0 0 180 200\"><path d=\"${JAPAN_PATH}\" class=\"map-land\"/>${markers}</svg>`\n  });
+  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' },\n    art,\n    el('figcaption', {},\n      el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),\n      el('strong', {}, region),\n      card\n        ? el('small', { class: 'map-meta' }, `${TEA_FAMILIES[tea.family][state.lang]} ・ ${shortNote}`)\n        : el('small', {}, note))\n  );
 }
 
 /* ---------------- 茶款詳情 ---------------- */
@@ -407,26 +376,7 @@ function teaDetails(tea, fromResult = false) {
   ];
   return [
     el('figure', { class: 'sheet-media' },
-      el('img', {
-        src: familyImage(tea),
-        alt: t('imgAlt', TEA_FAMILIES[tea.family][state.lang]),
-        width: '1264', height: '848', loading: 'lazy', decoding: 'async'
-      })
-    ),
-    el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
-    el('p', { class: 'rc-known' }, L(tea.knownForZh, tea.knownForEn)),
-    el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
-    el('p', { class: 'rc-cultivar' }, t('cultivarLabel'), ' · ', el('span', { lang: 'ja' }, tea.cultivar)),
-    originMap(tea),
-    el('p', { class: 'small muted' }, L(tea.processingZh, tea.processingEn)),
-    el('div', { class: 'rc-section' }, el('h4', {}, t('flavourTitle')),
-      el('div', { class: 'tags', style: 'margin-bottom:8px' }, tasteTags(tea)),
-      el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
-      tasteRows(tea.taste)),
-    ...caffeineAndBrew,
-    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
-    sourceBlock(tea)
-  ];
+      el('img', {\n        src: familyImage(tea),\n        alt: t('imgAlt', TEA_FAMILIES[tea.family][state.lang]),\n        width: '1264', height: '848', loading: 'lazy', decoding: 'async'\n      })\n    ),\n    el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),\n    el('p', { class: 'rc-known' }, L(tea.knownForZh, tea.knownForEn)),\n    el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),\n    el('p', { class: 'rc-cultivar' }, t('cultivarLabel'), ' · ', el('span', { lang: 'ja' }, tea.cultivar)),\n    originMap(tea),\n    el('p', { class: 'small muted' }, L(tea.processingZh, tea.processingEn)),\n    el('div', { class: 'rc-section' }, el('h4', {}, t('flavourTitle')),\n      el('div', { class: 'tags', style: 'margin-bottom:8px' }, tasteTags(tea)),\n      el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),\n      tasteRows(tea.taste)),\n    ...caffeineAndBrew,\n    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),\n    sourceBlock(tea)\n  ];
 }
 
 /* ---------------- 首頁 ---------------- */
@@ -437,32 +387,14 @@ const HERO_FLIGHT = ['gyokuro', 'matcha', 'wakoucha'];
 function heroCta() {
   return el('div', { class: 'hero-cta' },
     el('button', { type: 'button', class: 'btn btn-hero', onclick: startQuiz },
-      t('start'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
-    el('div', { class: 'hero-flight', 'aria-hidden': 'true' },
-      HERO_FLIGHT.map((family) => el('img', {
-        src: FAMILY_IMAGES[family], alt: '', width: '240', height: '240',
-        loading: 'eager', decoding: 'async'
-      }))),
-    el('a', { class: 'hero-explore', href: '#/teas' }, t('explore'),
-      el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'))
-  );
+      t('start'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),\n    el('div', { class: 'hero-flight', 'aria-hidden': 'true' },\n      HERO_FLIGHT.map((family) => el('img', {\n        src: FAMILY_IMAGES[family], alt: '', width: '240', height: '240',\n        loading: 'eager', decoding: 'async'\n      }))),\n    el('a', { class: 'hero-explore', href: '#/teas' }, t('explore'),\n      el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'))\n  );
 }
 
 function viewLanding() {
   document.body.dataset.view = 'home';
   const hero = el('section', { class: 'hero' },
     el('h1', { html: t('heroTitle') }),
-    el('p', { class: 'lede' }, t('heroLede')),
-    heroCta(),
-    heroCollage(),
-    el('p', { class: 'hero-routes' },
-      el('a', { href: '#/teas/sencha' }, L('煎茶・茶園', 'Sencha · tea fields')),
-      el('span', { 'aria-hidden': 'true' }, '／'),
-      el('a', { href: '#/teas/matcha' }, L('抹茶', 'Matcha')),
-      el('span', { 'aria-hidden': 'true' }, '／'),
-      el('a', { href: '#/teas/wakoucha' }, L('和紅茶・產地與品種', 'Wakoucha · origins & cultivars'))
-    )
-  );
+    el('p', { class: 'lede' }, t('heroLede')),\n    heroCta(),\n    heroCollage(),\n    el('p', { class: 'hero-routes' },\n      el('a', { href: '#/teas/sencha' }, L('煎茶・茶園', 'Sencha · tea fields')),\n      el('span', { 'aria-hidden': 'true' }, '／'),\n      el('a', { href: '#/teas/matcha' }, L('抹茶', 'Matcha')),\n      el('span', { 'aria-hidden': 'true' }, '／'),\n      el('a', { href: '#/teas/wakoucha' }, L('和紅茶・產地與品種', 'Wakoucha · origins & cultivars'))\n    )\n  );
 
   app.replaceChildren(hero);
 }
@@ -495,19 +427,7 @@ function heroCollage() {
     el('div', { class: 'tea-collage', role: 'group', 'aria-label': L('日本茶產地照片拼貼', 'Japanese tea origins photo collage') },
       HERO_PHOTOS.map((photo, index) => el('div', { class: `photo-tile ${photo.class}` },
         el('img', { src: `/personal/tea-quiz/assets/${photo.file}`, width: photo.width, height: photo.height, alt: L(photo.altZh, photo.altEn), loading: 'eager', decoding: 'async' }),
-        el('span', { class: 'photo-number', 'aria-hidden': 'true' }, `0${index + 1}`),
-        el('span', { class: 'photo-mask', 'aria-hidden': 'true' },
-          el('small', {}, photo.kicker), el('strong', {}, L(photo.zh, photo.en)))
-      ))
-    ),
-    el('figcaption', {},
-      el('span', {}, t('heroCap')),
-      el('span', { class: 'photo-credits' },
-        HERO_PHOTOS.flatMap((photo, index) => [index ? ' · ' : '', el('a', { href: photo.url, target: '_blank', rel: 'noreferrer' }, photo.credit)]),
-        ' / ', el('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noreferrer' }, 'CC BY-SA 4.0')
-      )
-    )
-  );
+        el('span', { class: 'photo-number', 'aria-hidden': 'true' }, `0${index + 1}`),\n        el('span', { class: 'photo-mask', 'aria-hidden': 'true' },\n          el('small', {}, photo.kicker), el('strong', {}, L(photo.zh, photo.en)))\n      ))\n    ),\n    el('figcaption', {},\n      el('span', {}, t('heroCap')),\n      el('span', { class: 'photo-credits' },\n        HERO_PHOTOS.flatMap((photo, index) => [index ? ' · ' : '', el('a', { href: photo.url, target: '_blank', rel: 'noreferrer' }, photo.credit)]),\n        ' / ', el('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noreferrer' }, 'CC BY-SA 4.0')\n      )\n    )\n  );
 }
 
 /* ---------------- Quiz ---------------- */
@@ -546,11 +466,7 @@ function viewQuiz() {
   const fill = el('div', { class: 'progress-fill', style: `width:${((i) / total) * 100}%` });
   const progress = el('div', { class: 'progress-top' },
     el('div', { class: 'progress-meta' },
-      el('span', {}, el('b', {}, `${i + 1}`), ` / ${total}`),
-      el('span', {}, q.optional ? t('skippable') : L('必答', 'required'))
-    ),
-    el('div', { class: 'progress-track', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1), 'aria-label': t('progress', i + 1, total) }, fill)
-  );
+      el('span', {}, el('b', {}, `${i + 1}`), ` / ${total}`),\n      el('span', {}, q.optional ? t('skippable') : L('必答', 'required'))\n    ),\n    el('div', { class: 'progress-track', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1), 'aria-label': t('progress', i + 1, total) }, fill)\n  );
 
   /* 選了哪一項只靠這個 class：填色、邊框與右邊的 ✓ 都跟著它 */
   const syncChecked = () => {
@@ -578,10 +494,7 @@ function viewQuiz() {
     });
     /* 整個選項就是一顆按鈕：不畫圓形 radio、不標 A/B/C，點下去就選好了。 */
     const label = el('label', { class: 'option', for: id },
-      el('span', { class: 'label' }, L(option.zh, option.en),
-        option.subZh ? el('span', { class: 'sub' }, L(option.subZh, option.subEn)) : null),
-      el('span', { class: 'mark', 'aria-hidden': 'true' }, '✓')
-    );
+      el('span', { class: 'label' }, L(option.zh, option.en),\n        option.subZh ? el('span', { class: 'sub' }, L(option.subZh, option.subEn)) : null),\n      el('span', { class: 'mark', 'aria-hidden': 'true' }, '✓')\n    );
     /* 真正的 input 只留給鍵盤與螢幕閱讀器；焦點框只給鍵盤，滑鼠與觸控點選不留外框 */
     input.addEventListener('focus', () => {
       if (input.matches(':focus-visible')) label.classList.add('is-focused');
@@ -593,40 +506,17 @@ function viewQuiz() {
   // 只有咖啡因這題需要一段說明：它會改變候選集，必須先講清楚
   const questionNote = q.key === 'caffeine'
     ? el('details', { class: 'why', style: 'margin-top:14px' },
-        el('summary', {}, t('whyLabel')),
-        el('p', { class: 'small', style: 'margin:8px 0 0' }, t('caffeineWhy'))
-      )
-    : null;
+        el('summary', {}, t('whyLabel')),\n        el('p', { class: 'small', style: 'margin:8px 0 0' }, t('caffeineWhy'))\n      )\n    : null;
 
   const section = el('section', { class: 'question', 'aria-labelledby': 'q-title' },
-    el('p', { class: 'qnum' }, `${t('qPrefix')} ${String(i + 1).padStart(2, '0')}`),
-    el('h2', { id: 'q-title', tabindex: '-1' }, L(q.zh, q.en)),
-    q.hintZh ? el('p', { class: 'hint', id: 'q-hint' }, L(q.hintZh, q.hintEn)) : null,
-    group,
-    questionNote
-  );
+    el('p', { class: 'qnum' }, `${t('qPrefix')} ${String(i + 1).padStart(2, '0')}`),\n    el('h2', { id: 'q-title', tabindex: '-1' }, L(q.zh, q.en)),\n    q.hintZh ? el('p', { class: 'hint', id: 'q-hint' }, L(q.hintZh, q.hintEn)) : null,\n    group,\n    questionNote\n  );
 
   const isLast = i === total - 1;
   const canProceed = Boolean(state.answers[q.id]) || Boolean(q.optional);
 
   const nav = el('div', { class: 'quiz-nav' },
     el('div', { class: 'quiz-nav-in' },
-      el('button', {
-        type: 'button', class: 'btn secondary',
-        onclick: () => go(i - 1), disabled: i === 0 ? true : null
-      }, '← ', t('prev')),
-      q.optional
-        ? el('button', { type: 'button', class: 'skip', onclick: () => { delete state.answers[q.id]; persist(); advance(); } }, t('skip'))
-        : el('span', { class: 'skip', style: 'text-decoration:none' }, ''),
-      // 選項按下會自動跳轉，此按鈕隱藏（不需手動按下一題）
-      el('button', {
-        type: 'button', class: 'btn',
-        disabled: true,
-        style: 'display:none',
-        onclick: () => (isLast ? finish() : advance())
-      }, isLast ? t('seeResult') : t('next'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, isLast ? '✦' : '→'))
-    )
-  );
+      el('button', {\n        type: 'button', class: 'btn secondary',\n        onclick: () => go(i - 1), disabled: i === 0 ? true : null\n      }, '← ', t('prev')),\n      q.optional\n        ? el('button', { type: 'button', class: 'skip', onclick: () => { delete state.answers[q.id]; persist(); advance(); } }, t('skip'))\n        : el('span', { class: 'skip', style: 'text-decoration:none' }, ''),\n      // 選項按下會自動跳轉，此按鈕隱藏（不需手動按下一題）\n      el('button', {\n        type: 'button', class: 'btn',\n        disabled: true,\n        style: 'display:none',\n        onclick: () => (isLast ? finish() : advance())\n      }, isLast ? t('seeResult') : t('next'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, isLast ? '✦' : '→'))\n    )\n  );
 
   app.replaceChildren(el('div', { class: 'quiz-wrap' }, progress, section, nav));
 
@@ -681,19 +571,7 @@ function familyImage(tea) {
 function profileCard(row, index) {
   const { tea, role } = row;
   const titleId = `pc-title-${index}`;
-  return el('article', {
-    class: `profile-card${index === 0 ? ' top' : ''}`,
-    'aria-labelledby': titleId,
-    'data-step': String(index)
-  },
-    el('div', { class: 'pc-body result-detail' },
-      el('p', { class: 'result-rank' }, `${index + 1} · ${roleLabel(role)}`),
-      el('h2', { class: 'pc-title', id: titleId }, L(tea.nameZh, tea.nameEn)),
-      el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),
-      el('p', { class: 'pc-known' }, L(tea.knownForZh, tea.knownForEn)),
-      ...teaDetails(tea, true)
-    )
-  );
+  return el('article', {\n    class: `profile-card${index === 0 ? ' top' : ''}`,\n    'aria-labelledby': titleId,\n    'data-step': String(index)\n  },\n    el('div', { class: 'pc-body result-detail' },\n      el('p', { class: 'result-rank' }, `${index + 1} · ${roleLabel(role)}`),\n      el('h2', { class: 'pc-title', id: titleId }, L(tea.nameZh, tea.nameEn)),\n      el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),\n      el('p', { class: 'pc-known' }, L(tea.knownForZh, tea.knownForEn)),\n      ...teaDetails(tea, true)\n    )\n  );
 }
 
 /* 只換卡牌，不重繪整頁：按鈕與焦點都留著，鍵盤使用者不會被丟回頁首 */
@@ -767,22 +645,7 @@ function viewResults(code) {
     document.body.dataset.view = 'result-empty';
     app.replaceChildren(
       el('section', { class: 'result-hero' },
-        el('p', { class: 'eyebrow' }, t('resultEyebrow')),
-        el('div', { class: 'empty' },
-          el('h2', {}, t('emptyTitle')),
-          el('p', { class: 'small muted' }, t('emptyBody')),
-          el('div', { class: 'actions center' },
-            el('button', {
-              type: 'button', class: 'btn',
-              onclick: () => { state.answers.q7 = 'low'; persist(); const next = encodeAnswers(state.answers); location.hash = `#/result/${next}`; viewResults(next); }
-            }, t('emptyAction')),
-            el('a', { class: 'btn secondary', href: '#/quiz' }, t('editAnswers'))
-          )
-        )
-      )
-    );
-    return;
-  }
+        el('p', { class: 'eyebrow' }, t('resultEyebrow')),\n        el('div', { class: 'empty' },\n          el('h2', {}, t('emptyTitle')),\n          el('p', { class: 'small muted' }, t('emptyBody')),\n          el('div', { class: 'actions center' },\n            el('button', {\n              type: 'button', class: 'btn',\n              onclick: () => { state.answers.q7 = 'low'; persist(); const next = encodeAnswers(state.answers); location.hash = `#/result/${next}`; viewResults(next); }\n            }, t('emptyAction')),\n            el('a', { class: 'btn secondary', href: '#/quiz' }, t('editAnswers'))\n          )\n        )\n      )\n    );\n    return;\n  }
 
   /* 換一組新答案就回到第一張；只是切換語言則停在原本那一張 */
   if (state.resultCode !== code) {
@@ -799,18 +662,7 @@ function viewResults(code) {
       /* 頁首只留一行：風味輪廓（含 visible h1）＋打開偏好層的一顆 chip */
       el('div', { class: 'result-top' },
         el('h1', { class: 'result-h', id: 'result-heading' },
-          el('span', { class: 'rh-label' }, t('resultTitle')),
-          el('span', { class: 'rh-profile' }, L(profile.zh, profile.en))),
-        el('button', { type: 'button', class: 'chip profile-open', onclick: () => openProfile(report) }, t('profileBtn'))
-      ),
-      el('p', { class: 'deck-guide' }, t('deckGuide')),
-      stage,
-      deck.status,
-      indicators
-    )
-  );
-
-  setStep(state.step);
+          el('span', { class: 'rh-label' }, t('resultTitle')),\n          el('span', { class: 'rh-profile' }, L(profile.zh, profile.en))),\n        el('button', { type: 'button', class: 'chip profile-open', onclick: () => openProfile(report) }, t('profileBtn'))\n      ),\n      el('p', { class: 'deck-guide' }, t('deckGuide')),\n      stage,\n      deck.status,\n      indicators,\n      /* 回到首頁的按鈕：放在結果頁最下方，讓使用者看完推薦後可以立刻回到 landing page */\n      el('div', { class: 'actions center', style: 'margin-top:22px' },\n        el('a', { class: 'btn secondary', href: '#/' }, t('backHome'))\n      )\n    )\n  );\n\n  setStep(state.step);
 }
 
 /* 風味偏好與其他出口：從結果頁右上角打開，不佔卡面空間。不放卡牌角色說明。 */
@@ -819,24 +671,7 @@ function openProfile(report) {
   document.getElementById('sheet-ja').textContent = L(report.profile.en, report.profile.zh);
   const body = document.getElementById('sheet-body');
   body.replaceChildren(
-    el('p', { class: 'small muted', style: 'margin-top:0' }, t('resultLede')),
-    el('div', { class: 'rc-section', style: 'margin-top:14px' },
-      el('h4', {}, t('tasteTitle')),
-      tasteRows(report.prefs.target)
-    ),
-    el('div', { class: 'actions' },
-      el('button', { type: 'button', class: 'btn small', onclick: () => copy(shareUrl()) }, t('copyShare')),
-      el('a', { class: 'btn secondary small', href: '#/quiz', onclick: () => closeSheet() }, t('editAnswers')),
-      el('button', {
-        type: 'button', class: 'btn secondary small',
-        onclick: () => { closeSheet(); startQuiz(); }
-      }, t('restart'))
-    ),
-    el('p', { class: 'tiny muted', style: 'margin-top:10px' }, t('shareHint')),
-    el('p', { style: 'margin:14px 0 0' },
-      el('a', { href: '#/teas', onclick: () => closeSheet() }, t('catalogLink')))
-  );
-  openSheet();
+    el('p', { class: 'small muted', style: 'margin-top:0' }, t('resultLede')),\n    el('div', { class: 'rc-section', style: 'margin-top:14px' },\n      el('h4', {}, t('tasteTitle')),\n      tasteRows(report.prefs.target)\n    ),\n    el('div', { class: 'actions' },\n      el('button', { type: 'button', class: 'btn small', onclick: () => copy(shareUrl()) }, t('copyShare')),\n      el('a', { class: 'btn secondary small', href: '#/quiz', onclick: () => closeSheet() }, t('editAnswers')),\n      el('button', {\n        type: 'button', class: 'btn secondary small',\n        onclick: () => { closeSheet(); startQuiz(); }\n      }, t('restart'))\n    ),\n    el('p', { class: 'tiny muted', style: 'margin-top:10px' }, t('shareHint')),\n    el('p', { style: 'margin:14px 0 0' },\n      el('a', { href: '#/teas', onclick: () => closeSheet() }, t('catalogLink')))\n  );\n  openSheet();
 }
 
 function shareUrl() {
@@ -855,51 +690,14 @@ function viewCatalog() {
 
   const chips = el('div', { class: 'filters', role: 'group', 'aria-label': L('依茶類篩選', 'Filter by tea family') },
     families.map(([key, label]) =>
-      el('button', {
-        type: 'button', class: 'chip', 'aria-pressed': String(catalogFilter === key),
-        onclick: () => { catalogFilter = key; location.hash = key === 'all' ? '#/teas' : `#/teas/${key}`; viewCatalog(); }
-      }, label)
-    )
-  );
+      el('button', {\n        type: 'button', class: 'chip', 'aria-pressed': String(catalogFilter === key),\n        onclick: () => { catalogFilter = key; location.hash = key === 'all' ? '#/teas' : `#/teas/${key}`; viewCatalog(); }\n      }, label)\n    )\n  );
 
   const items = el('div', { class: 'cat-list' },
-    list.map((tea) => el('button', {
-      type: 'button', class: 'cat-item', style: 'text-align:left;cursor:pointer',
-      onclick: () => openTea(tea.id)
-    },
-      el('div', { class: 'row' },
-        el('span', { class: 'name' }, L(tea.nameZh, tea.nameEn)),
-        el('span', { class: 'ja', lang: 'ja' }, tea.nameJa)
-      ),
-      el('div', { class: 'meta' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]} ・ `,
-        tea.caffeine.status === 'verified_free' ? t('caffeineFree') : t('caffeinated')),
-      el('div', { class: 'mini-bars', 'aria-hidden': 'true' },
-        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.viscosity ? 'on' : '' })),
-        el('i', { style: 'flex:0 0 6px;background:transparent' }),
-        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.umami ? 'on' : '' }))
-      ),
-      el('div', { class: 'meta', style: 'margin-top:2px' }, L('左：稠滑 ／ 右：鮮味', 'Left: silky texture · Right: umami'))
-    ))
-  );
+    list.map((tea) => el('button', {\n      type: 'button', class: 'cat-item', style: 'text-align:left;cursor:pointer',\n      onclick: () => openTea(tea.id)\n    },\n      el('div', { class: 'row' },\n        el('span', { class: 'name' }, L(tea.nameZh, tea.nameEn)),\n        el('span', { class: 'ja', lang: 'ja' }, tea.nameJa)\n      ),\n      el('div', { class: 'meta' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]} ・ `,\n        tea.caffeine.status === 'verified_free' ? t('caffeineFree') : t('caffeinated')),\n      el('div', { class: 'mini-bars', 'aria-hidden': 'true' },\n        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.viscosity ? 'on' : '' })),\n        el('i', { style: 'flex:0 0 6px;background:transparent' }),\n        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.umami ? 'on' : '' }))\n      ),\n      el('div', { class: 'meta', style: 'margin-top:2px' }, L('左：稠滑 ／ 右：鮮味', 'Left: silky texture · Right: umami'))\n    ))\n  );
 
   app.replaceChildren(
     el('section', { class: 'catalog' },
-      el('p', { class: 'eyebrow' }, t('catalogTitle')),
-      el('h1', { style: 'font-size:clamp(26px,6.4vw,38px)' }, t('catalogTitle')),
-      el('p', { class: 'lede' }, t('catalogLede')),
-      chips,
-      el('p', { class: 'count' }, t('countLabel', list.length)),
-      items,
-      el('p', { class: 'small muted', style: 'margin-top:20px' }, L(
-        '咖啡因一律先說「含咖啡因／經證實無咖啡因／數值未知」，不給個別產品估算值。',
-        'Caffeine is always stated first as contains / verified caffeine-free / unknown — never as an estimated per-product dose.'
-      )),
-      el('div', { class: 'actions' },
-        el('a', { class: 'btn', href: '#/quiz' }, t('start')),
-        el('a', { class: 'btn secondary', href: '#/' }, t('backHome'))
-      )
-    )
-  );
+      el('p', { class: 'eyebrow' }, t('catalogTitle')),\n      el('h1', { style: 'font-size:clamp(26px,6.4vw,38px)' }, t('catalogTitle')),\n      el('p', { class: 'lede' }, t('catalogLede')),\n      chips,\n      el('p', { class: 'count' }, t('countLabel', list.length)),\n      items,\n      el('p', { class: 'small muted', style: 'margin-top:20px' }, L(\n        '咖啡因一律先說「含咖啡因／經證實無咖啡因／數值未知」，不給個別產品估算值。',\n        'Caffeine is always stated first as contains / verified caffeine-free / unknown — never as an estimated per-product dose.'\n      )),\n      el('div', { class: 'actions' },\n        el('a', { class: 'btn', href: '#/quiz' }, t('start')),\n        el('a', { class: 'btn secondary', href: '#/' }, t('backHome'))\n      )\n    )\n  );
 }
 
 /* ---------------- 路由 ---------------- */
