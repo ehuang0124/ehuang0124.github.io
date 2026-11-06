@@ -69,7 +69,6 @@
           <p class="eyebrow">STAMP ATLAS ・ 世界蓋章地圖</p>
           <h1 id="page-title">世界旅行地圖</h1>
           <div class="ng-lattice ng-intro-lattice" aria-hidden="true"><svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg></div>
-          <p class="intro-lede">選一個到訪月份，為去過的國家、城市與國家公園蓋上紀念戳章。</p>
         </div>
         <div class="atlas-postage" aria-hidden="true"><div class="atlas-stamp"><svg viewBox="0 0 48 48"><path d="M3 34 17 15l10 13 6-8 12 14Z" fill="currentColor"/><circle cx="36" cy="10" r="5" fill="currentColor" opacity=".5"/><path d="M3 41h42" stroke="currentColor"/></svg><span>TRAVEL ATLAS</span></div><div class="atlas-postmark">世界蓋章<br><b>POSTCARD</b></div></div>
       </section>
@@ -91,9 +90,8 @@
                 </svg>
                 <div class="map-zoom" aria-label="地圖縮放控制"><button type="button" id="zoom-in" aria-label="放大地圖">+</button><button type="button" id="zoom-out" aria-label="縮小地圖">−</button><button type="button" id="zoom-reset" aria-label="重設地圖視角">全</button></div>
                 <div class="map-tooltip" id="map-tooltip" hidden></div>
-                <div class="map-legend"><span><i class="legend-pin" aria-hidden="true"></i>尚未蓋章</span><span><i class="legend-pin done" aria-hidden="true"></i>已蓋章</span><span id="state-legend" hidden><i class="legend-state" aria-hidden="true"></i>美國州</span><span id="colour-legend" class="colour-legend" aria-label="各大洲色調"><i class="legend-family" data-family="asia" aria-hidden="true"></i>亞洲<i class="legend-family" data-family="europe" aria-hidden="true"></i>歐洲<i class="legend-family" data-family="africa" aria-hidden="true"></i>非洲<i class="legend-family" data-family="americas" aria-hidden="true"></i>美洲<i class="legend-family" data-family="oceania" aria-hidden="true"></i>大洋洲</span><span class="map-instruction">拖曳移動地圖</span></div>
+                <div class="map-legend"><span><i class="legend-pin" aria-hidden="true"></i>尚未蓋章</span><span><i class="legend-pin done" aria-hidden="true"></i>已蓋章</span><span class="map-instruction">拖曳移動地圖</span></div>
               </div>
-              <div class="map-caption-line"><span id="map-note">點選地圖或清單，選擇地點。</span></div>
             </div>
 
             <aside class="stamp-panel" aria-label="目的地與蓋章台">
@@ -109,7 +107,7 @@
           </div>
 
           <section class="directory" id="destination-index" aria-labelledby="directory-title">
-            <div class="directory-head"><div><h2 id="directory-title">地點索引<span class="dot">.</span></h2><p id="directory-description">在地圖上找一個國家，或在下方搜尋它的名字。</p></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文、英文或代號…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
+            <div class="directory-head"><div><h2 id="directory-title">地點索引<span class="dot">.</span></h2></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文、英文或代號…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
             <div id="region-controls" class="region-controls" aria-label="主要地理分區"></div>
             <div class="directory-results"><span id="result-count" role="status" aria-live="polite"></span></div>
             <div id="place-list" class="place-list" aria-label="可選擇的目的地清單"></div>
@@ -119,7 +117,7 @@
       </section>
 
       <section class="friends" id="friends-section" aria-labelledby="friends-title">
-        <div class="friends-head"><div><h2 id="friends-title">一起走過<span class="dot">.</span></h2><p>選一位旅人，看你和他一起走過的地方。</p></div><div class="friends-tabs" id="friends-tabs" role="tablist" aria-label="選擇旅人"></div></div>
+        <div class="friends-head"><div><h2 id="friends-title">一起走過<span class="dot">.</span></h2></div><div class="friends-tabs" id="friends-tabs" role="tablist" aria-label="選擇旅人"></div></div>
         <div class="friends-body">
           <div class="friends-stat"><strong id="friends-shared">0</strong><span id="friends-visits">個共同去過的地點</span></div>
           <ul class="friends-list" id="friends-list"></ul>
@@ -128,10 +126,10 @@
         </div>
       </section>
 
-      <section class="backup" aria-labelledby="backup-title"><div class="backup-copy"><h2 id="backup-title">旅行紀錄備份</h2><p id="backup-hint">資料只存在此瀏覽器；匯出備份可轉移或還原。</p></div><div class="backup-actions"><button type="button" id="export-stamps">↓ 匯出戳章</button><label for="import-stamps" class="import-label">↑ 匯入備份</label><input id="import-stamps" class="sr-only" type="file" accept=".json,application/json" aria-label="選擇戳章備份 JSON 檔案"></div></section>
+      <section class="backup" aria-labelledby="backup-title"><div class="backup-copy"><h2 id="backup-title">旅行紀錄備份</h2></div><div class="backup-actions"><button type="button" id="export-stamps">↓ 匯出戳章</button><label for="import-stamps" class="import-label">↑ 匯入備份</label><input id="import-stamps" class="sr-only" type="file" accept=".json,application/json" aria-label="選擇戳章備份 JSON 檔案"></div></section>
       <p id="backup-feedback" class="backup-feedback" role="status" aria-live="polite"></p>
     </main>
-    <footer class="footer"><span>© 2026 EVA HUANG</span><span id="data-source" class="data-source">資料來源：此瀏覽器</span><a href="./specimen.html">戳章圖稿索引 ↗</a><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
+    <footer class="footer"><span>© 2026 EVA HUANG</span><a href="./specimen.html">戳章圖稿索引 ↗</a><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
   </div>
 
   <dialog id="collection-menu" class="collection-menu" aria-labelledby="collection-menu-title">
@@ -144,12 +142,12 @@
         <button type="button" class="collection-choice" id="tab-na" data-category="na"><span class="choice-number">03</span><span class="choice-name"><strong>北美區</strong><small>NORTH AMERICA</small></span><span class="tab-count" id="tab-count-na">0 / —</span><span class="choice-arrow" aria-hidden="true">↗</span></button>
         <button type="button" class="collection-choice" id="tab-jp" data-category="jp"><span class="choice-number">04</span><span class="choice-name"><strong>日本國家公園</strong><small>JAPAN NATIONAL PARKS</small></span><span class="tab-count" id="tab-count-jp">0 / —</span><span class="choice-arrow" aria-hidden="true">↗</span></button>
         <button type="button" class="collection-choice" id="tab-okinawa" data-category="okinawa"><span class="choice-number">05</span><span class="choice-name"><strong>沖繩專區</strong><small>OKINAWA ISLANDS</small></span><span class="tab-count" id="tab-count-okinawa">0 / —</span><span class="choice-arrow" aria-hidden="true">↗</span></button>
-      </nav><p class="collection-menu-footer">COLLECT MOMENTS, NOT JUST PLACES.</p>
+      </nav>
     </div>
   </dialog>
-  <dialog id="city-dialog" aria-labelledby="city-dialog-title"><form id="city-form"><div class="dialog-top"><span>PERSONAL DESTINATION / +01</span><button type="button" id="city-cancel" aria-label="關閉新增城市視窗">×</button></div><h2 id="city-dialog-title">把一座城市加進地圖。</h2><p>座標選填；留空時以國家中心標示。</p><label for="city-name">城市名稱 <input id="city-name" name="name" type="text" maxlength="80" placeholder="例如：臺南" required></label><label for="city-country">所屬國家或地區 <select id="city-country" name="country" required></select></label><div class="coordinate-fields"><label for="city-lat">緯度 <small>選填</small><input id="city-lat" type="number" min="-90" max="90" step="any" placeholder="例如 22.99"></label><label for="city-lon">經度 <small>選填</small><input id="city-lon" type="number" min="-180" max="180" step="any" placeholder="例如 120.20"></label></div><p id="city-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">加入城市清單 <span>↗</span></button></form></dialog>
+  <dialog id="city-dialog" aria-labelledby="city-dialog-title"><form id="city-form"><div class="dialog-top"><span>PERSONAL DESTINATION / +01</span><button type="button" id="city-cancel" aria-label="關閉新增城市視窗">×</button></div><h2 id="city-dialog-title">把一座城市加進地圖。</h2><label for="city-name">城市名稱 <input id="city-name" name="name" type="text" maxlength="80" placeholder="例如：臺南" required></label><label for="city-country">所屬國家或地區 <select id="city-country" name="country" required></select></label><div class="coordinate-fields"><label for="city-lat">緯度 <small>選填</small><input id="city-lat" type="number" min="-90" max="90" step="any" placeholder="例如 22.99"></label><label for="city-lon">經度 <small>選填</small><input id="city-lon" type="number" min="-180" max="180" step="any" placeholder="例如 120.20"></label></div><p id="city-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">加入城市清單 <span>↗</span></button></form></dialog>
   <noscript><p class="noscript">要使用互動地圖與蓋章功能，請啟用 JavaScript。</p></noscript>
-  <dialog id="companion-dialog" aria-labelledby="companion-dialog-title"><form method="dialog" id="companion-form"><div class="dialog-top"><span>COMPANIONS / 同行旅伴</span><button type="button" id="companion-cancel" aria-label="關閉旅伴視窗">×</button></div><h2 id="companion-dialog-title">和誰一起旅行？</h2><p>只有你選擇的旅人會出現在你的戳章與共同旅程裡。</p><div id="companion-options" class="companion-options"></div><p id="companion-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">儲存旅伴 <span>↗</span></button></form></dialog>
+  <dialog id="companion-dialog" aria-labelledby="companion-dialog-title"><form method="dialog" id="companion-form"><div class="dialog-top"><span>COMPANIONS / 同行旅伴</span><button type="button" id="companion-cancel" aria-label="關閉旅伴視窗">×</button></div><h2 id="companion-dialog-title">和誰一起旅行？</h2><div id="companion-options" class="companion-options"></div><p id="companion-error" class="city-error" role="alert"></p><button type="submit" class="dialog-submit">儲存旅伴 <span>↗</span></button></form></dialog>
   <dialog id="account-dialog" aria-labelledby="account-dialog-title"><form id="account-form" novalidate><div class="dialog-top account-dialog-top"><button type="button" id="account-dialog-close" aria-label="關閉帳號視窗">×</button></div><h2 id="account-dialog-title">登入</h2><p id="account-sync-note" class="account-note" hidden></p><p id="account-error" class="form-error" role="alert"></p><div id="local-signin" class="local-signin" hidden><label class="account-field" for="passphrase">旅行通行碼<input id="passphrase" type="password" autocomplete="current-password" placeholder="輸入通行碼"></label><button type="submit" id="local-signin-submit" class="dialog-submit">登入 <span aria-hidden="true">↗</span></button><p class="account-note">通行碼由網站擁有者保管；不知道通行碼時，請向網站擁有者索取。</p></div><div id="code-signin" class="local-signin" data-mode="login" hidden>
 <div class="account-modes" role="tablist" aria-label="帳號操作"><button type="button" role="tab" id="account-login" aria-selected="true" aria-controls="account-panel" tabindex="0">登入</button><button type="button" role="tab" id="account-create" aria-selected="false" aria-controls="account-panel" tabindex="-1">建立帳號</button></div>
 <div id="account-panel" class="account-fields" role="tabpanel" aria-labelledby="account-login" aria-describedby="account-error">
@@ -167,6 +165,6 @@
 <button type="button" id="verification-continue" class="dialog-submit">我已完成驗證 <span aria-hidden="true">↗</span></button>
 <button type="button" id="verification-resend" class="verification-resend">重新寄送驗證信</button>
 <p id="verification-feedback" class="account-note" role="status" aria-live="polite"></p>
-</div><button type="button" id="account-demo" class="account-demo" hidden>以示範旅人身分登入</button><p id="backend-note" class="account-note"></p></form></dialog>
+</div><button type="button" id="account-demo" class="account-demo" hidden>以示範旅人身分登入</button></form></dialog>
 </body>
 </html>

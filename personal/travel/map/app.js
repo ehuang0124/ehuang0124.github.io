@@ -26,15 +26,15 @@
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
   const CATEGORIES = {
-    countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', description:'點選國家，或搜尋名稱。', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
-    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', description:'選城市，或新增清單沒有的城市。', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
-    na: { title:'北美區', map:'03 / NORTH AMERICA', description:'搜尋美國各州、國家公園與加拿大國家公園。', note:'州界依美國人口普查局示意；公園標記為代表位置。', regions:[
+    countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', note:'國界為地理示意；小型島嶼可從清單選取。', regions:CONTINENTS, initial:'392' },
+    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', note:'城市以代表點標示；自訂城市可填座標。', regions:CONTINENTS, initial:'tokyo-jp' },
+    na: { title:'北美區', map:'03 / NORTH AMERICA', note:'州界依美國人口普查局示意；公園標記為代表位置。', regions:[
       {id:'all',label:'全部北美'}, {id:'us',label:'美國'}, {id:'ca',label:'加拿大'},
       {id:'na-us-west',label:'美國・西岸'}, {id:'na-us-mountain',label:'美國・山地沙漠'}, {id:'na-us-midwest',label:'美國・中西部'}, {id:'na-us-east',label:'美國・東岸南方'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'},
       {id:'na-ca-pacific',label:'加拿大・太平洋沿岸'}, {id:'na-ca-rockies',label:'加拿大・洛磯草原'}, {id:'na-ca-central',label:'加拿大・安大略魁北克'}, {id:'na-ca-atlantic',label:'加拿大・大西洋沿岸'}, {id:'na-ca-north',label:'加拿大・北方領地'}
     ], initial:'yell' },
-    jp: { title:'日本國家公園', map:'04 / JAPAN', description:'選擇地理分區，篩選國家公園。', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
-    okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', description:'從本島到離島，尋找屬於你的沖繩記憶。', note:'地點座標為概略位置；離島可由分區或清單定位。', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
+    jp: { title:'日本國家公園', map:'04 / JAPAN', note:'標示旅行分區，非行政界線；離島可由分區定位。', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
+    okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', note:'地點座標為概略位置；離島可由分區或清單定位。', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
   };
   const WORLD_AREA = { AS:[24,-15,179,78], EU:[-25,29,50,75], AF:[-25,-37,54,38], NA:[-170,0,-50,83], SA:[-85,-56,-30,14], OC:[94,-52,180,16], AN:[68,-58,82,-49] };
   const collator = new Intl.Collator('zh-Hant', { numeric:true });
@@ -363,13 +363,10 @@
     document.body.dataset.atlasTheme = category;
     $('#page-title').textContent = spec.title;
     $('.intro .eyebrow').textContent = spec.map + ' ・ STAMP ATLAS';
-    $('.intro-lede').textContent = spec.description;
     $('#board-title').textContent = spec.title;
     $('#map-caption').textContent = spec.map;
-    $('#directory-description').textContent = spec.description;
     $('#index-note').textContent = spec.note;
     $('#add-city').hidden = category !== 'cities';
-    $('#state-legend').hidden = category !== 'na' || region === 'ca' || region.startsWith('na-ca-') || region === 'na-us-territories';
     const mapAction = category === 'countries' ? '點選國家' : category === 'cities' ? '點選城市標記' : category === 'na' ? '點選州界或公園標記' : category === 'okinawa' ? '點選沖繩地點標記' : '點選國家公園標記';
     svg.setAttribute('aria-label', `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
@@ -1190,17 +1187,10 @@
       $('#traveller-name').value = account?.lastTravellerName?.() || '';
     }
     if ($('#account-demo')) $('#account-demo').hidden = atlasAccount.mode !== 'demo';
-    if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
-    // What signing in actually buys you depends on whether a backend exists.
-    const signInNote = cloud
-      ? ''
-      : atlasAccount.mode === 'demo'
-        ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
-        : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
     if ($('#account-dialog-title')) $('#account-dialog-title').textContent = view === 'reset' ? '重設密碼' : creating ? '建立帳號' : '登入';
     if ($('#account-sync-note')) {
-      $('#account-sync-note').textContent = view === 'reset' ? '設定新密碼後，就能用新密碼登入。' : signInNote;
-      $('#account-sync-note').hidden = view === 'reset' ? false : cloud;
+      $('#account-sync-note').textContent = '設定新密碼後，就能用新密碼登入。';
+      $('#account-sync-note').hidden = view !== 'reset';
     }
     $('#account-error').textContent = message;
     // Only explain the missing sign-in method when nothing more specific happened.
@@ -1245,16 +1235,6 @@
   }
   // Raw backend messages stay in the console for the owner; the page answers
   // in plain language.
-  function backendLabel() {
-    if (atlasAccount.mode === 'cloud') return '資料會同步到你的帳號，跨裝置都看得到。';
-    if (atlasAccount.mode === 'demo') return '示範資料；只存在這個瀏覽器，不會上傳。';
-    return '資料只存在這個瀏覽器，不會上傳。';
-  }
-  function dataSourceLabel() {
-    if (atlasAccount.mode === 'cloud') return '資料來源：你的帳號（跨裝置同步）';
-    if (atlasAccount.mode === 'demo') return '資料來源：示範資料';
-    return '資料來源：此瀏覽器';
-  }
   const STAMP_BUTTON_MARKUP = '<svg class="stamp-tool-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-button-label">蓋下這一章</span><span class="stamp-button-arrow" aria-hidden="true">↗</span>';
   function applyPermission() {
     const locked = !editable();
@@ -1296,22 +1276,14 @@
       card.hidden = true;
       closeAccountMenu();
     }
-    if ($('#backend-note')) $('#backend-note').textContent = backendLabel();
-    if ($('#data-source')) $('#data-source').textContent = dataSourceLabel();
     // Sync settings only mean something once a Supabase project is connected.
     if ($('#sync-now')) $('#sync-now').hidden = !cloud;
-    if ($('#backup-hint')) {
-      $('#backup-hint').textContent = cloudMode()
-        ? (signedIn() ? '匯出的備份只含你自己的戳章；匯入會與雲端紀錄合併。' : '訪客只能瀏覽。登入後可匯出、匯入與同步戳章。')
-        : (signedIn() ? '資料只存在此瀏覽器；匯出備份可轉移或還原。' : '登入後才能匯出或匯入戳章。');
-    }
     $('#account-demo').hidden = atlasAccount.mode !== 'demo';
     renderDemoSwitch();
     applyPermission();
   }
   function refreshStatus() {
     if (signedIn()) $('#account-menu-status').textContent = statusText();
-    if ($('#data-source')) $('#data-source').textContent = dataSourceLabel();
     if ($('#export-stamps')) $('#export-stamps').disabled = !editable();
     if ($('#import-stamps')) $('#import-stamps').disabled = !editable();
   }
