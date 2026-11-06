@@ -89,18 +89,15 @@ const S = {
     shareHint: '分享連結只包含你的答案，不含任何個人資料。',
     profileBtn: '風味偏好',
     profileSheetTitle: '你的風味偏好',
-    deckGuide: '3 款推薦：用下方按鈕一張一張看',
     deckAria: '推薦茶款卡牌',
     stepsAria: '選擇第幾款',
     prevTea: '上一款',
-    nextTea: '下一款',
+    prevTeaNamed: (name) => `上一款：${name}`,
+    nextTeaNamed: (name) => `下一款：${name}`,
+    deckNavAria: '推薦茶款導覽',
+    originAria: (region, note) => `日本地圖，標示${region}；${note}`,
     shareShort: '分享茶譜',
     fullInfo: '茶款詳情',
-    guideTitle: '三張卡牌怎麼看',
-    roleHintTop1: '七個維度都最靠近你的答案',
-    roleHintTop2: '同一條路線的第二個選擇',
-    roleHintTop3: '同一茶類裡的另一種個性',
-    roleHintExplore: '刻意換一條路線，讓三張不完全一樣',
     deckStatus: (i, n, name) => `第 ${i} 款，共 ${n} 款：${name}`,
     goTo: (i, name) => `看第 ${i} 款：${name}`,
     imgAlt: (family) => `${family}茶湯的水彩插畫，一杯放在米紙上的茶`,
@@ -173,18 +170,15 @@ const S = {
     shareHint: 'The shared link contains only your answers, no personal data.',
     profileBtn: 'Profile',
     profileSheetTitle: 'Your flavour profile',
-    deckGuide: 'Three teas — one card at a time',
     deckAria: 'Recommended teas',
     stepsAria: 'Choose a card',
     prevTea: 'Previous',
-    nextTea: 'Next',
+    prevTeaNamed: (name) => `Previous: ${name}`,
+    nextTeaNamed: (name) => `Next: ${name}`,
+    deckNavAria: 'Recommended teas',
+    originAria: (region, note) => `Map of Japan marking ${region}; ${note}`,
     shareShort: 'Share',
     fullInfo: 'Tea details',
-    guideTitle: 'How to read the three cards',
-    roleHintTop1: 'Closest to all seven of your answers',
-    roleHintTop2: 'The second choice on the same route',
-    roleHintTop3: 'A different character within the same family',
-    roleHintExplore: 'A deliberate change of route, so the three are not all alike',
     deckStatus: (i, n, name) => `Tea ${i} of ${n}: ${name}`,
     goTo: (i, name) => `Show tea ${i}: ${name}`,
     imgAlt: (family) => `Watercolour illustration of a cup of ${family} tea on cream paper`,
@@ -353,19 +347,42 @@ const ORIGINS = {
   T14: [[138.31, 35.02]], T15: [[138.22, 34.74]], T16: [[130.55, 31.50]],
   T17: [[135.94, 34.80]], T18: [[135.94, 34.80]]
 };
-function originMap(tea) {
+/* 兩種尺寸：'sheet' 是詳情層的完整產地圖，'card' 是結果卡上的小圖示。
+ * 卡面空間小：完整說明放進地圖的替代文字，可見文字只留產地、茶類與
+ * 一句「位置為概略」，不另開一段（咖啡因不上結果卡）。 */
+function originMap(tea, variant = 'sheet') {
+  const card = variant === 'card';
   const points = ORIGINS[tea.id] || [];
+  /* 卡面小圖只有 40px 寬，標點半徑放大才看得到；詳情層的大圖沿用原本尺寸。 */
+  const halo = variant === 'card' ? 18 : 6;
+  const pin = variant === 'card' ? 9 : 3;
   const markers = points.map(([lon, lat]) => {
     const x = ((lon - 128) * 10).toFixed(1), y = ((46 - lat) * 12.5).toFixed(1);
-    return `<circle cx="${x}" cy="${y}" r="6" class="map-halo"/><circle cx="${x}" cy="${y}" r="3" class="map-pin"/>`;
+    return `<circle cx="${x}" cy="${y}" r="${halo}" class="map-halo"/><circle cx="${x}" cy="${y}" r="${pin}" class="map-pin"/>`;
   }).join('');
+  const region = L(tea.regionZh, tea.regionEn);
   const note = points.length ? L('圓點為概略位置', 'Dots show approximate locations')
     : tea.id === 'T11' ? L('日本各地，無單一產地', 'Made across Japan; no single origin')
     : L('產地依商品標示，未標點', 'Origin varies by product; no location marked');
-  return el('figure', { class: 'origin-map' },
-    el('div', { class: 'map-art', 'aria-hidden': 'true', html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>` }),
-    el('figcaption', {}, el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
-      el('strong', {}, L(tea.regionZh, tea.regionEn)), el('small', {}, note))
+  /* 卡面沒有多餘行數，但「位置是概略的」這句話不能只留給螢幕閱讀器 */
+  const shortNote = points.length ? L('位置為概略', 'approximate location')
+    : tea.id === 'T11' ? L('日本各地', 'made across Japan')
+    : L('依商品標示', 'per product label');
+  const art = el('div', {
+    class: 'map-art',
+    'aria-hidden': card ? null : 'true',
+    role: card ? 'img' : null,
+    'aria-label': card ? t('originAria', region, note) : null,
+    html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>`
+  });
+  return el('figure', { class: card ? 'origin-map mini' : 'origin-map' },
+    art,
+    el('figcaption', {},
+      el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
+      el('strong', {}, region),
+      card
+        ? el('small', { class: 'map-meta' }, `${TEA_FAMILIES[tea.family][state.lang]} ・ ${shortNote}`)
+        : el('small', {}, note))
   );
 }
 
@@ -390,6 +407,7 @@ function openTea(id, { fromResult = false } = {}) {
       })
     ),
     el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
+    el('p', { class: 'rc-known' }, L(tea.knownForZh, tea.knownForEn)),
     el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
     el('p', { class: 'rc-cultivar' }, t('cultivarLabel'), ' · ', el('span', { lang: 'ja' }, tea.cultivar)),
     originMap(tea),
@@ -406,16 +424,31 @@ function openTea(id, { fromResult = false } = {}) {
 }
 
 /* ---------------- 首頁 ---------------- */
+/* CTA 排在標題與一句話說明之後、照片拼貼之前：一進頁面就看得到、按得到。
+ * 三張茶湯插畫只是裝飾性的「你會遇見這些茶」預告，不上文字、不重複照片署名。 */
+const HERO_FLIGHT = ['gyokuro', 'matcha', 'wakoucha'];
+
+function heroCta() {
+  return el('div', { class: 'hero-cta' },
+    el('button', { type: 'button', class: 'btn btn-hero', onclick: startQuiz },
+      t('start'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
+    el('div', { class: 'hero-flight', 'aria-hidden': 'true' },
+      HERO_FLIGHT.map((family) => el('img', {
+        src: FAMILY_IMAGES[family], alt: '', width: '240', height: '240',
+        loading: 'eager', decoding: 'async'
+      }))),
+    el('a', { class: 'hero-explore', href: '#/teas' }, t('explore'),
+      el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'))
+  );
+}
+
 function viewLanding() {
   document.body.dataset.view = 'home';
   const hero = el('section', { class: 'hero' },
     el('h1', { html: t('heroTitle') }),
     el('p', { class: 'lede' }, t('heroLede')),
+    heroCta(),
     heroCollage(),
-    el('div', { class: 'actions' },
-      el('button', { type: 'button', class: 'btn', onclick: startQuiz }, t('start'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
-      el('a', { class: 'btn secondary', href: '#/teas' }, t('explore'))
-    ),
     el('p', { class: 'hero-routes' },
       el('a', { href: '#/teas/sencha' }, L('煎茶・茶園', 'Sencha · tea fields')),
       el('span', { 'aria-hidden': 'true' }, '／'),
@@ -633,8 +666,9 @@ function roleLabel(role) {
 
 /* ---------------- 結果 ----------------
  * 一次只呈現一張卡牌：整頁停在一個視窗高度內，不必往下滑。
- * 由下方按鈕（上一款／下一款／1·2·3）逐張看完 Top 3；
- * 卡牌聚焦茶名、茶類、風味與香氣，讓結果保持簡潔。
+ * 卡面聚焦茶名、這款茶以什麼聞名（一句話）、產地小地圖、風味與香氣：
+ * 不解釋為什麼推薦這款，也不放咖啡因與沖泡資訊。
+ * 導覽收成一列：← / 1·2·3 / →（最後一張變成分享）。
  */
 const deck = {
   total: 0,
@@ -646,13 +680,6 @@ const deck = {
   status: null,
   results: []
 };
-
-function roleHint(role) {
-  if (role === 'top1') return t('roleHintTop1');
-  if (role === 'top2') return t('roleHintTop2');
-  if (role === 'top3') return t('roleHintTop3');
-  return t('roleHintExplore');
-}
 
 /* 茶種的飲品插畫：認茶類用，不是某一支商品的實拍照 */
 function familyImage(tea) {
@@ -678,10 +705,9 @@ function profileCard(row, index) {
     el('div', { class: 'pc-body' },
       el('h2', { class: 'pc-title', id: titleId }, L(tea.nameZh, tea.nameEn)),
       el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),
-      el('p', { class: 'pc-role' }, roleHint(role)),
-      el('p', { class: 'pc-meta' },
-        `${L(tea.regionZh, tea.regionEn)} ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
-      el('p', { class: 'pc-copy' }, L(tea.copyZh, tea.copyEn)),
+      /* 一句話：這款茶以什麼聞名。不是推薦理由，是茶自己的名聲。 */
+      el('p', { class: 'pc-known' }, L(tea.knownForZh, tea.knownForEn)),
+      originMap(tea, 'card'),
       el('div', { class: 'tags pc-tags' }, tasteTags(tea).slice(0, 3)),
       el('div', { class: 'aroma-tags pc-aroma' },
         tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
@@ -693,14 +719,22 @@ function profileCard(row, index) {
   );
 }
 
-function paintDeckNext() {
+const teaName = (row) => L(row.tea.nameZh, row.tea.nameEn);
+
+/* 一列搞定：← 上一款 ・ 1 2 3 ・ 下一款 →（最後一張變成分享）。
+   兩顆箭頭鈕的 aria-label 唸出要去的茶名，切換時由 role="status" 播報位置。 */
+function paintDeckNav() {
   const last = deck.index === deck.total - 1;
+  const prevRow = deck.results[deck.index - 1];
+  const nextRow = deck.results[deck.index + 1];
+  deck.prev.setAttribute('aria-label', prevRow ? t('prevTeaNamed', teaName(prevRow)) : t('prevTea'));
   deck.next.classList.toggle('share', last);
-  deck.next.setAttribute('aria-label', last ? t('shareShort') : t('nextTea'));
-  deck.next.replaceChildren(
-    el('span', { class: 'deck-btn-text' }, last ? t('shareShort') : t('nextTea')),
-    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, last ? '↗' : '→')
-  );
+  deck.next.setAttribute('aria-label', last ? t('copyShare') : t('nextTeaNamed', teaName(nextRow)));
+  /* replaceChildren 會把 null 轉成字串 "null"，先濾掉再放 */
+  deck.next.replaceChildren(...[
+    last ? el('span', { class: 'deck-btn-text' }, t('shareShort')) : null,
+    el('span', { class: 'deck-glyph', 'aria-hidden': 'true' }, last ? '↗' : '→')
+  ].filter(Boolean));
 }
 
 /* 只換卡牌，不重繪整頁：按鈕與焦點都留著，鍵盤使用者不會被丟回頁首 */
@@ -727,9 +761,8 @@ function setStep(index) {
   });
 
   deck.prev.disabled = next === 0;
-  paintDeckNext();
-  const row = deck.results[next];
-  deck.status.textContent = t('deckStatus', next + 1, deck.total, L(row.tea.nameZh, row.tea.nameEn));
+  paintDeckNav();
+  deck.status.textContent = t('deckStatus', next + 1, deck.total, teaName(deck.results[next]));
 }
 
 function buildDeck(report) {
@@ -739,21 +772,18 @@ function buildDeck(report) {
 
   deck.dots = report.results.map((row, i) => el('button', {
     type: 'button', class: 'step-dot',
-    'aria-label': t('goTo', i + 1, L(row.tea.nameZh, row.tea.nameEn)),
+    'aria-label': t('goTo', i + 1, teaName(row)),
     onclick: () => setStep(i)
   }, String(i + 1)));
 
   deck.prev = el('button', {
-    type: 'button', class: 'btn secondary small deck-prev',
+    type: 'button', class: 'nav-round deck-prev',
     'aria-label': t('prevTea'),
     onclick: () => setStep(deck.index - 1)
-  },
-    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, '←'),
-    el('span', { class: 'deck-btn-text' }, t('prevTea'))
-  );
+  }, el('span', { class: 'deck-glyph', 'aria-hidden': 'true' }, '←'));
 
   deck.next = el('button', {
-    type: 'button', class: 'btn small deck-next',
+    type: 'button', class: 'nav-round deck-next',
     onclick: () => {
       if (deck.index >= deck.total - 1) copy(shareUrl());
       else setStep(deck.index + 1);
@@ -763,7 +793,7 @@ function buildDeck(report) {
   deck.status = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
 
   const stage = el('div', { class: 'deck', role: 'group', 'aria-label': t('deckAria') }, deck.cards);
-  const nav = el('div', { class: 'deck-nav' },
+  const nav = el('nav', { class: 'deck-nav', 'aria-label': t('deckNavAria') },
     deck.prev,
     el('div', { class: 'deck-steps', role: 'group', 'aria-label': t('stepsAria') }, deck.dots),
     deck.next
@@ -783,7 +813,7 @@ function viewResults(code) {
     return;
   }
 
-  const report = recommend(state.answers, state.lang);
+  const report = recommend(state.answers);
 
   if (report.empty) {
     document.body.dataset.view = 'result-empty';
@@ -818,13 +848,13 @@ function viewResults(code) {
 
   app.replaceChildren(
     el('section', { class: 'result-shell', 'aria-labelledby': 'result-heading' },
+      /* 頁首只留一行：風味輪廓（含 visible h1）＋打開偏好層的一顆 chip */
       el('div', { class: 'result-top' },
-        el('p', { class: 'eyebrow' }, t('resultEyebrow')),
+        el('h1', { class: 'result-h', id: 'result-heading' },
+          el('span', { class: 'rh-label' }, t('resultTitle')),
+          el('span', { class: 'rh-profile' }, L(profile.zh, profile.en))),
         el('button', { type: 'button', class: 'chip profile-open', onclick: () => openProfile(report) }, t('profileBtn'))
       ),
-      el('h1', { class: 'sr-only', id: 'result-heading' }, `${t('resultTitle')}：${L(profile.zh, profile.en)}`),
-      el('p', { class: 'deck-guide' },
-        el('strong', { class: 'deck-profile' }, L(profile.zh, profile.en)), ` · ${t('deckGuide')}`),
       stage,
       deck.status,
       nav
@@ -834,7 +864,7 @@ function viewResults(code) {
   setStep(state.step);
 }
 
-/* 風味偏好、角色說明與其他出口：從卡牌右上角打開，不佔卡面空間 */
+/* 風味偏好與其他出口：從結果頁右上角打開，不佔卡面空間。不放卡牌角色說明。 */
 function openProfile(report) {
   document.getElementById('sheet-title').textContent = t('profileSheetTitle');
   document.getElementById('sheet-ja').textContent = L(report.profile.en, report.profile.zh);
@@ -844,15 +874,6 @@ function openProfile(report) {
     el('div', { class: 'rc-section', style: 'margin-top:14px' },
       el('h4', {}, t('tasteTitle')),
       tasteRows(report.prefs.target)
-    ),
-    el('div', { class: 'rc-section' },
-      el('h4', {}, t('guideTitle')),
-      el('ul', { class: 'role-legend' }, report.results.map((row, i) =>
-        el('li', {},
-          el('b', {}, `${i + 1} · ${roleLabel(row.role)}`),
-          el('span', {}, roleHint(row.role))
-        )
-      ))
     ),
     el('div', { class: 'actions' },
       el('button', { type: 'button', class: 'btn small', onclick: () => copy(shareUrl()) }, t('copyShare')),
