@@ -435,7 +435,7 @@
   function signInErrorText(error) {
     const text = `${error?.message || error || ''} ${error?.code || ''}`;
     if (/invalid login credentials|invalid_credentials/i.test(text)) return '電子郵件或個人密碼不正確。';
-    if (/already registered|user_already_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
+    if (/already registered|user_already_exists|email_exists/i.test(text)) return '這個電子郵件已註冊，請改用登入。';
     if (/weak_password|password.*(short|least|weak)/i.test(text)) return '密碼需超過 6 個字元；請在 Supabase → Authentication → Settings → Password security 將最低長度設為 7。';
     if (/rate.limit|too many requests|over_.*rate_limit/i.test(text)) return '登入或註冊太頻繁，請稍後再試。';
     if (/email_confirmation_required|email not confirmed|confirm your email/i.test(text)) {
@@ -474,12 +474,12 @@
     if (!client) return { ok:false, reason:'這個頁面還沒有連接 Supabase 專案。' };
     const value = typeof code === 'string' ? code.trim() : '';
     const traveller = typeof name === 'string' ? name.trim().slice(0, 40) : '';
-    if (createAccount && !value) return { ok:false, reason:'請輸入邀請碼。' };
+    if (createAccount && !value) return { ok:false, field:'#access-code', reason:'請輸入邀請碼。' };
     const address = typeof email === 'string' ? email.trim().toLowerCase() : '';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, reason:'請輸入有效的電子郵件。' };
-    if (typeof password !== 'string' || !password) return { ok:false, reason:'請輸入個人密碼。' };
-    if (password.length <= 6) return { ok:false, reason:'密碼需超過 6 個字元。' };
-    if (createAccount && !traveller) return { ok:false, reason:'請輸入顯示名稱。' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok:false, field:'#account-email', reason:'請輸入有效的電子郵件。' };
+    if (typeof password !== 'string' || !password) return { ok:false, field:'#account-password', reason:'請輸入個人密碼。' };
+    if (password.length <= 6) return { ok:false, field:'#account-password', reason:'密碼需超過 6 個字元。' };
+    if (createAccount && !traveller) return { ok:false, field:'#traveller-name', reason:'請輸入顯示名稱。' };
     if (authenticating) return { ok:false, reason:'登入中，請稍候。' };
     authenticating = true;
     ++resolveSeq;
@@ -494,12 +494,15 @@
         : await client.auth.signInWithPassword({ email:address, password });
       // A bad invite leaves an unapproved Auth account. Allow its owner to
       // retry creation, but only after proving the same personal password.
-      if (createAccount && /already registered|user_already_exists/i.test(`${response.error?.message || ''} ${response.error?.code || ''}`)) {
+      if (createAccount && /already registered|user_already_exists|email_exists/i.test(`${response.error?.message || ''} ${response.error?.code || ''}`)) {
         response = await client.auth.signInWithPassword({ email:address, password });
       }
       if (response.error) return { ok:false, reason:signInErrorText(response.error) };
       const attempt = { session:response.data?.session };
-      if (!attempt.session?.user) return { ok:false, reason:signInErrorText({ message:'email_confirmation_required' }) };
+      if (!attempt.session?.user) {
+        const duplicate = createAccount && Array.isArray(response.data?.user?.identities) && response.data.user.identities.length === 0;
+        return { ok:false, reason:signInErrorText({ message:duplicate ? 'user_already_exists' : 'email_confirmation_required' }) };
+      }
       if (createAccount) {
         const { data:existingProfile, error:profileError } = await client.from('profiles')
           .select('id').eq('id', attempt.session.user.id).maybeSingle();

@@ -42,7 +42,7 @@ GitHub Pages only serves files: there is no server process in this repository, s
 Linking a Supabase project turns the atlas into a small multi-traveller atlas. The account features below are off until `config.js` has a project URL and anon key; until then the `localGate` passphrase is the only sign-in.
 
 - **Visitors see the map, but cannot change it.** Reading is public; every write is checked by Postgres Row Level Security against `auth.uid()`. A visitor's stamp button opens the sign-in dialog instead of writing, and the page never holds a key that could edit someone else's rows.
-- **Separate login and creation.** Returning travellers enter only email and password. The “建立帳號” view also asks for an invite and display name. Passwords must be more than 6 characters (minimum 7); set Auth's minimum password length to 7 for API enforcement. Only creation calls `atlas_redeem_code(code, name, userAgent)` to approve a profile. Returning login calls `atlas_login(userAgent)`, which requires an existing approved profile and only appends to the private login log. An Auth account without an approved profile stays read-only and must finish creation with an invite. After a wrong invite, creation can resume with the same email and password. The page never stores passwords; Supabase persists its normal session.
+- **Separate login and creation.** Returning travellers enter only email and password. The “建立帳號” tab also asks for an invite and display name. The two tabs support arrow keys, Home/End, and native form submission (including mobile keyboards and password managers). An active tab can be clicked again without erasing a draft; tabs are locked while a request is pending. Passwords must be more than 6 characters (minimum 7); set Auth's minimum password length to 7 for API enforcement. Only creation calls `atlas_redeem_code(code, name, userAgent)` to approve a profile. Returning login calls `atlas_login(userAgent)`, which requires an existing approved profile and only appends to the private login log. An Auth account without an approved profile stays read-only and must finish creation with an invite. After a wrong invite, creation can resume with the same email and password. The page never stores passwords; Supabase persists its normal session.
 - **Login log.** Each successful creation or login appends to `atlas_logins` (time, name, browser string, IP, user id). The page never reads it; it is for the owner in the dashboard.
 - **Sign-in persistence.** A session survives reloads. After sign-out, the same email and password return to the same traveller on any device, even after clearing site data. Legacy generated device credentials are removed, not reused. Existing legacy sessions and records remain; see the setup guide's migration note before signing out of an old account.
 - **Companions.** Any signed-in traveller can be tagged on a trip before or after stamping. A trip is stored per traveller per place per month, so the same place can carry several months and several travellers. Untagging someone keeps your stamp.
@@ -143,7 +143,11 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-login-sql.cj
 ```
 
 The browser test checks map/index startup and real map clicks, login/creation switching,
-creation-only fields, password validation, and overflow at 1440, 390, and 320 px.
+creation-only fields, password validation, native form submission, rejected-invite retries, completed registration/login through the real Auth client with mocked HTTP responses, and overflow at 1440, 390, and 320 px.
 The SQL test runs the deployed `atlas_login` definition and grants in embedded Postgres:
 anonymous access is denied, an unapproved session cannot create a profile, and approved
 logins are recorded privately under `auth.uid()`.
+
+Existing projects missing `atlas_login` can apply only the additive repair in
+[`supabase/migrations/20261105_add_atlas_login.sql`](supabase/migrations/20261105_add_atlas_login.sql).
+This repair was applied to the configured live project on 2026-11-05; the public API cannot call it anonymously.

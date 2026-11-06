@@ -4,7 +4,9 @@
 
 **既有專案升級：** 部署前，請在 SQL Editor 重跑 [`supabase/setup.sql`](supabase/setup.sql)，
 新增只供已核准帳號登入的 `atlas_login()`（不會刪除戳章），並把 Auth 的最低密碼長度改為 **7**。
-`config.js` 仍指向專案 `osffsthnlmndwpxpxtou`；本次只更新 repo，未變更線上專案設定。
+`config.js` 仍指向專案 `osffsthnlmndwpxpxtou`。2026-11-05 已以
+[`20261105_add_atlas_login.sql`](supabase/migrations/20261105_add_atlas_login.sql) 補上線上缺少的登入函式，
+沒有更換邀請碼、刪除帳號或戳章。Auth 的最低密碼長度目前仍為 6；請至後台改成 **7**，與頁面限制一致。
 
 ---
 
@@ -125,6 +127,13 @@ limit 50;
 | 「連不到 Supabase」 | 網路或 `supabaseUrl` 打錯 | 檢查 `config.js` 的網址 |
 | 「RLS 擋下了這次寫入」 | 沒有通過通行碼的 session 想寫入 | 重新登入；確認 `setup.sql` 完整執行 |
 | 換裝置沒同步 | 沒登入，或剛好離線 | 登入後會自動補同步 |
+
+## 登入／建立帳號 Tab
+
+- 點選 Tab 或使用左右方向鍵、Home／End 切換；登入只要電子郵件與密碼。
+- 建立帳號才顯示名字與邀請碼。再次點選同一個 Tab 不會清空正在填的表單；真正切換時清除密碼與邀請碼。
+- 按 Enter、手機鍵盤送出或密碼管理器的表單提交都走相同流程，不會只關閉視窗。
+- 邀請碼錯誤時，視窗留在「建立帳號」；以相同電子郵件、原先密碼與正確邀請碼重試。
 
 ## 舊版裝置帳號
 

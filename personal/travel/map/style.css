@@ -421,6 +421,9 @@ a{color:inherit}
 .account-dialog-top{justify-content:flex-end}
 .account-modes{display:flex;border-bottom:1px solid var(--mag-line);margin-bottom:6px}
 .account-modes button{flex:1;border:0;border-bottom:2px solid transparent;background:transparent;padding:10px;font:inherit;color:var(--mag-muted);cursor:pointer}
-.account-modes button[aria-pressed="true"]{border-bottom-color:var(--mag-ink);color:var(--mag-ink)}
+.account-modes button[aria-selected="true"]{border-bottom-color:var(--mag-ink);color:var(--mag-ink)}
 .account-modes button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .account-field[hidden],.account-note[hidden]{display:none}
+
+.account-fields{display:grid;gap:10px}
+.account-modes button:disabled{cursor:wait;opacity:.6}
