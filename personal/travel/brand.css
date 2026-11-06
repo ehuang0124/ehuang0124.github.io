@@ -1222,3 +1222,9 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .impression-paper{background-color:var(--ng-paper);border-color:var(--ng-line)}
 @media(max-width:760px){.intro{grid-template-columns:1fr;padding:24px;border-width:7px}.atlas-postage{border-left:0;border-top:1px solid var(--ng-line);padding:20px 0 0;min-height:125px}.atlas-postmark{left:auto;right:65px;bottom:0}.travel-menu-links a{padding:18px 0}.travel-menu-head{margin-bottom:24px}.travel-menu-toggle span{display:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.ng-scroll b{transition:none}}
+
+/* Editorial framing for the winter travel features. */
+.feature-intro{padding:clamp(32px,5vw,60px) 0;border-bottom:1px solid var(--ng-line)}
+.feature-intro-label{margin:0 0 12px;color:var(--ng-red);font-size:11px;font-weight:700;letter-spacing:.12em}
+.feature-intro h2{margin:0 0 18px;font-size:clamp(20px,2.5vw,30px);line-height:1.5;font-weight:900}
+.feature-intro p:not(.feature-intro-label){max-width:48em;margin:10px 0 0;color:var(--ng-ink);font-size:15px;line-height:1.9}
