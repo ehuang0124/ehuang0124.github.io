@@ -1054,8 +1054,66 @@
     event.currentTarget.setAttribute('aria-pressed',String(visitedOnly));
     renderMap();renderDirectory(true);
   });
+  // The stamped month chooser shares the native field as its single source of truth.
+  const datePicker = $('#date-stamp-picker');
+  const datePickerToggle = $('#date-picker-toggle');
+  const datePickerPanel = $('#date-picker-panel');
+  const dateYear = $('#date-year');
+  const dateMonths = $('#date-months');
+  const currentYear = Number(today.slice(0, 4));
+  dateYear.max = currentYear;
+  let pickerYear = currentYear;
+  function renderDatePicker() {
+    dateYear.value = pickerYear;
+    $('#date-year-prev').disabled = pickerYear <= 1;
+    $('#date-year-next').disabled = pickerYear >= currentYear;
+    dateMonths.replaceChildren();
+    for (let month = 1; month <= 12; month++) {
+      const value = `${String(pickerYear).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = `${String(month).padStart(2, '0')}月`;
+      button.dataset.month = value;
+      button.disabled = value > today;
+      button.setAttribute('aria-label', `${pickerYear}年${month}月`);
+      button.setAttribute('aria-pressed', String(dateInput.value === value));
+      dateMonths.append(button);
+    }
+  }
+  function closeDatePicker(returnFocus = false) {
+    datePickerPanel.hidden = true;
+    datePickerToggle.setAttribute('aria-expanded', 'false');
+    if (returnFocus) datePickerToggle.focus();
+  }
+  datePickerToggle.addEventListener('click', () => {
+    if (!datePickerPanel.hidden) { closeDatePicker(); return; }
+    pickerYear = validDate(dateInput.value) ? Number(dateInput.value.slice(0, 4)) : currentYear;
+    renderDatePicker();
+    datePickerPanel.hidden = false;
+    datePickerToggle.setAttribute('aria-expanded', 'true');
+  });
+  $('#date-year-prev').addEventListener('click', () => { if (pickerYear > 1) { pickerYear--; renderDatePicker(); } });
+  $('#date-year-next').addEventListener('click', () => { if (pickerYear < currentYear) { pickerYear++; renderDatePicker(); } });
+  dateYear.addEventListener('change', () => {
+    const year = Number(dateYear.value);
+    if (Number.isInteger(year) && year >= 1 && year <= currentYear) pickerYear = year;
+    renderDatePicker();
+  });
+  dateMonths.addEventListener('click', event => {
+    const button = event.target.closest('button[data-month]');
+    if (!button || button.disabled) return;
+    dateInput.value = button.dataset.month;
+    dateInput.dispatchEvent(new Event('change', {bubbles:true}));
+    closeDatePicker(true);
+  });
+  document.addEventListener('click', event => { if (!datePicker.contains(event.target)) closeDatePicker(); });
+  mobileStampDialog.addEventListener('close', () => closeDatePicker());
+  datePicker.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !datePickerPanel.hidden) { event.preventDefault(); event.stopPropagation(); closeDatePicker(true); }
+  });
   dateInput.addEventListener('change',() => {
     const valid = validDate(dateInput.value) && dateInput.checkValidity();
+    if (!datePickerPanel.hidden) { pickerYear = valid ? Number(dateInput.value.slice(0, 4)) : currentYear; renderDatePicker(); }
     dateInput.setAttribute('aria-invalid',String(!valid));
     companionDraft.clear();
     if (!visitsOf(selectedPlace()).length) $('#stamp-face-date').textContent = printedDate(valid ? dateInput.value : '');
