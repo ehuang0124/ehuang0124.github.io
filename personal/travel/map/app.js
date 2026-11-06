@@ -1393,6 +1393,9 @@
   const companionDialog = $('#companion-dialog');
   const accountMenu = $('#account-menu');
   const accountMenuButton = $('#account-menu-button');
+  // True while the traveller is typing a new display name, so a re-render
+  // (sync, realtime) never overwrites what they are typing.
+  let profileNameDirty = false;
 
   let verificationAddress = '';
   function showEmailVerification(email) {
@@ -1510,6 +1513,17 @@
       }
       else avatar.hidden = true;
       $('#account-name').textContent = user.name;
+      // Profile section: the name travellers see, and the sign-in address.
+      // Email belongs to the sign-in service, so it is shown, never edited.
+      $('#account-profile-name').textContent = user.name;
+      const emailEl = $('#account-profile-email');
+      const emailNote = atlasAccount.mode === 'demo' ? '示範帳號（沒有電子郵件）'
+        : atlasAccount.mode === 'local' ? '本機通行碼登入（沒有電子郵件）' : '—';
+      emailEl.textContent = user.email || emailNote;
+      emailEl.title = user.email || emailNote;
+      const nameInput = $('#profile-name-input');
+      if (nameInput && document.activeElement !== nameInput && !profileNameDirty) nameInput.value = user.name;
+      if ($('#profile-reset-password')) $('#profile-reset-password').hidden = !(cloud && user.email);
       const profile = atlasAccount.profiles.get(user.id);
       $('#discoverable-toggle').checked = profile ? profile.discoverable !== false : true;
       if ($('#discoverable-row')) $('#discoverable-row').hidden = !cloud && atlasAccount.mode !== 'demo';
@@ -1900,6 +1914,7 @@
   $('#account-forgot')?.addEventListener('click', async () => {
     const button = $('#account-forgot');
     $('#account-error').textContent = '';
+    showAccountStatus('');
     if (button) button.disabled = true;
     const result = await account?.requestPasswordReset?.($('#account-email').value);
     if (button) button.disabled = false;
@@ -1907,7 +1922,8 @@
       showAccountError(result?.reason === 'invalid_email' ? '請先填入電子郵件，再按「忘記密碼」。' : '目前無法寄出重設密碼的信，請稍後再試。', '#account-email');
       return;
     }
-    $('#account-error').textContent = '重設密碼的信已寄出；請到信箱打開連結，設定新密碼。';
+    // Success is not an error: it gets the green status, not the red alert.
+    showAccountStatus('重設密碼的信已寄出；請到信箱打開連結，設定新密碼。');
   });
   async function submitNewPassword() {
     const submit = $('#code-signin-submit');
@@ -2021,6 +2037,49 @@
     account?.setDemoUser(event.target.value);
     friendSelection = null;
     closeAccountMenu();
+  });
+  // ---------- profile: display name + password reset ----------
+  $('#profile-name-input')?.addEventListener('input', () => {
+    profileNameDirty = true;
+    $('#profile-feedback').textContent = '';
+  });
+  $('#profile-name-input')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); $('#profile-save')?.click(); }
+  });
+  $('#profile-save')?.addEventListener('click', async () => {
+    if (!signedIn()) return;
+    const button = $('#profile-save');
+    const feedback = $('#profile-feedback');
+    button.disabled = true;
+    feedback.textContent = '儲存中…';
+    let result;
+    try { result = await account?.updateDisplayName?.($('#profile-name-input').value); }
+    catch { result = { ok:false, reason:'名稱暫時無法儲存，請稍後再試。' }; }
+    finally { button.disabled = false; }
+    if (!result?.ok) { feedback.textContent = result?.reason || '名稱暫時無法儲存，請稍後再試。'; return; }
+    profileNameDirty = false;
+    $('#profile-name-input').value = result.name;
+    feedback.textContent = result.unchanged ? '顯示名稱沒有變更。' : `顯示名稱已更新為「${result.name}」。`;
+    // setUser() already re-rendered the chip; keep the menu open on the result.
+    renderAccount();
+    $('#profile-feedback').textContent = result.unchanged ? '顯示名稱沒有變更。' : `顯示名稱已更新為「${result.name}」。`;
+  });
+  // Signed-in travellers who forgot their password get the same reset mail
+  // as the sign-in dialog sends; the link returns here on its reset view.
+  $('#profile-reset-password')?.addEventListener('click', async () => {
+    const button = $('#profile-reset-password');
+    const feedback = $('#profile-feedback');
+    const email = atlasAccount.user?.email || '';
+    if (!email) { feedback.textContent = '這個登入方式沒有電子郵件，無法寄送重設信。'; return; }
+    button.disabled = true;
+    feedback.textContent = '正在寄送重設信…';
+    let result;
+    try { result = await account?.requestPasswordReset?.(email); }
+    catch { result = { ok:false }; }
+    finally { button.disabled = false; }
+    feedback.textContent = result?.ok
+      ? `重設密碼的信已寄到 ${email}；請到信箱打開連結，設定新密碼。`
+      : '目前無法寄出重設密碼的信，請稍後再試。';
   });
   $('#discoverable-toggle').addEventListener('change', async event => {
     const ok = await account?.setDiscoverable(event.target.checked);

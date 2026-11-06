@@ -26,6 +26,8 @@
   let authenticating = false;
   let recoveryFlow = false;
   const TRAVELLER_NAME_KEY = 'eva.travel.atlas.name.v1';
+  // Display-name override for the browser-only gate, whose name comes from config.
+  const LOCAL_NAME_KEY = 'eva.travel.atlas.local-name.v1';
   const DEMO_USERS = [
     { id:'demo-eva', name:'Eva Huang' },
     { id:'demo-lin', name:'林宜臻' },
@@ -131,7 +133,9 @@
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY)); } catch { saved = null; }
     if (!saved || saved.hash !== gate.hash) return;
-    setUser({ id: gate.id, name: gate.name, avatar: '', email: '', local: true });
+    const savedName = readJSON(LOCAL_NAME_KEY, '');
+    const name = typeof savedName === 'string' && savedName.trim() ? savedName.trim().slice(0, 40) : gate.name;
+    setUser({ id: gate.id, name, avatar: '', email: '', local: true });
   }
   async function localSignIn(passphrase) {
     const gate = localGate();
@@ -142,7 +146,9 @@
     try {
       localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ hash: gate.hash, at: new Date().toISOString() }));
     } catch { return { ok: false, reason: '這個瀏覽器不允許儲存登入狀態。' }; }
-    setUser({ id: gate.id, name: gate.name, avatar: '', email: '', local: true });
+    const savedName = readJSON(LOCAL_NAME_KEY, '');
+    const name = typeof savedName === 'string' && savedName.trim() ? savedName.trim().slice(0, 40) : gate.name;
+    setUser({ id: gate.id, name, avatar: '', email: '', local: true });
     emit('status', status());
     return { ok: true };
   }
@@ -446,9 +452,20 @@
   }
 
   // ---------- profiles ----------
+  function demoNameOverrides() {
+    const raw = readJSON(DEMO_KEY, null);
+    return raw && raw.profileNames && typeof raw.profileNames === 'object' ? raw.profileNames : {};
+  }
   function profilesLoadDemo() {
-    DEMO_USERS.forEach(user => profiles.set(user.id, { id:user.id, name:user.name, avatar:'', discoverable:true }));
+    const overrides = demoNameOverrides();
+    DEMO_USERS.forEach(user => {
+      const name = typeof overrides[user.id] === 'string' && overrides[user.id].trim() ? overrides[user.id].trim().slice(0, 40) : user.name;
+      profiles.set(user.id, { id:user.id, name, avatar:'', discoverable:true });
+    });
     emit('profiles', profiles);
+  }
+  function demoDisplayName(id) {
+    return profiles.get(id)?.name || DEMO_USERS.find(user => user.id === id)?.name || '旅人';
   }
   async function setDiscoverable(value) {
     if (!state.user) return false;
@@ -462,6 +479,48 @@
     return !error;
   }
   api.setDiscoverable = setDiscoverable;
+
+  // ---------- display name ----------
+  // The name other travellers see (companion tags, stamp signatures). Email is
+  // owned by Supabase Auth and is only ever shown, never edited here. RLS
+  // ("own profile update") already restricts this write to the traveller's
+  // own row; demo and local modes keep the same behaviour without a backend.
+  async function updateDisplayName(rawName) {
+    if (!state.user) return { ok:false, reason:'請先登入。' };
+    const name = typeof rawName === 'string' ? rawName.trim().slice(0, 40) : '';
+    if (!name) return { ok:false, reason:'顯示名稱不能是空白。' };
+    if (name === state.user.name) return { ok:true, name, unchanged:true };
+    if (state.mode === 'demo') {
+      const okay = demoWriteGuarded(store => {
+        store.profileNames = { ...(store.profileNames || {}), [state.user.id]:name };
+      });
+      if (!okay) return { ok:false, reason:'暫時無法儲存，請稍後再試。' };
+      profilesLoadDemo();
+      setUser({ ...state.user, name });
+      emit('profiles', profiles);
+      return { ok:true, name };
+    }
+    if (state.mode === 'local') {
+      if (!writeJSON(LOCAL_NAME_KEY, name)) return { ok:false, reason:'這個瀏覽器不允許儲存，請稍後再試。' };
+      setUser({ ...state.user, name });
+      return { ok:true, name };
+    }
+    if (!client) return { ok:false, reason:'登入服務暫時無法使用，請稍後再試。' };
+    const { error } = await client.from('profiles')
+      .update({ display_name:name, updated_at:new Date().toISOString() })
+      .eq('id', state.user.id);
+    if (error) {
+      console.warn('display name could not be saved', error);
+      return { ok:false, reason:'名稱暫時無法儲存，請稍後再試。' };
+    }
+    const profile = profiles.get(state.user.id) || { id:state.user.id, avatar:state.user.avatar, discoverable:true };
+    profiles.set(state.user.id, { ...profile, name });
+    writeJSON(TRAVELLER_NAME_KEY, name);
+    setUser({ ...state.user, name });
+    emit('profiles', profiles);
+    return { ok:true, name };
+  }
+  api.updateDisplayName = updateDisplayName;
 
   // ---------- auth ----------
   // Anyone can open the page source, so failures are answered in plain
@@ -626,7 +685,7 @@
         id: String(result.user_id || attempt.session.user.id),
         name: typeof result.display_name === 'string' && result.display_name.trim() ? result.display_name.trim() : '旅人',
         avatar: typeof result.avatar_url === 'string' ? result.avatar_url : '',
-        email: ''
+        email: typeof attempt.session.user.email === 'string' ? attempt.session.user.email : address
       };
       writeJSON(TRAVELLER_NAME_KEY, profile.name);
       profiles.set(profile.id, { ...profile, discoverable: result.discoverable !== false });
@@ -692,7 +751,7 @@
     notifiedUnapprovedId = null;
     const profile = profileFromRow(data);
     profiles.set(profile.id, profile);
-    setUser({ id:profile.id, name:profile.name, avatar:profile.avatar, email:'' });
+    setUser({ id:profile.id, name:profile.name, avatar:profile.avatar, email:typeof session.user.email === 'string' ? session.user.email : '' });
     startSubscription();
     await syncPull();
     flush();
@@ -755,7 +814,7 @@
     const sameUser = state.user?.id === user.id;
     setDemoSession(user.id);
     profilesLoadDemo();
-    setUser({ id:user.id, name:user.name, avatar:'', email:'' });
+    setUser({ id:user.id, name:demoDisplayName(user.id), avatar:'', email:'' });
     // Switching between demo travellers needs a fresh pull; a first sign-in
     // already pulls from the auth change itself.
     if (sameUser || state.connection === 'online') syncPull();
