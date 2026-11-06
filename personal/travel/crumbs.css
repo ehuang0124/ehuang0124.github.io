@@ -1,12 +1,15 @@
-/* Shared breadcrumb for Eva Huang's travel pages.
-   Theme via custom properties on the <nav class="crumbs"> element:
+/* Shared breadcrumb for Eva Huang's travel pages — same crumb bar as the
+   landing page (`brand.css` .ng-crumbs). Theme via custom properties on the
+   <nav class="crumbs"> element when a page needs a variant:
    --crumb-bg, --crumb-ink, --crumb-strong, --crumb-accent, --crumb-line */
 .crumbs {
-  background: var(--crumb-bg, #f6f3ea);
-  color: var(--crumb-ink, #6b7a70);
-  border-bottom: 1px solid var(--crumb-line, rgba(35, 56, 48, .14));
-  font-size: 11.5px;
-  letter-spacing: .05em;
+  background: var(--crumb-bg, #ffffff);
+  color: var(--crumb-ink, #8b8b85);
+  border-bottom: 1px solid var(--crumb-line, #eeece5);
+  font-family: "Noto Sans JP", "Noto Sans TC", Arial, sans-serif;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: none;
 }
 .crumbs ol {
   list-style: none;
@@ -21,7 +24,7 @@
 .crumbs li { display: flex; align-items: center; gap: 10px; margin: 0; padding: 0; }
 .crumbs li + li::before { content: "›"; opacity: .5; }
 .crumbs a { color: inherit; text-decoration: none; }
-.crumbs a:hover { color: var(--crumb-accent, #ac6549); text-decoration: underline; text-underline-offset: 3px; }
-.crumbs a:focus-visible { outline: 2px solid var(--crumb-accent, #ac6549); outline-offset: 3px; border-radius: 2px; }
-.crumbs [aria-current="page"] { color: var(--crumb-strong, #233830); font-weight: 700; }
+.crumbs a:hover { color: var(--crumb-accent, #c9202f); text-decoration: underline; text-underline-offset: 3px; }
+.crumbs a:focus-visible { outline: 2px solid var(--crumb-accent, #c9202f); outline-offset: 3px; border-radius: 2px; }
+.crumbs [aria-current="page"] { color: var(--crumb-strong, #1c1c1c); font-weight: 700; }
 @media (max-width: 600px) { .crumbs ol { padding: 8px 16px; } }

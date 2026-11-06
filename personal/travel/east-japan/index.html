@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>幕末歷史與東日本</title>
-<meta name="theme-color" content="#f7f4ec">
+<meta name="theme-color" content="#ffffff">
 <meta name="description" content="幕末歷史與東日本：沿著時間軸與互動地圖，走訪東京、下田、靜岡、名古屋與伊勢志摩的幕末維新歷史景點。">
 <link rel="icon" type="image/svg+xml" href="/writing/assets/2n-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="/personal/travel/crumbs.css">
-<link rel="stylesheet" href="/personal/travel/magazine.css">
 <link rel="stylesheet" href="/personal/travel/itinerary.css">
 <link rel="stylesheet" href="/personal/travel/history-context.css">
+<link rel="stylesheet" href="/personal/travel/brand.css">
 </head>
-<body>
+<body class="ng-body">
 
 <nav class="crumbs" aria-label="Breadcrumb">
   <ol>
@@ -25,6 +25,22 @@
   </ol>
 </nav>
 
+<header class="ng-header">
+  <div class="ng-shell ng-header-in">
+    <a class="ng-brand" href="/personal/travel/">
+      <span class="ng-brand-mark" aria-hidden="true">旅</span>
+      <span class="ng-brand-txt"><b>旅行地図</b><span>Travel Atlas</span></span>
+    </a>
+    <nav class="ng-nav" aria-label="主要導覽">
+        <a href="/personal/travel/east-japan/" aria-current="page">東日本</a>
+        <a href="/personal/travel/kyushu/">九州</a>
+        <a href="/personal/travel/okinawa/">沖繩</a>
+        <a href="/personal/travel/map/">世界蓋章</a>
+        <a href="/writing/">Writing ↗</a>
+    </nav>
+  </div>
+</header>
+
 <header class="hero">
   <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末時代的江戶與黑船" decoding="async"></div>
   <span class="hero-frame" aria-hidden="true"></span>
@@ -32,6 +48,9 @@
     <div class="hero-copy">
       <p class="hero-kicker">EAST JAPAN ・ 12/06 – 12/17</p>
       <h1>幕末歷史與東日本</h1>
+      <div class="ng-lattice ng-lattice--hero" aria-hidden="true">
+        <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
+      </div>
       <p class="hero-meta"><span>東京 → 下田 → 靜岡 → 名古屋 → 伊勢志摩</span><span>15 篇故事</span></p>
     </div>
     <div class="hero-rail" aria-hidden="true"><span class="mag-tate">東日本・黒船から維新へ</span></div>
@@ -92,6 +111,9 @@
 
 <footer class="footer" id="sources">
 <div class="wrap">
+  <div class="ng-lattice ng-footer-lattice" aria-hidden="true">
+    <svg viewBox="0 0 240 24" role="presentation"><use href="/personal/travel/assets/travel-icons.svg#an-lattice"/></svg>
+  </div>
   <a href="/personal/travel/">← 旅行地圖索引</a> · <a href="/personal/travel/kyushu/">接續：幕末歷史與九州 ↗</a><br>
   <details class="credits">
     <summary>資料與圖片來源</summary>
