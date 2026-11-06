@@ -37,7 +37,7 @@ Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, thr
 Two motifs are deliberately kept and theirs is a narrow brief:
 
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
-- **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state; it only links in. Section 04 says so in copy.
+- **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state and never mentions stamps, month records or sign-in; section 04 is one postcard and only links in.
 
 The closing 型錄 section indexes the three trip features only (the Stamp Atlas map is reachable from the nav, category bar, postcard section and the callout). Each entry is an editorial spread: alternating photo/copy sides, an offset colour frame, an oversized hollow issue number, a vertical 第 0X 帖 tab, a date line, a route line and a pill link. The palette, icon grid and type rules live in `spec.md`.
 

@@ -55,14 +55,6 @@
   font-size:.36em;letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
   vertical-align:.28em;
 }
-.ng-head-side{
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.78fr);
-  gap:clamp(14px,3vw,44px);align-items:end;
-}
-.ng-head-side p{margin:0;font-size:12.5px;line-height:2;color:var(--ng-ink-soft)}
-.ng-head-side p b{font-weight:700;color:var(--ng-ink)}
-.ng-head-side p a{color:var(--ng-red);text-decoration:none;border-bottom:1px solid rgba(201,32,47,.35)}
-.ng-head-side p a:hover{border-bottom-color:var(--ng-red)}
 
 /* ---------- index ---------- */
 /* ---------- feature cards (lead spread + two stock cards) ---------- */
@@ -208,12 +200,6 @@
 .ng-shot:nth-child(4) .ng-shot-media{aspect-ratio:2/3}
 .ng-shot-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .ng-shot:hover .ng-shot-media img{transform:scale(1.04)}
-.ng-shot-month{
-  position:absolute;left:10px;top:10px;
-  padding:3px 9px;border-radius:999px;
-  background:rgba(255,255,255,.94);color:var(--ng-red);
-  font-family:var(--ng-grotesk);font-weight:700;font-size:9.5px;letter-spacing:.1em;
-}
 .ng-shot figcaption{
   display:flex;align-items:center;gap:7px;margin-top:9px;
   font-family:var(--ng-sans);font-weight:700;font-size:11px;color:var(--ng-ink-soft);
@@ -296,10 +282,6 @@
   font-family:var(--ng-sans);font-weight:900;font-size:18px;
   transform:rotate(-6deg);opacity:.94;
 }
-.ng-postcard-note{
-  margin:12px 0 0;font-size:11px;line-height:1.9;color:var(--ng-muted);
-}
-.ng-postcard-note a{color:var(--ng-red);text-decoration:none;border-bottom:1px solid rgba(201,32,47,.35)}
 
 /* ---------- catalogue (型錄) ----------
    Editorial spreads instead of a table: photo and copy trade sides, the
@@ -625,12 +607,6 @@
     color:var(--cat-accent,var(--ng-red));
     transition:transform .2s;
   }
-  /* 引言 */
-  .ng-preface{
-    max-width:48em;
-    font-size:14px;line-height:2.05;color:var(--ng-ink-soft);
-  }
-  .ng-preface b{color:var(--ng-ink)}
   /* postcard heading override */
   .ng-postcard h3.letter-title{
     font-size:clamp(22px,2.8vw,28px);

@@ -331,17 +331,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
   font-size:.36em;letter-spacing:.24em;text-transform:uppercase;color:var(--ng-muted);
   vertical-align:.28em;
 }
-.ng-head-side{
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.78fr);
-  gap:clamp(14px,3vw,44px);align-items:end;
-}
-.ng-head-side p,.head-side,.section-lede,.region-heading .head-side{
+.head-side,.section-lede,.region-heading .head-side{
   margin:0;max-width:34em;
   font-size:12.5px;line-height:2;color:var(--ng-ink-soft);
 }
-.ng-head-side p b,
 .head-side b{font-weight:700;color:var(--ng-ink)}
-.ng-head-side p a,
 .head-side a{color:var(--ng-red);text-decoration:none;border-bottom:1px solid rgba(201,32,47,.35)}
 
 /* ---------- chips, pills and controls ---------- */
@@ -1173,7 +1167,6 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 
 /* ---------- responsive ---------- */
 @media(max-width:1000px){
-  .ng-head-side{grid-template-columns:1fr;gap:12px}
   .ng-header-in{min-height:0;padding:10px 0;gap:8px 16px}
   .ng-nav{gap:16px}
   .ng-nav a,.topbar .nav a,.header-links a{font-size:11.5px}
