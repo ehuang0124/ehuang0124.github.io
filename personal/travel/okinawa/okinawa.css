@@ -113,10 +113,12 @@ section[id]{scroll-margin-top:84px}
   border-bottom:1px solid var(--ng-line);
   padding:0;
 }
-.hero:before{content:"";position:absolute;inset:14px;border:1px solid rgba(29,28,25,.18);pointer-events:none}
+/* cover photo: sits under the scrim and the island artwork */
+.hero-photo{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .hero-waves{position:absolute;left:0;right:0;bottom:0;width:100%;height:58%;opacity:.2;pointer-events:none}
 .hero-waves path{stroke:var(--ng-navy) !important}
-.hero-art{position:absolute;right:2%;top:50%;transform:translateY(-50%);width:min(46vw,470px);opacity:.95;pointer-events:none}
+.hero-art{position:absolute;right:2%;top:50%;transform:translateY(-50%);width:min(46vw,470px);opacity:.42;pointer-events:none}
 .hero-art svg{width:100%;height:auto;overflow:visible}
 .hero-art .isl{fill:none;stroke:var(--ng-navy);stroke-width:1;opacity:.6}
 .hero-art .isld{fill:rgba(39,71,92,.06)}
