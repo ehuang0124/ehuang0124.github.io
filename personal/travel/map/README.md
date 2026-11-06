@@ -17,6 +17,7 @@ The account control and the backend status line sit in the sticky top bar on eve
 - The city index can be extended from the page. Optional latitude **and** longitude give an accurate pin; without coordinates, the pin is explicitly labelled approximate and placed at the chosen country's map center. Custom cities can be removed.
 - Every layer shows the **country flag** of each destination: countries, cities, U.S. states, and U.S./Canadian/Japanese parks inherit the flag of their country. Flags are bundled local SVGs (`flags/`, from `country-flag-icons`, MIT), so they render the same on every platform and need no network. The five disputed or unassigned catalogue entries with no ISO 3166-1 code (Somaliland, Northern Cyprus, Siachen Glacier) deliberately show no flag.
 - Without a configured project, data stays in this browser's `localStorage` (`eva.travel.stamp-atlas.v1`), with the former Okinawa checklist kept separately as undated reminders. Signing in with the local passphrase is what unlocks stamping, custom cities, import and export. Export a versioned JSON backup, or import one to **merge** (not replace) existing visits and custom cities. Nothing is uploaded.
+- **Map colour follows the map, not the stamp.** Every shape wears the hue of its continent — Asia red, Europe blue, Africa gold, the Americas (North and South together) green, Oceania violet, the unassigned 極地海域 entry grey — and inside each hue four tones separate the shapes that sit side by side, so no two countries that share a border, no two U.S. states, and no two neighbouring city or park markers ever show the same colour. `palette.js` solves this once at load from the real border geometry (shared border vertices) and the real point positions; it takes about 40 ms, never persists, and always returns the same answer, so a place keeps its colour on every device. Stamping does not change a tone: an unstamped shape shows its step as a pale tint, a stamped one prints the same step solid, so the four-tone pattern survives stamping. The index rows repeat the same swatch, and the map legend names the five continent hues.
 - Text is set via `textContent` rather than interpolating user input into markup; imported backups are schema-checked and sanitized.
 
 ## Postcard plates
@@ -109,6 +110,14 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-stamp-atlas.cjs
 ```
 
 Or supply `CHROMIUM_PATH` pointing to a working Chromium executable. The browser test covers desktop/mobile, hover-only map labels, region navigation, map/list selections, zoom, month-only impressions, legacy date migration, duplicate prevention, delete, persistence, custom cities, export/import, navigation, overflow, the plate caption/tone groups and the specimen index. The existing `scripts/test-interactive-regions.cjs` checks the three Japan itinerary maps independently.
+
+The map colour rules have their own dependency-free Node test:
+
+```sh
+node scripts/test-map-palette.cjs
+```
+
+It loads the real shape and place data and checks that every country, state, city and park gets a colour, that each continent keeps one hue, that no two shapes sharing a border (and no two neighbouring markers) reuse a tone inside that hue, that each large group uses all four tones, and that a reload reproduces the identical map.
 
 The plate library also has a dependency-free Node test:
 

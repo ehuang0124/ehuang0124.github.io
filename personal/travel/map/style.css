@@ -84,6 +84,11 @@ a{color:inherit}
 .board-total strong{color:var(--rust);font-size:20px}.board-slash{padding:0 6px;color:var(--ng-line)}.board-total small{font-size:8px;letter-spacing:.1em;margin-left:9px;color:var(--ng-muted)}
 
 /* Cartography */
+/* One hue per continent, four tones inside each hue (see palette.js).
+   Asia red, Europe blue, Africa gold, the Americas green, Oceania violet.
+   A stamped shape takes the tone its neighbours do not have, mixed with paper
+   white so the crimson ink and navy pins stay legible on top. U.S. states and
+   markers wear the tone of their own four-colour group. */
 .atlas-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(320px,.78fr);border-bottom:1px solid var(--line)}
 .map-column{display:flex;flex-direction:column;min-width:0;border-right:2px dashed var(--ng-line)}
 .map-surface{position:relative;isolation:isolate;min-height:510px;flex:1;background:var(--map);overflow:hidden;
@@ -97,9 +102,25 @@ a{color:inherit}
 .map-country.done{fill:var(--ng-red);stroke:var(--ng-paper);stroke-width:.9}.map-country.done:hover{fill:var(--ng-red)}
 .map-country.selected{fill:var(--ng-navy-soft);stroke:var(--ng-navy);stroke-width:1.7;filter:drop-shadow(0 1px 2px rgba(43,85,68,.23))}
 .map-country.selected.done{fill:var(--ng-red);stroke:#ffffff}
-.map-country.relevant{fill:var(--ng-paper)}.map-country.outside{opacity:.37;pointer-events:none}
-.country-imprint{pointer-events:none;opacity:.87}.country-imprint .imprint-outer{fill:none;stroke:var(--ng-red-dark);stroke-width:1.4;stroke-dasharray:2.4 1.4;vector-effect:non-scaling-stroke}.country-imprint .imprint-inner{fill:none;stroke:#ffffff;stroke-width:1;vector-effect:non-scaling-stroke}.country-imprint .imprint-dot{fill:#ffffff}
-.map-point{cursor:pointer}.map-point .point-hit{fill:transparent}.map-point .point-halo{fill:rgba(163,66,49,.09)}
+.map-country.outside{opacity:.37;pointer-events:none}
+/* Countries outside the active collection keep their continent hue, dimmed. */
+.map-country.relevant{fill:var(--ng-paper-deep)}
+.country-imprint{pointer-events:none;opacity:.87}.country-imprint[data-family] .imprint-outer{stroke:var(--ng-white)}
+.country-imprint .imprint-outer{fill:none;stroke:var(--ng-red-dark);stroke-width:1.4;stroke-dasharray:2.4 1.4;vector-effect:non-scaling-stroke}.country-imprint .imprint-inner{fill:none;stroke:#ffffff;stroke-width:1;vector-effect:non-scaling-stroke}.country-imprint .imprint-dot{fill:#ffffff}
+.map-point{cursor:pointer}.map-point .point-hit{fill:transparent}
+.map-point[data-family] .point-halo{fill:color-mix(in srgb,var(--family-tint) 14%,transparent)}
+/* A city pin prints its tone as a solid dot, so neighbouring cities never
+   look alike; the ring keeps the shape readable on any tint. */
+.map-point[data-family] .point-outer{fill:color-mix(in srgb,var(--family-tint) 50%,var(--ng-white));stroke:var(--family-deep)}
+.map-point[data-family][data-tone="1"] .point-outer{fill:color-mix(in srgb,var(--family-tint) 66%,var(--ng-white))}
+.map-point[data-family][data-tone="2"] .point-outer{fill:color-mix(in srgb,var(--family-tint) 84%,var(--ng-white))}
+.map-point[data-family][data-tone="3"] .point-outer{fill:var(--family-deep)}
+.map-point[data-family] .point-center{fill:var(--ng-white)}
+.map-point.done[data-family] .point-outer{stroke:var(--ng-white);stroke-width:2.2}
+.map-point.selected[data-family]:not(.done) .point-outer{stroke:var(--family-ink);stroke-width:2.6}
+.map-point.selected.done[data-family] .point-outer{fill:var(--family-ink);stroke:var(--ng-white);stroke-width:2.6}
+.map-point[data-family]:hover .point-outer{stroke:var(--family-ink);stroke-width:2.6}
+.map-point .point-halo{fill:rgba(163,66,49,.09)}
 .map-point .point-stamp{fill:none;stroke:var(--rust-dark);stroke-width:1.1;stroke-dasharray:2 1.6;vector-effect:non-scaling-stroke;opacity:0;pointer-events:none}.map-point.done .point-stamp{opacity:.85}
 .map-point .point-outer{fill:#ffffff;stroke:var(--ng-navy);stroke-width:1.7;vector-effect:non-scaling-stroke;transition:fill .18s,stroke .18s}
 .map-point .point-center{fill:var(--ng-navy)}.map-point.done .point-outer{fill:var(--ng-red);stroke:#ffffff}.map-point.done .point-center{fill:#ffffff}
@@ -114,6 +135,9 @@ a{color:inherit}
 .map-tooltip{position:absolute;z-index:10;padding:7px 10px;background:var(--ink);color:#ffffff;border-radius:2px;box-shadow:0 5px 16px rgba(33,48,43,.2);font-size:11px;line-height:1.4;white-space:normal;pointer-events:none;width:max-content;max-width:min(280px,calc(100% - 24px));overflow-wrap:anywhere}
 .map-legend{position:absolute;z-index:2;bottom:23px;left:25px;right:25px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:10px;color:var(--ng-ink-soft);pointer-events:none}
 .legend-pin{display:inline-block;width:9px;height:9px;background:#ffffff;border:1.5px solid var(--ng-navy);border-radius:50%;margin-right:5px;vertical-align:-1px}.legend-pin.done{background:var(--rust);border-color:#fff7e6}
+.legend-family{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 3px 0 9px;vertical-align:-1px;background:var(--family-tint)}
+.colour-legend{display:inline-flex;align-items:center;flex-wrap:wrap;gap:0;pointer-events:none}
+.colour-legend .legend-family:first-child{margin-left:0}
 .map-instruction{margin-left:auto;font:9px var(--mono);letter-spacing:.05em;color:var(--ng-muted)}
 .map-caption-line{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;padding:12px 20px;min-height:44px;font-size:10px;color:var(--ng-muted);background:var(--ng-paper)}
 .map-caption-line span:first-child{color:var(--ng-ink-soft)}.map-caption-line span:last-child{font:9px var(--mono);letter-spacing:.08em;color:var(--ng-muted)}
@@ -190,6 +214,9 @@ a{color:inherit}
 .item-status{display:grid;place-items:center;flex:none;margin-left:auto;width:22px;height:22px;border:1px solid var(--ng-line);color:var(--ng-muted);border-radius:50%;font-size:10px;line-height:1;transform:rotate(-12deg)}
 .place-item.done .item-status{border:2px solid var(--rust);color:var(--rust);font-weight:700;box-shadow:inset 0 0 0 2px #ffffff}
 .place-item.done .item-info strong{color:var(--rust-dark)}
+.item-tone{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;vertical-align:1px;background:color-mix(in srgb,var(--family-tint,var(--ng-muted)) var(--tile-swatch,34%),var(--ng-white));opacity:.55}
+.place-item.done .item-tone{opacity:1}
+.place-heading[data-family] .place-name-line:before{content:"";display:inline-block;width:10px;height:10px;margin-right:9px;border-radius:2px;vertical-align:2px;background:color-mix(in srgb,var(--family-tint) var(--tile-swatch),var(--ng-white))}
 .empty-results{grid-column:1/-1;padding:34px 8px;text-align:center;color:var(--ng-muted);font-size:12px}.empty-results strong{display:block;font:22px/1.5 var(--serif);color:var(--ng-ink-soft);margin-bottom:6px}
 .directory-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:15px;min-height:42px}.directory-bottom p{margin:0;font-size:10px;color:var(--ng-muted)}
 .add-city{border:1px dashed var(--ng-red);background:#ffffff;color:var(--rust-dark);border-radius:2px;padding:7px 12px;font-size:11px;font-weight:700}.add-city:hover{background:var(--ng-paper)}
@@ -263,6 +290,29 @@ a{color:inherit}
 .map-us-state.done{fill:var(--ng-red);stroke:var(--ng-paper)}
 .map-us-state.selected{fill:var(--ng-navy-soft);stroke:var(--ng-navy);stroke-width:2}
 .map-us-state.selected.done{fill:var(--ng-red);stroke:#ffffff}
+
+[data-family="asia"]{--family-tint:#c9202f;--family-deep:#8f1b26;--family-ink:#4f1015}
+[data-family="europe"]{--family-tint:#3f6fa8;--family-deep:#2b4f7a;--family-ink:#17304c}
+[data-family="africa"]{--family-tint:#b8862a;--family-deep:#8a6118;--family-ink:#4f370c}
+[data-family="americas"]{--family-tint:#3f7d5c;--family-deep:#2c5a41;--family-ink:#173426}
+[data-family="oceania"]{--family-tint:#7b5fa0;--family-deep:#5a4179;--family-ink:#33254a}
+[data-family="ocean"]{--family-tint:#98a099;--family-deep:#6d746e;--family-ink:#424742}
+/* Four steps of one hue. Land stays pale until it is stamped, then the same
+   step prints solid, so the four-colour pattern survives stamping. */
+[data-family],[data-tone]{--tile-light:28%;--tile-solid:75%;--tile-swatch:42%}
+[data-tone="1"]{--tile-light:42%;--tile-solid:85%;--tile-swatch:62%}
+[data-tone="2"]{--tile-light:56%;--tile-solid:93%;--tile-swatch:80%}
+[data-tone="3"]{--tile-light:70%;--tile-solid:100%;--tile-swatch:100%}
+.map-country[data-family],.map-us-state[data-family]{
+  fill:color-mix(in srgb,var(--family-tint) var(--tile-light),var(--ng-white));
+  stroke:var(--ng-white);stroke-width:.7}
+.map-country.done[data-family],.map-us-state.done[data-family]{
+  fill:color-mix(in srgb,var(--family-tint) var(--tile-solid),var(--ng-white));
+  stroke:var(--ng-white);stroke-width:1}
+.map-country.selectable[data-family]:hover,.map-us-state.selectable[data-family]:hover{fill:color-mix(in srgb,var(--family-tint) 24%,var(--ng-white))}
+.map-country.done[data-family]:hover,.map-us-state.done[data-family]:hover,
+.map-country.selected.done[data-family],.map-us-state.selected.done[data-family]{fill:var(--family-deep)}
+.map-country.selected[data-family]:not(.done),.map-us-state.selected[data-family]:not(.done){fill:var(--ng-navy-soft);stroke:var(--ng-navy)}
 
 .legend-state{display:inline-block;width:10px;height:10px;background:var(--ng-paper);border:1px solid var(--ng-muted);margin-right:5px;vertical-align:-1px}
 
