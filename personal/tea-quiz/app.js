@@ -89,7 +89,7 @@ const S = {
     shareHint: '分享連結只包含你的答案，不含任何個人資料。',
     profileBtn: '風味偏好',
     profileSheetTitle: '你的風味偏好',
-    deckGuide: '3 款推薦：用下方按鈕一張一張看',
+    deckGuide: '左右滑動查看 3 款推薦',
     deckAria: '推薦茶款卡牌',
     stepsAria: '選擇第幾款',
     prevTea: '上一款',
@@ -173,7 +173,7 @@ const S = {
     shareHint: 'The shared link contains only your answers, no personal data.',
     profileBtn: 'Profile',
     profileSheetTitle: 'Your flavour profile',
-    deckGuide: 'Three teas — one card at a time',
+    deckGuide: 'Swipe left or right to explore three teas',
     deckAria: 'Recommended teas',
     stepsAria: 'Choose a card',
     prevTea: 'Previous',
@@ -376,12 +376,17 @@ function openTea(id, { fromResult = false } = {}) {
   document.getElementById('sheet-title').textContent = L(tea.nameZh, tea.nameEn);
   document.getElementById('sheet-ja').textContent = tea.nameJa;
   const body = document.getElementById('sheet-body');
+  body.replaceChildren(...teaDetails(tea, fromResult));
+  openSheet();
+}
+
+function teaDetails(tea, fromResult = false) {
   // 結果卡牌開啟的詳情維持精簡；從茶款目錄進入時仍保留這些資料。
   const caffeineAndBrew = fromResult ? [] : [
     el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
     el('div', { class: 'rc-section' }, el('h4', {}, t('brewTitle')), brewBlock(tea))
   ];
-  body.replaceChildren(...[
+  return [
     el('figure', { class: 'sheet-media' },
       el('img', {
         src: familyImage(tea),
@@ -401,8 +406,7 @@ function openTea(id, { fromResult = false } = {}) {
     ...caffeineAndBrew,
     el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
     sourceBlock(tea)
-  ]);
-  openSheet();
+  ];
 }
 
 /* ---------------- 首頁 ---------------- */
@@ -631,21 +635,8 @@ function roleLabel(role) {
   return t('roleExplore');
 }
 
-/* ---------------- 結果 ----------------
- * 一次只呈現一張卡牌：整頁停在一個視窗高度內，不必往下滑。
- * 由下方按鈕（上一款／下一款／1·2·3）逐張看完 Top 3；
- * 卡牌聚焦茶名、茶類、風味與香氣，讓結果保持簡潔。
- */
-const deck = {
-  total: 0,
-  index: 0,
-  cards: [],
-  dots: [],
-  prev: null,
-  next: null,
-  status: null,
-  results: []
-};
+/* 一次顯示一張完整茶款詳情，左右滑動切換推薦。 */
+const deck = { total: 0, index: 0, cards: [], dots: [], status: null, results: [] };
 
 function roleHint(role) {
   if (role === 'top1') return t('roleHintTop1');
@@ -667,39 +658,13 @@ function profileCard(row, index) {
     'aria-labelledby': titleId,
     'data-step': String(index)
   },
-    el('div', { class: 'pc-media' },
-      el('img', {
-        src: familyImage(tea),
-        alt: t('imgAlt', TEA_FAMILIES[tea.family][state.lang]),
-        width: '1264', height: '848', decoding: 'async'
-      }),
-      el('span', { class: 'pc-rank' }, el('span', { class: 'n' }, String(index + 1)), roleLabel(role))
-    ),
-    el('div', { class: 'pc-body' },
+    el('div', { class: 'pc-body result-detail' },
+      el('p', { class: 'result-rank' }, `${index + 1} · ${roleLabel(role)}`),
       el('h2', { class: 'pc-title', id: titleId }, L(tea.nameZh, tea.nameEn)),
       el('p', { class: 'pc-ja', lang: 'ja' }, tea.nameJa),
       el('p', { class: 'pc-role' }, roleHint(role)),
-      el('p', { class: 'pc-meta' },
-        `${L(tea.regionZh, tea.regionEn)} ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
-      el('p', { class: 'pc-copy' }, L(tea.copyZh, tea.copyEn)),
-      el('div', { class: 'tags pc-tags' }, tasteTags(tea).slice(0, 3)),
-      el('div', { class: 'aroma-tags pc-aroma' },
-        tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
-      el('div', { class: 'pc-foot' },
-        el('button', { type: 'button', class: 'btn secondary small', onclick: () => openTea(tea.id, { fromResult: true }) },
-          t('fullInfo'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'))
-      )
+      ...teaDetails(tea, true)
     )
-  );
-}
-
-function paintDeckNext() {
-  const last = deck.index === deck.total - 1;
-  deck.next.classList.toggle('share', last);
-  deck.next.setAttribute('aria-label', last ? t('shareShort') : t('nextTea'));
-  deck.next.replaceChildren(
-    el('span', { class: 'deck-btn-text' }, last ? t('shareShort') : t('nextTea')),
-    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, last ? '↗' : '→')
   );
 }
 
@@ -722,12 +687,9 @@ function setStep(index) {
   });
 
   deck.dots.forEach((dot, i) => {
-    if (i === next) dot.setAttribute('aria-current', 'step');
-    else dot.removeAttribute('aria-current');
+    dot.classList.toggle('is-active', i === next);
   });
 
-  deck.prev.disabled = next === 0;
-  paintDeckNext();
   const row = deck.results[next];
   deck.status.textContent = t('deckStatus', next + 1, deck.total, L(row.tea.nameZh, row.tea.nameEn));
 }
@@ -737,38 +699,26 @@ function buildDeck(report) {
   deck.results = report.results;
   deck.cards = report.results.map((row, i) => profileCard(row, i));
 
-  deck.dots = report.results.map((row, i) => el('button', {
-    type: 'button', class: 'step-dot',
-    'aria-label': t('goTo', i + 1, L(row.tea.nameZh, row.tea.nameEn)),
-    onclick: () => setStep(i)
-  }, String(i + 1)));
-
-  deck.prev = el('button', {
-    type: 'button', class: 'btn secondary small deck-prev',
-    'aria-label': t('prevTea'),
-    onclick: () => setStep(deck.index - 1)
-  },
-    el('span', { class: 'deck-arrow', 'aria-hidden': 'true' }, '←'),
-    el('span', { class: 'deck-btn-text' }, t('prevTea'))
-  );
-
-  deck.next = el('button', {
-    type: 'button', class: 'btn small deck-next',
-    onclick: () => {
-      if (deck.index >= deck.total - 1) copy(shareUrl());
-      else setStep(deck.index + 1);
-    }
-  });
-
+  deck.dots = report.results.map(() => el('span', { class: 'deck-indicator' }));
   deck.status = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
 
-  const stage = el('div', { class: 'deck', role: 'group', 'aria-label': t('deckAria') }, deck.cards);
-  const nav = el('div', { class: 'deck-nav' },
-    deck.prev,
-    el('div', { class: 'deck-steps', role: 'group', 'aria-label': t('stepsAria') }, deck.dots),
-    deck.next
-  );
-  return { stage, nav };
+  const stage = el('div', { class: 'deck', role: 'group', 'aria-label': t('deckAria'), tabindex: '0' }, deck.cards);
+  let start = null;
+  stage.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    start = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  });
+  stage.addEventListener('pointerup', (event) => {
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.2) setStep(deck.index + (dx < 0 ? 1 : -1));
+  });
+  stage.addEventListener('pointercancel', () => { start = null; });
+  const indicators = el('div', { class: 'deck-indicators', 'aria-hidden': 'true' }, deck.dots);
+  return { stage, indicators };
+
 }
 
 function viewResults(code) {
@@ -814,7 +764,7 @@ function viewResults(code) {
 
   document.body.dataset.view = 'result';
   const profile = report.profile;
-  const { stage, nav } = buildDeck(report);
+  const { stage, indicators } = buildDeck(report);
 
   app.replaceChildren(
     el('section', { class: 'result-shell', 'aria-labelledby': 'result-heading' },
@@ -827,7 +777,7 @@ function viewResults(code) {
         el('strong', { class: 'deck-profile' }, L(profile.zh, profile.en)), ` · ${t('deckGuide')}`),
       stage,
       deck.status,
-      nav
+      indicators
     )
   );
 
