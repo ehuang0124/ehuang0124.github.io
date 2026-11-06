@@ -5,6 +5,7 @@
  */
 
 import { TEAS, TEA_FAMILIES, CAFFEINE_REFERENCE } from './data.js';
+import { JAPAN_PATH } from './japan-path.js';
 import {
   QUESTIONS, recommend, encodeAnswers, decodeAnswers, SCALE_LABELS
 } from './quiz.js';
@@ -334,6 +335,38 @@ function sourceBlock(tea) {
   );
 }
 
+/* Approximate locations, not boundaries or a claim about an individual product. */
+const ORIGINS = {
+  T01: [[136.55, 34.96]], T02: [[130.44, 31.38]], T03: [[130.56, 33.21]],
+  T04: [[129.99, 33.10]], T05: [[129.99, 33.10]], T06: [[138.09, 35.10]],
+  T07: [[138.01, 34.77]], T08: [[138.21, 34.96]], T09: [[135.80, 34.89]],
+  T10: [[137.06, 34.86]], T12: [[129.99, 33.10], [138.33, 34.95]]
+};
+function originMap(tea) {
+  const points = ORIGINS[tea.id] || [];
+  const markers = points.map(([lon, lat]) => {
+    const x = ((lon - 128) * 10).toFixed(1), y = ((46 - lat) * 12.5).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="6" class="map-halo"/><circle cx="${x}" cy="${y}" r="3" class="map-pin"/>`;
+  }).join('');
+  const note = points.length ? L('圓點為概略位置', 'Dots show approximate locations')
+    : tea.id === 'T11' ? L('日本各地，無單一產地', 'Made across Japan; no single origin')
+    : L('產地依商品標示，未標點', 'Origin varies by product; no location marked');
+  return el('figure', { class: 'origin-map' },
+    el('div', { class: 'map-art', 'aria-hidden': 'true', html: `<svg viewBox="0 0 180 200"><path d="${JAPAN_PATH}" class="map-land"/>${markers}</svg>` }),
+    el('figcaption', {}, el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
+      el('strong', {}, L(tea.regionZh, tea.regionEn)), el('small', {}, note))
+  );
+}
+
+const QUESTION_ART = [
+  ['◌', '〜', '◒', '●'], ['✧', '◉', '♨', '◌'], ['○', '◔', '◑'],
+  ['☁', '❧', '✿', '♨'], ['○', '◔', '◑', '●'], ['☾', '☼', '☀', '✧'], ['◡', '◷', '❄', '☕']
+];
+function teaArtwork(kind) {
+  return el('div', { class: `tea-art tea-art-${kind}`, 'aria-hidden': 'true' },
+    el('span', { class: 'tea-art-label' }, kind === 'quiz' ? 'A MOMENT FOR TEA' : 'YOUR CUP OF TEA'));
+}
+
 /* ---------------- 茶款詳情 ---------------- */
 function openTea(id) {
   const tea = TEAS.find((x) => x.id === id);
@@ -344,6 +377,7 @@ function openTea(id) {
   body.replaceChildren(
     el('p', { class: 'rc-region', style: 'margin-top:0' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
     el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
+    originMap(tea),
     el('p', { class: 'small muted' }, L(tea.processingZh, tea.processingEn)),
     el('div', { class: 'rc-section' }, el('h4', {}, t('flavourTitle')), el('div', { class: 'tags', style: 'margin-bottom:12px' }, tasteTags(tea)), tasteRows(tea.taste)),
     el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
@@ -498,6 +532,7 @@ function viewQuiz() {
     });
     const label = el('label', { class: 'option', for: id },
       el('span', { class: 'tick', 'aria-hidden': 'true' }, String.fromCharCode(65 + q.options.indexOf(option))),
+      el('span', { class: 'option-icon', 'aria-hidden': 'true' }, QUESTION_ART[i][q.options.indexOf(option)]),
       el('span', { class: 'label' }, L(option.zh, option.en))
     );
     group.append(input, label);
@@ -512,6 +547,7 @@ function viewQuiz() {
     : null;
 
   const section = el('section', { class: 'question', 'aria-labelledby': 'q-title' },
+    teaArtwork('quiz'),
     el('p', { class: 'qnum' }, `${t('qPrefix')} ${String(i + 1).padStart(2, '0')}`),
     el('h2', { id: 'q-title' }, L(q.zh, q.en)),
     q.hintZh ? el('p', { class: 'hint' }, L(q.hintZh, q.hintEn)) : null,
@@ -586,7 +622,8 @@ function resultCard(row, index) {
         el('span', { class: 'rc-ja', lang: 'ja' }, tea.nameJa)
       ),
       el('p', { class: 'rc-region' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
-      el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn))
+      el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
+      originMap(tea)
     ),
     el('div', { class: 'rc-body' },
       el('div', { class: 'rc-section' },
@@ -644,6 +681,7 @@ function viewResults(code) {
 
   const profile = report.profile;
   const header = el('section', { class: 'result-hero' },
+    teaArtwork('result'),
     el('p', { class: 'eyebrow' }, t('resultEyebrow')),
     el('h1', { style: 'font-size:clamp(26px,6.4vw,38px);margin-bottom:12px' },
       el('span', { style: 'display:block;font-family:var(--jf-serif)' }, L(profile.zh, profile.en)),
