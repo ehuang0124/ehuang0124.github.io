@@ -15,14 +15,14 @@ const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoM
 const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
-function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null } = {}) {
+function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null, profileResponse = null } = {}) {
   const state = { session: null, rpcCalls: [] };
   const chain = () => {
     const builder = {
       select() { return builder; }, order() { return builder; }, limit() { return builder; },
       eq() { return builder; }, in() { return builder; }, update() { return builder; },
       delete() { return builder; }, upsert() { return builder; },
-      maybeSingle() { return Promise.resolve({ data:null, error:null }); },
+      maybeSingle() { return Promise.resolve(profileResponse || { data:null, error:null }); },
       single() { return Promise.resolve({ data:null, error:null }); },
       then(resolveFn, rejectFn) { return Promise.resolve({ data:[], error:null }).then(resolveFn, rejectFn); }
     };
@@ -35,12 +35,12 @@ function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null,
       async signUp() {
         if (signupResponse) return signupResponse;
         if (!signedUp) return { data:{ user:null, session:null }, error:{ message:'could not create the personal account' } };
-        state.session = { access_token:'token', user:{ id:'user-device' } };
+        state.session = { access_token:'token', user:{ id:'user-device', email:'eva@example.com', email_confirmed_at:'2026-11-06T00:00:00Z' } };
         return { data:{ user:state.session.user, session:state.session }, error:null };
       },
       async signInWithPassword() {
         if (signInError) return { data:{ user:null, session:null }, error: signInError };
-        state.session = { access_token:'token', user:{ id:'user-personal' } };
+        state.session = { access_token:'token', user:{ id:'user-personal', email:'eva@example.com', email_confirmed_at:'2026-11-06T00:00:00Z' } };
         return { data:{ session:state.session, user:state.session.user }, error:null };
       },
       async signOut() { state.session = null; return { error:null }; }
@@ -200,7 +200,7 @@ async function load({ config = CLOUD, clientOptions, url = 'https://eva.example/
 
   // Obfuscated duplicate-signup responses are not email-confirmation errors.
   {
-    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[] }, session:null }, error:null } } });
+    const page = await load({ clientOptions:{ signupResponse:{ data:{ user:{ identities:[] }, session:null }, error:null }, profileResponse:{ data:{ id:'user-personal' }, error:null } } });
     await page.signIn();
     assert(page.$('#account-error').textContent.includes('已註冊'));
     assert(!page.$('#account-error').textContent.includes('Confirm email'));

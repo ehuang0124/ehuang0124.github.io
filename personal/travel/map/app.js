@@ -375,8 +375,14 @@
     legacyNote.hidden = place.category !== 'okinawa' || !legacyOkinawaVisits().includes(place.id);
     legacyNote.textContent = legacyNote.hidden ? '' : '舊版沖繩清單曾標記或預設為去過（未記錄月份）。請確認後選擇實際到訪月份，再蓋章保存。';
     const face = $('#stamp-face');
+    const hasOwnStamp = signedIn() && ownVisits(place).length > 0;
+    const ownerName = String(atlasAccount.user?.name || '旅').trim();
+    const ownerInitial = ([...ownerName][0] || '旅').toUpperCase();
     face.classList.toggle('pending', stamps.length === 0);
+    face.classList.toggle('personalized', hasOwnStamp);
     face.classList.toggle('long-name', [...place.zh].length > 6);
+    $('#stamp-owner-seal').hidden = !hasOwnStamp;
+    $('#stamp-owner-initial').textContent = hasOwnStamp ? ownerInitial : '';
     $('#stamp-face-name').textContent = place.zh;
     renderStampArt(place);
     $('#stamp-face-date').textContent = printedDate(stamps.at(-1) || (validDate(dateInput.value) ? dateInput.value : ''));
@@ -477,6 +483,8 @@
     manage.hidden = false;
     manage.disabled = !editable();
     const ids = activeCompanionIds();
+    $('#companion-manage-label').textContent = ids.length ? '編輯同行旅伴' : '標記旅伴';
+    $('.companion-manage-plus').textContent = ids.length ? '→' : '＋';
     renderCompanionChips(ids);
     if (!others.length) note.textContent = '目前還沒有其他旅人登入過這個地圖；他們登入後就能一起標記。';
     else if (!ids.length) note.textContent = '你可以標記這趟旅程的同行者，蓋章後會一起顯示在共同旅程裡。';
@@ -991,16 +999,34 @@
   const accountMenu = $('#account-menu');
   const accountMenuButton = $('#account-menu-button');
 
-  function openAccountDialog(message = '') {
+  let verificationAddress = '';
+  function showEmailVerification(email) {
+    verificationAddress = String(email || verificationAddress || '').trim();
+    $('#local-signin').hidden = true;
+    $('#code-signin').hidden = true;
+    $('#account-demo').hidden = true;
+    $('#email-verification').hidden = false;
+    $('#account-sync-note').hidden = true;
+    $('#account-dialog-title').textContent = '驗證電子郵件';
+    $('#verification-email').textContent = verificationAddress;
+    $('#verification-feedback').textContent = '';
+    $('#account-error').textContent = '';
+    if (!accountDialog.open) accountDialog.showModal();
+    setTimeout(() => $('#verification-continue')?.focus(), 0);
+  }
+  function openAccountDialog(message = '', mode = 'login') {
     const cloud = atlasAccount.mode === 'cloud';
     const local = atlasAccount.mode === 'local';
+    const creating = cloud && mode === 'create';
     const gate = Boolean(account?.localGateAvailable?.());
+    $('#email-verification').hidden = true;
+    $('#verification-feedback').textContent = '';
     const localBlock = $('#local-signin');
     if (localBlock) localBlock.hidden = !(local && gate);
     // Open returning-user login by default; registration has its own view.
     const codeBlock = $('#code-signin');
     if (codeBlock) codeBlock.hidden = !cloud;
-    if (cloud) setAccountMode(false);
+    if (cloud) setAccountMode(creating);
     if (cloud && $('#traveller-name') && !$('#traveller-name').value) {
       $('#traveller-name').value = account?.lastTravellerName?.() || '';
     }
@@ -1012,7 +1038,7 @@
       : atlasAccount.mode === 'demo'
         ? '以示範旅人身分登入；資料只存在這個瀏覽器。'
         : '用通行碼登入；戳章存在這個瀏覽器，不會上傳。';
-    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = '登入';
+    if ($('#account-dialog-title')) $('#account-dialog-title').textContent = creating ? '建立帳號' : '登入';
     if ($('#account-sync-note')) {
       $('#account-sync-note').textContent = signInNote;
       $('#account-sync-note').hidden = cloud;
@@ -1023,8 +1049,13 @@
       $('#account-error').textContent = '目前還不能登入，請向網站擁有者取得登入方式。';
     }
     if (!accountDialog.open) accountDialog.showModal();
-    if (cloud) setTimeout(() => $('#account-email')?.focus(), 60);
-    else if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 60);
+    if (cloud) setTimeout(() => $(creating ? '#account-password' : '#account-email')?.focus(), 0);
+    else if (local && gate) setTimeout(() => $('#passphrase')?.focus(), 0);
+  }
+  function showRegistrationCompletion(email) {
+    openAccountDialog('', 'create');
+    if (email) $('#account-email').value = String(email);
+    $('#create-account-note').textContent = '電子郵件已驗證。請輸入個人密碼與邀請碼，完成帳號建立。';
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
@@ -1065,7 +1096,7 @@
     if (atlasAccount.mode === 'demo') return '資料來源：示範資料';
     return '資料來源：此瀏覽器';
   }
-  const STAMP_BUTTON_MARKUP = '<span aria-hidden="true">✳</span> 蓋下這一章 <span aria-hidden="true">↗</span>';
+  const STAMP_BUTTON_MARKUP = '<svg class="stamp-tool-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-button-label">蓋下這一章</span><span class="stamp-button-arrow" aria-hidden="true">↗</span>';
   function applyPermission() {
     const locked = !editable();
     const button = $('#stamp-button');
@@ -1266,6 +1297,10 @@
       atlasAccount.lastSyncAt = status.lastSyncAt;
       refreshStatus();
     });
+    account.on('registration', detail => {
+      if (detail?.stage === 'complete') showRegistrationCompletion(detail.email);
+      else if (detail?.stage === 'verify') showEmailVerification(detail.email);
+    });
     account.on('error', message => {
       // For the owner, the raw detail is in the console; the page stays plain.
       if (message) console.warn('account transport error', message);
@@ -1332,6 +1367,10 @@
     // Keep a locally invalid form editable; clear the password after any
     // request actually reached Auth, regardless of success or failure.
     if (!result?.field) $('#account-password').value = '';
+    if (result?.verificationRequired) {
+      showEmailVerification(result.email || $('#account-email').value);
+      return;
+    }
     if (!result || result.ok !== true) {
       showAccountError(result?.reason || '無法登入。', result?.field || (creating ? '#access-code' : '#account-password'));
       return;
@@ -1353,6 +1392,8 @@
       $(id).disabled = !creating;
       $(id).required = creating;
     }
+    $('#create-account-note').hidden = !creating;
+    if (creating) $('#create-account-note').textContent = '送出後會收到驗證信；點擊信中的連結，再回來完成帳號建立。';
     if (changed) {
       $('#account-password').value = '';
       $('#access-code').value = '';
@@ -1367,6 +1408,23 @@
   accountDialog.addEventListener('close', () => {
     $('#account-password').value = '';
     $('#access-code').value = '';
+  });
+  $('#verification-continue').addEventListener('click', () => {
+    showRegistrationCompletion(verificationAddress);
+  });
+  $('#verification-resend').addEventListener('click', async () => {
+    const button = $('#verification-resend');
+    const feedback = $('#verification-feedback');
+    button.disabled = true;
+    feedback.textContent = '正在重新寄送…';
+    try {
+      const result = await account?.resendVerification?.(verificationAddress);
+      feedback.textContent = result?.ok ? '驗證信已重新寄出，請稍候片刻再查看信箱。' : (result?.reason || '暫時無法寄送，請稍後再試。');
+    } catch {
+      feedback.textContent = '暫時無法寄送，請稍後再試。';
+    } finally {
+      button.disabled = false;
+    }
   });
   $('#account-form').addEventListener('submit', event => {
     event.preventDefault();

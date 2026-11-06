@@ -12,11 +12,12 @@
 --   atlas_login_attempts  failed guesses, used to slow brute force down
 --
 -- Accounts
---   1. Supabase Auth verifies each traveller's personal email and password.
---   2. On creation only, atlas_redeem_code checks the invite's bcrypt hash
---      and creates the profile that RLS requires before any write.
---   3. Returning users call atlas_login, which requires an existing profile
---      and appends the login log without checking an invite or creating a profile.
+--   1. Supabase Auth verifies each traveller's personal email and password;
+--      new accounts must confirm ownership of the email address first.
+--   2. On creation only, atlas_redeem_code requires that confirmed address,
+--      checks the invite's bcrypt hash, and creates the profile required by RLS.
+--   3. Returning users call atlas_login, which requires a confirmed address and
+--      an existing profile, and never checks an invite or creates a profile.
 --   Rotate registration invites with atlas_rotate_code('your new code').
 --   Password length is enforced by Supabase Auth settings (minimum 7).
 --
@@ -103,7 +104,13 @@ stable
 security definer
 set search_path = public, extensions, pg_temp
 as $$
-  select exists (select 1 from public.profiles where id = auth.uid());
+  select exists (
+    select 1
+      from public.profiles as p
+      join auth.users as u on u.id = p.id
+     where p.id = auth.uid()
+       and u.email_confirmed_at is not null
+  );
 $$;
 
 grant execute on function public.atlas_is_traveller() to anon, authenticated;
@@ -181,6 +188,12 @@ begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
   end if;
+  if not exists (
+    select 1 from auth.users
+     where id = v_uid and email_confirmed_at is not null
+  ) then
+    return jsonb_build_object('ok', false, 'reason', 'email_unverified');
+  end if;
 
   begin
     v_headers := nullif(current_setting('request.headers', true), '')::jsonb;
@@ -255,6 +268,12 @@ declare
 begin
   if v_uid is null then
     return jsonb_build_object('ok', false, 'reason', 'no_session');
+  end if;
+  if not exists (
+    select 1 from auth.users
+     where id = v_uid and email_confirmed_at is not null
+  ) then
+    return jsonb_build_object('ok', false, 'reason', 'email_unverified');
   end if;
   select * into v_profile from public.profiles where id = v_uid;
   if not found then
