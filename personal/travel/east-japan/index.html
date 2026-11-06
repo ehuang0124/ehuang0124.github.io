@@ -43,7 +43,7 @@
 </header>
 
 <header class="hero">
-  <div class="hero-photo" id="hero-photo"><img id="hero-img" alt="幕末時代的江戶與黑船" decoding="async"></div>
+  <div class="hero-photo" id="hero-photo"><img id="hero-img" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Mount_Fuji_and_Miho_no_Matsubara_20170211.jpg/1920px-Mount_Fuji_and_Miho_no_Matsubara_20170211.jpg" alt="三保松原的松林與海，遠方是富士山" decoding="async" fetchpriority="high"></div>
   <span class="hero-frame" aria-hidden="true"></span>
   <div class="hero-inner">
     <div class="hero-copy">
@@ -56,7 +56,7 @@
     </div>
     <div class="hero-rail" aria-hidden="true"><span class="mag-tate">東海道・城と街道</span></div>
   </div>
-  <div class="hero-credit" id="hero-credit" style="display:none">圖片來源：Wikimedia Commons</div>
+  <div class="hero-credit" id="hero-credit">三保松原與富士山 ／ Suicasmo（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）</div>
 </header>
 
 <main class="wrap">
@@ -124,7 +124,8 @@
   <details class="credits">
     <summary>資料與圖片來源</summary>
     歷史資料：<a href="https://sunpucastle.jp/" target="_blank" rel="noopener">駿府城</a> · <a href="https://www.city.shimoda.shizuoka.jp/" target="_blank" rel="noopener">下田市</a> · <a href="https://nagoyajo.city.nagoya.jp/" target="_blank" rel="noopener">名古屋城</a> · <a href="https://www.atsutajingu.jp/" target="_blank" rel="noopener">熱田神宮</a> · <a href="https://www.isejingu.or.jp/" target="_blank" rel="noopener">伊勢神宮</a><br>
-    地圖：Natural Earth 10m 向量圖資 · 照片：Wikimedia Commons
+    地圖：Natural Earth 10m 向量圖資 · 照片：Wikimedia Commons<br>
+    封面：三保松原與富士山／<a href="https://commons.wikimedia.org/wiki/File:Mount_Fuji_and_Miho_no_Matsubara_20170211.jpg" target="_blank" rel="noopener noreferrer">Suicasmo</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>）。
   </details>
 </div>
 </footer>
@@ -397,31 +398,13 @@ function focus(id,scroll=false,zoom=true){
   }
 }
 
-async function commonsSearch(q,limit){
-  let url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent('filetype:bitmap '+q)+
-    '&gsrnamespace=6&gsrlimit='+limit+'&prop=imageinfo&iiprop=url&iiurlwidth=1400&format=json&origin=*';
-  let data=await(await fetch(url)).json();
-  return Object.values(data.query?.pages||{}).filter(p=>p.imageinfo?.[0]?.thumburl).map(p=>p.imageinfo[0].thumburl);
-}
-
-async function loadHero(){
+/* the cover photo is pinned in the markup; this only guards a failed load */
+function loadHero(){
   if(heroDone)return;
   heroDone=true;
-  const img=el('hero-img');
-  if(img.complete&&img.naturalWidth>0)return;
-  const queries=['Commodore Perry black ships 1853 Japan illustration','Edo period ukiyo print Tokyo castle'];
-  for(const q of queries){
-    try{
-      let list=await commonsSearch(q,10);
-      let pick=list.find(u=>!/\.(svg|png)$/i.test(u))||list[0];
-      if(pick){
-        img.onerror=()=>{img.style.display='none';el('hero-credit').style.display='none'};
-        img.onload=()=>{el('hero-credit').style.display='block'};
-        img.src=pick;
-        return;
-      }
-    }catch(err){}
-  }
+  const img=el('hero-img'),credit=el('hero-credit');
+  if(!img)return;
+  img.onerror=()=>{img.remove();if(credit)credit.style.display='none'};
 }
 
 async function wikiPhoto(title){
