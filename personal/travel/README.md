@@ -32,7 +32,7 @@ The landing page is the reference implementation of that brand. A tracked micro-
 
 `landing.css` no longer declares tokens of its own: it consumes `--ng-*` from `brand.css`, so one edit to the brand reaches the landing page, the two itinerary pages, 沖繩 and the atlas at once.
 
-Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, three photographic plates plus a Stamp Atlas callout), the 青島 quote band, 旅の断片, 寄一封明信片, and 型錄.
+Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, three photographic plates plus a Stamp Atlas callout), the 青島 quote band, 旅の断片, 寄一封明信片, and 型錄. 旅の断片 is a responsive four-place Kyushu index: each card links to the matching prefecture in `kyushu/?region=<key>#regions`. Unknown region keys fall back to Nagasaki.
 
 **One menu, not two.** `navigation.js` gives every travel page a single trigger: the sticky header's link row becomes one full-screen `MENU` dialog holding the four journeys (東海道, 九州, 沖繩, 世界蓋章), the page's own 頁面分類 links as chips, and a foot row (旅行首頁, 文字紀錄, Eva Huang). A page's section row is marked `data-page-sections` — it is the no-JavaScript fallback index and is folded into that dialog at load, so the landing page never shows a second menu stacked under the header. The hero's 往下閱讀 cue points at the first section (`#journeys`), not at the section row.
 
