@@ -7,10 +7,10 @@
 import { TEAS, TEA_FAMILIES, CAFFEINE_REFERENCE } from './data.js';
 import { JAPAN_PATH } from './japan-path.js';
 import {
-  QUESTIONS, recommend, encodeAnswers, decodeAnswers, SCALE_LABELS
+  QUESTIONS, recommend, encodeAnswers, decodeAnswers, SCALE_LABELS, AROMA_LABELS, sanitizeAnswers, missingRequired
 } from './quiz.js';
 
-const STORE = 'tea.quiz.answers.v1';
+const STORE = 'tea.quiz.answers.v2';
 const app = document.getElementById('app');
 const sheet = document.getElementById('sheet');
 const toastEl = document.getElementById('toast');
@@ -24,16 +24,12 @@ const state = {
 /* ---------------- 文案 ---------------- */
 const S = {
   zh: {
-    heroEyebrow: '7 題 · 2 分鐘 · 不需要註冊',
     heroTitle: '找到適合你的<br><em>日本茶</em>。',
-    heroLede: '從入口的柔滑、茶香，到喝完的餘韻，找一杯屬於你的茶。',
+    heroLede: '從靜岡的茶園、宇治的石臼，到鹿兒島的茶葉。用你熟悉的味道，找一杯屬於你的日本茶。',
     start: '開始選茶',
     explore: '直接探索茶種',
-    heroCap: '茶湯、茶田與器皿：先描述口感，再談茶種。',
-    value1: '不用懂茶名：7 題問你想要的稠滑、甘甜、澀度與香氣。',
-    value2: '三款茶，各自附上推薦原因、沖泡比例，還有在茶店說得出口的日文。',
-    value3: '咖啡因只回答「含／經證實無／未知」，不估算、不猜。',
-    catalogLink: '看全部茶款 →',
+    heroCap: '茶園與茶葉的真實風景。照片經裁切、縮圖，依原授權使用。',
+    catalogLink: `看全部 ${TEAS.length} 款茶 →`,
     progress: (i, n) => `第 ${i} 題／共 ${n} 題`,
     qPrefix: 'QUESTION',
     next: '下一題',
@@ -44,11 +40,11 @@ const S = {
     caffeineWhy: '選「必須無咖啡因」時，只會留下包裝明確標示「ノンカフェイン／カフェインレス」的商品；玄米茶、焙茶、冠茶都不算。沒有符合商品時，我們不會放寬條件。',
     resultEyebrow: '你的風味輪廓',
     resultTitle: '你的風味輪廓',
-    resultLede: '以下是你的偏好，不是化驗值；分數 0–5 是你想要的口感位置。',
+    resultLede: '以下是你選的風味方向，不是化驗值；未回答的部分以中間值呈現。',
     tasteTitle: '偏好雷達',
     top1: '最推薦',
     top2: '相似路線',
-    top3: '探索不同路線',
+    top3: '另一種相近風格',
     roleExplore: '探索推薦',
     whyTitle: '推薦原因',
     flavourTitle: '風味標籤',
@@ -82,7 +78,7 @@ const S = {
     sec: '秒',
     perLabel: '每份',
     catalogTitle: '直接探索茶種',
-    catalogLede: '十三款茶，依口感主軸排列。不想做測驗也可以直接看。',
+    catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
     filterAll: '全部',
     countLabel: (n) => `${n} 款茶`,
     sourceLabel: '資料來源',
@@ -96,16 +92,12 @@ const S = {
     foot: '風味分數是編輯標籤，不是化驗值；咖啡因數字是官方標準浸出液的類別參考值，不能當作同容量實際攝取量比較。'
   },
   en: {
-    heroEyebrow: '7 questions · 2 minutes · no sign-up',
     heroTitle: 'Find the Japanese tea<br>that fits <em>you</em>.',
-    heroLede: 'From the first silky sip to the finish — find the cup that is yours.',
+    heroLede: 'Tea fields in Shizuoka, a stone mill in Uji, leaves from Kagoshima. Find your Japanese tea through flavours you already know.',
     start: 'Start the quiz',
     explore: 'Browse the teas',
-    heroCap: 'Texture first, tea names later.',
-    value1: 'No tea knowledge needed: 7 questions about texture, sweetness, astringency and aroma.',
-    value2: 'Three teas, each with a reason, a brew ratio, and the words to ask for it in Japanese.',
-    value3: 'Caffeine is answered as contains / verified caffeine-free / unknown — never guessed.',
-    catalogLink: 'See all 13 teas →',
+    heroCap: 'Real tea gardens and leaves. Photographs cropped and resized under their original licences.',
+    catalogLink: `See all ${TEAS.length} teas →`,
     progress: (i, n) => `Question ${i} of ${n}`,
     qPrefix: 'QUESTION',
     next: 'Next',
@@ -116,11 +108,11 @@ const S = {
     caffeineWhy: 'Choosing “must be caffeine-free” keeps only products whose packaging states ノンカフェイン / カフェインレス. Genmaicha, hōjicha and kabusecha never count. If nothing qualifies, we do not loosen the rule.',
     resultEyebrow: 'Your flavour profile',
     resultTitle: 'Your flavour profile',
-    resultLede: 'These are your preferences, not measurements. 0–5 is where you want the tea to sit.',
+    resultLede: 'Your chosen flavour direction, not measurements. Unanswered dimensions sit at the midpoint.',
     tasteTitle: 'Preference radar',
     top1: 'Best match',
     top2: 'Similar route',
-    top3: 'Different direction',
+    top3: 'A neighbouring style',
     roleExplore: 'Sideways pick',
     whyTitle: 'Why this one',
     flavourTitle: 'Flavour tags',
@@ -154,7 +146,7 @@ const S = {
     sec: 's',
     perLabel: 'per serving',
     catalogTitle: 'Browse the teas',
-    catalogLede: 'Thirteen teas ordered by their texture. No quiz required.',
+    catalogLede: `${TEAS.length} teas ordered by texture, including ${TEAS.filter((tea) => tea.family === 'wakoucha').length} wakoucha from light honeyed cups to milk-tea styles.`,
     filterAll: 'All',
     countLabel: (n) => `${n} teas`,
     sourceLabel: 'Sources',
@@ -301,10 +293,19 @@ function purchaseBlock(tea) {
   );
 }
 
+function sourceName(url) {
+  const host = new URL(url).hostname;
+  const names = {
+    'www.maff.go.jp': '農林水産省', 'www.oguri-farm.com': '小栗農園',
+    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',
+    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'
+  };
+  return names[host] || host;
+}
 function sourceBlock(tea) {
   return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },
     `${t('sourceLabel')}：`,
-    tea.sources.map((url, i) => el('a', { href: url, target: '_blank', rel: 'noreferrer' }, i === 0 ? '農林水産省' : url)),
+    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),
     ` ・ ${t('editorialNote')}`
   );
 }
@@ -314,7 +315,9 @@ const ORIGINS = {
   T01: [[136.55, 34.96]], T02: [[130.44, 31.38]], T03: [[130.56, 33.21]],
   T04: [[129.99, 33.10]], T05: [[129.99, 33.10]], T06: [[138.09, 35.10]],
   T07: [[138.01, 34.77]], T08: [[138.21, 34.96]], T09: [[135.80, 34.89]],
-  T10: [[137.06, 34.86]], T12: [[129.99, 33.10], [138.33, 34.95]]
+  T10: [[137.06, 34.86]], T12: [[138.22, 34.74]],
+  T14: [[138.31, 35.02]], T15: [[138.22, 34.74]], T16: [[130.55, 31.50]],
+  T17: [[135.94, 34.80]], T18: [[135.94, 34.80]]
 };
 function originMap(tea) {
   const points = ORIGINS[tea.id] || [];
@@ -330,15 +333,6 @@ function originMap(tea) {
     el('figcaption', {}, el('span', { class: 'map-kicker' }, L('產地 / ORIGIN', 'ORIGIN / JAPAN')),
       el('strong', {}, L(tea.regionZh, tea.regionEn)), el('small', {}, note))
   );
-}
-
-const QUESTION_ART = [
-  ['◌', '〜', '◒', '●'], ['✧', '◉', '♨', '◌'], ['○', '◔', '◑'],
-  ['☁', '❧', '✿', '♨'], ['○', '◔', '◑', '●'], ['☾', '☼', '☀', '✧'], ['◡', '◷', '❄', '☕']
-];
-function teaArtwork(kind) {
-  return el('div', { class: `tea-art tea-art-${kind}`, 'aria-hidden': 'true' },
-    el('span', { class: 'tea-art-label' }, kind === 'quiz' ? 'A MOMENT FOR TEA' : 'YOUR CUP OF TEA'));
 }
 
 /* ---------------- 茶款詳情 ---------------- */
@@ -366,60 +360,66 @@ function openTea(id) {
 function viewLanding() {
   document.body.dataset.view = 'home';
   const hero = el('section', { class: 'hero' },
-    el('p', { class: 'eyebrow' }, t('heroEyebrow')),
     el('h1', { html: t('heroTitle') }),
     el('p', { class: 'lede' }, t('heroLede')),
+    heroCollage(),
     el('div', { class: 'actions' },
       el('button', { type: 'button', class: 'btn', onclick: startQuiz }, t('start'), el('span', { class: 'arrow', 'aria-hidden': 'true' }, '→')),
       el('a', { class: 'btn secondary', href: '#/teas' }, t('explore'))
     ),
-    el('figure', { class: 'hero-figure' },
-      el('div', { html: cupArt() }),
-      el('figcaption', {}, t('heroCap'))
-    ),
-    el('ul', { class: 'value-list' },
-      ['value1', 'value2', 'value3'].map((key) => el('li', {}, t(key)))
+    el('p', { class: 'hero-routes' },
+      el('a', { href: '#/teas/sencha' }, L('煎茶・茶園', 'Sencha · tea fields')),
+      el('span', { 'aria-hidden': 'true' }, '／'),
+      el('a', { href: '#/teas/matcha' }, L('抹茶', 'Matcha')),
+      el('span', { 'aria-hidden': 'true' }, '／'),
+      el('a', { href: '#/teas/wakoucha' }, L('和紅茶・產地與品種', 'Wakoucha · origins & cultivars'))
     )
   );
 
   app.replaceChildren(hero);
 }
 
-function cupArt() {
-  return `
-  <svg viewBox="0 0 780 320" role="img" aria-label="A cup of green tea with rising steam, drawn in fine lines">
-    <defs>
-      <linearGradient id="tea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#6E8C63"/><stop offset="1" stop-color="#3C5B40"/>
-      </linearGradient>
-      <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#C9B48C"/><stop offset="1" stop-color="#B69C70"/>
-      </linearGradient>
-    </defs>
-    <rect width="780" height="320" fill="#FBF9F3"/>
-    <g opacity=".5" stroke="#E5E1D6" stroke-width="1">
-      <path d="M0 236 H780"/><path d="M0 268 H780"/>
-    </g>
-    <ellipse cx="390" cy="250" rx="196" ry="26" fill="#EFEDE3"/>
-    <path d="M262 178 C258 232 306 258 390 258 C474 258 522 232 518 178 Z" fill="#FFFFFF" stroke="#D3CEBF"/>
-    <path d="M276 186 C274 226 312 246 390 246 C468 246 506 226 504 186 Z" fill="url(#tea)" opacity=".92"/>
-    <ellipse cx="390" cy="184" rx="118" ry="17" fill="#FFFFFF" stroke="#D3CEBF"/>
-    <ellipse cx="390" cy="184" rx="110" ry="12" fill="url(#tea)" opacity=".35"/>
-    <path d="M518 196 c34 4 52 20 44 38 -8 18 -32 22 -54 18" fill="none" stroke="#D3CEBF" stroke-width="3" stroke-linecap="round"/>
-    <g fill="none" stroke="#B69C70" stroke-width="2" stroke-linecap="round" opacity=".85">
-      <path d="M336 160 c-14 -18 12 -30 -2 -48 -10 -13 2 -24 6 -32"/>
-      <path d="M390 152 c-16 -22 14 -34 -2 -54 -9 -12 2 -22 5 -30"/>
-      <path d="M442 160 c-14 -18 12 -30 -2 -48 -10 -13 2 -24 6 -32"/>
-    </g>
-    <g stroke="#496B51" stroke-width="1.6" fill="none" opacity=".9">
-      <path d="M104 208 c0 -34 26 -60 58 -60 -2 34 -26 58 -58 60 Z" fill="#EDF1E9"/>
-      <path d="M104 208 c18 -6 34 -22 44 -44"/>
-      <path d="M676 214 c0 -30 22 -54 50 -54 -2 30 -23 52 -50 54 Z" fill="#EDF1E9"/>
-    </g>
-    <g fill="url(#gold)" opacity=".7">
-      <circle cx="640" cy="86" r="3"/><circle cx="664" cy="104" r="2"/><circle cx="118" cy="98" r="2"/>
-    </g>
-  </svg>`;
+const HERO_PHOTOS = [
+  {
+    file: 'hero-shizuoka.webp', width: 500, height: 333, class: 'photo-shizuoka',
+    zh: '靜岡・袋井茶園', en: 'Shizuoka · Fukuroi', kicker: 'SHIZUOKA',
+    altZh: '靜岡縣袋井市的茶園，整齊茶樹沿著坡地排列，茶園間立著防霜風扇。',
+    altEn: 'Rows of tea bushes on a slope in Fukuroi, Shizuoka, with frost-prevention fans.',
+    credit: 'MaedaAkihiko', url: 'https://commons.wikimedia.org/wiki/File:Tea-plantation_Shizuoka-Fukuroi.jpg'
+  },
+  {
+    file: 'hero-uji.webp', width: 900, height: 600, class: 'photo-uji',
+    zh: '京都・宇治抹茶', en: 'Kyoto · Uji matcha', kicker: 'UJI, KYOTO',
+    altZh: '京都宇治的傳統石臼正在研磨碾茶，細緻抹茶粉堆在石臼邊緣。',
+    altEn: 'A traditional stone mill grinding tencha in Uji, Kyoto, with fine matcha around its edge.',
+    credit: 'Derjochenmeyer', url: 'https://commons.wikimedia.org/wiki/File:Matcha_stone_mill_grinding_tencha_into_powder.jpg'
+  },
+  {
+    file: 'hero-kagoshima.webp', width: 800, height: 800, class: 'photo-kagoshima',
+    zh: '鹿兒島・煎茶葉', en: 'Kagoshima · Sencha', kicker: 'KAGOSHIMA',
+    altZh: '鹿兒島產さえみどり品種的深蒸煎茶乾葉，細長深綠茶葉堆在白色背景上。',
+    altEn: 'Dry deep-steamed Saemidori sencha leaves grown in Kagoshima, photographed on white.',
+    credit: 'Difference engine', url: 'https://commons.wikimedia.org/wiki/File:2017_Kagoshima_sencha.jpg'
+  }
+];
+function heroCollage() {
+  return el('figure', { class: 'hero-figure' },
+    el('div', { class: 'tea-collage', role: 'group', 'aria-label': L('日本茶產地照片拼貼', 'Japanese tea origins photo collage') },
+      HERO_PHOTOS.map((photo, index) => el('div', { class: `photo-tile ${photo.class}` },
+        el('img', { src: `/personal/tea-quiz/assets/${photo.file}`, width: photo.width, height: photo.height, alt: L(photo.altZh, photo.altEn), loading: 'eager', decoding: 'async' }),
+        el('span', { class: 'photo-number', 'aria-hidden': 'true' }, `0${index + 1}`),
+        el('span', { class: 'photo-mask', 'aria-hidden': 'true' },
+          el('small', {}, photo.kicker), el('strong', {}, L(photo.zh, photo.en)))
+      ))
+    ),
+    el('figcaption', {},
+      el('span', {}, t('heroCap')),
+      el('span', { class: 'photo-credits' },
+        HERO_PHOTOS.flatMap((photo, index) => [index ? ' · ' : '', el('a', { href: photo.url, target: '_blank', rel: 'noreferrer' }, photo.credit)]),
+        ' / ', el('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noreferrer' }, 'CC BY-SA 4.0')
+      )
+    )
+  );
 }
 
 /* ---------------- Quiz ---------------- */
@@ -443,8 +443,8 @@ function restore() {
     if (!raw) return;
     const data = JSON.parse(raw);
     if (data && typeof data === 'object') {
-      state.answers = data.answers || {};
-      state.index = Number.isInteger(data.index) ? data.index : 0;
+      state.answers = sanitizeAnswers(data.answers);
+      state.index = Number.isInteger(data.index) ? Math.max(0, Math.min(QUESTIONS.length - 1, data.index)) : 0;
     }
   } catch { /* ignore */ }
 }
@@ -474,7 +474,7 @@ function viewQuiz() {
   };
 
   /* 選項是一組 radio，但不畫任何 radio 圓點；群組名稱直接指向題目標題 */
-  const group = el('div', { class: 'options', role: 'radiogroup', 'aria-labelledby': 'q-title' });
+  const group = el('div', { class: 'options', role: 'radiogroup', 'aria-labelledby': 'q-title', 'aria-describedby': q.hintZh ? 'q-hint' : null });
   q.options.forEach((option) => {
     const id = `${q.id}-${option.id}`;
     const checked = state.answers[q.id] === option.id;
@@ -490,8 +490,8 @@ function viewQuiz() {
     });
     /* 整個選項就是一顆按鈕：不畫圓形 radio、不標 A/B/C，點下去就選好了。 */
     const label = el('label', { class: 'option', for: id },
-      el('span', { class: 'option-icon', 'aria-hidden': 'true' }, QUESTION_ART[i][q.options.indexOf(option)]),
-      el('span', { class: 'label' }, L(option.zh, option.en)),
+      el('span', { class: 'label' }, L(option.zh, option.en),
+        option.subZh ? el('span', { class: 'sub' }, L(option.subZh, option.subEn)) : null),
       el('span', { class: 'mark', 'aria-hidden': 'true' }, '✓')
     );
     /* 真正的 input 只留給鍵盤與螢幕閱讀器；焦點框只給鍵盤，滑鼠與觸控點選不留外框 */
@@ -503,7 +503,7 @@ function viewQuiz() {
   });
 
   // 只有咖啡因這題需要一段說明：它會改變候選集，必須先講清楚
-  const questionNote = q.id === 'q5'
+  const questionNote = q.key === 'caffeine'
     ? el('details', { class: 'why', style: 'margin-top:14px' },
         el('summary', {}, t('whyLabel')),
         el('p', { class: 'small', style: 'margin:8px 0 0' }, t('caffeineWhy'))
@@ -511,10 +511,9 @@ function viewQuiz() {
     : null;
 
   const section = el('section', { class: 'question', 'aria-labelledby': 'q-title' },
-    teaArtwork('quiz'),
     el('p', { class: 'qnum' }, `${t('qPrefix')} ${String(i + 1).padStart(2, '0')}`),
-    el('h2', { id: 'q-title' }, L(q.zh, q.en)),
-    q.hintZh ? el('p', { class: 'hint' }, L(q.hintZh, q.hintEn)) : null,
+    el('h2', { id: 'q-title', tabindex: '-1' }, L(q.zh, q.en)),
+    q.hintZh ? el('p', { class: 'hint', id: 'q-hint' }, L(q.hintZh, q.hintEn)) : null,
     group,
     questionNote
   );
@@ -529,7 +528,7 @@ function viewQuiz() {
         onclick: () => go(i - 1), disabled: i === 0 ? true : null
       }, '← ', t('prev')),
       q.optional
-        ? el('button', { type: 'button', class: 'skip', onclick: advance }, t('skip'))
+        ? el('button', { type: 'button', class: 'skip', onclick: () => { delete state.answers[q.id]; persist(); advance(); } }, t('skip'))
         : el('span', { class: 'skip', style: 'text-decoration:none' }, ''),
       // 選項按下會自動跳轉，此按鈕隱藏（不需手動按下一題）
       el('button', {
@@ -548,11 +547,12 @@ function viewQuiz() {
   if (optionList) optionList.scrollTop = 0;
 
   syncChecked();
-  const current = app.querySelector('input:checked');
-  if (current) current.focus({ preventScroll: true });
+  document.getElementById('q-title').focus({ preventScroll: true });
 }
 
 function advance() {
+  const q = QUESTIONS[state.index];
+  if (!q.optional && !state.answers[q.id]) return;
   if (state.index >= QUESTIONS.length - 1) { finish(); return; }
   go(state.index + 1);
 }
@@ -564,6 +564,8 @@ function go(index) {
 }
 
 function finish() {
+  const missing = missingRequired(state.answers);
+  if (missing.length) { go(QUESTIONS.findIndex((q) => q.id === missing[0])); return; }
   const code = encodeAnswers(state.answers);
   state.index = 0;
   persist();
@@ -589,6 +591,7 @@ function resultCard(row, index) {
         el('span', { class: 'rc-ja', lang: 'ja' }, tea.nameJa)
       ),
       el('p', { class: 'rc-region' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]}`),
+      el('p', { class: 'rc-cultivar' }, L('品種', 'Cultivar'), ' · ', el('span', { lang: 'ja' }, tea.cultivar)),
       el('p', { class: 'rc-copy' }, L(tea.copyZh, tea.copyEn)),
       originMap(tea)
     ),
@@ -599,7 +602,8 @@ function resultCard(row, index) {
       ),
       el('div', { class: 'rc-section' },
         el('h4', {}, t('flavourTitle')),
-        el('div', { class: 'tags' }, tasteTags(tea))
+        el('div', { class: 'tags' }, tasteTags(tea)),
+        el('div', { class: 'aroma-tags' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang])))
       ),
       el('div', { class: 'rc-section' }, el('h4', {}, t('caffeineTitle')), caffeineBlock(tea)),
       el('div', { class: 'rc-section' }, el('h4', {}, t('brewTitle')), brewBlock(tea)),
@@ -615,11 +619,11 @@ function resultCard(row, index) {
 
 function viewResults(code) {
   document.body.dataset.view = 'result';
-  const answers = Object.keys(state.answers).length ? state.answers : decodeAnswers(code);
-  if (answers) state.answers = answers;
+  const answers = decodeAnswers(code);
+  if (answers) { state.answers = answers; state.index = 0; persist(); }
 
-  /* 沒有任何可用答案（例如壞掉的分享連結）就不要假裝有結果。 */
-  if (!Object.keys(state.answers).length) {
+  /* 壞掉或舊版分享碼回首頁，不拿其他答案充數。 */
+  if (!answers) {
     if (location.hash !== '#/') location.replace('#/');
     viewLanding();
     return;
@@ -637,7 +641,7 @@ function viewResults(code) {
           el('div', { class: 'actions center' },
             el('button', {
               type: 'button', class: 'btn',
-              onclick: () => { state.answers.q5 = 'low'; viewResults(encodeAnswers(state.answers)); }
+              onclick: () => { state.answers.q7 = 'low'; persist(); const code = encodeAnswers(state.answers); location.hash = `#/result/${code}`; viewResults(code); }
             }, t('emptyAction')),
             el('a', { class: 'btn secondary', href: '#/quiz' }, t('editAnswers'))
           )
@@ -649,7 +653,6 @@ function viewResults(code) {
 
   const profile = report.profile;
   const header = el('section', { class: 'result-hero' },
-    teaArtwork('result'),
     el('p', { class: 'eyebrow' }, t('resultEyebrow')),
     el('h1', { style: 'font-size:clamp(26px,6.4vw,38px);margin-bottom:12px' },
       el('span', { style: 'display:block;font-family:var(--jf-serif)' }, L(profile.zh, profile.en)),
@@ -701,7 +704,7 @@ function viewCatalog() {
     families.map(([key, label]) =>
       el('button', {
         type: 'button', class: 'chip', 'aria-pressed': String(catalogFilter === key),
-        onclick: () => { catalogFilter = key; viewCatalog(); }
+        onclick: () => { catalogFilter = key; location.hash = key === 'all' ? '#/teas' : `#/teas/${key}`; viewCatalog(); }
       }, label)
     )
   );
@@ -755,7 +758,12 @@ function route() {
     viewResults(code);
     return;
   }
-  if (hash.startsWith('#/teas')) { viewCatalog(); return; }
+  if (hash.startsWith('#/teas')) {
+    const family = hash.split('/')[2];
+    if (family && Object.hasOwn(TEA_FAMILIES, family)) catalogFilter = family;
+    else if (!family) catalogFilter = 'all';
+    viewCatalog(); return;
+  }
   viewLanding();
 }
 
@@ -802,8 +810,8 @@ window.addEventListener('hashchange', () => {
 document.addEventListener('keydown', (event) => {
   if (!location.hash.startsWith('#/quiz')) return;
   if (document.activeElement?.tagName === 'INPUT') return;
-  if (event.key === 'ArrowLeft') { go(state.index - 1); }
-  if (event.key === 'ArrowRight') { go(state.index + 1); }
+  if (event.key === 'ArrowLeft') { event.preventDefault(); go(state.index - 1); }
+  if (event.key === 'ArrowRight') { event.preventDefault(); advance(); }
 });
 
 restore();
