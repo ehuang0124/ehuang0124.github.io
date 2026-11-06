@@ -32,7 +32,7 @@ GitHub Pages only serves files: there is no server process in this repository, s
 
 - **Follow [`SETUP-SUPABASE.md`](SETUP-SUPABASE.md)** to create the project, run the schema, set the access code, and write the two config values.
 - **`config.js` is the switch.** `supabaseUrl` + `supabaseAnonKey` → Supabase mode. Empty strings → browser-only mode with the `localGate` passphrase.
-- **You can see which one is live in three places:** the account menu (*已同步 / 本機通行碼*), the account dialog's 後端 line, and the footer's `資料來源:` line. In Supabase mode the footer prints the project host, e.g. `資料來源：Supabase（abcdefgh.supabase.co）`.
+- **You can see which one is live in two places:** the account menu status line and the account dialog / footer `資料來源:` line. Both only say, in plain language, whether records sync to the traveller's account or stay in this browser — the page never prints the project host or names the service. Setup steps never leave the repo: failures on the page are plain language, and raw errors go to the console.
 - **The data itself** is in the Supabase dashboard → **Table Editor** → `stamps`, `custom_cities`, `profiles`, and `atlas_logins` (one row per sign-in). Requests appear in the browser's Network panel as `https://<project>.supabase.co/rest/v1/...`.
 - **The access code** is never in this repository. `atlas_access` holds one bcrypt hash; rotate it with `select public.atlas_rotate_code('a new code');` in the SQL Editor. `atlas_access`, `atlas_logins`, and `atlas_login_attempts` have RLS on and no policies, so the public API cannot read them.
 - **If those two config lines are empty, no backend exists**: stamps are only in `localStorage` (`eva.travel.stamp-atlas.v1`), the site cannot enforce "only someone with the code can stamp", and nothing syncs.
@@ -80,7 +80,7 @@ Anyone who knows the passphrase can stamp **in their own browser**; their stamps
    It writes `supabaseUrl` / `supabaseAnonKey` into [`config.js`](config.js), refuses a `service_role` key, and `--check` reports whether the anon key works, email sign-up is open with confirmation off, a code is set, and the `stamps` table exists. `--disconnect` returns the page to browser-only mode. The anon key is public by design; RLS is the access control.
 5. Optional: run `NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-accounts.cjs` and `node scripts/test-atlas-auth-errors.cjs` to check the page against an in-memory double of PostgREST, RLS, Supabase sessions, and realtime.
 
-Misconfiguration is surfaced in the page rather than the console: a wrong code, a throttled address, a project with no code set, missing tables or functions, a project that still demands e-mail confirmation, a wrong key, and being offline each get their own sentence naming the next dashboard step (`scripts/test-atlas-auth-errors.cjs`).
+Misconfiguration is answered in plain language on the page (never naming dashboard steps, SQL, or file paths); the raw error goes to the browser console for the owner. A wrong password, a wrong code, a throttled address, an unapproved account, missing tables or functions, an e-mail block, and being offline each get their own sentence (`scripts/test-atlas-auth-errors.cjs`).
 
 The vendored `vendor/supabase.js` is [`@supabase/supabase-js@2.119.0`](https://github.com/supabase/supabase-js) UMD build (MIT, see `vendor/LICENSE-supabase-js.txt`). It is loaded only to keep the page build-free; when no project is configured the client is never created.
 
@@ -129,7 +129,7 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules node scripts/test-atlas-demo-mode.cj
 ```
 
 - `test-atlas-local-mode.cjs` proves the unconfigured page keeps its records in the browser, refuses to stamp without the passphrase, rejects a wrong passphrase, shows country flags, and prints the data source in the footer.
-- `test-atlas-auth-errors.cjs` loads the page with the `?error=` / `#error=` URLs Supabase redirects back with, and checks the message names the right dashboard step and is cleaned from the address bar.
+- `test-atlas-auth-errors.cjs` drives the sign-in form against an in-memory client and checks every failure (wrong password, wrong code, throttling, unapproved login, missing setup, offline) is answered with plain language and no backend internals.
 - `test-atlas-accounts.cjs` runs the page against an in-memory Supabase double: the access code, the login log, personal-password protection, cross-device identity, companion stamping, cloud delete, realtime inserts on a second device, row-level security on other people's rows, sessions that never redeemed the code, and the demo mode.
 - `test-atlas-demo-mode.cjs` walks the demo: sign-in, companion stamps, switching demo identity, a live cross-tab update, and the read-only visitor a signed-out browser sees.
 
