@@ -65,7 +65,24 @@ const { pgcrypto } = require('@electric-sql/pglite/contrib/pgcrypto');
     await db.query('update auth.users set email_confirmed_at = now() where id = $1', [alice]);
     await db.exec('set role authenticated');
     assert.equal((await login()).ok, true, 'verified approved users can still log in');
-    console.log('PASS email SQL: unverified and unapproved sessions blocked, verified invite required, RLS, idempotency');
+    await db.exec('reset role');
+    // A previously approved but now unverified traveller cannot bypass the
+    // gate through the SECURITY DEFINER companion-removal function.
+    const bob = '22222222-2222-4222-8222-222222222222';
+    await db.query('insert into auth.users (id) values ($1)', [bob]);
+    await db.query("insert into public.profiles (id, display_name) values ($1, 'Bob')", [bob]);
+    await db.query('update public.stamps set companions = array[$1::uuid] where user_id = $2', [bob, alice]);
+    const stampId = (await db.query('select id from public.stamps where user_id = $1', [alice])).rows[0].id;
+    await db.query("select set_config('request.jwt.claim.sub', $1, false)", [bob]);
+    await db.exec('set role authenticated');
+    const leave = async () => (await db.query('select public.atlas_leave_stamp($1) as result', [stampId])).rows[0].result;
+    assert.equal((await leave()).reason, 'not_approved', 'unverified users cannot remove a tag');
+    await db.exec('reset role');
+    assert.deepEqual((await db.query('select companions from public.stamps where id = $1', [stampId])).rows[0].companions, [bob]);
+    await db.query('update auth.users set email_confirmed_at = now() where id = $1', [bob]);
+    await db.exec('set role authenticated');
+    assert.equal((await leave()).ok, true, 'a confirmed approved traveller may remove their own tag');
+    console.log('PASS email SQL: unverified and unapproved sessions blocked, verified invite required, RLS, companion RPC, idempotency');
   } finally {
     await db.close();
   }

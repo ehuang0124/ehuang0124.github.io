@@ -117,7 +117,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('[data-region="AS"]').click();
       assert.equal(await page.locator('.place-item').count(),55);
       await page.locator('#place-search').fill('日本');
-      assert.equal(await page.locator('.place-item').count(),1);
+      assert.equal(await page.locator('.place-item[data-place="392"]').count(),1);
+      assert(await page.locator('.place-item').count() > 1, 'search spans every collection');
       await page.locator('#place-search').fill('');
       await page.locator('[data-region="all"]').click();
       await page.locator('#map-svg').scrollIntoViewIfNeeded();
@@ -159,6 +160,10 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#visit-date').fill('2024-05');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('#history-list li').count(),2);
+      page.once('dialog', dialog => dialog.dismiss());
+      await page.locator('#history-list button[data-date="2023-03"]').click();
+      assert.equal(await page.locator('#history-list li').count(),2, 'cancel leaves the record intact');
+      page.once('dialog', dialog => dialog.accept());
       await page.locator('#history-list button[data-date="2023-03"]').click();
       assert.equal(await page.locator('#history-list li').count(),1);
       await page.reload();
@@ -208,7 +213,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       // Zoom a dense layer before targeting a state on a narrow screen.
       await page.locator('[data-region="us"]').click();
       await page.locator('#place-search').fill('加利福尼亞州');
-      await page.locator('.place-item').click();
+      await page.locator('.place-item[data-place="state-ca"]').click();
       await onShape('.map-us-state[data-id="state-ca"]', 'hover');
       await page.locator('#place-search').fill('');
       assert((await page.locator('#map-tooltip').textContent()).includes('加利福尼亞州'));
@@ -224,14 +229,15 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert((await page.locator('[data-region="ca"]').textContent()).includes('48'));
       await page.locator('[data-region="all"]').click();
       await page.locator('#place-search').fill('加利福尼亞州');
-      assert.equal(await page.locator('.place-item').count(),1);
-      await page.locator('.place-item').click(); // focuses the small state
+      assert.equal(await page.locator('.place-item[data-place="state-ca"]').count(),1);
+      await page.locator('.place-item[data-place="state-ca"]').click(); // focuses the small state
       await onShape('.map-us-state[data-id="state-ca"]', 'click');
       assert.equal(await page.locator('#place-name').textContent(),'加利福尼亞州');
       assert.equal(await page.locator('.map-us-state.selected').count(),1);
       await page.locator('#visit-date').fill('2024-06');
       await page.locator('#stamp-button').click();
       assert.equal(await page.locator('.map-us-state.done').count(),1);
+      page.once('dialog', dialog => dialog.accept());
       await page.locator('#history-list button[data-date="2024-06"]').click();
       assert.equal(await page.locator('.map-us-state.done').count(),0);
       await page.locator('#place-search').fill('');
@@ -299,7 +305,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#place-search').fill('臺南');
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#history-list li').count(),1);
-      page.once('dialog',dialog => dialog.accept());
+      page.once('dialog', dialog => dialog.accept());
       await page.locator('#delete-city').click();
       assert.equal(await page.locator('#board-total').textContent(),'171');
       assert.equal(await page.locator('#passport-count').textContent(),'2');

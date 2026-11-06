@@ -37,7 +37,8 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
   assert.equal($('#account-name').textContent, 'Eva Huang');
   assert.equal($('#passport-count').textContent, '8', 'the atlas counts only your own places');
   assert(['3 / 240','3 / 240'].includes($('#tab-count-countries').textContent));
-  assert.equal($$('.map-country.done').length, 5, 'JP, TW, TH, FR, KR marked on the shared map');
+  // One data scope: a signed-in traveller's map marks only their own countries.
+  assert.equal($$('.map-country.done').length, 3, 'your own countries (JP, TW, TH) mark the map');
   assert($('#friends-tabs').textContent.includes('林宜臻'), 'companions seeded');
   assert(Number($('#friends-shared').textContent) >= 1, 'shared places are listed');
   assert($('#friends-list').textContent.includes('日本'));
@@ -100,6 +101,7 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
     assert.equal(d3.querySelector('#collection-label').textContent, '旅人共蓋章');
     const shared = d3.querySelector('#passport-count').textContent;
     assert(Number(shared) > 0, 'the shared atlas is visible before sign-in');
+    assert.equal(d3.querySelectorAll('.map-country.done').length, 5, 'a visitor sees every traveller on the map (JP, TW, TH, FR, KR)');
     d3.querySelector('#sign-in').dispatchEvent(new w3.MouseEvent('click', { bubbles:true }));
     await new Promise(resolve => setTimeout(resolve, 30));
     d3.querySelector('#account-demo').dispatchEvent(new w3.MouseEvent('click', { bubbles:true }));

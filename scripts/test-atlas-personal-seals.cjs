@@ -72,31 +72,55 @@ const root = path.resolve(__dirname, '..');
       await page.locator('#account-name').waitFor({ state:'visible' });
       await page.locator(`.place-item[data-place="${id}"]`).click();
       assert.equal(await page.locator('#stamp-face-initial').textContent(), 'E', 'owner initial persists after reload');
-      await page.locator('#account-menu-button').click();
-      await page.locator('#demo-user').selectOption('demo-lin');
-      assert.equal(await page.locator('#account-name').textContent(), '林宜臻');
+      const switchToLin = async () => {
+        await page.locator('#account-menu-button').click();
+        await page.locator('#demo-user').selectOption('demo-lin');
+        assert.equal(await page.locator('#account-name').textContent(), '林宜臻');
+      };
+      const becomeVisitor = async () => {
+        await page.locator('#account-menu-button').click();
+        await page.locator('#sign-out').click();
+        await page.locator('#sign-in').waitFor({ state:'visible' });
+      };
+      const signInAsLin = async () => {
+        await page.locator('#sign-in').click();
+        await page.locator('#account-demo').click();
+        await switchToLin();
+      };
+      await switchToLin();
+      assert.equal(await country.locator('.map-seal').count(), 0, 'another traveller is not shown as my stamp');
+      assert(await page.locator('#stamp-signatures').isHidden());
       await page.locator('#visit-date').fill('2019-01');
       await page.locator('#stamp-button').click();
-      assert.equal(await page.locator('#stamp-face-initial').textContent(), '林', 'the current owner is prioritised');
-      assert.equal(await page.locator('#stamp-face-date').textContent(), '2019.01', 'the featured initial and date belong to the same owner');
-      assert.equal(await country.locator('.map-seal').count(), 2, 'two independent owners have separate seals');
-      assert.equal(await country.locator('.map-seal[data-author-id="demo-lin"] .map-seal-initial').textContent(), '林');
-      assert((await page.locator('#stamp-signature-list').textContent()).includes('Eva Huang'));
-      assert((await page.locator('#stamp-signature-list').textContent()).includes('林宜臻'));
-      await page.locator('#history-list button[data-date="2019-01"]').click();
-      assert.equal(await country.locator('.map-seal').count(), 1, 'removing one owner leaves the other seal');
-      assert.equal(await country.locator('.map-seal-initial').textContent(), 'E');
-      // Japan's seeded demo has four different owners. The map limits visual
-      // crowding to three, but never excludes the signed-in author and the
-      // detail view lists all four.
+      assert.equal(await page.locator('#stamp-face-initial').textContent(), '林');
+      assert.equal(await page.locator('#stamp-face-date').textContent(), '2019.01', 'initial and date belong to the same owner');
+      assert.equal(await country.locator('.map-seal').count(), 1, 'the signed-in scope shows only my seal');
+      assert.equal(await country.locator('.map-seal-initial').textContent(), '林');
+      assert(!(await page.locator('#stamp-signature-list').textContent()).includes('Eva Huang'));
       await page.locator('.place-item[data-place="392"]').click();
       const japan = page.locator('.country-imprint[data-place-key="countries:392"]');
-      assert.equal(await japan.locator('.map-seal').count(), 3);
+      assert.equal(await japan.locator('.map-seal').count(), 1);
       assert.equal(await japan.locator('.map-seal').first().getAttribute('data-author-id'), 'demo-lin');
       assert.equal(await page.locator('#stamp-face-date').textContent(), '2023.04');
+      assert.equal(await page.locator('#stamp-signature-list .stamp-signature').count(), 1);
+      // A read-only visitor sees every author. The map limits crowding to three,
+      // while the destination details retain all four real owners.
+      await becomeVisitor();
+      assert.equal(await japan.locator('.map-seal').count(), 3);
       assert.equal(await page.locator('#stamp-signature-list .stamp-signature').count(), 4);
       for (const name of ['Eva Huang', '林宜臻', '陳柏宇', '田中雅子'])
         assert((await page.locator('#stamp-signature-list').textContent()).includes(name));
+      await page.locator(`.place-item[data-place="${id}"]`).click();
+      assert.equal(await country.locator('.map-seal').count(), 2, 'the visitor sees both independent owners');
+      assert.equal(await country.locator('.map-seal[data-author-id="demo-lin"] .map-seal-initial').textContent(), '林');
+      await signInAsLin();
+      page.once('dialog', dialog => dialog.accept());
+      await page.locator('#history-list button[data-date="2019-01"]').click();
+      assert.equal(await country.locator('.map-seal').count(), 0, 'removing my seal leaves my view unvisited');
+      await becomeVisitor();
+      assert.equal(await country.locator('.map-seal').count(), 1, 'removing one owner leaves the other seal');
+      assert.equal(await country.locator('.map-seal-initial').textContent(), 'E');
+      await signInAsLin();
       // Point layers and state outlines also use owner seals.
       await page.locator('#collection-inline').click();
       await page.locator('#tab-cities').click();

@@ -46,7 +46,7 @@ const root = path.resolve(__dirname, '..');
         if (!request.url().startsWith('https://example.supabase.co')) return request.url().startsWith(base) ? route.continue() : route.abort();
         const url = new URL(request.url());
         const body = request.postDataJSON() || {};
-        calls.push({ path:url.pathname, body });
+        calls.push({ path:url.pathname, method:request.method(), body });
         // Exercise the real vendored Auth client, including duplicate-signup
         // errors, token persistence, PostgREST maybeSingle, and auth events.
         if (url.pathname === '/auth/v1/settings') return route.fulfill({ json:{ mailer_autoconfirm:false, external:{ email:true } } });
@@ -56,7 +56,7 @@ const root = path.resolve(__dirname, '..');
           registered = true;
           return route.fulfill({ json:authUser() });
         }
-        if (url.pathname === '/auth/v1/resend') return route.fulfill({ json:{} });
+        if (url.pathname === '/auth/v1/resend' || url.pathname === '/auth/v1/recover') return route.fulfill({ json:{} });
         if (url.pathname === '/auth/v1/token') {
           if (!confirmed) return route.fulfill({ status:400, json:{ code:'email_not_confirmed', msg:'Email not confirmed' } });
           return route.fulfill({ json:session() });
@@ -156,6 +156,18 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('#account-email').inputValue(), 'traveller@example.com');
       assert.equal(await page.locator('#account-create').getAttribute('aria-selected'), 'true');
       assert(await page.locator('#account-card').isHidden());
+      // An unapproved account can recover its password without the invite
+      // prompt replacing the reset form; afterwards it still needs the invite.
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(base + '/personal/travel/map/?unapproved-reset=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery');
+      await page.waitForFunction(() => document.querySelector('#code-signin').dataset.mode === 'reset');
+      assert(await page.locator('#account-password').isVisible());
+      await page.locator('#account-password').fill('abcdefg');
+      await page.locator('#account-form').evaluate(form => form.requestSubmit());
+      await page.waitForFunction(() => document.querySelector('#account-status').textContent.includes('密碼已更新'));
+      assert.equal(await page.locator('#code-signin').getAttribute('data-mode'), 'create');
+      assert.equal(await page.locator('#account-email').inputValue(), 'traveller@example.com');
+      assert(await page.locator('#account-card').isHidden());
       await page.locator('#account-password').fill('abcdefg');
       await page.locator('#traveller-name').fill('測試旅人');
       await page.locator('#access-code').fill('bad-invite');
@@ -181,10 +193,31 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('#account-name').textContent(), '測試旅人');
       assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length, redemptions, 'login never redeems an invite');
       assert.equal(calls.filter(call => call.path === '/rest/v1/rpc/atlas_login').length, 1);
+      // Recovery and confirmation both use real implicit Auth callbacks. A
+      // reset link must keep its dedicated view after the other flow is added.
+      await page.locator('#account-menu-button').click();
+      await page.locator('#sign-out').click();
+      await page.locator('#sign-in').click();
+      await page.locator('#account-email').fill('traveller@example.com');
+      await page.locator('#account-forgot').click();
+      await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('重設密碼的信已寄出'));
+      assert.equal(calls.filter(call => call.path === '/auth/v1/recover').length, 1);
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(base + '/personal/travel/map/?password-recovery=1#access_token=' + encodeURIComponent(token()) + '&refresh_token=test-refresh&expires_in=3600&token_type=bearer&type=recovery');
+      await page.waitForFunction(() => document.querySelector('#code-signin').dataset.mode === 'reset');
+      assert(await page.locator('#account-dialog').isVisible());
+      assert(await page.locator('#account-password').isVisible());
+      assert(await page.locator('#account-email').isHidden());
+      assert(await page.locator('#account-create-hint').isHidden());
+      await page.locator('#account-password').fill('replacement-password-123');
+      await page.locator('#account-form').evaluate(form => form.requestSubmit());
+      await page.locator('#account-dialog').waitFor({ state:'hidden' });
+      assert(calls.some(call => call.path === '/auth/v1/user' && call.method === 'PUT'), 'the new password reaches Auth');
+      assert.equal(await page.locator('#account-name').textContent(), '測試旅人');
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       assert.deepEqual(errors, []);
       await page.close();
-      console.log(`PASS auth UI ${viewport.width}px: map/index, keyboard tabs, native form submission, email confirmation on another browser, resend, registration retry and login`);
+      console.log(`PASS auth UI ${viewport.width}px: map/index, keyboard tabs, native form submission, email confirmation on another browser, resend, registration retry, login and password recovery`);
     }
   } finally {
     await browser?.close();
