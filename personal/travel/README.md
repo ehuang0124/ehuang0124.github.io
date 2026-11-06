@@ -9,7 +9,7 @@ Every page under `personal/travel/` — the landing page, the two 幕末 itinera
 | File | Scope |
 | --- | --- |
 | `brand.css` | The shared brand layer: tokens, base type, breadcrumbs, top bar (landing header, 沖繩 topbar, atlas header), hero/cover, lattice, section heads, chips, buttons, selects, footers, plus a pass for each page family. Loaded after the page's layout CSS (on the landing page, before `landing.css`). |
-| `landing.css` | Landing page only (`index.html`): the 観光案内 nav, 目次, feature cards, the 推し POINT callout, the 青島 band, 旅の断片, the postcard and the printed 型錄 style guide. It declares no tokens of its own. |
+| `landing.css` | Landing page only (`index.html`): the 頁面分類 row (the no-JavaScript fallback index), 目次, feature cards, the 推し POINT callout, the 青島 band, 旅の断片, the postcard and the printed 型錄 style guide. It declares no tokens of its own. |
 | `assets/travel-icons.svg` | Shared 24×24 line-icon sprite (13 symbols: 神社 / 五重塔 / 城 / 山 / 海 / 鐵道 / 渡船 / 溫泉 / 食 / 寫真 / 地點 / 郵戳, plus `an-lattice` — the 240×24 diamond chain used as the brand's separator). Reference one with `<svg class="an-i"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>`; stroke and fill are inherited, so a single class themes every icon. |
 | `itinerary.css` | Layout for the two 幕末 itinerary maps (East Japan, Kyushu): cover, prefecture cards, chronology, map panel, place panel. Tokens and type come from `brand.css`. |
 | `okinawa/okinawa.css` | 沖繩 page layout only; tokens and type come from `brand.css`. |
@@ -34,12 +34,14 @@ The landing page is the reference implementation of that brand. A tracked micro-
 
 Sections run 0101–0105: 日本三帖 preface, 三つの帖 (trilogy index, three photographic plates plus a Stamp Atlas callout), the 青島 quote band, 旅の断片, 寄一封明信片, and 型錄.
 
+**One menu, not two.** `navigation.js` gives every travel page a single trigger: the sticky header's link row becomes one full-screen `MENU` dialog holding the four journeys (東海道, 九州, 沖繩, 世界蓋章), the page's own 頁面分類 links as chips, and a foot row (旅行首頁, 文字紀錄, Eva Huang). A page's section row is marked `data-page-sections` — it is the no-JavaScript fallback index and is folded into that dialog at load, so the landing page never shows a second menu stacked under the header. The hero's 往下閱讀 cue points at the first section (`#journeys`), not at the section row.
+
 Two motifs are deliberately kept and theirs is a narrow brief:
 
 - **Postcard** — the airmail-bordered `旅のたより` panel carries a stamp, a postmark and a 朱 hanko. It is decoration plus one call to action; it stores nothing and reads nothing.
 - **Stamping** — stamps, month precision, sign-in and local storage stay in the [world stamp atlas](map/). The landing page never renders stamp state and never mentions stamps, month records or sign-in; section 04 is one postcard and only links in.
 
-The closing 型錄 section indexes the three trip features only (the Stamp Atlas map is reachable from the nav, category bar, postcard section and the callout). Each entry is an editorial spread: alternating photo/copy sides, an offset colour frame, an oversized hollow issue number, a vertical 第 0X 帖 tab, a date line, a route line and a pill link. The palette, icon grid and type rules live in `spec.md`.
+The closing 型錄 section indexes the three trip features only (the Stamp Atlas map is reachable from the menu, the postcard section and the callout). Each entry is an editorial spread: alternating photo/copy sides, an offset colour frame, an oversized hollow issue number, a vertical 第 0X 帖 tab, a date line, a route line and a pill link. The palette, icon grid and type rules live in `spec.md`.
 
 Photography is Wikimedia Commons only, each file credited in the page footer and on the cover. `--ng-sans` and `--ng-grotesk` fall back to **Noto Sans JP / Noto Sans TC** (with Archivo first for Latin) because Japanese shinjitai and kana in display copy (e.g. 断, 残) are absent from the Traditional Chinese subsets. The itinerary, island and atlas pages draw their Wikimedia Commons images the same way and keep their own `hero-credit` / credits blocks.
 

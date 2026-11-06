@@ -5,10 +5,13 @@
    category nav, 目次, feature cards, the 推し POINT callout, the 青島 band,
    旅の断片 strip, the postcard and the printed 型錄 style guide. */
 
-/* ---------- category nav ---------- */
+/* ---------- category nav ----------
+   The 頁面分類 row is this page's section index. It is only ever seen when
+   JavaScript has not run: `navigation.js` moves these links into the single
+   travel menu, so the page never shows a second menu under the header. */
 .ng-catnav{background:var(--ng-paper);border-bottom:1px solid var(--ng-line)}
 .ng-catnav-in{
-  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
   gap:1px;background:var(--ng-line);border-left:1px solid var(--ng-line);border-right:1px solid var(--ng-line);
 }
 .ng-cat{
@@ -423,7 +426,6 @@
   .ng-lead:nth-child(3) .ng-lead-fig{aspect-ratio:16/10}
   .ng-lead-copy,
   .ng-lead:nth-child(even) .ng-lead-copy{padding-right:0}
-  .ng-catnav-in{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:760px){
   .ng-hero{min-height:clamp(380px,72vh,520px)}
@@ -625,7 +627,7 @@
 
 /* Cover reading cue and quiet geometric chapter break. */
 #journeys{scroll-margin-top:72px}
-#guide,#postcard{scroll-margin-top:96px}
+#guide,#postcard,#moments{scroll-margin-top:96px}
 .ng-hero--winter{min-height:clamp(360px,calc(100svh - 176px),540px)}
 .ng-hero--winter .ng-hero-media img{object-position:65% 48%}
 .ng-hero--winter .ng-hero-in{padding:clamp(22px,3svh,38px) 0 clamp(68px,8svh,80px)}
