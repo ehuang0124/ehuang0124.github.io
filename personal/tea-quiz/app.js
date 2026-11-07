@@ -585,6 +585,17 @@ function viewQuiz() {
       if (input.matches(':focus-visible')) label.classList.add('is-focused');
     });
     input.addEventListener('blur', () => label.classList.remove('is-focused'));
+    /* 用滑鼠再點一次已選的選項：原生 radio 不會派發 change，但使用者仍期望畫面前進（最後一題即顯示結果）。 */
+    label.addEventListener('click', () => {
+      if (state.answers[q.id] === option.id) advance();
+    });
+    /* 鍵盤：已選的選項再按 Space/Enter 同樣不會派發 change，也要能前進。 */
+    input.addEventListener('keydown', (event) => {
+      if ((event.key === ' ' || event.key === 'Enter') && state.answers[q.id] === option.id) {
+        event.preventDefault();
+        advance();
+      }
+    });
     group.append(input, label);
   });
 
@@ -1024,6 +1035,9 @@ function openSheet() {
 function closeSheet() {
   if (supportsDialog) sheet.close();
   else { sheet.removeAttribute('open'); sheet.classList.remove('fallback'); document.body.style.overflow = ''; }
+  /* 從茶款目錄打開詳情再關閉時，不要讓目錄按鈕保留焦點框線（“邊框還在”）。 */
+  const active = document.activeElement;
+  if (active?.matches('.cat-item')) active.blur();
 }
 
 document.getElementById('sheet-close').addEventListener('click', closeSheet);
