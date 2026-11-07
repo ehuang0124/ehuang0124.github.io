@@ -33,14 +33,46 @@ export const FAMILY_IMAGES = {
 /* 咖啡因狀態只允許三種：contains（含咖啡因）/ verified_free（經證實無咖啡因）/ unknown（數值未知）
  * 注意：玄米茶、焙茶、冠茶都不能因為「喝起來淡」被推定為無咖啡因。 */
 export const TEA_FAMILIES = {
-  gyokuro: { zh: '玉露', en: 'Gyokuro' },
-  kabuse: { zh: '冠茶', en: 'Kabusecha' },
-  sencha: { zh: '煎茶', en: 'Sencha' },
-  kamairi: { zh: '釜炒茶', en: 'Kamairicha' },
-  matcha: { zh: '抹茶', en: 'Matcha' },
-  genmaicha: { zh: '玄米茶', en: 'Genmaicha' },
-  wakoucha: { zh: '和紅茶', en: 'Wakoucha' },
-  decaf: { zh: '無咖啡因商品', en: 'Decaf product' }
+  gyokuro: {
+    zh: '玉露', en: 'Gyokuro', ja: '玉露', kicker: 'GYOKURO',
+    noteZh: '覆蓋遮光的茶葉，少量低溫的水，等一盞像高湯一樣的鮮味。',
+    noteEn: 'Shaded leaves, a little water at low heat, and a cup that tastes like broth.'
+  },
+  kabuse: {
+    zh: '冠茶', en: 'Kabusecha', ja: '冠茶', kicker: 'KABUSECHA',
+    noteZh: '遮光時間比玉露短，甘甜與柔滑留下，澀味留在門外。',
+    noteEn: 'A shorter shaded season than gyokuro: sweetness and silk, astringency left outside.'
+  },
+  sencha: {
+    zh: '煎茶', en: 'Sencha', ja: '煎茶', kicker: 'SENCHA',
+    noteZh: '日本最日常的一杯；蒸氣、揉捻與日光，決定它清爽或厚實。',
+    noteEn: 'Japan’s everyday cup — steam, rolling and sunlight decide whether it lands light or deep.'
+  },
+  kamairi: {
+    zh: '釜炒茶', en: 'Kamairicha', ja: '釜炒茶', kicker: 'KAMAIRICHA',
+    noteZh: '不經蒸氣，在熱鍋裡炒出來的青綠茶，香氣裡有一點栗子。',
+    noteEn: 'Pan-fired instead of steamed: a green tea with a chestnut edge.'
+  },
+  matcha: {
+    zh: '抹茶', en: 'Matcha', ja: '抹茶', kicker: 'MATCHA',
+    noteZh: '碾茶磨成粉，整片茶葉一起喝下；石臼與茶筅決定它的樣子。',
+    noteEn: 'Tencha ground to powder, so the whole leaf is drunk — stone mill and whisk included.'
+  },
+  genmaicha: {
+    zh: '玄米茶', en: 'Genmaicha', ja: '玄米茶', kicker: 'GENMAICHA',
+    noteZh: '煎茶裡拌入炒過的糙米，焙香把茶味壓得溫柔。',
+    noteEn: 'Sencha blended with toasted rice, the roast softening everything around it.'
+  },
+  wakoucha: {
+    zh: '和紅茶', en: 'Wakoucha', ja: '和紅茶', kicker: 'WAKOUCHA',
+    noteZh: '日本自己做的紅茶；品種與產地，從蜜香一路走到奶茶的厚度。',
+    noteEn: 'Black tea made in Japan — cultivar and origin, from honeyed cups to milk-tea depth.'
+  },
+  decaf: {
+    zh: '無咖啡因商品', en: 'Decaf', ja: 'カフェインレス', kicker: 'DECAF',
+    noteZh: '包裝明確標示不含咖啡因的茶款，讓夜裡也留得下一杯。',
+    noteEn: 'Teas whose packaging states caffeine-free, so the evening keeps its cup.'
+  }
 };
 
 export const TEAS = [

@@ -80,8 +80,13 @@ const S = {
     ml: 'mL',
     sec: 's',
     catalogTitle: '直接探索茶種',
-    catalogLede: `${TEAS.length} 款茶，依口感主軸排列。其中 ${TEAS.filter((tea) => tea.family === 'wakoucha').length} 款和紅茶，從輕盈蜜香到濃厚奶茶路線。`,
-    filterAll: '全部',
+    catalogKicker: '茶種圖鑑',
+    catalogLede: `八個茶類、${TEAS.length} 款茶，沿著茶湯的份量從清爽排到濃厚。`,
+    axisAria: '茶類濃淡軸線',
+    axisAll: '全部茶款',
+    axisLight: '清爽',
+    axisHeavy: '濃厚',
+    spreadCount: (n) => `${n} 款`,
     countLabel: (n) => `${n} 款茶`,
     copied: '已複製',
     copyFail: '複製失敗，請手動選取',
@@ -159,9 +164,14 @@ const S = {
     ml: 'mL',
     sec: 's',
     catalogTitle: 'Browse the teas',
-    catalogLede: `${TEAS.length} teas ordered by texture, including ${TEAS.filter((tea) => tea.family === 'wakoucha').length} wakoucha from light honeyed cups to milk-tea styles.`,
-    filterAll: 'All',
-    countLabel: (n) => `${n} teas`,
+    catalogKicker: 'Tea atlas',
+    catalogLede: `Eight tea families, ${TEAS.length} teas, running from the lightest cup to the fullest.`,
+    axisAria: 'Tea families by the weight of the cup',
+    axisAll: 'All teas',
+    axisLight: 'Lighter',
+    axisHeavy: 'Fuller',
+    spreadCount: (n) => (n === 1 ? '1 tea' : `${n} teas`),
+    countLabel: (n) => (n === 1 ? '1 tea' : `${n} teas`),
     copied: 'Copied',
     copyFail: 'Copy failed — please select manually',
     shareHint: 'The shared link contains only your answers, no personal data.',
@@ -322,23 +332,6 @@ function purchaseBlock(tea) {
   );
 }
 
-function sourceName(url) {
-  const host = new URL(url).hostname;
-  const names = {
-    'www.maff.go.jp': '農林水產省', 'www.oguri-farm.com': '小栗農園',
-    'chasho.yamachou.net': '静岡茶匠の逸品', 'susumuya.com': 'すすむ屋茶店',
-    'www.wazukakoucha.jp': '和束紅茶', 'changetea.jp': '茶の間・柴本俊史'
-  };
-  return names[host] || host;
-}
-function sourceBlock(tea) {
-  return el('p', { class: 'tiny muted', style: 'margin:10px 0 0' },
-    `${t('sourceLabel')}：`,
-    tea.sources.flatMap((url, i) => [i ? ' ・ ' : '', el('a', { href: url, target: '_blank', rel: 'noreferrer' }, sourceName(url))]),
-    ` ・ ${t('editorialNote')}`
-  );
-}
-
 /* Approximate locations, not boundaries or a claim about an individual product. */
 const ORIGINS = {
   T01: [[136.55, 34.96]], T02: [[130.44, 31.38]], T03: [[130.56, 33.21]],
@@ -422,8 +415,7 @@ function teaDetails(tea, fromResult = false) {
       el('div', { class: 'aroma-tags', style: 'margin:0 0 12px' }, tea.aromaFamily.map((family) => el('span', {}, AROMA_LABELS[family][state.lang]))),
       tasteRows(tea.taste)),
     ...caffeineAndBrew,
-    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea)),
-    sourceBlock(tea)
+    el('div', { class: 'rc-section' }, el('h4', {}, t('purchaseTitle')), purchaseBlock(tea))
   ];
 }
 
@@ -926,61 +918,184 @@ function shareUrl() {
   return `${location.origin}${location.pathname}#/result/${encodeAnswers(state.answers)}`;
 }
 
-/* ---------------- 目錄 ---------------- */
+/* ---------------- 目錄：雜誌式茶種圖鑑 ---------------- */
+/* 版面順序：濃淡軸線（也是篩選控制）→ 八個茶類的跨頁（插畫＋該類茶款索引）。
+ * 軸線與跨頁用同一個排序，所以往下讀就是沿著軸線從清爽走到濃厚。 */
 let catalogFilter = 'all';
+
+/* 茶湯份量：body 0.4 + viscosity 0.35 + umami 0.25（編輯標籤的類別平均，不是化驗值），
+ * 只用來決定茶類在軸線上的位置。 */
+function familyWeight(family) {
+  const list = TEAS.filter((tea) => tea.family === family);
+  const mean = (dim) => list.reduce((sum, tea) => sum + tea.taste[dim], 0) / list.length;
+  return 0.4 * mean('body') + 0.35 * mean('viscosity') + 0.25 * mean('umami');
+}
+
+/* 把數值放上 0–1 的軸線，並確保每一站至少隔一個 step，標籤不會疊在一起 */
+function axisStops(values, gap = 0.108) {
+  const n = values.length;
+  const lo = 0.05;
+  const hi = 0.95;
+  const step = Math.min(gap, (hi - lo) / Math.max(1, n - 1));
+  const min = Math.min(...values);
+  const span = Math.max(...values) - min || 1;
+  const stops = values.map((value) => lo + ((value - min) / span) * (hi - lo));
+  /* 先往左收（右端留位），再往右推：兩趟之後每一站都落在 [lo, hi] 且保持間距 */
+  for (let i = n - 1; i >= 0; i -= 1) stops[i] = Math.min(stops[i], hi - step * (n - 1 - i));
+  for (let i = 1; i < n; i += 1) stops[i] = Math.max(stops[i], stops[i - 1] + step);
+  return stops;
+}
+
+/* 由輕到重的茶類順序，軸線與跨頁共用 */
+function orderedFamilies() {
+  return Object.keys(TEA_FAMILIES)
+    .map((key) => ({ key, weight: familyWeight(key) }))
+    .sort((a, b) => a.weight - b.weight || a.key.localeCompare(b.key))
+    .map((row) => row.key);
+}
+
+function chooseFamily(key, keepFocus) {
+  const nextHash = key === 'all' ? '#/teas' : `#/teas/${key}`;
+  catalogFilter = key;
+  if (location.hash !== nextHash) history.replaceState(null, '', nextHash);
+  viewCatalog();
+  if (!keepFocus) return;
+  const target = key === 'all'
+    ? app.querySelector('.teaxis-all')
+    : app.querySelector(`.teaxis-stop[data-family="${key}"]`);
+  target?.focus({ preventScroll: true });
+}
+
+function teaAxis() {
+  const order = orderedFamilies();
+  const stops = axisStops(order.map((key) => familyWeight(key)));
+  const buttons = order.map((key, i) => {
+    const family = TEA_FAMILIES[key];
+    const count = TEAS.filter((tea) => tea.family === key).length;
+    return el('button', {
+      type: 'button',
+      class: 'teaxis-stop',
+      style: `left:${(stops[i] * 100).toFixed(2)}%`,
+      'data-family': key,
+      'aria-pressed': String(catalogFilter === key),
+      onclick: (event) => chooseFamily(key, event.currentTarget.matches(':focus-visible'))
+    },
+      el('span', { class: 'teaxis-cup' },
+        el('img', {
+          src: FAMILY_IMAGES[key], alt: '', width: '112', height: '112',
+          loading: 'lazy', decoding: 'async'
+        })
+      ),
+      el('span', { class: 'teaxis-name' }, family[state.lang]),
+      /* 中文頁的茶類名底下放羅馬字，英文頁放日文原名：不重複同一個字 */
+      state.lang === 'zh'
+        ? el('span', { class: 'teaxis-ja' }, family.kicker)
+        : el('span', { class: 'teaxis-ja', lang: 'ja' }, family.ja),
+      el('span', { class: 'teaxis-n' }, t('spreadCount', count))
+    );
+  });
+
+  return el('div', { class: 'teaxis', role: 'group', 'aria-label': t('axisAria') },
+    el('div', { class: 'teaxis-head' },
+      el('p', { class: 'teaxis-count' }, t('countLabel', catalogFilter === 'all'
+        ? TEAS.length
+        : TEAS.filter((tea) => tea.family === catalogFilter).length)),
+      el('button', {
+        type: 'button', class: 'chip teaxis-all',
+        'aria-pressed': String(catalogFilter === 'all'),
+        onclick: (event) => chooseFamily('all', event.currentTarget.matches(':focus-visible'))
+      }, t('axisAll'))
+    ),
+    el('div', { class: 'teaxis-scroll' },
+      el('div', { class: 'teaxis-track' },
+        el('span', { class: 'teaxis-bar', 'aria-hidden': 'true' }),
+        buttons
+      ),
+      el('div', { class: 'teaxis-ends', 'aria-hidden': 'true' },
+        el('span', {}, t('axisLight')),
+        el('span', {}, t('axisHeavy'))
+      )
+    )
+  );
+}
+
+/* 風味標籤：中文只取標籤的前半（'稠滑 Texture' → '稠滑'），英文用整個標籤 */
+function scaleWord(dim) {
+  const label = SCALE_LABELS[state.lang][dim];
+  return state.lang === 'zh' ? label.split(' ')[0] : label;
+}
+
+function teaLine(tea, index) {
+  const tags = ['viscosity', 'umami'].map((dim) =>
+    el('span', { class: 'tag' }, `${scaleWord(dim)} `, el('b', {}, `${tea.taste[dim]}/5`))
+  );
+  return el('button', { type: 'button', class: 'tea-line', onclick: () => openTea(tea.id) },
+    el('span', { class: 'tl-num', 'aria-hidden': 'true' }, String(index + 1).padStart(2, '0')),
+    el('span', { class: 'tl-main' },
+      el('span', { class: 'tl-name' }, L(tea.nameZh, tea.nameEn)),
+      el('span', { class: 'tl-sub' },
+        tea.nameJa === tea.nameZh ? null : el('span', { class: 'tl-ja', lang: 'ja' }, tea.nameJa),
+        tea.nameJa === tea.nameZh ? null : ' ・ ',
+        L(tea.regionZh, tea.regionEn),
+        ' ・ ',
+        L(tea.processingZh, tea.processingEn)
+      ),
+      el('span', { class: 'tags tl-tags' }, tags)
+    ),
+    el('span', { class: 'tl-go', 'aria-hidden': 'true' }, '→')
+  );
+}
+
+function familySpread(key) {
+  const family = TEA_FAMILIES[key];
+  const headingId = `fam-${key}`;
+  /* 序號永遠是這個茶類在整條軸線上的位置，篩選後也不會跳號 */
+  const position = orderedFamilies().indexOf(key);
+  const teas = TEAS
+    .filter((tea) => tea.family === key)
+    .sort((a, b) => b.taste.body - a.taste.body || b.taste.umami - a.taste.umami || a.id.localeCompare(b.id));
+
+  return el('article', { class: 'spread', 'aria-labelledby': headingId },
+    el('figure', { class: 'spread-media' },
+      el('div', { class: 'spread-shot' },
+        el('img', {
+          src: FAMILY_IMAGES[key] || FAMILY_IMAGES.sencha,
+          alt: t('imgAlt', family[state.lang]),
+          width: '1264', height: '848',
+          loading: position < 2 ? 'eager' : 'lazy', decoding: 'async'
+        }),
+        el('span', { class: 'spread-count' }, t('spreadCount', teas.length))
+      ),
+      el('figcaption', {},
+        el('span', { class: 'spread-kicker' }, `${String(position + 1).padStart(2, '0')} · ${family.kicker}`),
+        el('h2', { id: headingId }, family[state.lang]),
+        state.lang === 'zh' ? null : el('span', { class: 'spread-ja', lang: 'ja' }, family.ja),
+        el('p', { class: 'spread-note' }, L(family.noteZh, family.noteEn))
+      )
+    ),
+    el('div', { class: 'spread-body' },
+      el('ul', { class: 'tea-lines', 'aria-label': family[state.lang] },
+        teas.map((tea, i) => el('li', {}, teaLine(tea, i)))
+      )
+    )
+  );
+}
 
 function viewCatalog() {
   document.body.dataset.view = 'catalog';
-  const families = [['all', t('filterAll')], ...Object.entries(TEA_FAMILIES).map(([key, value]) => [key, value[state.lang]])];
-  const list = TEAS
-    .filter((tea) => catalogFilter === 'all' || tea.family === catalogFilter)
-    .sort((a, b) => b.taste.viscosity - a.taste.viscosity || b.taste.body - a.taste.body || a.id.localeCompare(b.id));
-
-  const chips = el('div', { class: 'filters', role: 'group', 'aria-label': L('依茶類篩選', 'Filter by tea family') },
-    families.map(([key, label]) =>
-      el('button', {
-        type: 'button', class: 'chip', 'aria-pressed': String(catalogFilter === key),
-        onclick: (event) => {
-          const keepFocus = event.currentTarget.matches(':focus-visible');
-          const nextHash = key === 'all' ? '#/teas' : `#/teas/${key}`;
-          catalogFilter = key;
-          if (location.hash !== nextHash) history.replaceState(null, '', nextHash);
-          viewCatalog();
-          if (keepFocus) app.querySelector('.filters .chip[aria-pressed="true"]')?.focus({ preventScroll: true });
-        }
-      }, label)
-    )
-  );
-
-  const items = el('div', { class: 'cat-list' },
-    list.map((tea) => el('button', {
-      type: 'button', class: 'cat-item', style: 'text-align:left;cursor:pointer',
-      onclick: () => openTea(tea.id)
-    },
-      el('div', { class: 'row' },
-        el('span', { class: 'name' }, L(tea.nameZh, tea.nameEn)),
-        el('span', { class: 'ja', lang: 'ja' }, tea.nameJa)
-      ),
-      el('div', { class: 'meta' }, L(tea.regionZh, tea.regionEn), ` ・ ${TEA_FAMILIES[tea.family][state.lang]} ・ `,
-        tea.caffeine.status === 'verified_free' ? t('caffeineFree') : t('caffeinated')),
-      el('div', { class: 'mini-bars', 'aria-hidden': 'true' },
-        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.viscosity ? 'on' : '' })),
-        el('i', { style: 'flex:0 0 6px;background:transparent' }),
-        [1, 2, 3, 4, 5].map((n) => el('i', { class: n <= tea.taste.umami ? 'on' : '' }))
-      ),
-      el('div', { class: 'meta', style: 'margin-top:2px' }, L('左：稠滑 ／ 右：鮮味', 'Left: silky texture · Right: umami'))
-    ))
-  );
+  const order = orderedFamilies();
+  const shown = catalogFilter === 'all' ? order : order.filter((key) => key === catalogFilter);
 
   app.replaceChildren(
     el('section', { class: 'catalog' },
-      el('p', { class: 'eyebrow' }, t('catalogTitle')),
-      el('h1', { style: 'font-size:clamp(26px,6.4vw,38px)' }, t('catalogTitle')),
-      el('p', { class: 'lede' }, t('catalogLede')),
-      chips,
-      el('p', { class: 'count' }, t('countLabel', list.length)),
-      items,
-      el('p', { class: 'small muted', style: 'margin-top:20px' }, L(
+      el('header', { class: 'cat-head' },
+        el('p', { class: 'eyebrow' }, t('catalogKicker')),
+        el('h1', {}, t('catalogTitle')),
+        el('p', { class: 'lede' }, t('catalogLede'))
+      ),
+      teaAxis(),
+      el('div', { class: 'spreads' }, shown.map((key) => familySpread(key))),
+      el('p', { class: 'catalog-foot' }, L(
         '咖啡因一律先說「含咖啡因／經證實無咖啡因／數值未知」，不給個別產品估算值。',
         'Caffeine is always stated first as contains / verified caffeine-free / unknown — never as an estimated per-product dose.'
       )),
@@ -1037,7 +1152,7 @@ function closeSheet() {
   else { sheet.removeAttribute('open'); sheet.classList.remove('fallback'); document.body.style.overflow = ''; }
   /* 從茶款目錄打開詳情再關閉時，不要讓目錄按鈕保留焦點框線（“邊框還在”）。 */
   const active = document.activeElement;
-  if (active?.matches('.cat-item')) active.blur();
+  if (active?.matches('.tea-line')) active.blur();
 }
 
 document.getElementById('sheet-close').addEventListener('click', closeSheet);

@@ -702,9 +702,116 @@ body[data-view="result"] #app { min-width: 0; }
 .empty { text-align: center; padding: 34px 20px; border: 1px dashed var(--jf-line-strong); border-radius: var(--jf-radius-lg); background: var(--jf-card); }
 .empty h2 { margin-bottom: 8px; }
 
-/* ---------- 探索目錄 ---------- */
-.catalog { padding: 26px 0 60px; }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 8px; }
+/* ---------- 探索目錄：雜誌式茶種圖鑑 ----------
+ * 由輕到重的濃淡軸線（同時是篩選控制）＋ 八個茶類的跨頁（插畫＋該類茶款索引）。
+ * 目錄用比問卷更寬的版面，讓插畫真的當圖片看，而不是一排清單。 */
+body[data-view="catalog"] { --jf-max: 1000px; }
+
+.catalog { padding: 22px 0 56px; }
+
+.cat-head { display: grid; gap: 6px; padding-bottom: 18px; border-bottom: 2px solid var(--jf-ink); }
+.cat-head .eyebrow { margin: 0; }
+.cat-head h1 { margin: 0; font-size: clamp(34px, 7.6vw, 56px); line-height: 1.12; letter-spacing: -.02em; }
+.cat-head .lede { margin: 4px 0 0; max-width: 46ch; font-size: 15.5px; }
+
+/* 濃淡軸線 */
+.teaxis { margin: 16px 0 0; }
+.teaxis-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.teaxis-count { margin: 0; font: 12px/1.4 var(--jf-mono); letter-spacing: .1em; color: var(--jf-muted); }
+.teaxis-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; scrollbar-width: thin; }
+.teaxis-track { position: relative; min-width: 720px; height: 146px; margin-top: 12px; }
+.teaxis-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, #E7EAE0 0%, #CBD8C7 32%, #82A081 64%, #3C5A44 100%);
+}
+.teaxis-stop {
+  position: absolute; top: 0; transform: translateX(-50%);
+  width: 92px; display: grid; justify-items: center;
+  padding: 14px 0 0; border: 0; background: none; cursor: pointer; color: inherit;
+}
+.teaxis-stop::before {
+  content: ""; position: absolute; top: 2px; left: 50%; width: 1px; height: 12px;
+  background: var(--jf-line-strong);
+}
+.teaxis-cup {
+  display: block; width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--jf-paper); background: var(--jf-paper-2);
+  box-shadow: 0 0 0 1px var(--jf-line-strong), 0 10px 18px -14px rgba(39, 53, 45, .9);
+  transition: box-shadow .18s, transform .18s;
+}
+.teaxis-cup img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 56%; }
+.teaxis-stop:hover .teaxis-cup { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--jf-matcha), 0 14px 22px -16px rgba(39, 53, 45, .95); }
+.teaxis-stop[aria-pressed="true"] .teaxis-cup { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--jf-matcha), 0 0 0 6px var(--jf-matcha-wash); }
+.teaxis-stop[aria-pressed="true"]::before { background: var(--jf-matcha); width: 2px; }
+.teaxis-name { margin-top: 8px; font: 600 14px/1.3 var(--jf-serif); color: var(--jf-ink); white-space: nowrap; }
+.teaxis-stop[aria-pressed="true"] .teaxis-name { color: var(--jf-matcha-deep); }
+.teaxis-stop:hover .teaxis-name { color: var(--jf-matcha-deep); }
+.teaxis-ja { font: 400 10.5px/1.45 var(--jf-mono); letter-spacing: .08em; color: var(--jf-muted); white-space: nowrap; }
+.teaxis-n { font: 500 10.5px/1.5 var(--jf-mono); letter-spacing: .04em; color: var(--jf-gold-ink); }
+.teaxis-ends {
+  display: flex; justify-content: space-between; min-width: 720px; padding: 0 5%;
+  font: 500 10.5px/1 var(--jf-mono); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--jf-muted);
+}
+.teaxis-all { flex: none; }
+
+/* 茶類跨頁 */
+.spreads { display: grid; margin: 24px 0 0; }
+.spread {
+  display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  gap: 22px; padding: 24px 0; border-top: 1px solid var(--jf-line);
+}
+.spread:first-child { border-top: 0; padding-top: 4px; }
+/* 左右交錯，讓目錄讀起來像翻頁 */
+.spread:nth-child(even) .spread-media { order: 2; }
+
+.spread-media {
+  margin: 0; display: grid; grid-template-rows: 1fr auto;
+  border: 1px solid var(--jf-line); border-radius: var(--jf-radius-lg);
+  overflow: hidden; background: var(--jf-card);
+}
+.spread-shot { position: relative; aspect-ratio: 5 / 4; overflow: hidden; background: var(--jf-paper-2); }
+.spread-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 58%; transition: transform .6s ease; }
+.spread:hover .spread-shot img { transform: scale(1.035); }
+.spread-count {
+  position: absolute; top: 10px; right: 10px; padding: 3px 9px; border-radius: 999px;
+  background: rgba(247, 245, 238, .92); color: var(--jf-ink-soft);
+  font: 600 11px/1.7 var(--jf-mono); letter-spacing: .08em;
+}
+.spread-media figcaption { display: grid; gap: 0; padding: 12px 15px 15px; border-top: 1px solid var(--jf-line); }
+.spread-kicker { font: 600 10px/1.6 var(--jf-mono); letter-spacing: .16em; color: var(--jf-gold-ink); }
+.spread-media h2 { margin: 1px 0 0; font-size: clamp(22px, 3.2vw, 27px); line-height: 1.25; }
+.spread-ja { font: 400 11.5px/1.6 var(--jf-serif); color: var(--jf-muted); }
+.spread-note { margin: 7px 0 0; font-size: 12.5px; line-height: 1.65; color: var(--jf-ink-soft); }
+
+.spread-body { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.tea-lines { list-style: none; margin: 0; padding: 0; }
+.tea-lines li + li { border-top: 1px solid var(--jf-line); }
+.tea-line {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr) 18px; gap: 10px;
+  align-items: start; width: 100%; padding: 13px 6px 13px 4px;
+  border: 0; border-radius: 8px; background: none; color: inherit; text-align: left;
+  cursor: pointer; transition: background .16s;
+}
+.tea-line:hover { background: var(--jf-matcha-wash); }
+.tea-line:hover .tl-name,
+.tea-line:hover .tl-go { color: var(--jf-matcha-deep); }
+.tea-line:hover .tl-go { transform: translateX(3px); }
+.tl-num { font: 600 11px/1.9 var(--jf-mono); letter-spacing: .08em; color: var(--jf-gold-ink); }
+.tl-main { display: grid; gap: 2px; min-width: 0; }
+.tl-name { font: 600 16.5px/1.4 var(--jf-serif); transition: color .16s; }
+.tl-sub { font-size: 12px; line-height: 1.6; color: var(--jf-muted); }
+.tl-ja { font-family: var(--jf-serif); }
+.tl-tags { margin-top: 6px; }
+.tl-tags .tag { padding: 1px 8px; font-size: 11px; line-height: 1.7; }
+.tl-go { justify-self: end; align-self: center; font-size: 15px; color: var(--jf-line-strong); transition: transform .16s, color .16s; }
+
+.catalog-foot {
+  margin: 24px 0 0; padding-top: 14px; border-top: 1px solid var(--jf-line);
+  font-size: 12px; line-height: 1.7; color: var(--jf-muted);
+}
+
+/* 篩選與跳轉用的小膠囊（目錄軸線的「全部茶款」與結果頁的偏好按鈕共用） */
 .chip {
   min-height: 44px;
   padding: 0 14px;
@@ -718,28 +825,13 @@ body[data-view="result"] #app { min-width: 0; }
 }
 .chip:hover { border-color: var(--jf-matcha); color: var(--jf-matcha-deep); }
 .chip[aria-pressed="true"] { background: var(--jf-matcha); border-color: var(--jf-matcha); color: #fff; }
-.count { font-size: 13px; color: var(--jf-muted); margin: 6px 0 0; font-family: var(--jf-mono); letter-spacing: .06em; }
 
-.cat-list { display: grid; gap: 12px; margin-top: 18px; }
-.cat-item {
-  display: grid;
-  gap: 4px;
-  padding: 15px 16px;
-  border: 1px solid var(--jf-line);
-  border-radius: var(--jf-radius);
-  background: var(--jf-card);
-  text-decoration: none;
-  color: inherit;
-  transition: border-color .18s, transform .18s;
+@media (max-width: 760px) {
+  .spread { grid-template-columns: 1fr; gap: 12px; padding: 20px 0; }
+  .spread:nth-child(even) .spread-media { order: 0; }
+  .spread-shot { aspect-ratio: 16 / 10; }
+  .teaxis-track, .teaxis-ends { min-width: 640px; }
 }
-.cat-item:hover { border-color: var(--jf-matcha); transform: translateY(-1px); color: inherit; }
-.cat-item .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
-.cat-item .name { font-family: var(--jf-serif); font-size: 17px; font-weight: 600; }
-.cat-item .ja { font-family: var(--jf-serif); font-size: 13.5px; color: var(--jf-muted); }
-.cat-item .meta { font-size: 12.5px; color: var(--jf-muted); }
-.cat-item .mini-bars { display: flex; gap: 2px; margin-top: 6px; max-width: 220px; }
-.cat-item .mini-bars i { flex: 1; height: 5px; border-radius: 2px; background: var(--jf-line); }
-.cat-item .mini-bars i.on { background: var(--jf-matcha); }
 
 /* ---------- 茶款詳情 / dialog ---------- */
 dialog.sheet {
