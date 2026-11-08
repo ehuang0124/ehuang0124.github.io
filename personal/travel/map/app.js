@@ -348,7 +348,11 @@
     CATEGORY_ORDER.forEach(cat => {
       // The collection total counts each place once; tab counts describe layers.
       catalogue[cat].forEach(place => { if (isStamped(place)) counted.add(place.key); });
-      $(`#tab-count-${cat}`).textContent = `${stampCount(cat)} / ${catalogue[cat].length}`;
+      const text = `${stampCount(cat)} / ${catalogue[cat].length}`;
+      const tab = $(`#tab-count-${cat}`);
+      if (tab) tab.textContent = text;
+      const pill = $(`#pill-count-${cat}`);
+      if (pill) pill.textContent = text;
     });
     $('#passport-count').textContent = counted.size;
     const label = $('#collection-label');
@@ -362,9 +366,17 @@
       if (choice.dataset.category === category) choice.setAttribute('aria-current', 'true');
       else choice.removeAttribute('aria-current');
     });
+    document.querySelectorAll('.collection-pill').forEach(pill => {
+      const active = pill.dataset.category === category;
+      pill.setAttribute('aria-selected', String(active));
+      pill.classList.toggle('is-active', active);
+      if (active) pill.setAttribute('aria-current', 'true');
+      else pill.removeAttribute('aria-current');
+    });
     document.body.dataset.atlasTheme = category;
     $('#page-title').textContent = spec.title;
-    $('.intro .eyebrow').textContent = spec.map + ' ・ STAMP ATLAS';
+    const introEyebrow = document.querySelector('.intro .eyebrow');
+    if (introEyebrow) introEyebrow.textContent = spec.map + ' ・ STAMP ATLAS';
     $('#board-title').textContent = spec.title;
     $('#map-caption').textContent = spec.map;
     $('#add-city').hidden = category !== 'cities';
@@ -373,6 +385,7 @@
       ? `${spec.title}互動地圖，含地方分區與都道府縣界。${mapAction}，或搜尋目的地清單。`
       : `${spec.title}互動地圖。${mapAction}，或搜尋目的地清單。`);
     updateCounters();
+    document.dispatchEvent(new CustomEvent('atlas:categorychange', { detail: { category } }));
   }
   function areaLabel(place) {
     if (place.isState) return `美國州 · ${place.abbr} · 首府 ${place.capital}`;
@@ -1089,13 +1102,18 @@
     renderMarkers(); // Pixel scale also changes when the SVG itself is resized.
   });
   const menu = $('#collection-menu');
-  const openMenu = () => { if (!menu.open) { menu.showModal(); $('#collection-menu-button').setAttribute('aria-expanded','true'); } };
-  menu.addEventListener('close', () => { $('#collection-menu-button').setAttribute('aria-expanded','false'); });
-  $('#collection-menu-button').addEventListener('click', openMenu);
-  $('#collection-inline').addEventListener('click', openMenu);
+  const openMenu = () => { if (!menu.open) { menu.showModal(); const btn = $('#collection-menu-button'); if (btn) btn.setAttribute('aria-expanded','true'); } };
+  menu.addEventListener('close', () => { const btn = $('#collection-menu-button'); if (btn) btn.setAttribute('aria-expanded','false'); });
+  const menuBtn = $('#collection-menu-button');
+  if (menuBtn) menuBtn.addEventListener('click', openMenu);
+  const inlineBtn = $('#collection-inline');
+  if (inlineBtn) inlineBtn.addEventListener('click', openMenu);
   $('#collection-menu-close').addEventListener('click', () => menu.close());
   document.querySelectorAll('.collection-choice').forEach(choice => {
-    choice.addEventListener('click', () => { chooseCategory(choice.dataset.category); menu.close(); $('#collection-menu-button').focus(); });
+    choice.addEventListener('click', () => { chooseCategory(choice.dataset.category); menu.close(); const b = $('#collection-menu-button'); if (b) b.focus(); });
+  });
+  document.querySelectorAll('.collection-pill').forEach(pill => {
+    pill.addEventListener('click', () => { chooseCategory(pill.dataset.category, true); pill.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); });
   });
   $('#region-controls').addEventListener('click',event => {
     const button = event.target.closest('button[data-region]');

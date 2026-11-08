@@ -52,18 +52,33 @@
   <div class="shell">
     <header class="site-header">
       <a class="brand" href="/personal/travel/"><span class="ng-brand-mark" aria-hidden="true">旅</span><span class="brand-txt"><b>世界蓋章地圖</b><span>Eva Huang · Travel Atlas</span></span></a>
-      <div class="header-end">
-        <button class="collection-menu-button" id="collection-menu-button" type="button" aria-haspopup="dialog" aria-controls="collection-menu" aria-expanded="false"><span class="menu-icon" aria-hidden="true"><i></i><i></i></span><span>探索主題</span></button>
-        <nav class="header-links" aria-label="旅行導覽">
-          <a href="/personal/travel/">← 旅行首頁</a>
-          <a href="/">主站 ↗</a>
-        </nav>
+      <nav class="site-nav" id="site-nav" aria-label="主要導覽">
+        <a href="/personal/travel/">旅行首頁</a>
+        <a href="/personal/travel/east-japan/">東海道</a>
+        <a href="/personal/travel/kyushu/">九州</a>
+        <a href="/personal/travel/okinawa/">沖繩</a>
+        <a href="/personal/travel/map/" aria-current="page">世界蓋章</a>
+      </nav>
+      <div class="site-actions">
         <div class="account-chip" id="account-chip">
           <button type="button" id="sign-in" class="account-signin">登入</button>
           <div class="account-card" id="account-card" hidden><img id="account-avatar" alt="" width="26" height="26" hidden><span class="account-name" id="account-name"></span><button type="button" id="account-menu-button" aria-expanded="false" aria-haspopup="true" aria-label="帳號與同步設定">⚙</button><div class="account-menu" id="account-menu" hidden role="group" aria-label="帳號與同步設定"><p class="account-menu-status" id="account-menu-status" role="status" aria-live="polite"></p><section class="account-profile" aria-labelledby="account-profile-title"><h3 id="account-profile-title">個人資料 <span aria-hidden="true">PROFILE</span></h3><dl class="account-profile-list"><div><dt>顯示名稱</dt><dd id="account-profile-name">—</dd></div><div><dt>電子郵件</dt><dd id="account-profile-email">—</dd></div></dl><label class="account-profile-field" for="profile-name-input">變更顯示名稱<input id="profile-name-input" type="text" maxlength="40" autocomplete="nickname" placeholder="例如：Eva Huang"></label><p class="account-profile-feedback" id="profile-feedback" role="status" aria-live="polite"></p><div class="account-profile-actions"><button type="button" id="profile-save">儲存名稱</button><button type="button" id="profile-reset-password">忘記密碼？寄送重設信</button></div></section><label class="account-menu-toggle" id="discoverable-row"><input type="checkbox" id="discoverable-toggle"> 讓其他旅人標記我為旅伴</label><label class="account-menu-toggle demo-switch" id="demo-switch" hidden>示範身分 <select id="demo-user"></select></label><button type="button" id="sync-now">立即同步</button><button type="button" id="sign-out">登出</button></div></div>
         </div>
+        <button class="site-menu-toggle travel-menu-toggle" id="site-menu-toggle" type="button" aria-haspopup="dialog" aria-controls="travel-menu" aria-expanded="false"><span>選單</span><i aria-hidden="true"></i></button>
       </div>
     </header>
+    <nav class="atlas-collections" aria-label="旅行收藏主題">
+      <div class="atlas-collections-in">
+        <div class="collections-pills" id="collections-pills" role="tablist" aria-label="旅行收藏">
+          <button type="button" class="collection-pill" data-category="countries" role="tab" aria-selected="true" id="pill-countries"><span class="pill-num">01</span><span class="pill-name"><strong>世界國家</strong><small>THE WHOLE WORLD</small></span><span class="pill-count" id="pill-count-countries">0 / —</span></button>
+          <button type="button" class="collection-pill" data-category="cities" role="tab" aria-selected="false" id="pill-cities"><span class="pill-num">02</span><span class="pill-name"><strong>世界主要城市</strong><small>CITIES OF THE WORLD</small></span><span class="pill-count" id="pill-count-cities">0 / —</span></button>
+          <button type="button" class="collection-pill" data-category="na" role="tab" aria-selected="false" id="pill-na"><span class="pill-num">03</span><span class="pill-name"><strong>北美區</strong><small>NORTH AMERICA</small></span><span class="pill-count" id="pill-count-na">0 / —</span></button>
+          <button type="button" class="collection-pill" data-category="jp" role="tab" aria-selected="false" id="pill-jp"><span class="pill-num">04</span><span class="pill-name"><strong>日本國家公園</strong><small>JAPAN NATIONAL PARKS</small></span><span class="pill-count" id="pill-count-jp">0 / —</span></button>
+          <button type="button" class="collection-pill" data-category="okinawa" role="tab" aria-selected="false" id="pill-okinawa"><span class="pill-num">05</span><span class="pill-name"><strong>沖繩專區</strong><small>OKINAWA ISLANDS</small></span><span class="pill-count" id="pill-count-okinawa">0 / —</span></button>
+        </div>
+        <button type="button" class="collections-overview" id="collection-menu-button" aria-haspopup="dialog" aria-controls="collection-menu" aria-expanded="false"><span class="overview-label">總覽</span><span class="overview-icon" aria-hidden="true">◈</span></button>
+      </div>
+    </nav>
 
     <main id="main">
       <section class="intro" aria-labelledby="page-title">

@@ -1222,6 +1222,25 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .travel-menu .ng-cat{display:inline-flex;flex-direction:row;align-items:center;gap:9px;padding:11px 16px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:transparent;color:var(--ng-white);font:700 12.5px var(--ng-sans);letter-spacing:.04em}
 .travel-menu .ng-cat .an-i{width:18px;height:18px;color:var(--ng-gold);stroke-width:1.5}
 .travel-menu .ng-cat:hover{background:rgba(255,255,255,.1);border-color:var(--ng-gold);color:var(--ng-gold)}
+/* Atlas collections inside the single drawer — same pills as the bar, but in navy */
+.travel-menu-collections{max-width:800px;margin:32px auto 0}
+.travel-menu-collection-list{display:grid;gap:8px}
+.travel-collection-link{
+  display:grid;grid-template-columns:44px 1fr auto 20px;align-items:center;gap:12px;
+  padding:14px 14px;border:1px solid rgba(255,255,255,.18);border-radius:12px;
+  background:rgba(255,255,255,.06);color:var(--ng-white);text-decoration:none;
+  transition:background .18s,border-color .18s;
+}
+.travel-collection-link:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+.travel-collection-link[aria-current="true"]{background:var(--ng-white);color:var(--ng-navy);border-color:var(--ng-white)}
+.travel-collection-link[aria-current="true"] .travel-collection-count{color:var(--ng-navy);opacity:.7}
+.travel-collection-num{font:700 10px var(--ng-grotesk);letter-spacing:.1em;opacity:.7}
+.travel-collection-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.travel-collection-name strong{font:800 15px var(--ng-sans);line-height:1.2}
+.travel-collection-name small{font:700 8px var(--ng-grotesk);letter-spacing:.14em;opacity:.7}
+.travel-collection-count{font:700 11px var(--ng-grotesk);letter-spacing:.04em;opacity:.6}
+.travel-collection-arrow{font-size:16px;opacity:.6}
+.travel-collection-link[aria-current="true"] .travel-collection-arrow{color:var(--ng-red)}
 .travel-menu-foot{display:flex;flex-wrap:wrap;gap:16px 26px;max-width:800px;margin:36px auto 0;padding-top:22px;border-top:1px solid #ffffff38;font:700 12px var(--ng-sans);letter-spacing:.06em;color:rgba(255,255,255,.76)}
 .travel-menu-foot a:hover{color:var(--ng-gold)}
 .travel-menu-page-links{display:flex;flex-wrap:wrap;gap:24px;max-width:800px;margin:24px auto;font-size:14px}
@@ -1229,6 +1248,17 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .travel-menu :focus-visible{outline:2px solid var(--ng-gold);outline-offset:5px}
 .site-header .header-end{margin-left:auto}
 .site-header .travel-menu-toggle{margin-left:16px}
+/* New atlas header: inline nav on desktop, single hamburger on mobile */
+.site-header .site-nav a[aria-current="page"]{color:var(--ng-white)}
+@media(max-width:860px){
+  .ng-header-in .ng-nav{display:none}
+  .topbar .nav{display:none}
+  .site-header .site-nav{display:none}
+  .site-header .travel-menu-toggle{display:flex}
+}
+@media(min-width:861px){
+  .site-header .travel-menu-toggle{display:none !important}
+}
 
 /* Atlas as the reverse of the landing postcard: airmail, paper, stamp, postmark. */
 .intro{position:relative;margin:28px 0 24px;padding:clamp(26px,4vw,52px);border:10px solid transparent;border-radius:16px;background:linear-gradient(var(--ng-white),var(--ng-white)) padding-box,repeating-linear-gradient(-45deg,var(--ng-red) 0 8px,var(--ng-white) 8px 16px,var(--ng-navy) 16px 24px,var(--ng-white) 24px 32px) border-box;box-shadow:0 24px 38px -34px rgba(20,25,30,.7);display:grid;grid-template-columns:1fr 180px;gap:24px;align-items:center}
