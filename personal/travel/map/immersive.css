@@ -44,25 +44,27 @@ body[data-atlas-theme="okinawa"]{--chapter-image:url('./images/okinawa.jpg');--c
 .site-nav a:hover{background:var(--ng-paper);color:var(--ng-ink);border-color:var(--ng-line)}
 .site-nav a[aria-current="page"]{background:var(--ng-ink);color:var(--ng-white);border-color:var(--ng-ink)}
 .site-actions{
-  display:flex;align-items:center;gap:12px;
+  display:flex;align-items:center;gap:14px;
   margin-left:auto;min-width:0;flex:none;
 }
+/* Unified hamburger — same size/position as landing page, always visible at consistent corner */
 .site-menu-toggle{
-  display:none;align-items:center;gap:10px;
-  border:1px solid var(--ng-line);border-radius:999px;
-  background:var(--ng-white);color:var(--ng-ink);
-  padding:9px 14px;cursor:pointer;
-  font:700 11px var(--ng-grotesk);letter-spacing:.12em;
+  display:inline-flex;align-items:center;gap:12px;flex-shrink:0;
+  border:0;background:transparent;color:var(--ng-navy);
+  padding:14px 6px;cursor:pointer;
+  font:700 11px var(--ng-grotesk);letter-spacing:.14em;
 }
 .site-menu-toggle i{
-  width:18px;height:12px;flex:none;
+  width:27px;height:16px;flex:none;
   border-block:2px solid currentColor;position:relative;
 }
-.site-menu-toggle i:after{content:"";position:absolute;top:3px;left:0;right:0;border-top:2px solid currentColor}
-.site-menu-toggle:hover{background:var(--ng-ink);color:var(--ng-white);border-color:var(--ng-ink)}
+.site-menu-toggle i:after{content:"";position:absolute;top:5px;left:0;right:0;border-top:2px solid currentColor}
+.site-menu-toggle:hover{color:var(--ng-red)}
 
-/* ---------- collection bar — visible tabs, not a hamburger ---------- */
+/* ---------- collection bar — visible tabs, not a hamburger — with working carousel ---------- */
 .atlas-collections{
+  position:relative;
+  display:flex;align-items:center;gap:8px;
   margin:0 0 14px;
   border-bottom:1px solid var(--ng-line);
   background:var(--ng-white);
@@ -70,13 +72,27 @@ body[data-atlas-theme="okinawa"]{--chapter-image:url('./images/okinawa.jpg');--c
 .atlas-collections-in{
   display:flex;align-items:center;gap:14px;
   min-height:64px;padding:10px 0;
-  overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--ng-line) transparent;
+  flex:1;min-width:0;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-behavior:smooth;scroll-snap-type:x proximity;
+  scrollbar-width:none;-ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
 }
-.atlas-collections-in::-webkit-scrollbar{height:6px}
-.atlas-collections-in::-webkit-scrollbar-thumb{background:var(--ng-line);border-radius:999px}
+.atlas-collections-in::-webkit-scrollbar{display:none}
 .collections-pills{
   display:flex;align-items:stretch;gap:8px;flex:1;min-width:0;
 }
+.carousel-nav{
+  flex:none;display:grid;place-items:center;
+  width:34px;height:34px;border-radius:50%;
+  border:1px solid var(--ng-line);background:var(--ng-white);color:var(--ng-ink);
+  font:700 20px/1 var(--ng-sans);cursor:pointer;z-index:1;
+  transition:background .18s,color .18s,border-color .18s,opacity .18s;
+}
+.carousel-nav:hover{background:var(--ng-ink);color:var(--ng-white);border-color:var(--ng-ink)}
+.carousel-nav:disabled{opacity:.28;pointer-events:none}
+.carousel-nav[hidden]{display:none !important}
+@media(max-width:600px){.carousel-nav{width:30px;height:30px;font-size:18px}}
 .collection-pill{
   display:flex;align-items:center;gap:10px;
   min-width:0;flex:1 1 0;
@@ -84,8 +100,10 @@ body[data-atlas-theme="okinawa"]{--chapter-image:url('./images/okinawa.jpg');--c
   border:1.5px solid var(--ng-line);border-radius:12px;
   background:var(--ng-white);color:var(--ng-ink-soft);
   text-align:left;cursor:pointer;white-space:nowrap;
+  scroll-snap-align:start;
   transition:border-color .18s,background .18s,color .18s,transform .18s,box-shadow .18s;
 }
+.collections-pills .collection-pill:focus-visible{outline:2px solid var(--ng-red);outline-offset:2px}
 .collection-pill:hover{border-color:var(--ng-line-strong);background:var(--ng-paper);color:var(--ng-ink);transform:translateY(-1px)}
 .collection-pill.is-active{
   background:var(--chapter-accent, var(--ng-red));color:var(--ng-white);

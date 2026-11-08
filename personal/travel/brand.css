@@ -1248,16 +1248,15 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
 .travel-menu :focus-visible{outline:2px solid var(--ng-gold);outline-offset:5px}
 .site-header .header-end{margin-left:auto}
 .site-header .travel-menu-toggle{margin-left:16px}
-/* New atlas header: inline nav on desktop, single hamburger on mobile */
+/* Atlas header — hamburger at consistent corner on all viewports, same as landing */
 .site-header .site-nav a[aria-current="page"]{color:var(--ng-white)}
 @media(max-width:860px){
   .ng-header-in .ng-nav{display:none}
   .topbar .nav{display:none}
   .site-header .site-nav{display:none}
-  .site-header .travel-menu-toggle{display:flex}
 }
-@media(min-width:861px){
-  .site-header .travel-menu-toggle{display:none !important}
+@media(max-width:760px){
+  .site-header .travel-menu-toggle span{display:none}
 }
 
 /* Atlas as the reverse of the landing postcard: airmail, paper, stamp, postmark. */

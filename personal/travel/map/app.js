@@ -1115,6 +1115,54 @@
   document.querySelectorAll('.collection-pill').forEach(pill => {
     pill.addEventListener('click', () => { chooseCategory(pill.dataset.category, true); pill.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); });
   });
+  // Carousel: arrow buttons + keyboard for the collection pills
+  (() => {
+    const scroller = $('#atlas-collections-in');
+    const prev = $('#carousel-prev');
+    const next = $('#carousel-next');
+    const pills = document.querySelectorAll('.collection-pill');
+    if (!scroller || !prev || !next || !pills.length) return;
+    const update = () => {
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      const atStart = scroller.scrollLeft <= 2;
+      const atEnd = scroller.scrollLeft >= max - 2;
+      prev.hidden = atStart && max > 2;
+      next.hidden = atEnd && max > 2;
+      // Hide both when no overflow
+      if (max <= 2) { prev.hidden = true; next.hidden = true; }
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+    };
+    const scrollByAmount = () => {
+      const w = scroller.clientWidth;
+      return Math.max(140, Math.floor(w * 0.6));
+    };
+    prev.addEventListener('click', () => scroller.scrollBy({ left: -scrollByAmount(), behavior: 'smooth' }));
+    next.addEventListener('click', () => scroller.scrollBy({ left: scrollByAmount(), behavior: 'smooth' }));
+    scroller.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    // Keyboard: ArrowLeft/Right on focused pill moves focus and selects
+    pills.forEach((pill, i) => {
+      pill.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const dir = e.key === 'ArrowRight' ? 1 : -1;
+          const target = pills[(i + dir + pills.length) % pills.length];
+          target.focus();
+          target.click();
+        }
+      });
+    });
+    // Initial and after category change, ensure active pill is visible
+    document.addEventListener('atlas:categorychange', () => {
+      const active = document.querySelector('.collection-pill.is-active');
+      if (active) active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      setTimeout(update, 50);
+    });
+    update();
+    // Also update after fonts/layout settle
+    setTimeout(update, 200);
+  })();
   $('#region-controls').addEventListener('click',event => {
     const button = event.target.closest('button[data-region]');
     if (button) chooseRegion(button.dataset.region);
