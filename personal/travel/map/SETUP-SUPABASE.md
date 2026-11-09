@@ -4,7 +4,9 @@
 
 **既有專案升級：** 目前專案已套用
 [`20261106_require_verified_email.sql`](supabase/migrations/20261106_require_verified_email.sql)，也已開啟 **Confirm email**，不會刪除帳號或戳章。
-但尚未設定自訂 SMTP，預設服務只能寄給專案團隊成員，一般旅人可能無法收到驗證信或重設密碼信，請優先完成步驟 3。
+專案已設好自訂 SMTP（Gmail），但認證資料不完整，寄信會失敗：
+`POST /auth/v1/resend` 回 `500 Error sending confirmation email`，`auth.users.confirmation_sent_at` 仍會更新，
+實際上沒有一封信寄出。請先照步驟 3 修正 SMTP User 與應用程式密碼。
 
 正式部署前還需依序套用 [`20261106_stamp_guards.sql`](supabase/migrations/20261106_stamp_guards.sql) 與
 [`20261107_verified_write_guards.sql`](supabase/migrations/20261107_verified_write_guards.sql)
@@ -39,9 +41,30 @@
 
 ## 3. 開啟帳號服務
 
-1. **Authentication → SMTP Settings**：設定可寄給一般旅人的自訂 SMTP。
+1. **Authentication → Emails → SMTP Settings**：設定可寄給一般旅人的自訂 SMTP。
    預設寄信服務只能寄給專案團隊成員，且有嚴格寄信上限；不是一般訪客註冊的正式方案。
    SMTP 供應商、寄件網域及憑證請在後台設定，**不要放進網站或聊天**。
+
+   目前設定為 Gmail（`smtp.gmail.com`、port `587`、寄件者 `ehuang0124@gmail.com`、寄件者名稱 `Postcard Room`）。
+   Gmail 不接受 Google 帳號密碼，也不接受 `@` 前面那一段當使用者名稱；任一項不對就會出現
+
+   ```
+   POST /auth/v1/resend  →  500 {"code":500,"error_code":"unexpected_failure","msg":"Error sending confirmation email"}
+   ```
+
+   Google 端的原因是 `535-5.7.8 Username and Password not accepted`（帳號有兩步驟驗證卻送一般密碼時是 `534-5.7.9`）。
+   修正後兩個欄位要長這樣：
+
+   | 欄位 | 正確值 |
+   | --- | --- |
+   | **SMTP User** | 完整信箱 `ehuang0124@gmail.com`（不是 `ehuang0124`） |
+   | **SMTP Password** | Google 帳號 → 安全性 → 兩步驟驗證 → **應用程式密碼** 產生的 16 碼，中間不加空格 |
+   | **SMTP Host／Port** | `smtp.gmail.com`／`587` |
+   | **Sender email** | `ehuang0124@gmail.com`（需與登入帳號相同，否則 Gmail 會改寫寄件者） |
+
+   應用程式密碼在改過 Google 密碼、關閉兩步驟驗證或久未使用後會失效，要重新產生一次。
+   Gmail 個人帳號每天約 500 封、Auth 每封之間至少 60 秒（`smtp_max_frequency`）；
+   要寄給較多旅人時換成 Resend／SES／Postmark 等服務，並驗證自己的寄件網域（SPF、DKIM）。
 2. **Authentication → Sign In / Providers → Email**：開啟 Email 與 **Confirm email**。目前專案已開啟 Confirm email；新專案請先設定 SMTP、部署新版網頁，再啟用確認信。
    新版在確認信未啟用時會拒絕建立帳號，避免繞過驗證。
 3. **Authentication → URL Configuration**：允許 `https://ehuang0124.github.io/personal/travel/map/` 作為 Redirect URL。
@@ -148,7 +171,8 @@ limit 50;
 | 「嘗試次數太多，請稍後再試。」 | 同一 IP 15 分鐘內錯 8 次 | 等 15 分鐘，或到 SQL Editor 刪掉 `atlas_login_attempts` 的紀錄 |
 | 「目前還不能建立帳號，請聯絡網站擁有者。」 | `atlas_access` 沒有資料、註冊被關閉，或確認信未啟用 | 擁有者請重跑步驟 3–5 |
 | 「請先點擊驗證信中的連結」 | 信箱尚未驗證 | 查看收件匣／垃圾郵件或按「重寄驗證信」；確認 SMTP 可寄給該地址 |
-| 「驗證信暫時無法寄出」 | SMTP 或寄信限制 | 設定自訂 SMTP、檢查寄信額度及供應商設定 |
+| 「驗證信暫時無法寄出」 | SMTP 或寄信限制 | 依步驟 3 檢查 SMTP User 是否為完整信箱、密碼是否為 Gmail 應用程式密碼（`535-5.7.8`），再確認寄信額度 |
+| 按「重寄驗證信」沒報錯但收不到信 | 寄信其實失敗；`confirmation_sent_at` 有更新不代表信已送出 | Auth log 找 `Error sending confirmation email`，回 500 就是 SMTP 被拒，照步驟 3 修 |
 | 「登入服務暫時無法使用，請稍後再試。」 | 沒跑 `setup.sql`，或只跑了一半、金鑰貼錯 | 重跑整份 `setup.sql`；檢查步驟 4 的 anon key |
 | 「網路連線似乎有問題，請檢查網路後再試。」 | 網路，或 `supabaseUrl` 打錯 | 檢查 `config.js` 的網址與網路連線 |
 | 「登入或註冊太頻繁，請稍後再試。」 | 短時間嘗試太多次 | 稍後再試 |
