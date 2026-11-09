@@ -29,7 +29,7 @@ const root = path.resolve(__dirname, '..');
     const url = `http://127.0.0.1:${server.address().port}`;
     for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
       const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
-      // Tests are offline: siblings' remote photos are not required; Okinawa's local cover is checked.
+      // Tests are offline: siblings' remote photos are not required; Okinawa's cover and four chapter photos are local.
       await context.route('**/*', route => route.request().url().startsWith(url) ? route.continue() : route.abort());
       const page = await context.newPage();
       const errors = [];
@@ -99,6 +99,23 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('.history-marker').count(), 0);
       assert.equal(await page.locator('#mapsvg .area-text, #mapsvg .sea-text, #label-layer-pins, .map-legend').count(), 0);
       assert.equal(await page.locator('#narrative .chapter').count(), 4);
+      for (const [i, file] of ['urasoe-walls.jpg', 'kume-shiseibyo.jpg', 'shikinaen.jpg', 'tsuboya-street.jpg'].entries()) {
+        const figure = page.locator('#narrative .chapter').nth(i).locator('figure.chapter-figure');
+        assert.equal(await figure.count(), 1);
+        const img = figure.locator('img');
+        assert.equal(await img.getAttribute('src'), `./photos/${file}`);
+        assert((await img.getAttribute('alt')).length > 12);
+        await img.scrollIntoViewIfNeeded();
+        await img.evaluate(el => el.decode());
+        assert(await img.evaluate(el => {
+          const { width, height } = el.getBoundingClientRect();
+          return el.complete && el.naturalWidth > 0 && width > 0 &&
+            Math.abs(width / height - el.naturalWidth / el.naturalHeight) < 0.02;
+        }));
+        assert.equal(await figure.locator('figcaption a[href^="https://commons.wikimedia.org/wiki/File:"]').count(), 1);
+        assert.equal(await figure.locator('figcaption a[href^="https://creativecommons.org/licenses/"]').count(), 1);
+        assert((await figure.locator('figcaption').innerText()).includes('未裁切'));
+      }
       assert.equal(await page.locator('#regions, #list, .rcard').count(), 0);
       assert.equal(await page.locator('#plan-grid .day').count(), 4);
       assert.equal(await page.evaluate(() => document.body.textContent.includes('⚠️') || document.body.textContent.includes('齋場')), false);
@@ -163,7 +180,7 @@ const root = path.resolve(__dirname, '..');
       assert.equal(await page.locator('#region-filter').evaluate(el => el === document.activeElement), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.deepEqual(errors, []);
-      console.log(`PASS okinawa ${viewport.width}px: 4 narrative chapters, 2 regions, 14 places (6 core), itinerary, route, keyboard, no overflow`);
+      console.log(`PASS okinawa ${viewport.width}px: 4 chapter photos, 2 regions, 14 places (6 core), itinerary, route, keyboard, no overflow`);
       await context.close();
     }
   } finally {
