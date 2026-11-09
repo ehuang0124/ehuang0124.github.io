@@ -69,6 +69,11 @@ const root = path.resolve(__dirname, '..');
           approved = true;
           return route.fulfill({ json:{ ok:true, user_id:user.id, ...profile } });
         }
+        // This browser test covers a project without the newer signup functions;
+        // test-atlas-auth-errors/accounts cover the link-finishes-signup flow.
+        if (url.pathname === '/rest/v1/rpc/atlas_prepare_signup' || url.pathname === '/rest/v1/rpc/atlas_complete_signup') {
+          return route.fulfill({ status:404, json:{ code:'PGRST202', message:`Could not find the function public.${url.pathname.split('/').pop()}` } });
+        }
         if (url.pathname === '/rest/v1/rpc/atlas_login') return route.fulfill({ json:{ ok:approved, user_id:user.id, ...profile } });
         if (url.pathname === '/rest/v1/profiles') return route.fulfill({ json:approved ? [profile] : [] });
         return route.fulfill({ json:[] });
@@ -204,7 +209,11 @@ const root = path.resolve(__dirname, '..');
       assert.equal(calls.filter(call => call.path === '/auth/v1/signup').length, 3);
       assert.equal(calls.filter(call => call.path === '/auth/v1/token').length, 2, 'each retry proves the original password');
       const redemptions = calls.filter(call => call.path === '/rest/v1/rpc/atlas_redeem_code').length;
+      assert(!(await page.locator('#account-card').textContent()).includes('⚙'), 'no gear beside the profile');
       await page.locator('#account-menu-button').click();
+      const menuBox = await page.locator('#account-menu').boundingBox();
+      assert(menuBox.x >= 0 && menuBox.x + menuBox.width <= viewport.width, 'the account menu stays on screen');
+      assert.equal(await page.locator('#account-profile-link').getAttribute('href'), './profile/');
       await page.locator('#sign-out').click();
       await page.locator('#sign-in').waitFor({ state:'visible' });
       await page.locator('#sign-in').click();

@@ -62,7 +62,7 @@
       <div class="site-actions">
         <div class="account-chip" id="account-chip">
           <button type="button" id="sign-in" class="account-signin">登入</button>
-          <div class="account-card" id="account-card" hidden><img id="account-avatar" alt="" width="26" height="26" hidden><span class="account-name" id="account-name"></span><button type="button" id="account-menu-button" aria-expanded="false" aria-haspopup="true" aria-label="帳號與同步設定">⚙</button><div class="account-menu" id="account-menu" hidden role="group" aria-label="帳號與同步設定"><p class="account-menu-status" id="account-menu-status" role="status" aria-live="polite"></p><section class="account-profile" aria-labelledby="account-profile-title"><h3 id="account-profile-title">個人資料 <span aria-hidden="true">PROFILE</span></h3><dl class="account-profile-list"><div><dt>顯示名稱</dt><dd id="account-profile-name">—</dd></div><div><dt>電子郵件</dt><dd id="account-profile-email">—</dd></div></dl><label class="account-profile-field" for="profile-name-input">變更顯示名稱<input id="profile-name-input" type="text" maxlength="40" autocomplete="nickname" placeholder="例如：Eva Huang"></label><p class="account-profile-feedback" id="profile-feedback" role="status" aria-live="polite"></p><div class="account-profile-actions"><button type="button" id="profile-save">儲存名稱</button><button type="button" id="profile-reset-password">忘記密碼？寄送重設信</button></div></section><label class="account-menu-toggle" id="discoverable-row"><input type="checkbox" id="discoverable-toggle"> 讓其他旅人標記我為旅伴</label><label class="account-menu-toggle demo-switch" id="demo-switch" hidden>示範身分 <select id="demo-user"></select></label><button type="button" id="sync-now">立即同步</button><button type="button" id="sign-out">登出</button></div></div>
+          <div class="account-card" id="account-card" hidden><button type="button" id="account-menu-button" class="account-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="account-menu"><img id="account-avatar" alt="" width="26" height="26" hidden><span class="account-name" id="account-name"></span></button><div class="account-menu" id="account-menu" hidden role="group" aria-labelledby="account-summary-name"><div class="account-summary"><strong id="account-summary-name"></strong><span id="account-summary-email"></span></div><dl class="account-glance"><div><dt>同步</dt><dd id="account-menu-status" role="status" aria-live="polite"></dd></div><div><dt>足跡</dt><dd id="account-footprint"></dd></div></dl><label class="account-menu-toggle demo-switch" id="demo-switch" hidden>示範身分 <select id="demo-user"></select></label><a class="account-profile-link" id="account-profile-link" href="./profile/">個人資料與設定 <span aria-hidden="true">→</span></a><button type="button" id="sign-out">登出</button></div></div>
         </div>
         <button class="site-menu-toggle travel-menu-toggle" id="site-menu-toggle" type="button" aria-haspopup="dialog" aria-controls="travel-menu" aria-expanded="false"><span>MENU</span><i aria-hidden="true"></i></button>
       </div>
@@ -194,12 +194,12 @@
 <button type="button" id="account-forgot" class="account-forgot" hidden>忘記密碼？</button>
 <label class="account-field" for="access-code" hidden>邀請碼<input id="access-code" type="password" autocomplete="off" placeholder="向網站擁有者索取" disabled></label>
 <label class="account-field" for="traveller-name" hidden>顯示名稱<input id="traveller-name" type="text" maxlength="40" autocomplete="nickname" placeholder="例如：Eva Huang" disabled></label>
-<p id="create-account-note" class="account-note" hidden>送出後會收到驗證信；點擊信中的連結，再回來完成帳號建立。</p>
+<p id="create-account-note" class="account-note" hidden>送出後會收到驗證信；點擊信中的連結，就會完成建立並登入。</p>
 <button type="submit" id="code-signin-submit" class="dialog-submit">登入 <span aria-hidden="true">↗</span></button>
 </div></div><div id="email-verification" class="email-verification" hidden>
 <div class="verification-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><span>EMAIL CHECK / 必要步驟</span></div>
-<p class="verification-lede"><strong id="verification-email"></strong> 尚待驗證，請查看信箱並點擊驗證連結，再回來完成帳號建立。</p>
-<ol class="verification-steps"><li>開啟電子郵件中的驗證連結。</li><li>回到這裡，重新輸入個人密碼與邀請碼。</li></ol>
+<p class="verification-lede"><strong id="verification-email"></strong> 尚待驗證，請查看信箱並點擊驗證連結。</p>
+<ol class="verification-steps"><li>開啟電子郵件中的驗證連結。</li><li id="verification-step-two">連結會帶你回到這裡，自動完成建立並登入。</li></ol>
 <button type="button" id="verification-continue" class="dialog-submit">我已完成驗證 <span aria-hidden="true">↗</span></button>
 <button type="button" id="verification-resend" class="verification-resend">重新寄送驗證信</button>
 <p id="verification-feedback" class="account-note" role="status" aria-live="polite"></p>

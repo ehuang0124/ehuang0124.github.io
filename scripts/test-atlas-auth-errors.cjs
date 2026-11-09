@@ -15,8 +15,11 @@ const LOCAL = 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoM
 const wait = async (n = 14) => { for (let i = 0; i < n; i++) await new Promise(r => setTimeout(r, 3)); };
 
 // Minimal stand-in for supabase-js: just the calls the page makes.
-function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, signInError = null, initialSession = null, profileResponse = null } = {}) {
-  const state = { session: initialSession, rpcCalls: [], signupCalls:0, resendCalls:0 };
+// `prepare` answers atlas_prepare_signup; by default the project predates it
+// (function missing), so the older verify-then-redeem flow is exercised.
+const LEGACY_PREPARE = { data:null, error:{ code:'PGRST202', message:'Could not find the function public.atlas_prepare_signup' } };
+function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null, error:null }, prepare = LEGACY_PREPARE, rpcByName = {}, signInError = null, initialSession = null, profileResponse = null, updateUserError = null } = {}) {
+  const state = { session: initialSession, rpcCalls: [], prepareCalls: [], signupCalls:0, resendCalls:0, updateUserCalls:0 };
   const chain = () => {
     const builder = {
       select() { return builder; }, order() { return builder; }, limit() { return builder; },
@@ -46,10 +49,15 @@ function makeClient({ signedUp = true, signupResponse = null, rpc = { data:null,
         state.session = { access_token:'token', user:{ id:'user-personal' } };
         return { data:{ session:state.session, user:state.session.user }, error:null };
       },
+      async updateUser() { state.updateUserCalls++; return { data:{ user:state.session?.user || null }, error:updateUserError }; },
       async signOut() { state.session = null; return { error:null }; }
     },
     from: chain,
-    rpc(name, args) { state.rpcCalls.push({ name, args }); return Promise.resolve(rpc); },
+    rpc(name, args) {
+      if (name === 'atlas_prepare_signup') { state.prepareCalls.push(args); return Promise.resolve(prepare); }
+      state.rpcCalls.push({ name, args });
+      return Promise.resolve(rpcByName[name] || rpc);
+    },
     channel() {
       const realtime = { on() { return realtime; }, subscribe(handler) { handler?.('SUBSCRIBED'); return realtime; } };
       return realtime;
@@ -265,7 +273,106 @@ async function load({ config = CLOUD, clientOptions, autoConfirm = false, url = 
     assert.deepEqual(page.errors, []);
   }
 
-  console.log('PASS sign-in errors: wrong password, wrong code, throttling, missing code, missing setup, offline, login function, unapproved login');
+  // The invite is checked before the mail goes out; the link alone will then
+  // finish the account, so the verification view says so.
+  {
+    const page = await load({ clientOptions:{ prepare:{ data:{ ok:true }, error:null }, signupResponse:{ data:{ user:{ identities:[{ provider:'email' }] }, session:null }, error:null } } });
+    await page.signIn({ code:'travel2n' });
+    assert.equal(page.fake.state.prepareCalls.length, 1);
+    assert.equal(JSON.stringify(page.fake.state.prepareCalls[0]), JSON.stringify({ p_email:'eva@example.com', p_code:'travel2n', p_name:'Eva Huang' }));
+    assert.equal(page.fake.state.signupCalls, 1);
+    assert.equal(page.$('#email-verification').hidden, false);
+    assert(page.$('#verification-step-two').textContent.includes('自動完成建立並登入'));
+    assert.equal(page.fake.state.rpcCalls.length, 0, 'nothing is redeemed before the link');
+    assert(!JSON.stringify([...Array(page.window.localStorage.length).keys()].map(i => page.window.localStorage.getItem(page.window.localStorage.key(i)))).includes('travel2n'), 'the invite is not stored by the page');
+    // 「我已完成驗證」 goes to a plain login, not the second form.
+    page.click(page.$('#verification-continue'));
+    await page.window.Promise.resolve();
+    assert.equal(page.$('#account-login').getAttribute('aria-selected'), 'true');
+    assert.equal(page.$('#account-email').value, 'eva@example.com');
+    assert.deepEqual(page.errors, []);
+  }
+  // A wrong invite is refused before any Auth user or mail exists.
+  {
+    const page = await load({ clientOptions:{ prepare:{ data:{ ok:false, reason:'invalid_code' }, error:null } } });
+    await page.signIn({ code:'nope' });
+    assert(page.$('#account-error').textContent.includes('通行碼不正確'));
+    assert.equal(page.fake.state.signupCalls, 0, 'no signup with a wrong invite');
+    assert.equal(page.$('#email-verification').hidden, true);
+    assert.equal(page.$('#account-create').getAttribute('aria-selected'), 'true');
+    assert.deepEqual(page.errors, []);
+  }
+  // Opening the confirmation link finishes the account and signs in.
+  {
+    const page = await load({ clientOptions:{
+      initialSession:{ access_token:'token', user:{ id:'new-user', email:'new@example.com', email_confirmed_at:'2026-11-09T00:00:00Z' } },
+      profileResponse:{ data:null, error:null },
+      rpcByName:{ atlas_complete_signup:{ data:{ ok:true, user_id:'new-user', display_name:'新旅人', avatar_url:'', discoverable:true }, error:null } }
+    } });
+    assert.equal(page.fake.state.rpcCalls.at(-1)?.name, 'atlas_complete_signup');
+    assert.equal(page.$('#account-card').hidden, false, 'the link signs the traveller in');
+    assert.equal(page.$('#account-name').textContent, '新旅人');
+    assert.equal(page.$('#account-dialog').open, false, 'no second form');
+    assert(page.$('#stamp-feedback').textContent.includes('帳號已建立'));
+    assert.deepEqual(page.errors, []);
+  }
+  // Confirmed elsewhere, then a plain login here finishes the account.
+  {
+    const page = await load({ clientOptions:{ rpcByName:{
+      atlas_login:{ data:{ ok:false, reason:'not_approved' }, error:null },
+      atlas_complete_signup:{ data:{ ok:true, user_id:'user-personal', display_name:'Eva Huang', avatar_url:'', discoverable:true }, error:null }
+    } } });
+    await page.signIn({ createAccount:false });
+    assert.equal(page.$('#account-card').hidden, false);
+    assert.deepEqual(page.fake.state.rpcCalls.map(call => call.name), ['atlas_login', 'atlas_complete_signup']);
+    assert.deepEqual(page.errors, []);
+  }
+  // An expired or used mail link says so instead of silently showing the map.
+  {
+    const page = await load({ url:'https://eva.example/personal/travel/map/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=' });
+    await wait();
+    assert.equal(page.$('#account-dialog').open, true);
+    assert(page.$('#account-error').textContent.includes('已失效'));
+    assert.equal(page.$('#account-forgot').hidden, false, 'a new reset mail is one click away');
+    assert.equal(page.window.location.hash, '', 'the error is not replayed on reload');
+    assert(!/otp_expired|access_denied/.test(page.$('#account-error').textContent));
+    assert.deepEqual(page.errors, []);
+  }
+  // Reset: choosing the current password again is named, not "reopen the link".
+  {
+    const recovery = 'https://eva.example/personal/travel/map/#access_token=t&refresh_token=r&expires_in=3600&token_type=bearer&type=recovery';
+    const page = await load({ url:recovery, clientOptions:{
+      initialSession:{ access_token:'token', user:{ id:'user-personal', email:'eva@example.com', email_confirmed_at:'2026-11-01T00:00:00Z' } },
+      profileResponse:{ data:{ id:'user-personal', display_name:'Eva Huang', discoverable:true }, error:null },
+      updateUserError:{ message:'New password should be different from the old password.', code:'same_password' }
+    } });
+    await wait();
+    assert.equal(page.$('#code-signin').dataset.mode, 'reset');
+    page.$('#account-password').value = 'same-password-123';
+    page.click(page.$('#code-signin-submit'));
+    await wait(20);
+    assert.equal(page.fake.state.updateUserCalls, 1);
+    assert(page.$('#account-error').textContent.includes('不能和目前的密碼相同'));
+    assert.equal(page.$('#code-signin').dataset.mode, 'reset', 'stays on the reset view to try another');
+    assert.deepEqual(page.errors, []);
+  }
+  // Reset with no session left: send the traveller to request a new mail.
+  {
+    const recovery = 'https://eva.example/personal/travel/map/#access_token=t&refresh_token=r&expires_in=3600&token_type=bearer&type=recovery';
+    const page = await load({ url:recovery });
+    await wait();
+    assert.equal(page.$('#code-signin').dataset.mode, 'reset');
+    page.$('#account-password').value = 'new-password-123';
+    page.click(page.$('#code-signin-submit'));
+    await wait(20);
+    assert.equal(page.fake.state.updateUserCalls, 0, 'no update without a session');
+    assert(page.$('#account-error').textContent.includes('重設連結已失效'));
+    assert.equal(page.$('#code-signin').dataset.mode, 'login');
+    assert.equal(page.$('#account-forgot').hidden, false);
+    assert.deepEqual(page.errors, []);
+  }
+
+  console.log('PASS sign-in errors: wrong password, wrong code, throttling, missing code, missing setup, offline, login function, unapproved login, invite before mail, link finishes signup, login finishes signup, expired links, reset errors');
   process.exit(0);
 })().catch(error => {
   console.error(error);

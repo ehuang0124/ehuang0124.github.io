@@ -25,6 +25,9 @@
   const DEVICE_KEY = 'eva.travel.atlas.device.v1';
   let authenticating = false;
   let recoveryFlow = false;
+  // An expired or already-used mail link comes back with an error instead of
+  // a session; the page says so instead of silently showing the map.
+  let linkError = null;
   const TRAVELLER_NAME_KEY = 'eva.travel.atlas.name.v1';
   // Display-name override for the browser-only gate, whose name comes from config.
   const LOCAL_NAME_KEY = 'eva.travel.atlas.local-name.v1';
@@ -408,6 +411,10 @@
       if (isConfigured()) {
         // Capture the recovery type before the Auth client consumes the hash.
         recoveryFlow = recoveryLink();
+        linkError = readLinkError();
+        const tokenHash = linkError ? null : readTokenHash();
+        // An error link never opens the reset view: it has no session to use.
+        if (linkError) recoveryFlow = false;
         try { localStorage.removeItem(DEVICE_KEY); } catch { /* ignore */ }
         state.mode = 'cloud';
         state.connection = 'connecting';
@@ -426,8 +433,23 @@
           if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id && session.user.email_confirmed_at) return;
           resolveSession(session);
         });
+        if (tokenHash) {
+          try {
+            const { error } = await client.auth.verifyOtp(tokenHash);
+            if (error) { console.warn('mail link could not be verified', error); linkError = { code:error.code || 'otp_expired', description:error.message || '' }; recoveryFlow = false; }
+          } catch (error) {
+            console.warn('mail link could not be verified', error);
+            linkError = { code:'otp_expired', description:'' };
+            recoveryFlow = false;
+          }
+        }
         const { data } = await client.auth.getSession();
         await resolveSession(data?.session || null);
+        cleanAuthParams();
+        if (linkError) {
+          console.warn('mail link returned an error', linkError);
+          setTimeout(() => emit('link-error', linkError), 0);
+        }
         setConnection('online');
         // A link that carries the recovery type opens the reset view even if
         // the exchange completes after the page has already rendered.
@@ -564,13 +586,42 @@
       default: return '登入失敗，請稍後再試。';
     }
   }
-  function confirmationRedirect() {
-    // Do not carry filters, demo flags or authentication tokens into the email.
+  const firstRow = data => (Array.isArray(data) ? data[0] : data) || null;
+  // The page may run against a project that has not applied the newest
+  // migration yet; a missing function falls back to the older flow.
+  const missingFunction = error => /PGRST202|42883|could not find the function|function .* does not exist/i
+    .test(`${error?.message || ''} ${error?.code || ''} ${error?.details || ''}`);
+  // A confirmed address whose invite was checked before the mail was sent
+  // becomes a traveller here, without a second form. Returns the profile row
+  // from the database, or null when the account still needs the invite.
+  async function completeSignup() {
+    if (!client) return null;
+    try {
+      const { data, error } = await client.rpc('atlas_complete_signup', {
+        p_user_agent:String(navigator.userAgent || '').slice(0, 300)
+      });
+      if (error) {
+        if (!missingFunction(error)) console.warn('signup could not be completed', error);
+        return null;
+      }
+      const result = firstRow(data);
+      return result && result.ok === true ? result : null;
+    } catch (error) {
+      console.warn('signup could not be completed', error);
+      return null;
+    }
+  }
+  // Mail links always return to the atlas page, which owns the reset and
+  // confirmation views, even when the request came from the profile page.
+  function atlasUrl() {
     const url = new URL(location.href);
+    url.pathname = url.pathname.replace(/\/profile\/(?:index\.html)?$/, '/');
+    // Do not carry filters, demo flags or authentication tokens into the email.
     url.search = '';
     url.hash = '';
     return url.toString();
   }
+  function confirmationRedirect() { return atlasUrl(); }
   async function confirmationEnabled() {
     // Fail closed before creating an Auth user if the project would silently
     // auto-confirm arbitrary addresses. The settings endpoint is public.
@@ -631,6 +682,27 @@
             : '網路連線似乎有問題，請檢查網路後再試。' };
         }
       }
+      // Check the invite before any mail is sent, so the confirmation link
+      // alone can finish the account. Older projects skip this step.
+      let prepared = false;
+      if (createAccount) {
+        const { data:prepData, error:prepError } = await client.rpc('atlas_prepare_signup', {
+          p_email:address, p_code:value, p_name:traveller
+        });
+        if (prepError && !missingFunction(prepError)) return { ok:false, reason:signInErrorText(prepError) };
+        if (!prepError) {
+          const prep = firstRow(prepData);
+          if (!prep || prep.ok !== true) {
+            const reason = prep?.reason;
+            return {
+              ok:false,
+              field:reason === 'invalid_code' || reason === 'missing_code' ? '#access-code' : reason === 'invalid_email' ? '#account-email' : undefined,
+              reason:reason === 'invalid_email' ? '請輸入有效的電子郵件。' : codeErrorText(reason)
+            };
+          }
+          prepared = true;
+        }
+      }
       // Never reuse an existing session as proof of the typed password.
       let response = createAccount
         ? await client.auth.signUp({ email:address, password, options:{ emailRedirectTo:confirmationRedirect() } })
@@ -651,7 +723,9 @@
       if (createAccount && !duplicate && !attempt.session?.user) {
         // No password, invite or token is retained while waiting for the email.
         writeJSON(TRAVELLER_NAME_KEY, traveller);
-        return { ok:false, pendingVerification:true, reason:'如果信箱可註冊，驗證信已寄出。請點擊信中連結，再以原帳密和邀請碼完成建立；若已註冊請直接登入。' };
+        return { ok:false, pendingVerification:true, autoComplete:prepared, reason:prepared
+          ? '驗證信已寄出。打開信中的連結，就會自動完成建立並登入。'
+          : '如果信箱可註冊，驗證信已寄出。請點擊信中連結，再以原帳密和邀請碼完成建立；若已註冊請直接登入。' };
       }
       if (!attempt.session?.user) return { ok:false, reason:'登入狀態已失效，請重新整理再試。' };
       // Even if configuration changes between the settings check and signup,
@@ -676,7 +750,10 @@
         setConnection('error');
         return { ok:false, reason: signInErrorText(error) };
       }
-      const result = Array.isArray(data) ? data[0] : data;
+      let result = firstRow(data);
+      // The link may have been opened on another device: a returning login
+      // finishes an account whose invite was already accepted.
+      if (!createAccount && result?.reason === 'not_approved') result = (await completeSignup()) || result;
       if (!result || result.ok !== true) {
         setConnection('online');
         return { ok:false, needsVerification:result?.reason === 'email_unverified', reason: codeErrorText(result?.reason) };
@@ -738,8 +815,26 @@
       if (isSetupError(error)) emit('error', error.message);
       return;
     }
-    // Following a confirmation link creates a session, not a profile. Keep
-    // the visitor read-only and guide them back to the invite step.
+    // Following a confirmation link creates a session, not a profile. If the
+    // invite was accepted before the mail went out, finish the account now
+    // and sign the traveller in; otherwise stay read-only and ask for it.
+    if (!data && !recoveryFlow) {
+      const finished = await completeSignup();
+      if (seq !== resolveSeq) return;
+      if (finished) {
+        notifiedUnapprovedId = null;
+        const profile = profileFromRow({ id:finished.user_id || session.user.id, display_name:finished.display_name, avatar_url:finished.avatar_url, discoverable:finished.discoverable });
+        profiles.set(profile.id, profile);
+        writeJSON(TRAVELLER_NAME_KEY, profile.name);
+        setUser({ id:profile.id, name:profile.name, avatar:profile.avatar, email:typeof session.user.email === 'string' ? session.user.email : '' });
+        emit('signup-complete', { name:profile.name });
+        startSubscription();
+        emit('profiles', profiles);
+        await syncPull();
+        flush();
+        return;
+      }
+    }
     if (!data) {
       setUser(null);
       if (!recoveryFlow && session.user.email_confirmed_at && notifiedUnapprovedId !== session.user.id) {
@@ -772,12 +867,7 @@
   // The link in the mail must come back to this page, without the query string
   // that started it.
   function recoveryRedirect() {
-    try {
-      const url = new URL(location.href);
-      url.search = '';
-      url.hash = '';
-      return url.href;
-    } catch { return undefined; }
+    try { return atlasUrl(); } catch { return undefined; }
   }
   function recoveryLink() {
     try {
@@ -793,11 +883,28 @@
     const { error } = await client.auth.resetPasswordForEmail(address, { redirectTo:recoveryRedirect() });
     return error ? { ok:false, reason:'failed' } : { ok:true };
   }
+  function passwordErrorReason(error) {
+    const text = `${error?.message || error || ''} ${error?.code || ''}`;
+    if (/same_password|different from the old password/i.test(text)) return 'same';
+    if (/weak_password|password.*(short|least|weak)/i.test(text)) return 'short';
+    if (/session_not_found|session.*missing|auth session missing|jwt expired|invalid jwt|refresh_token_not_found|bad_jwt|user_not_found/i.test(text)) return 'expired';
+    if (/reauthentication/i.test(text)) return 'expired';
+    if (/failed to fetch|networkerror|load failed/i.test(text)) return 'offline';
+    return 'failed';
+  }
   async function updatePassword(password) {
     if (state.mode !== 'cloud' || !client) return { ok:false, reason:'unavailable' };
     if (typeof password !== 'string' || password.length <= 6) return { ok:false, reason:'short' };
-    const { error } = await client.auth.updateUser({ password });
-    if (error) return { ok:false, reason:'failed' };
+    // Without the session the link brought, there is nobody to update.
+    const { data:current } = await client.auth.getSession();
+    if (!current?.session?.user) return { ok:false, reason:'expired' };
+    let error = null;
+    try { ({ error } = await client.auth.updateUser({ password })); }
+    catch (caught) { error = caught; }
+    if (error) {
+      console.warn('password could not be updated', error);
+      return { ok:false, reason:passwordErrorReason(error) };
+    }
     const { data } = await client.auth.getSession();
     // Do not let the confirmation/invite prompt replace an active reset view.
     await resolveSession(data?.session || null);
@@ -807,6 +914,42 @@
   api.requestPasswordReset = requestPasswordReset;
   api.updatePassword = updatePassword;
   api.recoveryRequested = recoveryLink;
+  api.linkError = () => linkError;
+
+  // Read an error the Auth server put on the way back (expired, used, or
+  // denied link). Both the hash (implicit links) and the query are checked.
+  function readLinkError() {
+    try {
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+      const code = hash.get('error_code') || query.get('error_code') || hash.get('error') || query.get('error');
+      if (!code) return null;
+      return { code, description:hash.get('error_description') || query.get('error_description') || '' };
+    } catch { return null; }
+  }
+  // Links built from a custom mail template may carry `token_hash` instead of
+  // tokens in the hash; verify those here so either template works.
+  function readTokenHash() {
+    try {
+      const query = new URLSearchParams(location.search);
+      const tokenHash = query.get('token_hash');
+      const type = query.get('type');
+      return tokenHash && type ? { token_hash:tokenHash, type } : null;
+    } catch { return null; }
+  }
+  // Drop auth parameters from the address bar so a reload or a shared link
+  // does not replay an expired token or error.
+  function cleanAuthParams() {
+    try {
+      const url = new URL(location.href);
+      const authKeys = ['token_hash', 'type', 'error', 'error_code', 'error_description', 'code', 'sb'];
+      let changed = false;
+      authKeys.forEach(key => { if (url.searchParams.has(key)) { url.searchParams.delete(key); changed = true; } });
+      const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
+      if (['access_token', 'error', 'error_code', 'error_description', 'type'].some(key => hash.has(key))) { url.hash = ''; changed = true; }
+      if (changed) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    } catch { /* leave the address as it is */ }
+  }
 
   function enterDemo(id = 'demo-eva') {
     const user = DEMO_USERS.find(item => item.id === id);

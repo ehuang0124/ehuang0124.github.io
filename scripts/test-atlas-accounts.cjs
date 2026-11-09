@@ -16,6 +16,7 @@ catch { console.error('Install jsdom first: npm install --prefix /tmp/atlas-test
 const root = path.resolve(__dirname, '..');
 const mapDir = path.join(root, 'personal/travel/map');
 const pageHtml = fs.readFileSync(path.join(mapDir, 'index.html'), 'utf8');
+const profileHtml = fs.readFileSync(path.join(mapDir, 'profile/index.html'), 'utf8');
 const CONFIG_SNIPPET = `window.TravelAtlasConfig = { supabaseUrl:'https://example.supabase.co', supabaseAnonKey:'test-anon-key', demoMode:false };`;
 
 // ---------------------------------------------------------------- test server
@@ -29,6 +30,10 @@ function createServer() {
   const ACCESS_CODE = 'travel2n';
   let nextId = 1;
   let failedTable = null;
+  // Off by default so the older verify-then-redeem flow stays covered; the
+  // newer project answers atlas_prepare_signup / atlas_complete_signup.
+  let autoSignup = false;
+  const approvals = new Map(); // email -> display name
 
   const uuid = prefix => `${prefix}-${String(nextId++).padStart(4, '0')}`;
   function addUser({ name, email, sub }) {
@@ -164,6 +169,27 @@ function createServer() {
   // profile, and every accepted code appends to atlas_logins.
   async function rpc(name, args, who) {
     calls.push({ op:'rpc', name, payload:args });
+    if (autoSignup && name === 'atlas_prepare_signup') {
+      if (String(args?.p_code || '').trim() !== ACCESS_CODE) return { data:{ ok:false, reason:'invalid_code' }, error:null };
+      approvals.set(String(args.p_email).toLowerCase(), String(args.p_name || '').trim().slice(0, 40) || '旅人');
+      return { data:{ ok:true }, error:null };
+    }
+    if (autoSignup && name === 'atlas_complete_signup') {
+      const current = who();
+      if (!current?.user) return { data:{ ok:false, reason:'no_session' }, error:null };
+      if (!current.user.email_confirmed_at) return { data:{ ok:false, reason:'email_unverified' }, error:null };
+      let profile = tables.profiles.find(row => row.id === current.user.id);
+      if (!profile) {
+        const display = approvals.get(String(current.user.email).toLowerCase());
+        if (!display) return { data:{ ok:false, reason:'not_approved' }, error:null };
+        profile = { id:current.user.id, user_id:current.user.id, display_name:display, avatar_url:'', discoverable:true, updated_at:new Date().toISOString() };
+        tables.profiles.push(profile);
+        publish('profiles', 'INSERT', profile);
+      }
+      approvals.delete(String(current.user.email).toLowerCase());
+      tables.logins.push({ user_id:profile.id, display_name:profile.display_name, user_agent:String(args?.p_user_agent || ''), ip:'test' });
+      return { data:{ ok:true, user_id:profile.id, display_name:profile.display_name, avatar_url:profile.avatar_url, discoverable:profile.discoverable }, error:null };
+    }
     if (!['atlas_redeem_code', 'atlas_login', 'atlas_leave_stamp'].includes(name)) {
       return { data:null, error:{ message:`Could not find the function public.${name}`, code:'PGRST202' } };
     }
@@ -303,15 +329,17 @@ function createServer() {
   const verify = email => { const user = accounts.get(email)?.user; assert(user); user.email_confirmed_at = new Date().toISOString(); };
   return {
     users, tables, calls, accounts, addUser, connect, uuid, notifyLive, verify, accessCode:ACCESS_CODE,
-    setWriteFailure: table => { failedTable = table; }
+    setWriteFailure: table => { failedTable = table; },
+    setAutoSignup: value => { autoSignup = Boolean(value); },
+    approvals
   };
 }
 
 // ---------------------------------------------------------------- page harness
 const sharedServer = createServer();
 
-async function boot({ demo = false, seed = {}, viewport = 'desktop', url = 'https://eva.example/personal/travel/map/' } = {}) {
-  const dom = new JSDOM(pageHtml, { url, runScripts:'outside-only', pretendToBeVisual:true });
+async function boot({ demo = false, seed = {}, viewport = 'desktop', page = 'map', url = page === 'profile' ? 'https://eva.example/personal/travel/map/profile/' : 'https://eva.example/personal/travel/map/' } = {}) {
+  const dom = new JSDOM(page === 'profile' ? profileHtml : pageHtml, { url, runScripts:'outside-only', pretendToBeVisual:true });
   const { window } = dom;
   const errors = [];
   window.addEventListener('error', event => errors.push(event.message));
@@ -350,8 +378,11 @@ async function boot({ demo = false, seed = {}, viewport = 'desktop', url = 'http
   };
   inject('config.js', () => demo ? 'window.TravelAtlasConfig={supabaseUrl:"",supabaseAnonKey:"",demoMode:true};' : CONFIG_SNIPPET);
   inject('account.js');
-  for (const file of ['palette.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'jp-admin.js']) inject(file);
-  inject('app.js');
+  if (page === 'profile') inject('profile/profile.js');
+  else {
+    for (const file of ['palette.js', 'world.js', 'places.js', 'okinawa-places.js', 'us-states.js', 'jp-admin.js']) inject(file);
+    inject('app.js');
+  }
   const document = window.document;
   const settle = async (turns = 12) => { for (let i = 0; i < turns; i++) await new Promise(resolve => setTimeout(resolve, 3)); };
   await settle();
@@ -551,45 +582,68 @@ async function main() {
     assert.equal(server.tables.logins.length, 2, 'each sign-in is logged');
     assert.equal(server.calls.filter(call => call.op === 'rpc').at(-1).name, 'atlas_login');
 
-    // Profile section: email is shown read-only, the display name can change,
-    // and a signed-in traveller can ask for a password-reset mail.
+    // The header menu shows only a glance; everything else is on the profile page.
+    assert(!page.$('#account-card').textContent.includes('⚙'), 'no gear next to the profile');
     click(page.window, page.$('#account-menu-button'));
     await page.settle();
-    assert.equal(page.$('#account-profile-name').textContent, 'Eva Huang', 'the profile shows the display name');
-    assert.equal(page.$('#account-profile-email').textContent, 'eva-approved@example.com', 'the profile shows the sign-in email');
-    assert.equal(page.$('#profile-name-input').value, 'Eva Huang', 'the rename field starts from the current name');
-    assert.equal(page.$('#profile-reset-password').hidden, false, 'cloud travellers can request a reset from the profile');
-    page.$('#profile-name-input').value = '   ';
-    input(page.window, page.$('#profile-name-input'));
-    click(page.window, page.$('#profile-save'));
-    await page.settle();
-    assert(page.$('#profile-feedback').textContent.includes('不能是空白'), 'a blank name is refused');
+    assert.equal(page.$('#account-menu').hidden, false);
+    assert.equal(page.$('#account-summary-name').textContent, 'Eva Huang');
+    assert.equal(page.$('#account-summary-email').textContent, 'eva-approved@example.com');
+    assert(page.$('#account-menu-status').textContent.length > 0, 'the menu shows the sync state');
+    assert(page.$('#account-footprint').textContent.length > 0, 'the menu shows the footprint');
+    assert.equal(page.$('#account-profile-link').getAttribute('href'), './profile/');
+    for (const id of ['#profile-name-input', '#profile-save', '#profile-reset-password', '#discoverable-toggle', '#sync-now']) {
+      assert.equal(page.$(id), null, `${id} lives on the profile page, not in the menu`);
+    }
+    click(page.window, page.$('#account-menu-button'));
+
+    // Profile page: email is shown read-only, the display name can change,
+    // and a signed-in traveller can ask for a password-reset mail.
+    const profilePage = await boot({ page:'profile' });
+    assert.equal(profilePage.$('#profile-signed-out').hidden, false, 'a visitor is sent to sign in');
+    assert.equal(profilePage.$('#profile-content').hidden, true);
+    assert(profilePage.$('#profile-signin-link').getAttribute('href').includes('signin=1'));
+    assert.equal((await profilePage.window.TravelAtlasAccount.signIn({ email:'eva-approved@example.com', password:'personal-password-123' })).ok, true);
+    await profilePage.settle();
+    const pp = profilePage;
+    assert.equal(pp.$('#profile-content').hidden, false);
+    assert.equal(pp.$('#account-profile-name').textContent, 'Eva Huang', 'the profile shows the display name');
+    assert.equal(pp.$('#account-profile-email').textContent, 'eva-approved@example.com', 'the profile shows the sign-in email');
+    assert.equal(pp.$('#profile-name-input').value, 'Eva Huang', 'the rename field starts from the current name');
+    assert.equal(pp.$('#profile-password-card').hidden, false, 'cloud travellers can request a reset from the profile');
+    assert.equal(pp.$('#profile-companion-card').hidden, false);
+    assert.equal(pp.$('#sync-now').hidden, false);
+    assert(/^\d+$/.test(pp.$('#stat-places').textContent));
+    const submitName = () => pp.$('#profile-name-form').dispatchEvent(new pp.window.Event('submit', { bubbles:true, cancelable:true }));
+    pp.$('#profile-name-input').value = '   ';
+    input(pp.window, pp.$('#profile-name-input'));
+    submitName();
+    await pp.settle();
+    assert(pp.$('#profile-feedback').textContent.includes('不能是空白'), 'a blank name is refused');
     assert.equal(server.tables.profiles.find(row => row.id === traveller.id).display_name, 'Eva Huang', 'a blank name writes nothing');
-    page.$('#profile-name-input').value = 'Eva H.';
-    input(page.window, page.$('#profile-name-input'));
-    click(page.window, page.$('#profile-save'));
-    await page.settle(); await page.settle();
+    pp.$('#profile-name-input').value = 'Eva H.';
+    input(pp.window, pp.$('#profile-name-input'));
+    submitName();
+    await pp.settle(); await pp.settle();
     assert.equal(server.tables.profiles.find(row => row.id === traveller.id).display_name, 'Eva H.', 'the new name reaches the profile row');
-    assert.equal(page.window.TravelAtlasAccount.user.name, 'Eva H.', 'the session carries the new name');
-    assert.equal(page.$('#account-name').textContent, 'Eva H.', 'the chip shows the new name');
-    assert.equal(page.$('#account-profile-name').textContent, 'Eva H.');
-    assert(page.$('#profile-feedback').textContent.includes('Eva H.'), 'the save is confirmed in the menu');
-    assert.equal(page.$('#account-menu').hidden, false, 'the menu stays open after saving');
+    assert.equal(pp.window.TravelAtlasAccount.user.name, 'Eva H.', 'the session carries the new name');
+    assert.equal(pp.$('#account-profile-name').textContent, 'Eva H.');
+    assert(pp.$('#profile-feedback').textContent.includes('Eva H.'), 'the save is confirmed on the page');
     const resetCalls = server.calls.filter(call => call.op === 'resetPasswordForEmail').length;
-    click(page.window, page.$('#profile-reset-password'));
-    await page.settle();
+    click(pp.window, pp.$('#profile-reset-password'));
+    await pp.settle();
     const profileReset = server.calls.filter(call => call.op === 'resetPasswordForEmail').at(-1);
     assert.equal(server.calls.filter(call => call.op === 'resetPasswordForEmail').length, resetCalls + 1, 'the profile reset sends one mail');
     assert.equal(profileReset.payload.email, 'eva-approved@example.com', 'the reset goes to the signed-in address');
-    assert(profileReset.payload.options.redirectTo.startsWith('https://eva.example/personal/travel/map/'), 'the profile reset link returns to this page');
-    assert(page.$('#profile-feedback').textContent.includes('重設密碼的信已寄到'), 'the profile confirms the reset mail');
+    assert.equal(profileReset.payload.options.redirectTo, 'https://eva.example/personal/travel/map/', 'the reset link returns to the atlas, not the profile page');
+    assert(pp.$('#profile-password-feedback').textContent.includes('重設密碼的信已寄到'), 'the profile confirms the reset mail');
     // Restore the name other scenarios expect.
-    page.$('#profile-name-input').value = 'Eva Huang';
-    input(page.window, page.$('#profile-name-input'));
-    click(page.window, page.$('#profile-save'));
-    await page.settle(); await page.settle();
-    assert.equal(page.window.TravelAtlasAccount.user.name, 'Eva Huang');
-    click(page.window, page.$('#account-menu-button'));
+    pp.$('#profile-name-input').value = 'Eva Huang';
+    input(pp.window, pp.$('#profile-name-input'));
+    submitName();
+    await pp.settle(); await pp.settle();
+    assert.equal(pp.window.TravelAtlasAccount.user.name, 'Eva Huang');
+    assert.deepEqual(pp.errors, []);
     console.log('PASS profile: email shown, display name editable and saved, signed-in password reset');
   }
 
@@ -942,6 +996,59 @@ async function main() {
     console.log('PASS password reset: link view, short password refused, new password signs in');
   }
 
+  // ------------------------------------------------- 5b. signup finishes on the link
+  {
+    const server = sharedServer;
+    server.setAutoSignup(true);
+    try {
+      const page = await boot();
+      click(page.window, page.$('#sign-in'));
+      await page.settle();
+      click(page.window, page.$('#account-create'));
+      page.$('#account-email').value = 'auto@example.com';
+      page.$('#account-password').value = 'auto-password-123';
+      page.$('#traveller-name').value = '自動旅人';
+      page.$('#access-code').value = 'wrong-code';
+      click(page.window, page.$('#code-signin-submit'));
+      await page.settle(); await page.settle();
+      assert(page.$('#account-error').textContent.includes('通行碼不正確'), 'a wrong invite is refused before any mail');
+      assert.equal(server.accounts.has('auto@example.com'), false, 'no Auth user for a wrong invite');
+      page.$('#account-password').value = 'auto-password-123';
+      page.$('#access-code').value = server.accessCode;
+      click(page.window, page.$('#code-signin-submit'));
+      await page.settle(); await page.settle();
+      assert.equal(page.$('#email-verification').hidden, false);
+      assert(page.$('#verification-step-two').textContent.includes('自動完成建立並登入'));
+      assert.equal(server.tables.profiles.some(row => row.display_name === '自動旅人'), false, 'nothing is created before the link');
+      // The link opens on this page: the confirmed session finishes the account.
+      server.verify('auto@example.com');
+      const user = server.accounts.get('auto@example.com').user;
+      page.connection.fireAuth({ access_token:'token-confirm', user });
+      await page.settle(); await page.settle();
+      assert.equal(page.$('#account-card').hidden, false, 'signed in straight from the link');
+      assert.equal(page.$('#account-name').textContent, '自動旅人');
+      assert.equal(page.$('#account-dialog').open, false, 'no second form');
+      assert.equal(page.$('#stamp-button').classList.contains('locked'), false);
+      assert.equal(server.calls.filter(call => call.name === 'atlas_redeem_code' && call.payload?.p_name === '自動旅人').length, 0, 'the invite is not asked for again');
+      await page.window.TravelAtlasAccount.signOut();
+      await page.settle();
+      // Later logins are ordinary.
+      assert.equal((await page.window.TravelAtlasAccount.signIn({ email:'auto@example.com', password:'auto-password-123' })).ok, true);
+      assert.deepEqual(page.errors, []);
+      // Confirmed on another device first: a plain login here finishes it.
+      const other = await boot();
+      const account = other.window.TravelAtlasAccount;
+      assert.equal((await account.signIn({ email:'later@example.com', password:'later-password-1', name:'晚到旅人', code:server.accessCode, createAccount:true })).pendingVerification, true);
+      server.verify('later@example.com');
+      const finished = await account.signIn({ email:'later@example.com', password:'later-password-1' });
+      assert.equal(finished.ok, true, 'login finishes an approved, confirmed signup');
+      assert.equal(account.user.name, '晚到旅人');
+      console.log('PASS auto signup: invite before mail, link signs in, login after confirming elsewhere');
+    } finally {
+      server.setAutoSignup(false);
+    }
+  }
+
   // ---------------------------------------------------------------- 6. demo mode
   {
     const page = await boot({ demo:true });
@@ -965,15 +1072,21 @@ async function main() {
     assert(page.$('#friends-tabs').textContent.length > 0, 'demo exposes companions');
     click(page.window, page.$('#account-menu-button'));
     await page.settle();
-    assert.equal(page.$('#account-profile-email').textContent, '示範帳號（沒有電子郵件）', 'demo travellers are told there is no email');
-    assert.equal(page.$('#profile-reset-password').hidden, true, 'demo travellers get no reset mail');
-    page.$('#profile-name-input').value = '示範 Eva';
-    input(page.window, page.$('#profile-name-input'));
-    click(page.window, page.$('#profile-save'));
-    await page.settle();
-    assert.equal(page.window.TravelAtlasAccount.user.name, '示範 Eva', 'a demo rename applies immediately');
-    assert.equal(page.$('#account-name').textContent, '示範 Eva');
-    assert(page.$('#profile-feedback').textContent.includes('示範 Eva'));
+    assert.equal(page.$('#account-summary-email').textContent, '示範帳號');
+    assert.equal(page.$('#demo-switch').hidden, false, 'demo identities can be switched from the menu');
+    const demoProfile = await boot({ demo:true, page:'profile' });
+    demoProfile.window.TravelAtlasAccount.enterDemo('demo-eva');
+    await demoProfile.settle();
+    assert.equal(demoProfile.$('#account-profile-email').textContent, '示範帳號（沒有電子郵件）', 'demo travellers are told there is no email');
+    assert.equal(demoProfile.$('#profile-password-card').hidden, true, 'demo travellers get no reset mail');
+    assert.equal(demoProfile.$('#sync-now').hidden, true);
+    demoProfile.$('#profile-name-input').value = '示範 Eva';
+    input(demoProfile.window, demoProfile.$('#profile-name-input'));
+    demoProfile.$('#profile-name-form').dispatchEvent(new demoProfile.window.Event('submit', { bubbles:true, cancelable:true }));
+    await demoProfile.settle();
+    assert.equal(demoProfile.window.TravelAtlasAccount.user.name, '示範 Eva', 'a demo rename applies immediately');
+    assert(demoProfile.$('#profile-feedback').textContent.includes('示範 Eva'));
+    assert.deepEqual(demoProfile.errors, []);
     console.log('PASS demo: local sign-in, seeded trips, stamping, companions');
   }
 
