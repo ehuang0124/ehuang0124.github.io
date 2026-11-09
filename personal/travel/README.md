@@ -12,9 +12,9 @@ Every page under `personal/travel/` — the landing page, the two 幕末 itinera
 | `landing.css` | Landing page only (`index.html`): the 頁面分類 row (the no-JavaScript fallback index), 目次, feature cards, the 推し POINT callout, the 青島 band, 旅の断片, the postcard and the printed 型錄 style guide. It declares no tokens of its own. |
 | `assets/travel-icons.svg` | Shared 24×24 line-icon sprite (13 symbols: 神社 / 五重塔 / 城 / 山 / 海 / 鐵道 / 渡船 / 溫泉 / 食 / 寫真 / 地點 / 郵戳, plus `an-lattice` — the 240×24 diamond chain used as the brand's separator). Reference one with `<svg class="an-i"><use href="/personal/travel/assets/travel-icons.svg#an-castle"/></svg>`; stroke and fill are inherited, so a single class themes every icon. |
 | `itinerary.css` | Layout for the two 幕末 itinerary maps (East Japan, Kyushu): cover, prefecture cards, chronology, map panel, place panel. Tokens and type come from `brand.css`. |
-| `okinawa/okinawa.css` | 沖繩 page layout only; tokens and type come from `brand.css`. |
+| `okinawa/okinawa.css` | 沖繩 page layout only (narrative chapters, mainland interactive atlas, four-day itinerary); tokens and type come from `brand.css`. |
 | `map/style.css` | Stamp Atlas application layout. Its `:root` aliases the atlas's own names (`--paper`, `--rust`, `--serif` …) to brand tokens; `brand.css` is what turns that layout white, crimson and gothic. |
-| `history-context.css` | The optional shared history layer used by the three Japan maps; themed by the historical-context pass in `brand.css`. |
+| `history-context.css` | The optional shared history layer used by the East Japan and Kyushu maps; themed by the historical-context pass in `brand.css`. |
 | `crumbs.css` | Shared breadcrumb bar, matching the landing page's `.ng-crumbs`; a page may still theme it through `--crumb-*`. |
 
 Four axes carry the brand everywhere:
@@ -62,24 +62,18 @@ All three maps expose a labelled native **區域** select next to the map contro
 - Kyushu: 北部九州 (the existing Fukuoka/Nagasaki stories) and 南部九州 (Kagoshima/Miyazaki). The existing seven-prefecture editorial navigation is retained.
 - Options reflect the map's existing content, not an all-Japan coverage claim. There are currently no Hokuriku stories or markers.
 
-## Okinawa proposal
+## Okinawa
 
-These are **travel areas informed by cultural context**, not official cultural boundaries or the historical Hokuzan/Chuzan/Nanzan kingdoms.
+The Okinawa feature page (`/personal/travel/okinawa/`) focuses on Fuzhou / Chinese immigration heritage and the 2027 1/7–1/10 mainland itinerary across **14 sites** in two mainland groupings (the complete 49-place Okinawa dataset remains intact in the independent [world stamp atlas](map/) via `map/okinawa-places.js`):
 
-| Area | Existing places / rationale |
+| Area | Sites |
 | --- | --- |
-| 山原（北端森林） | Kunigami's forest, waterfalls and Cape Hedo. Yanbaru culture extends beyond this deliberately narrow travel grouping. |
-| 名護・本部半島 | Nago, Motobu, Nakijin, Sesoko, Kouri and Ie; northern port/peninsula itinerary and Hokuzan castle heritage. |
-| 恩納海岸 | Onna's west-coast route: Manzamo, Maeda and Ryukyu Mura. |
-| 中部 | Yomitan pottery, gusuku sites, Koza and postwar streets, plus Urasoe. |
-| 那霸・首里 | Royal capital, Kume's diplomatic connections and Naha's markets; includes the airport. |
-| 南部 | Nanjo sacred sites, Itoman war remembrance and Tomigusuku. The existing combined Nishihara/Haebaru entry stays intact and follows the Haebaru itinerary here; this does not reclassify Nishihara administratively. |
-| 慶良間群島 | Zamami and Tokashiki; ferry itinerary. |
-| 久米島 | Separate island and transport itinerary. |
-| 宮古群島 | Miyako and Irabu, kept distinct from Yaeyama. |
-| 八重山群島 | Ishigaki, Taketomi, Iriomote and Yonaguni. |
+| 那霸・首里 (`naha`, 8 sites) | Kume (久米村・久米至聖廟), Fukushuen (1992 garden), Shuri Castle, Shikinaen (1799), Tsuboya (1682 kiln consolidation), Kencho-mae, Kokusai-dori / Makishi, Naha Airport |
+| 中部 (`central`, 6 sites) | Nishihara / Haebaru (Ryukyu kasuri & suburban stops), Urasoe (1372 Satto tribute origin), Nakagusuku Castle, Yomitan Yachimun no Sato, Southeast Botanical Gardens, Koza Gate 2 Street |
 
-Each Okinawa area belongs to exactly one map projection. This fixes the old “離島” card, which switched to Miyako/Yaeyama even for Kerama and Kumejima. Cards and the select share one filter; switching projections clears an incompatible filter. The visited-state filter intersects the region filter for both pins and the sidebar, with an explicit empty state. The full stamp checklist remains global. Existing place IDs, localStorage key and stamps are unchanged.
+The page pairs four thematic narrative chapters (`#narrative`, linking directly into map pins) with a mainland-only interactive SVG atlas (`#atlas`, including a 6-site `只看移民史核心` filter and 1/7–1/10 route toggle) and the four-day itinerary (`#plan`). Place names live in the site index, hover tooltips and keyboard-accessible pins, not permanent map overlays. It intentionally excludes the 1945 Battle of Okinawa markers (`history-context.js`) and outer-island/Yanbaru regions so the editorial scope stays centered on Sino-Ryukyuan maritime immigration history and the 2027 mainland itinerary.
+
+The cover and landing card share a locally bundled copy of the [2010 Shuri Castle aerial photograph](https://commons.wikimedia.org/wiki/File:100927_Shuri_Cstl_aerial.jpg) (MLIT/GSI; reuse allowed with attribution, including the prescribed National Land Image Information credit in each page's footer). Both pages load the already bundled segmented Noto Sans TC variable font (`map/fonts/noto-sans-tc/`) so the new Traditional Chinese characters remain legible offline even when Google Fonts is unavailable. The shared masthead's Japanese 図 glyph has a small OFL-licensed JP fallback (`map/fonts/atlas-sans-jp-brand.woff2`).
 
 ## Browser regression tests
 
@@ -93,13 +87,13 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules CHROMIUM_PATH=/path/to/chromium \
   node scripts/test-travel-landing.cjs
 ```
 
-Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. The landing test covers filled photos, text spacing, route wrapping, keyboard links and longer copy across desktop and mobile widths. The region tests cover timeline/marker filtering, cards/projection synchronization, reset/route behavior, visited intersections, empty states, saved stamps, itinerary jumps and keyboard focus.
+Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. The landing test covers filled photos, text spacing, route wrapping, keyboard links and longer copy across desktop and mobile widths. The region tests cover timeline/marker filtering, Okinawa's 4 narrative chapters and 14 mainland sites, core-site and route toggles, reset behavior, itinerary jumps and keyboard focus.
 
 ## Historical context and the Kanto/Kansai question
 
-`history-context.js` / `history-context.css` provide one shared, optional SVG context layer, separate from itinerary stories and stamp storage. The East Japan map labels **Kansai (Kinki) ← Chubu (Tokai) → Kanto**. Kanto and Kansai do not share a border. Open-diamond markers identify **Hakone Pass**, **Fuwa Barrier / Sekigahara**, and **Suzuka Pass** as travel gateways / transition references, not a surveyed regional boundary. The region grouping remains Kinki including Mie; Kansai's cultural extent varies by definition.
+`history-context.js` / `history-context.css` provide one shared, optional SVG context layer used by East Japan and Kyushu (`AtlasHistory.events` keeps all 9 canonical events so shared scripts stay intact). The East Japan map labels **Kansai (Kinki) ← Chubu (Tokai) → Kanto**. Kanto and Kansai do not share a border. Open-diamond markers identify **Hakone Pass**, **Fuwa Barrier / Sekigahara**, and **Suzuka Pass** as travel gateways / transition references, not a surveyed regional boundary. The region grouping remains Kinki including Mie; Kansai's cultural extent varies by definition.
 
-Closed, numbered diamonds identify exactly **nine** selected historical locations across the three maps:
+Closed, numbered diamonds identify exactly **nine** selected historical locations in `history-context.js` (with East Japan showing 5 and Kyushu showing 2):
 
 1. 1582 本能寺之變 — Kyoto, the original temple site (not the relocated modern temple).
 2. 1600 關原之戰 — a representative point in the Sekigahara battlefield.
@@ -113,4 +107,4 @@ Closed, numbered diamonds identify exactly **nine** selected historical location
 
 Locations are approximate representative points, never battle extents. Each item has explanatory text and an external reading link. Markers and the corresponding accessible button list respect the region and map projection, but intentionally ignore stamp status so an important event doesn't disappear just because the user hasn't visited. Both the historical layer and East Japan's gateway layer have independent toggles. Marker selection works by pointer, Enter, or Space; list selection frames the site. The layer keeps callout sizes consistent on zoom and preserves keyboard focus during redraws. On narrow screens the numbered map badges use the full-text list as their legend.
 
-The regression suite also covers the nine-item cap, historical marker filtering/toggles, gateway controls and boundary disclaimer, keyboard marker activation, focus retention, and independence from stamp filtering. No historical marker adds a stamp or changes the existing 49-place dataset.
+The regression suite also covers the nine-item cap, historical marker filtering/toggles, gateway controls and boundary disclaimer, keyboard marker activation, focus retention, and independence from stamp filtering. The 49-place Okinawa dataset in `map/okinawa-places.js` remains untouched.

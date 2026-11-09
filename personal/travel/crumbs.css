@@ -6,7 +6,7 @@
   background: var(--crumb-bg, #ffffff);
   color: var(--crumb-ink, #8b8b85);
   border-bottom: 1px solid var(--crumb-line, #eeece5);
-  font-family: "Noto Sans JP", "Noto Sans TC", Arial, sans-serif;
+  font-family: var(--ng-sans, "Noto Sans JP", "Noto Sans TC", Arial, sans-serif);
   font-size: 10.5px;
   letter-spacing: .04em;
   text-transform: none;
