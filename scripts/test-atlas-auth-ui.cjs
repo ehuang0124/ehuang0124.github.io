@@ -109,6 +109,20 @@ const root = path.resolve(__dirname, '..');
       await page.locator('#account-password').fill('123456');
       await page.locator('#account-password').press('Enter');
       await page.waitForFunction(() => document.querySelector('#account-error').textContent.includes('6'));
+      const errorStyle = await page.locator('#account-error').evaluate(el => {
+        const style = getComputedStyle(el);
+        return { color:style.color, background:style.backgroundColor, fontSize:style.fontSize };
+      });
+      const luminance = color => {
+        const channels = color.match(/\d+/g).slice(0, 3).map(value => {
+          const channel = Number(value) / 255;
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+      };
+      const foreground = luminance(errorStyle.color), background = luminance(errorStyle.background);
+      assert((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05) >= 4.5, 'account error text meets WCAG AA contrast');
+      assert.equal(errorStyle.fontSize, '14px', 'dialog paragraph styles do not shrink account errors');
       assert(await page.locator('#account-dialog').isVisible());
       await page.locator('#account-create').click();
       assert(await page.locator('#access-code').isVisible());
