@@ -15,7 +15,8 @@ const root = path.resolve(__dirname, '..');
     if (file.endsWith(path.sep)) file += 'index.html';
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404).end(); return; }
-      res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8');
+      const mime = {'.css':'text/css', '.js':'text/javascript; charset=utf-8', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.woff2':'font/woff2'};
+      res.setHeader('Content-Type', mime[path.extname(file)] || 'text/html; charset=utf-8');
       res.end(data);
     });
   });
@@ -28,7 +29,7 @@ const root = path.resolve(__dirname, '..');
     const url = `http://127.0.0.1:${server.address().port}`;
     for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
       const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
-      // Tests are offline: Wikimedia photos are not required for map interaction.
+      // Tests are offline: siblings' remote photos are not required; Okinawa's local cover is checked.
       await context.route('**/*', route => route.request().url().startsWith(url) ? route.continue() : route.abort());
       const page = await context.newPage();
       const errors = [];
@@ -40,8 +41,9 @@ const root = path.resolve(__dirname, '..');
         await page.goto(`${url}/personal/travel/${name}/`);
         const total = Object.values(regions).reduce((sum, n) => sum + n, 0);
         assert.equal(await page.locator('.event').count(), total);
-        // Choosing a region brings the page to the story block below the tabs.
-        await page.locator(`.region-tab[data-region="${Object.keys(regions)[1]}"]`).click();
+        // Editorial tabs use prefectures; the map select uses larger travel areas.
+        // Choosing either page's second editorial tab reveals its story block.
+        await page.locator('.region-tab').nth(1).click();
         await page.waitForFunction(() => {
           const top = document.getElementById('region-content').getBoundingClientRect().top;
           return top >= document.querySelector('.ng-header').offsetHeight - 1 && top < innerHeight;
@@ -93,53 +95,75 @@ const root = path.resolve(__dirname, '..');
         console.log(`PASS ${name} ${viewport.width}px: every region, timeline, markers, reset, route, history/gateway layers`);
       }
       await page.goto(`${url}/personal/travel/okinawa/`);
-      assert.equal(await page.locator('.history-marker').count(),2);
-      const expected = { yanbaru: 3, motobu: 7, onna: 3, central: 11, naha: 8, south: 8, kerama: 2, kume: 1, miyako: 2, yaeyama: 4 };
-      // All 49 places stay accounted for; no IDs or storage keys changed.
-      assert.equal(await page.evaluate(() => PLACES.length), 49);
-      assert(await page.evaluate(() => PLACES.every(p => REGIONS[p.region]?.map === p.map)));
+      assert(await page.locator('#hero-img').evaluate(img => img.complete && img.naturalWidth > 0));
+      assert.equal(await page.locator('.history-marker').count(), 0);
+      assert.equal(await page.locator('#mapsvg .area-text, #mapsvg .sea-text, #label-layer-pins, .map-legend').count(), 0);
+      assert.equal(await page.locator('#narrative .chapter').count(), 4);
+      assert.equal(await page.locator('#regions, #list, .rcard').count(), 0);
+      assert.equal(await page.locator('#plan-grid .day').count(), 4);
+      assert.equal(await page.evaluate(() => document.body.textContent.includes('⚠️') || document.body.textContent.includes('齋場')), false);
+      const expected = { naha: 8, central: 6 };
+      assert.equal(await page.evaluate(() => PLACES.length), 14);
+      assert.equal(await page.evaluate(() => PLACES.filter(p => p.core).length), 6);
+      assert(await page.evaluate(() => PLACES.every(p => REGIONS[p.region]?.map === 'main' && p.map === 'main')));
+      assert.equal(await page.evaluate(() => activeId), 'kume');
+      const cluster = page.locator('#pin-layer .cluster').first();
+      assert(await cluster.count() > 0);
+      await cluster.focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => activeId), null);
+      assert(await page.locator('#detail [data-pick]').count() >= 2);
+      const chosen = await page.locator('#detail [data-pick]').first().getAttribute('data-pick');
+      assert.equal(await page.locator('#detail [data-pick]:focus').count(), 1);
+      await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(() => activeId), chosen);
+      assert.equal(await page.locator('#detail h3:focus').count(), 1);
       for (const [region, count] of Object.entries(expected)) {
         await page.selectOption('#region-filter', region);
         assert.equal(await page.locator('#sidenav-list button').count(), count);
-        assert.equal(await page.locator(`.rcard[data-r="${region}"]`).getAttribute('aria-pressed'), 'true');
-        assert(await page.evaluate(() => visiblePlaces().every(p => p.region === regionFilter && p.map === viewName)));
+        assert(await page.evaluate(() => visiblePlaces().every(p => p.region === regionFilter)));
         assert.equal(await page.evaluate(() => visiblePlaces().length), count);
-        assert.equal(await page.locator('.history-marker').count(),['naha','south'].includes(region)?1:0);
         assert(await page.evaluate(() => [vb.x, vb.y, vb.w, vb.h].every(Number.isFinite)));
+        if (region === 'naha') {
+          await page.locator('#pin-layer [data-id="shuri"]').focus();
+          await page.keyboard.press('Enter');
+          assert.equal(await page.evaluate(() => activeId), 'shuri');
+          assert.equal(await page.locator('#pin-layer [data-id="shuri"]:focus').count(), 1);
+          await page.locator('#sidenav-list [data-nav="kencho"]').focus();
+          await page.keyboard.press('Enter');
+          assert.equal(await page.evaluate(() => activeId), 'kencho');
+          assert.equal(await page.locator('#sidenav-list [data-nav="kencho"]:focus').count(), 1);
+        }
         await page.locator('#reset-view').click();
         assert.equal(await page.inputValue('#region-filter'), region);
       }
-      await page.selectOption('#region-filter', 'kerama');
-      assert.equal(await page.evaluate(() => viewName), 'main');
-      await page.locator('.rcard[data-r="miyako"]').click();
-      assert.equal(await page.inputValue('#region-filter'), 'miyako');
-      assert.equal(await page.evaluate(() => viewName), 'islands');
-      await page.locator('[data-view="main"]').click();
+      await page.selectOption('#region-filter', 'all');
+      assert.equal(await page.locator('#sidenav-list button').count(), 14);
+      await page.locator('#core-toggle').click();
+      assert.equal(await page.locator('#sidenav-list button').count(), 6);
+      await page.selectOption('#region-filter', 'central');
+      assert.equal(await page.locator('#sidenav-list button').count(), 1);
+      assert.equal(await page.evaluate(() => activeId), 'yachimun');
+      await page.locator('#narrative [data-jump="shuri"]').click();
       assert.equal(await page.inputValue('#region-filter'), 'all');
-      assert.equal(await page.locator('.rcard[aria-pressed="true"]').count(), 0);
-      await page.selectOption('#region-filter', 'naha');
-      await page.locator('[data-history-pick="shuri-battle"]').click();
-      assert((await page.locator('.history-detail').textContent()).includes('首里戰線'));
-      assert.equal(await page.locator('[data-history-pick="shuri-battle"]:focus').count(),1);
-      // The itinerary is a planning map; visit stamps now live only in the
-      // atlas. Region, history and route controls must still work without the
-      // retired local visit filter or mutation functions.
-      assert.equal(await page.locator('[data-filter="visited"]').count(), 0);
-      assert.equal(await page.locator('.history-marker').count(), 1);
-      await page.selectOption('#region-filter', 'kerama');
+      assert.equal(await page.locator('#core-toggle').getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.evaluate(() => activeId), 'shuri');
+      await page.locator('#narrative [data-jump="urasoe"]').click();
+      assert.equal(await page.locator('#core-toggle').getAttribute('aria-pressed'), 'false');
+      assert.equal(await page.evaluate(() => activeId), 'urasoe');
+      await page.selectOption('#region-filter', 'central');
       await page.locator('#plan-grid [data-stop="kume"]').click();
       assert.equal(await page.inputValue('#region-filter'), 'all');
       assert.equal(await page.evaluate(() => activeId), 'kume');
-      await page.selectOption('#region-filter', 'yaeyama');
+      await page.selectOption('#region-filter', 'naha');
       await page.locator('#route-toggle').click();
       assert.equal(await page.inputValue('#region-filter'), 'all');
-      assert.equal(await page.evaluate(() => viewName), 'main');
-      // Native labelled select is keyboard accessible and fits narrow screens.
+      assert(await page.evaluate(() => (document.getElementById('route-line')?.getAttribute('d') || '').startsWith('M')));
       await page.locator('#region-filter').focus();
       assert.equal(await page.locator('#region-filter').evaluate(el => el === document.activeElement), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.deepEqual(errors, []);
-      console.log(`PASS okinawa ${viewport.width}px: 10 regions, view/card sync, itinerary, route, history, keyboard, no overflow`);
+      console.log(`PASS okinawa ${viewport.width}px: 4 narrative chapters, 2 regions, 14 places (6 core), itinerary, route, keyboard, no overflow`);
       await context.close();
     }
   } finally {
