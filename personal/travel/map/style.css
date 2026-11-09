@@ -481,8 +481,8 @@ a{color:inherit}
 /* The sign-in error is the one thing in the dialog that must never be missed:
    a solid crimson alert with a white "!" chip — shouting on purpose, not
    caption text. Keep it unmistakable even at a glance. */
-.form-error{display:flex;align-items:flex-start;gap:11px;margin:14px 0 2px;padding:13px 15px 13px 12px;border:0;border-radius:2px;background:var(--ng-red);color:var(--ng-white);font-size:14px;font-weight:800;line-height:1.65;letter-spacing:.015em;box-shadow:0 12px 26px -12px rgba(163,22,42,.6);animation:form-error-in .28s ease-out}
-.form-error:empty{display:none}
+#account-dialog .form-error{display:flex;align-items:flex-start;gap:11px;margin:14px 0 2px;padding:13px 15px 13px 12px;border:0;border-radius:2px;background:var(--ng-red);color:var(--ng-white);font-size:14px;font-weight:800;line-height:1.65;letter-spacing:.015em;box-shadow:0 12px 26px -12px rgba(163,22,42,.6);animation:form-error-in .28s ease-out}
+#account-dialog .form-error:empty{display:none}
 .form-error::before{content:"!";flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:22px;height:22px;margin-top:1px;border-radius:50%;background:var(--ng-white);color:var(--ng-red-dark);font:900 13px/1 var(--ng-grotesk)}
 @keyframes form-error-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.form-error{animation:none}}
