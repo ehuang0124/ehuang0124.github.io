@@ -1459,13 +1459,17 @@
   const companionDialog = $('#companion-dialog');
   const accountMenu = $('#account-menu');
   const accountMenuButton = $('#account-menu-button');
-  // True while the traveller is typing a new display name, so a re-render
-  // (sync, realtime) never overwrites what they are typing.
-  let profileNameDirty = false;
 
   let verificationAddress = '';
-  function showEmailVerification(email) {
+  // `autoComplete` is true when the invite was already accepted, so the link
+  // alone finishes the account; older projects still need the second form.
+  let verificationAuto = true;
+  function showEmailVerification(email, autoComplete = verificationAuto) {
     verificationAddress = String(email || verificationAddress || '').trim();
+    verificationAuto = autoComplete !== false;
+    $('#verification-step-two').textContent = verificationAuto
+      ? '連結會帶你回到這裡，自動完成建立並登入。'
+      : '回到這裡，重新輸入個人密碼與邀請碼。';
     $('#local-signin').hidden = true;
     $('#code-signin').hidden = true;
     $('#account-demo').hidden = true;
@@ -1516,6 +1520,21 @@
     openAccountDialog('', 'create');
     if (email) $('#account-email').value = String(email);
     $('#create-account-note').textContent = '開啟驗證連結後，請輸入個人密碼與邀請碼，完成帳號建立。';
+  }
+  // The two numbers the account menu shows at a glance: places and visits in
+  // the signed-in traveller's own scope.
+  function footprint() {
+    if (!cloudMode()) {
+      const entries = Object.values(data.visits || {}).filter(months => Array.isArray(months) && months.length);
+      return { places:entries.length, visits:entries.reduce((total, months) => total + months.length, 0) };
+    }
+    if (!signedIn()) return { places:0, visits:0 };
+    const mine = atlasAccount.rows.filter(row => row.userId === atlasAccount.user.id);
+    return { places:new Set(mine.map(row => row.placeKey)).size, visits:new Set(mine.map(row => `${row.placeKey}|${row.month}`)).size };
+  }
+  function footprintText() {
+    const { places, visits } = footprint();
+    return places ? `${places} 個地點 · ${visits} 次到訪` : '還沒有戳章';
   }
   function closeAccountMenu() {
     accountMenu.hidden = true;
@@ -1579,20 +1598,15 @@
       }
       else avatar.hidden = true;
       $('#account-name').textContent = user.name;
-      // Profile section: the name travellers see, and the sign-in address.
-      // Email belongs to the sign-in service, so it is shown, never edited.
-      $('#account-profile-name').textContent = user.name;
-      const emailEl = $('#account-profile-email');
-      const emailNote = atlasAccount.mode === 'demo' ? '示範帳號（沒有電子郵件）'
-        : atlasAccount.mode === 'local' ? '本機通行碼登入（沒有電子郵件）' : '—';
-      emailEl.textContent = user.email || emailNote;
-      emailEl.title = user.email || emailNote;
-      const nameInput = $('#profile-name-input');
-      if (nameInput && document.activeElement !== nameInput && !profileNameDirty) nameInput.value = user.name;
-      if ($('#profile-reset-password')) $('#profile-reset-password').hidden = !(cloud && user.email);
-      const profile = atlasAccount.profiles.get(user.id);
-      $('#discoverable-toggle').checked = profile ? profile.discoverable !== false : true;
-      if ($('#discoverable-row')) $('#discoverable-row').hidden = !cloud && atlasAccount.mode !== 'demo';
+      accountMenuButton.setAttribute('aria-label', `${user.name}・帳號`);
+      $('#account-summary-name').textContent = user.name;
+      const emailNote = atlasAccount.mode === 'demo' ? '示範帳號'
+        : atlasAccount.mode === 'local' ? '本機通行碼登入' : '';
+      $('#account-summary-email').textContent = user.email || emailNote;
+      $('#account-summary-email').hidden = !(user.email || emailNote);
+      $('#account-footprint').textContent = footprintText();
+      // The profile page needs the same demo flag to stay a local demonstration.
+      $('#account-profile-link').href = atlasAccount.mode === 'demo' && new URLSearchParams(location.search).has('demo') ? './profile/?demo=1' : './profile/';
       $('#account-menu-status').textContent = statusText();
     } else {
       signin.hidden = false;
@@ -1600,14 +1614,15 @@
       card.hidden = true;
       closeAccountMenu();
     }
-    // Sync settings only mean something once a Supabase project is connected.
-    if ($('#sync-now')) $('#sync-now').hidden = !cloud;
     $('#account-demo').hidden = atlasAccount.mode !== 'demo';
     renderDemoSwitch();
     applyPermission();
   }
   function refreshStatus() {
-    if (signedIn()) $('#account-menu-status').textContent = statusText();
+    if (signedIn()) {
+      $('#account-menu-status').textContent = statusText();
+      $('#account-footprint').textContent = footprintText();
+    }
     if ($('#export-stamps')) $('#export-stamps').disabled = !editable();
     if ($('#import-stamps')) $('#import-stamps').disabled = !editable();
   }
@@ -1831,6 +1846,17 @@
       if (signedIn() && cloudMode()) renderDetail();
       refreshSyncNotice();
     });
+    // The confirmation link finished the account: the traveller is signed in.
+    account.on('signup-complete', ({ name } = {}) => {
+      atlasAccount.mode = account.mode;
+      if (accountDialog.open) accountDialog.close();
+      refreshAll(`歡迎，${name || '旅人'}！帳號已建立，可以開始蓋章。`, 'success');
+    });
+    // An expired or already-used mail link: say so where the next step is.
+    account.on('link-error', () => {
+      atlasAccount.mode = account.mode;
+      openAccountDialog('這個信件連結已失效或已經用過。請重新寄送一次，並打開最新的那封信。');
+    });
     // A recovery link opens the same dialog on its reset view.
     account.on('recovery', () => {
       atlasAccount.mode = account.mode;
@@ -1917,7 +1943,7 @@
     if (result?.pendingVerification || result?.needsVerification) {
       // Neither secret is retained while waiting for email confirmation.
       $('#access-code').value = '';
-      showEmailVerification(result.email || $('#account-email').value);
+      showEmailVerification(result.email || $('#account-email').value, result.pendingVerification ? result.autoComplete === true : verificationAuto);
       return;
     }
     if (!result || result.ok !== true) {
@@ -2005,7 +2031,19 @@
       $('#account-panel').removeAttribute('aria-busy');
     }
     if (!result?.ok) {
-      showAccountError(result?.reason === 'short' ? '密碼需超過 6 個字元。' : '無法更新密碼，請重新打開信中的連結再試一次。', '#account-password');
+      if (result?.reason === 'expired') {
+        // The reset session is gone; only a new mail can help, so go to the
+        // login view where 「忘記密碼？」 sends one.
+        setAccountView('login');
+        showAccountError('這個重設連結已失效。請填入電子郵件，按「忘記密碼？」重新寄送。', '#account-email');
+        return;
+      }
+      const messages = {
+        short:'密碼需超過 6 個字元。',
+        same:'新密碼不能和目前的密碼相同，請換一組。',
+        offline:'網路連線似乎有問題，請檢查網路後再試。'
+      };
+      showAccountError(messages[result?.reason] || '無法更新密碼，請稍後再試。', '#account-password');
       return;
     }
     $('#account-password').value = '';
@@ -2024,8 +2062,13 @@
     $('#account-password').value = '';
     $('#access-code').value = '';
   });
+  // After confirming on another device, a plain login finishes the account.
   $('#verification-continue').addEventListener('click', () => {
-    showRegistrationCompletion(verificationAddress);
+    if (!verificationAuto) { showRegistrationCompletion(verificationAddress); return; }
+    openAccountDialog('', 'login');
+    if (verificationAddress) $('#account-email').value = verificationAddress;
+    showAccountStatus('驗證完成後，輸入個人密碼即可登入。');
+    setTimeout(() => $('#account-password')?.focus(), 0);
   });
   $('#verification-resend').addEventListener('click', async () => {
     const button = $('#verification-resend');
@@ -2082,18 +2125,31 @@
     const open = accountMenu.hidden;
     accountMenu.hidden = !open;
     accountMenuButton.setAttribute('aria-expanded', String(open));
-    if (open) $('#account-menu-status').textContent = statusText();
+    if (open) {
+      $('#account-menu-status').textContent = statusText();
+      $('#account-footprint').textContent = footprintText();
+      keepMenuOnScreen();
+    }
   });
+  // The chip moves around between header layouts; keep the open menu inside
+  // the viewport instead of letting it hang off either edge.
+  function keepMenuOnScreen() {
+    accountMenu.style.transform = '';
+    const rect = accountMenu.getBoundingClientRect();
+    const margin = 12;
+    let shift = 0;
+    if (rect.left < margin) shift = margin - rect.left;
+    else if (rect.right > innerWidth - margin) shift = innerWidth - margin - rect.right;
+    if (shift) accountMenu.style.transform = `translateX(${Math.round(shift)}px)`;
+  }
   document.addEventListener('click', event => {
     if (accountMenu.hidden) return;
     if (!event.target.closest('#account-card')) closeAccountMenu();
   });
-  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeAccountMenu(); });
-  $('#sync-now').addEventListener('click', async () => {
-    $('#account-menu-status').textContent = '同步中…';
-    await account?.refresh();
-    await account?.flush();
-    $('#account-menu-status').textContent = statusText();
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || accountMenu.hidden) return;
+    closeAccountMenu();
+    accountMenuButton.focus();
   });
   $('#sign-out').addEventListener('click', () => {
     closeAccountMenu();
@@ -2104,55 +2160,6 @@
     friendSelection = null;
     closeAccountMenu();
   });
-  // ---------- profile: display name + password reset ----------
-  $('#profile-name-input')?.addEventListener('input', () => {
-    profileNameDirty = true;
-    $('#profile-feedback').textContent = '';
-  });
-  $('#profile-name-input')?.addEventListener('keydown', event => {
-    if (event.key === 'Enter') { event.preventDefault(); $('#profile-save')?.click(); }
-  });
-  $('#profile-save')?.addEventListener('click', async () => {
-    if (!signedIn()) return;
-    const button = $('#profile-save');
-    const feedback = $('#profile-feedback');
-    button.disabled = true;
-    feedback.textContent = '儲存中…';
-    let result;
-    try { result = await account?.updateDisplayName?.($('#profile-name-input').value); }
-    catch { result = { ok:false, reason:'名稱暫時無法儲存，請稍後再試。' }; }
-    finally { button.disabled = false; }
-    if (!result?.ok) { feedback.textContent = result?.reason || '名稱暫時無法儲存，請稍後再試。'; return; }
-    profileNameDirty = false;
-    $('#profile-name-input').value = result.name;
-    feedback.textContent = result.unchanged ? '顯示名稱沒有變更。' : `顯示名稱已更新為「${result.name}」。`;
-    // setUser() already re-rendered the chip; keep the menu open on the result.
-    renderAccount();
-    $('#profile-feedback').textContent = result.unchanged ? '顯示名稱沒有變更。' : `顯示名稱已更新為「${result.name}」。`;
-  });
-  // Signed-in travellers who forgot their password get the same reset mail
-  // as the sign-in dialog sends; the link returns here on its reset view.
-  $('#profile-reset-password')?.addEventListener('click', async () => {
-    const button = $('#profile-reset-password');
-    const feedback = $('#profile-feedback');
-    const email = atlasAccount.user?.email || '';
-    if (!email) { feedback.textContent = '這個登入方式沒有電子郵件，無法寄送重設信。'; return; }
-    button.disabled = true;
-    feedback.textContent = '正在寄送重設信…';
-    let result;
-    try { result = await account?.requestPasswordReset?.(email); }
-    catch { result = { ok:false }; }
-    finally { button.disabled = false; }
-    feedback.textContent = result?.ok
-      ? `重設密碼的信已寄到 ${email}；請到信箱打開連結，設定新密碼。`
-      : '目前無法寄出重設密碼的信，請稍後再試。';
-  });
-  $('#discoverable-toggle').addEventListener('change', async event => {
-    const ok = await account?.setDiscoverable(event.target.checked);
-    if (!ok) event.target.checked = !event.target.checked;
-    $('#account-menu-status').textContent = event.target.checked ? '其他旅人可以標記你。' : '其他旅人不能標記你。';
-  });
-
   // Companion picker: any signed-in traveller can be tagged.
   function openCompanionDialog() {
     if (!signedIn()) { openAccountDialog('登入後才能標記旅伴。'); return; }
@@ -2373,5 +2380,13 @@
   if (account) account.init().then(() => {
     if (!signedIn()) { atlasAccount.mode = account.mode; refreshAll(); }
     else { applyAccount(); refreshAll(); writeCache(); }
+    // The profile page sends signed-out visitors here to sign in.
+    const params = new URLSearchParams(location.search);
+    if (params.has('signin')) {
+      params.delete('signin');
+      const rest = params.toString();
+      history.replaceState(history.state, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+      if (!signedIn() && !accountDialog.open) openAccountDialog();
+    }
   });
 })();

@@ -1095,7 +1095,13 @@ section.hero .hero-credit{top:22px;bottom:auto;right:16px;color:rgba(255,255,255
   background:var(--ng-white);
   box-shadow:0 24px 48px -32px rgba(20,25,30,.55);
 }
-.account-menu-status{color:var(--ng-muted)!important;border-bottom:1px solid var(--ng-line-soft)}
+.account-summary,.account-glance{border-bottom-color:var(--ng-line-soft)}
+.account-summary strong{color:var(--ng-ink);font-family:var(--ng-sans)}
+.account-glance dd{color:var(--ng-ink)}
+.account-trigger:focus-visible{outline-color:var(--ng-red)}
+.account-card:hover,.account-card:has(.account-trigger[aria-expanded="true"]){border-color:var(--ng-ink-soft)}
+.account-profile-link{color:var(--ng-ink);border-radius:var(--ng-r-sm)}
+.account-profile-link:hover,.account-profile-link:focus-visible{background:var(--ng-paper);color:var(--ng-red)}
 .account-menu-toggle{color:var(--ng-ink-soft)}
 .account-menu-toggle input{accent-color:var(--ng-red)}
 .account-menu button{color:var(--ng-ink-soft);border-radius:var(--ng-r-sm)}
