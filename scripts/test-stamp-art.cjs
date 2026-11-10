@@ -28,7 +28,7 @@ const catalogue = [
   ...places.ca.map(p => ({ category: 'na', key: `ca:${p[0]}`, id: p[0], region: 'na-ca', zh: p[2] })),
   ...places.jp.map(p => ({ category: 'jp', key: `jp:${p[0]}`, id: p[0], region: p[3], zh: p[2] }))
 ];
-assert.equal(catalogue.length, 608, 'the destination index must cover every catalogue entry');
+assert.equal(catalogue.length, 630, 'the destination index must cover every catalogue entry');
 
 // Every named plate resolves to a real drawing and a known kind.
 const ids = new Set();
@@ -80,7 +80,7 @@ const expected = [
 ];
 for (const [place, id] of expected) assert.equal(atlas.find(place).id, id, `${place.id || place.abbr || place.iso} should use ${id}`);
 
-// All 608 destinations get a stable, captionable plate. Region-only fallbacks
+// All 630 destinations get a stable, captionable plate. Region-only fallbacks
 // are labelled as such instead of implying a destination-specific landmark.
 const scopes = {};
 const used = new Set();

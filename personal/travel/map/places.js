@@ -1,7 +1,7 @@
 // Editorial city index: prominent destinations, not an exhaustive gazetteer.
 // Park point coordinates represent a place in/near each park, never its boundary.
 // Format: English | Traditional Chinese | ISO 3166-1 alpha-2 | latitude | longitude
-const travelCityCodes = {"Tokyo": "TYO", "Kyoto": "UKY", "Osaka": "OSA", "Sapporo": "SPK", "Fukuoka": "FUK", "Naha": "OKA", "Nagoya": "NGO", "Hiroshima": "HIJ", "Seoul": "SEL", "Busan": "PUS", "Taipei": "TPE", "Taichung": "RMQ", "Kaohsiung": "KHH", "Hong Kong": "HKG", "Macau": "MFM", "Beijing": "BJS", "Shanghai": "SHA", "Shenzhen": "SZX", "Guangzhou": "CAN", "Chengdu": "CTU", "Xi’an": "XIY", "Singapore": "SIN", "Bangkok": "BKK", "Chiang Mai": "CNX", "Phuket": "HKT", "Kuala Lumpur": "KUL", "George Town": "PEN", "Hanoi": "HAN", "Ho Chi Minh City": "SGN", "Da Nang": "DAD", "Manila": "MNL", "Cebu City": "CEB", "Jakarta": "JKT", "Denpasar": "DPS", "Yogyakarta": "YIA", "Mumbai": "BOM", "New Delhi": "DEL", "Bengaluru": "BLR", "Kolkata": "CCU", "Dubai": "DXB", "Abu Dhabi": "AUH", "Doha": "DOH", "Istanbul": "IST", "Tel Aviv": "TLV", "Kathmandu": "KTM", "Phnom Penh": "PNH", "Yangon": "RGN", "Ulaanbaatar": "UBN", "Tbilisi": "TBS", "Almaty": "ALA", "Colombo": "CMB", "Malé": "MLE", "London": "LON", "Paris": "PAR", "Berlin": "BER", "Munich": "MUC", "Rome": "ROM", "Milan": "MIL", "Venice": "VCE", "Florence": "FLR", "Madrid": "MAD", "Barcelona": "BCN", "Lisbon": "LIS", "Porto": "OPO", "Amsterdam": "AMS", "Brussels": "BRU", "Vienna": "VIE", "Prague": "PRG", "Budapest": "BUD", "Warsaw": "WAW", "Kraków": "KRK", "Copenhagen": "CPH", "Stockholm": "STO", "Oslo": "OSL", "Helsinki": "HEL", "Reykjavík": "KEF", "Dublin": "DUB", "Edinburgh": "EDI", "Zürich": "ZRH", "Geneva": "GVA", "Athens": "ATH", "Moscow": "MOW", "Saint Petersburg": "LED", "Kyiv": "KBP", "Dubrovnik": "DBV", "New York": "NYC", "Los Angeles": "LAX", "Chicago": "CHI", "San Francisco": "SFO", "Seattle": "SEA", "Portland": "PDX", "Boston": "BOS", "Washington, D.C.": "WAS", "Miami": "MIA", "Atlanta": "ATL", "Denver": "DEN", "Las Vegas": "LAS", "Phoenix": "PHX", "Austin": "AUS", "Dallas": "DFW", "Houston": "HOU", "San Diego": "SAN", "New Orleans": "MSY", "Honolulu": "HNL", "Anchorage": "ANC", "Toronto": "YTO", "Vancouver": "YVR", "Montréal": "YMQ", "Montreal": "YMQ", "Québec City": "YQB", "Calgary": "YYC", "Edmonton": "YEG", "Ottawa": "YOW", "Winnipeg": "YWG", "Mexico City": "MEX", "Cancún": "CUN", "Guadalajara": "GDL", "Havana": "HAV", "San José": "SJO", "Panama City": "PTY", "Bogotá": "BOG", "Medellín": "MDE", "Lima": "LIM", "Cusco": "CUZ", "Santiago": "SCL", "Buenos Aires": "BUE", "Rio de Janeiro": "RIO", "São Paulo": "SAO", "Quito": "UIO", "La Paz": "LPB", "Sydney": "SYD", "Melbourne": "MEL", "Brisbane": "BNE", "Perth": "PER", "Auckland": "AKL", "Wellington": "WLG", "Christchurch": "CHC", "Cairo": "CAI", "Marrakesh": "RAK", "Cape Town": "CPT", "Johannesburg": "JNB", "Nairobi": "NBO", "Zanzibar City": "ZNZ", "Arusha": "ARK"};
+const travelCityCodes = {"Tokyo": "TYO", "Kyoto": "UKY", "Osaka": "OSA", "Sapporo": "SPK", "Fukuoka": "FUK", "Naha": "OKA", "Nagoya": "NGO", "Hiroshima": "HIJ", "Seoul": "SEL", "Busan": "PUS", "Taipei": "TPE", "Taichung": "RMQ", "Kaohsiung": "KHH", "Hong Kong": "HKG", "Macau": "MFM", "Beijing": "BJS", "Shanghai": "SHA", "Shenzhen": "SZX", "Guangzhou": "CAN", "Chengdu": "CTU", "Xi’an": "XIY", "Singapore": "SIN", "Bangkok": "BKK", "Chiang Mai": "CNX", "Phuket": "HKT", "Kuala Lumpur": "KUL", "George Town": "PEN", "Hanoi": "HAN", "Ho Chi Minh City": "SGN", "Da Nang": "DAD", "Manila": "MNL", "Cebu City": "CEB", "Jakarta": "JKT", "Denpasar": "DPS", "Yogyakarta": "YIA", "Mumbai": "BOM", "New Delhi": "DEL", "Bengaluru": "BLR", "Kolkata": "CCU", "Dubai": "DXB", "Abu Dhabi": "AUH", "Doha": "DOH", "Istanbul": "IST", "Tel Aviv": "TLV", "Kathmandu": "KTM", "Phnom Penh": "PNH", "Yangon": "RGN", "Ulaanbaatar": "UBN", "Tbilisi": "TBS", "Almaty": "ALA", "Colombo": "CMB", "Malé": "MLE", "London": "LON", "Paris": "PAR", "Berlin": "BER", "Munich": "MUC", "Rome": "ROM", "Milan": "MIL", "Venice": "VCE", "Florence": "FLR", "Madrid": "MAD", "Barcelona": "BCN", "Lisbon": "LIS", "Porto": "OPO", "Amsterdam": "AMS", "Brussels": "BRU", "Vienna": "VIE", "Prague": "PRG", "Budapest": "BUD", "Warsaw": "WAW", "Kraków": "KRK", "Copenhagen": "CPH", "Stockholm": "STO", "Oslo": "OSL", "Helsinki": "HEL", "Reykjavík": "KEF", "Dublin": "DUB", "Edinburgh": "EDI", "Zürich": "ZRH", "Geneva": "GVA", "Athens": "ATH", "Moscow": "MOW", "Saint Petersburg": "LED", "Kyiv": "KBP", "Dubrovnik": "DBV", "New York": "NYC", "Los Angeles": "LAX", "Chicago": "CHI", "San Francisco": "SFO", "Seattle": "SEA", "Portland": "PDX", "Boston": "BOS", "Washington, D.C.": "WAS", "Miami": "MIA", "Atlanta": "ATL", "Denver": "DEN", "Las Vegas": "LAS", "Phoenix": "PHX", "Austin": "AUS", "Dallas": "DFW", "Houston": "HOU", "San Diego": "SAN", "New Orleans": "MSY", "Honolulu": "HNL", "Anchorage": "ANC", "Toronto": "YTO", "Vancouver": "YVR", "Montréal": "YMQ", "Montreal": "YMQ", "Québec City": "YQB", "Calgary": "YYC", "Edmonton": "YEG", "Ottawa": "YOW", "Winnipeg": "YWG", "Mexico City": "MEX", "Cancún": "CUN", "Guadalajara": "GDL", "Havana": "HAV", "San José": "SJO", "Panama City": "PTY", "Bogotá": "BOG", "Medellín": "MDE", "Lima": "LIM", "Cusco": "CUZ", "Santiago": "SCL", "Buenos Aires": "BUE", "Rio de Janeiro": "RIO", "São Paulo": "SAO", "Quito": "UIO", "La Paz": "LPB", "Sydney": "SYD", "Melbourne": "MEL", "Brisbane": "BNE", "Perth": "PER", "Auckland": "AKL", "Wellington": "WLG", "Christchurch": "CHC", "Cairo": "CAI", "Marrakesh": "RAK", "Cape Town": "CPT", "Johannesburg": "JNB", "Nairobi": "NBO", "Zanzibar City": "ZNZ", "Arusha": "ARK", "Orlando": "ORL", "Frankfurt": "FRA", "Hamburg": "HAM", "Pattaya": "UTP", "Antalya": "AYT", "Palma de Mallorca": "PMI", "Seville": "SVQ", "Valencia": "VLC", "Rhodes": "RHO", "Verona": "VRN", "Bologna": "BLQ", "Riyadh": "RUH", "Johor Bahru": "JHB", "Heraklion": "HER", "Nha Trang": "CXR", "Medina": "MED", "Thessaloniki": "SKG", "Punta Cana": "PUJ", "Zhuhai": "ZUH", "Vilnius": "VNO"};
 const travelCities = `
 Tokyo|東京|JP|35.676|139.650
 Kyoto|京都|JP|35.012|135.768
@@ -24,15 +24,19 @@ Shenzhen|深圳|CN|22.543|114.058
 Guangzhou|廣州|CN|23.129|113.264
 Chengdu|成都|CN|30.572|104.066
 Xi’an|西安|CN|34.341|108.939
+Zhuhai|珠海|CN|22.271|113.577
 Singapore|新加坡|SG|1.290|103.852
 Bangkok|曼谷|TH|13.756|100.502
 Chiang Mai|清邁|TH|18.788|98.985
 Phuket|普吉|TH|7.881|98.392
+Pattaya|芭達雅|TH|12.927|100.877
 Kuala Lumpur|吉隆坡|MY|3.140|101.693
 George Town|喬治市|MY|5.416|100.332
+Johor Bahru|新山|MY|1.493|103.741
 Hanoi|河內|VN|21.028|105.854
 Ho Chi Minh City|胡志明市|VN|10.823|106.630
 Da Nang|峴港|VN|16.054|108.202
+Nha Trang|芽莊|VN|12.239|109.197
 Manila|馬尼拉|PH|14.600|120.984
 Cebu City|宿霧市|PH|10.316|123.890
 Jakarta|雅加達|ID|-6.209|106.846
@@ -45,7 +49,12 @@ Kolkata|加爾各答|IN|22.573|88.364
 Dubai|杜拜|AE|25.205|55.271
 Abu Dhabi|阿布達比|AE|24.453|54.377
 Doha|杜哈|QA|25.286|51.533
+Riyadh|利雅德|SA|24.713|46.675
+Medina|麥地那|SA|24.467|39.611
+Mecca|麥加|SA|21.389|39.858
 Istanbul|伊斯坦堡|TR|41.009|28.978
+Antalya|安塔利亞|TR|36.897|30.713
+Muğla|穆拉|TR|37.215|28.364
 Jerusalem|耶路撒冷|IL|31.768|35.214
 Tel Aviv|特拉維夫|IL|32.086|34.781
 Kathmandu|加德滿都|NP|27.717|85.324
@@ -60,12 +69,19 @@ London|倫敦|GB|51.507|-0.128
 Paris|巴黎|FR|48.857|2.352
 Berlin|柏林|DE|52.520|13.405
 Munich|慕尼黑|DE|48.137|11.576
+Frankfurt|法蘭克福|DE|50.110|8.682
+Hamburg|漢堡|DE|53.551|9.994
 Rome|羅馬|IT|41.903|12.496
 Milan|米蘭|IT|45.464|9.190
 Venice|威尼斯|IT|45.440|12.315
 Florence|佛羅倫斯|IT|43.770|11.255
+Verona|維洛那|IT|45.438|10.992
+Bologna|波隆那|IT|44.494|11.343
 Madrid|馬德里|ES|40.417|-3.703
 Barcelona|巴塞隆納|ES|41.387|2.170
+Palma de Mallorca|帕爾馬|ES|39.570|2.650
+Seville|塞維亞|ES|37.389|-5.984
+Valencia|瓦倫西亞|ES|39.470|-0.376
 Lisbon|里斯本|PT|38.722|-9.139
 Porto|波多|PT|41.149|-8.611
 Amsterdam|阿姆斯特丹|NL|52.368|4.904
@@ -85,6 +101,9 @@ Edinburgh|愛丁堡|GB|55.953|-3.189
 Zürich|蘇黎世|CH|47.377|8.541
 Geneva|日內瓦|CH|46.204|6.143
 Athens|雅典|GR|37.984|23.728
+Rhodes|羅德島|GR|36.434|28.217
+Heraklion|伊拉克利翁|GR|35.339|25.144
+Thessaloniki|塞薩洛尼基|GR|40.640|22.944
 Moscow|莫斯科|RU|55.756|37.617
 Saint Petersburg|聖彼得堡|RU|59.935|30.325
 Kyiv|基輔|UA|50.450|30.524
@@ -93,6 +112,7 @@ Split|斯普利特|HR|43.509|16.440
 Bucharest|布加勒斯特|RO|44.427|26.103
 Tallinn|塔林|EE|59.437|24.754
 Riga|里加|LV|56.950|24.105
+Vilnius|維爾紐斯|LT|54.687|25.280
 Nice|尼斯|FR|43.710|7.262
 New York|紐約|US|40.713|-74.006
 Boston|波士頓|US|42.361|-71.059
@@ -113,6 +133,7 @@ Denver|丹佛|US|39.739|-104.990
 Salt Lake City|鹽湖城|US|40.760|-111.891
 Anchorage|安克拉治|US|61.218|-149.900
 Honolulu|檀香山|US|21.309|-157.858
+Orlando|奧蘭多|US|28.538|-81.379
 Toronto|多倫多|CA|43.653|-79.383
 Vancouver|溫哥華|CA|49.282|-123.120
 Montréal|蒙特婁|CA|45.502|-73.567
@@ -128,6 +149,7 @@ Havana|哈瓦那|CU|23.114|-82.366
 San José|聖荷西|CR|9.928|-84.090
 Panama City|巴拿馬城|PA|8.983|-79.520
 Santo Domingo|聖多明哥|DO|18.486|-69.932
+Punta Cana|蓬塔卡納|DO|18.582|-68.405
 San Juan|聖胡安|PR|18.466|-66.106
 São Paulo|聖保羅|BR|-23.550|-46.633
 Rio de Janeiro|里約熱內盧|BR|-22.906|-43.173
