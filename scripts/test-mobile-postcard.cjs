@@ -41,6 +41,23 @@ const config = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:'',loca
       assert.equal(await page.locator('#place-list button[data-place]').count(), 240);
       assert.equal(await page.locator('.map-country').count(), 240);
       const dialog = page.locator('#mobile-stamp-dialog');
+      const mapPop = page.locator('#map-pop');
+      if (mobile) {
+        // Phones open on the region index: the map and the list wait behind a card.
+        assert.equal(await page.locator('#map-svg').isVisible(), false);
+        assert.equal(await page.locator('#place-list').isVisible(), false, 'the home list waits for a search');
+        assert.equal(await page.locator('#region-index button[data-region]').count(), 8, 'the whole collection plus one card per continent');
+        assert.equal(await page.locator('#region-index button[data-region="AS"] .region-card-count').innerText(), '0 / 55');
+        assert(await page.locator('#region-index button[data-region="AS"] .thumb-shape').count() >= 50, 'each card draws its own countries');
+        await page.locator('#region-index button[data-region="AS"]').click();
+        assert.equal(await mapPop.evaluate(el => el.open), true, 'a region card pops the map out');
+        assert.equal(await page.locator('#map-pop-title').innerText(), '亞洲');
+        assert.equal(await page.locator('#map-pop #place-list').isVisible(), true, 'the region list rides with the map');
+        assert.equal(await page.locator('#map-pop #place-list button[data-place]').count(), 55);
+      } else {
+        assert.equal(await page.locator('#region-index').isVisible(), false, 'desktop keeps its side-by-side board');
+        assert.equal(await page.locator('#map-open').isVisible(), false);
+      }
       // A real map click still selects a destination and opens the mobile postcard.
       await page.locator('#map-svg').scrollIntoViewIfNeeded();
       const point = await page.locator('.map-country[data-id="156"]').evaluate(el => {
@@ -53,9 +70,32 @@ const config = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:'',loca
       await page.mouse.click(point.x, point.y);
       assert.equal(await page.locator('#place-name').innerText(), '中國');
       assert.equal(await dialog.evaluate(el => el.open), mobile);
-      if (mobile) await page.locator('#mobile-stamp-close').click();
+      if (mobile) {
+        assert.equal(await dialog.getAttribute('data-sheet'), 'peek', 'a tap opens the short sheet over the map');
+        assert.equal(await page.locator('#map-tooltip').innerText(), '中國', 'the tapped name stays pinned over the map');
+        assert.equal(await page.locator('#map-tooltip').isVisible(), true);
+        const stamp = await page.locator('#stamp-button').boundingBox();
+        assert(stamp.y + stamp.height <= viewport.height, 'the stamp button is reachable without scrolling');
+        assert.equal(await page.locator('.impression-paper').isVisible(), false, 'the peek keeps the map in view');
+        await page.locator('#sheet-toggle').click();
+        assert.equal(await dialog.getAttribute('data-sheet'), 'full');
+        assert.equal(await page.locator('.impression-paper').isVisible(), true, 'pulling up shows the whole stamp desk');
+        // Escape closes the sheet before the map; the close button returns home.
+        await page.keyboard.press('Escape');
+        await dialog.waitFor({state:'hidden'});
+        assert.equal(await mapPop.evaluate(el => el.open), true);
+        await page.locator('#map-pop-close').click();
+        await mapPop.waitFor({state:'hidden'});
+        await page.waitForFunction(() => document.querySelector('.atlas-grid > .map-column'));
+        assert.equal(await page.locator('.atlas-grid > .map-column').count(), 1, 'the map goes back to the board');
+        assert.equal(await page.locator('.directory > #place-list').count(), 1, 'the list goes back to the index');
+      }
       // The searchable destination index uses the same panel and picker.
       await page.locator('#place-search').fill('法國');
+      if (mobile) {
+        assert.equal(await page.locator('#region-index').isVisible(), false, 'searching swaps the cards for results');
+        assert.equal(await page.locator('#place-list').isVisible(), true);
+      }
       await page.locator('#place-list button[data-place]').first().click();
       assert.equal(await dialog.evaluate(el => el.open), mobile);
       assert.equal(await dialog.getAttribute('data-family'), 'europe');

@@ -330,6 +330,8 @@
   let query = '';
   const selectedByCategory = Object.fromEntries(CATEGORY_ORDER.map(cat => [cat, CATEGORIES[cat].initial]));
   let view = {x:0,y:0,w:1000,h:520};
+  let ratioOverride = 0; // region cards frame their thumbnails at their own aspect ratio
+  let pinned = null; // the place whose name stays over the phone map
   let currentMessage = null;
 
   function selectedPlace() { return catalogue[category].find(place => place.id === selectedByCategory[category]) || catalogue[category][0]; }
@@ -359,6 +361,9 @@
     if (label) label.textContent = signedIn() ? '已蓋章' : (cloudMode() ? '旅人共蓋章' : '已蓋章');
     $('#board-visited').textContent = stampCount(category);
     $('#board-total').textContent = catalogue[category].length;
+    renderRegionIndex();
+    renderRecentStamps();
+    updateMapPopHead();
   }
   function updateCategoryUI() {
     const spec = CATEGORIES[category];
@@ -678,6 +683,7 @@
   function renderDirectory(resetScroll = false) {
     const oldScroll = resetScroll ? 0 : list.scrollTop;
     const places = visiblePlaces();
+    $('#destination-index').classList.toggle('has-query', Boolean(query.trim()));
     $('#result-count').textContent = `${places.length} / ${searchPool().length} 個目的地`;
     const fragment = document.createDocumentFragment();
     if (!places.length) {
@@ -724,7 +730,7 @@
     list.scrollTop = oldScroll;
   }
 
-  function mapRatio() { return Math.max(1, (surface.clientWidth || 800) / (surface.clientHeight || 500)); }
+  function mapRatio() { return ratioOverride || Math.max(1, (surface.clientWidth || 800) / (surface.clientHeight || 500)); }
   function clampView(raw) {
     if (raw.w >= 1000) return {x:0,y:0,w:1000,h:520};
     const w = Math.max(12,Math.min(1000,raw.w));
@@ -771,6 +777,7 @@
     // A drag changes only the viewBox origin; rebuilding every marker on every
     // pointermove would make the map feel sticky on a phone.
     if (scaleChanged) renderMarkers();
+    if (pinned) pinPlace(pinned);
   }
   function focusPlace(place) {
     if (category === 'countries') {
@@ -963,6 +970,7 @@
   }
   function showTooltip(place, event, label) {
     if (!place) return;
+    tooltip.classList.remove('pinned', 'below');
     const flag = flagImage(place, 'flag tooltip-flag');
     tooltip.replaceChildren();
     if (flag) tooltip.append(flag);
@@ -974,41 +982,310 @@
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
   }
-  function hideTooltip() { tooltip.hidden = true; }
-  // Reuse the real detail panel and its controls in a mobile postcard dialog.
+  // A pinned phone label outlives hover: leaving a shape brings it back.
+  function hideTooltip() {
+    tooltip.hidden = true;
+    if (pinned) pinPlace(pinned);
+  }
+  // Phones get an index-first layout. The region index is the home screen; a
+  // region pops the real map, region chips and destination list out in a
+  // full-screen dialog, and the real detail panel rides in a bottom sheet inside
+  // it, so stamping, account prompts, history and companions keep one source.
+  // Desktop keeps the side-by-side board and never runs any of this.
+  const mobileLayout = matchMedia('(max-width: 840px)');
+  const mapPop = $('#map-pop');
   const mobileStampDialog = $('#mobile-stamp-dialog');
   const stampPanel = $('.stamp-panel');
-  const panelSlot = document.createComment('stamp panel');
-  stampPanel.before(panelSlot);
-  const mobileLayout = matchMedia('(max-width: 840px)');
-  function openMobileStamp() {
-    if (!mobileLayout.matches) return;
-    mobileStampDialog.append(stampPanel);
-    if (!mobileStampDialog.open) mobileStampDialog.showModal();
-    $('#mobile-stamp-close').focus({preventScroll:true});
+  const sheetToggle = $('#sheet-toggle');
+  const travellers = {
+    map: [$('.map-column')],
+    tools: [$('#region-controls'), $('#visited-filter')],
+    list: [$('.directory-results'), list]
+  };
+  const homeSlots = new Map();
+  [...Object.values(travellers).flat(), stampPanel].forEach(node => {
+    const slot = document.createComment('mobile slot');
+    node.before(slot);
+    homeSlots.set(node, slot);
+  });
+  function sendHome(node) { homeSlots.get(node).after(node); }
+  function regionLabel() {
+    const spec = CATEGORIES[category];
+    return region === 'all' ? spec.title : (spec.regions.find(area => area.id === region)?.label || spec.title);
   }
-  function restoreStampPanel() { panelSlot.after(stampPanel); }
-  $('#mobile-stamp-close').addEventListener('click', () => mobileStampDialog.close());
-  mobileStampDialog.addEventListener('close', restoreStampPanel);
-  mobileStampDialog.addEventListener('click', event => {
-    if (event.target === mobileStampDialog) mobileStampDialog.close();
+  function updateMapPopHead() {
+    if (!mapPop.open) return;
+    const places = catalogue[category].filter(place => matchesRegion(place));
+    $('#map-pop-title').textContent = regionLabel();
+    $('#map-pop-visited').textContent = places.filter(isStamped).length;
+    $('#map-pop-total').textContent = places.length;
+    paint(mapPop, places[0]);
+  }
+  // Returns true when this call opened it, so the caller can frame the map for
+  // the pop-out's own aspect ratio.
+  function openMapPop() {
+    if (!mobileLayout.matches) return false;
+    const opening = !mapPop.open;
+    if (opening) {
+      $('#map-pop-map').append(...travellers.map);
+      $('#map-pop-tools').append(...travellers.tools);
+      $('#map-pop-list').append(...travellers.list);
+      mapPop.showModal();
+      document.documentElement.classList.add('map-pop-open');
+    }
+    updateMapPopHead();
+    return opening;
+  }
+  function openRegionMap(id) {
+    if (id !== region) chooseRegion(id);
+    openMapPop();
+    resetView();
+    renderMarkers();
+  }
+  // The board gets its pieces back as soon as the pop-out closes, not a task
+  // later when the close event arrives; the event covers every other way out.
+  function restoreBoard() {
+    closeStampSheet();
+    Object.values(travellers).flat().forEach(sendHome);
+    document.documentElement.classList.remove('map-pop-open');
+    hidePin();
+  }
+  function closeMapPop() {
+    if (!mapPop.open) return;
+    restoreBoard();
+    mapPop.close();
+  }
+  mapPop.addEventListener('close', restoreBoard);
+  // Escape (or a phone's back gesture) closes the sheet first, then the map.
+  mapPop.addEventListener('cancel', event => {
+    if (!mobileStampDialog.open) return;
+    event.preventDefault();
+    closeStampSheet();
+  });
+  mapPop.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || event.defaultPrevented || !mobileStampDialog.open) return;
+    event.preventDefault();
+    closeStampSheet();
+    $('#map-pop-close').focus({preventScroll:true});
+  });
+  $('#map-pop-close').addEventListener('click', closeMapPop);
+  function setSheet(state) {
+    mobileStampDialog.dataset.sheet = state;
+    sheetToggle.setAttribute('aria-expanded', String(state === 'full'));
+    sheetToggle.setAttribute('aria-label', state === 'full' ? '收合蓋章台' : '展開蓋章台');
+  }
+  function openMobileStamp(state = 'peek') {
+    if (!mobileLayout.matches) return;
+    openMapPop();
+    if (stampPanel.parentNode !== mobileStampDialog) mobileStampDialog.append(stampPanel);
+    if (!mobileStampDialog.open) {
+      setSheet(state);
+      mobileStampDialog.show();
+      mapPop.classList.add('sheet-open');
+      $('#mobile-stamp-close').focus({preventScroll:true});
+    }
+  }
+  function restoreSheet() {
+    sendHome(stampPanel);
+    mapPop.classList.remove('sheet-open');
+    hidePin();
+  }
+  function closeStampSheet() {
+    if (!mobileStampDialog.open) return;
+    restoreSheet();
+    mobileStampDialog.close();
+  }
+  $('#mobile-stamp-close').addEventListener('click', closeStampSheet);
+  mobileStampDialog.addEventListener('close', restoreSheet);
+  // Tap the handle or the place name to pull the sheet up or down; a short drag
+  // on the handle does the same, and dragging the peek down closes it.
+  let sheetDrag = null;
+  sheetToggle.addEventListener('pointerdown', event => {
+    sheetDrag = { id:event.pointerId, y:event.clientY, moved:false };
+    sheetToggle.setPointerCapture(event.pointerId);
+  });
+  sheetToggle.addEventListener('pointerup', event => {
+    if (!sheetDrag || sheetDrag.id !== event.pointerId) return;
+    const dy = event.clientY - sheetDrag.y;
+    sheetDrag.moved = Math.abs(dy) > 24;
+    if (dy < -24) setSheet('full');
+    else if (dy > 24) { if (mobileStampDialog.dataset.sheet === 'full') setSheet('peek'); else closeStampSheet(); }
+  });
+  sheetToggle.addEventListener('pointercancel', () => { sheetDrag = null; });
+  sheetToggle.addEventListener('click', () => {
+    if (sheetDrag?.moved) { sheetDrag = null; return; }
+    sheetDrag = null;
+    setSheet(mobileStampDialog.dataset.sheet === 'full' ? 'peek' : 'full');
+  });
+  stampPanel.addEventListener('click', event => {
+    if (!mobileStampDialog.open) return;
+    if (event.target.closest('.place-heading')) setSheet(mobileStampDialog.dataset.sheet === 'full' ? 'peek' : 'full');
+    // The month grid needs the room, so choosing a month pulls the sheet up first.
+    else if (event.target.closest('#date-picker-toggle')) setSheet('full');
+  }, true);
+  // On a phone there is no hover, so a tapped place keeps its name pinned over
+  // the map until the sheet closes or another place is chosen.
+  function pinPlace(place) {
+    pinned = place;
+    if (!place || !mapPop.open) return;
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return;
+    const point = new DOMPoint(place.x, place.y).matrixTransform(matrix);
+    const bounds = surface.getBoundingClientRect();
+    tooltip.replaceChildren();
+    const flag = flagImage(place, 'flag tooltip-flag');
+    if (flag) tooltip.append(flag);
+    tooltip.append(document.createTextNode(category === 'cities' && place.code ? `${place.zh} · ${place.code}` : place.zh));
+    tooltip.classList.add('pinned');
+    tooltip.hidden = false;
+    const x = point.x - bounds.left, y = point.y - bounds.top;
+    const below = y - tooltip.offsetHeight - 14 < 8;
+    tooltip.classList.toggle('below', below);
+    tooltip.style.left = `${Math.min(Math.max(8, x - tooltip.offsetWidth / 2), Math.max(8, bounds.width - tooltip.offsetWidth - 8))}px`;
+    tooltip.style.top = `${below ? y + 14 : y - tooltip.offsetHeight - 14}px`;
+  }
+  function hidePin() {
+    pinned = null;
+    tooltip.classList.remove('pinned', 'below');
+    hideTooltip();
+  }
+  function revealListRow() {
+    const row = list.querySelector('[aria-current="true"]');
+    if (!row || !mapPop.open) return;
+    list.scrollTop += row.getBoundingClientRect().top - list.getBoundingClientRect().top - 4;
+  }
+  // Region cards: one per travel area of the open collection, each with a small
+  // map in the atlas colours and its own count. Shapes are built once per
+  // collection; later updates only flip the stamped state and the numbers.
+  const regionIndex = $('#region-index');
+  let regionIndexKey = '';
+  function thumbView(areaId) {
+    const saved = region;
+    region = areaId;
+    ratioOverride = 2;
+    try {
+      return areaId === 'na-us-territories' ? viewFromPoints(catalogue.na.filter(place => matchesRegion(place)), 13, 75) : defaultView();
+    } finally {
+      region = saved;
+      ratioOverride = 0;
+    }
+  }
+  function landDefs() {
+    if (document.getElementById('atlas-land')) return;
+    const holder = makeSvg('svg', { width:0, height:0, 'aria-hidden':'true', focusable:'false', style:'position:absolute' });
+    const defs = makeSvg('defs', {});
+    defs.append(makeSvg('path', { id:'atlas-land', d:world.countries.map(country => country.d).join('') }));
+    holder.append(defs);
+    document.body.append(holder);
+  }
+  function indexAreas() {
+    const spec = CATEGORIES[category];
+    const areas = spec.regions.filter(area => area.id !== 'all' && !(category === 'na' && (area.id === 'us' || area.id === 'ca')));
+    return [{ id:'all', label:spec.title }, ...areas];
+  }
+  function buildRegionCard(area) {
+    const places = catalogue[category].filter(place => matchesRegion(place, area.id));
+    if (!places.length) return null;
+    const wide = area.id === 'all';
+    const card = makeElement('button', `region-card${wide ? ' wide' : ''}`);
+    card.type = 'button';
+    card.dataset.region = area.id;
+    paint(card, places[0]);
+    const frame = thumbView(area.id);
+    const thumb = makeSvg('svg', { class:'region-thumb', viewBox:`${frame.x} ${frame.y} ${frame.w} ${frame.h}`, preserveAspectRatio:'xMidYMid slice', 'aria-hidden':'true', focusable:'false' });
+    thumb.append(makeSvg('use', { href:'#atlas-land', class:'thumb-land' }));
+    const radius = Math.max(frame.w / (wide ? 150 : 70), .5);
+    for (const place of places) {
+      const shape = place.d && !wide
+        ? makeSvg('path', { d:place.d, class:'thumb-shape' })
+        : makeSvg('circle', { cx:place.x, cy:place.y, r:radius, class:'thumb-dot' });
+      shape.dataset.key = place.key;
+      paint(shape, place);
+      thumb.append(shape);
+    }
+    const count = makeElement('span', 'region-card-count');
+    count.append(makeElement('b'), document.createTextNode(` / ${places.length}`));
+    const bar = makeElement('span', 'region-card-bar');
+    bar.append(makeElement('i'));
+    bar.setAttribute('aria-hidden', 'true');
+    card.append(thumb, makeElement('span', 'region-card-name', area.label), count, bar);
+    return card;
+  }
+  function renderRegionIndex() {
+    if (!mobileLayout.matches) {
+      if (regionIndexKey) { regionIndex.replaceChildren(); regionIndexKey = ''; }
+      return;
+    }
+    const key = `${category}:${catalogue[category].length}`;
+    if (key !== regionIndexKey) {
+      landDefs();
+      regionIndexKey = key;
+      regionIndex.replaceChildren(...indexAreas().map(buildRegionCard).filter(Boolean));
+    }
+    const byKey = new Map(catalogue[category].map(place => [place.key, place]));
+    for (const card of regionIndex.children) {
+      const places = catalogue[category].filter(place => matchesRegion(place, card.dataset.region));
+      const done = places.filter(isStamped).length;
+      card.querySelector('.region-card-count b').textContent = done;
+      card.querySelector('.region-card-bar i').style.width = `${places.length ? done / places.length * 100 : 0}%`;
+      card.setAttribute('aria-label', `${card.querySelector('.region-card-name').textContent}，已蓋章 ${done} / ${places.length}`);
+    }
+    for (const shape of regionIndex.querySelectorAll('[data-key]')) shape.classList.toggle('done', isStamped(byKey.get(shape.dataset.key)));
+  }
+  regionIndex.addEventListener('click', event => {
+    const card = event.target.closest('button[data-region]');
+    if (card) openRegionMap(card.dataset.region);
+  });
+  $('#map-open').addEventListener('click', () => openRegionMap('all'));
+  // The latest stamps of the open collection, newest first; each one opens its place.
+  function renderRecentStamps() {
+    const strip = $('#recent-stamps');
+    const recent = catalogue[category]
+      .map(place => ({ place, month:visitsOf(place).at(-1) }))
+      .filter(item => item.month)
+      .sort((a, b) => b.month.localeCompare(a.month) || collator.compare(a.place.zh, b.place.zh))
+      .slice(0, 12);
+    strip.hidden = !recent.length;
+    strip.replaceChildren(...recent.map(({ place, month }) => {
+      const button = makeElement('button', 'recent-stamp');
+      button.type = 'button';
+      button.dataset.place = place.id;
+      paint(button, place);
+      const flag = flagImage(place);
+      if (flag) button.append(flag);
+      const time = makeElement('time', '', printedDate(month));
+      time.dateTime = month;
+      button.append(makeElement('span', '', place.zh), time);
+      button.setAttribute('aria-label', `${place.zh}，${printedDate(month)}`);
+      return button;
+    }));
+  }
+  $('#recent-stamps').addEventListener('click', event => {
+    const button = event.target.closest('button[data-place]');
+    if (button) selectPlace(button.dataset.place, true, true);
   });
   mobileLayout.addEventListener('change', () => {
-    if (!mobileLayout.matches && mobileStampDialog.open) mobileStampDialog.close();
+    if (!mobileLayout.matches) closeMapPop();
+    renderRegionIndex();
   });
   function selectPlace(id,focus = false,fromIndex = false) {
     const place = catalogue[category].find(p => p.id === id);
     if (!place) return;
     selectedByCategory[category] = id;
     currentMessage = null;
+    const phone = mobileLayout.matches;
+    const opened = phone && openMapPop();
     renderDetail();
     if (focus) focusPlace(place);
+    else if (opened) resetView();
     renderMap();
     renderDirectory();
     hideTooltip();
-    if (mobileLayout.matches) {
-      if (fromIndex) surface.scrollIntoView({block:'center',behavior:'instant'});
+    if (phone) {
+      updateMapPopHead();
       openMobileStamp();
+      pinPlace(place);
+      revealListRow();
     } else if (fromIndex) {
       const target = $('.atlas-grid');
       target.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
@@ -1038,6 +1315,7 @@
     const options = sortedPlaces(category).filter(matchesRegion);
     if (options.length && !matchesRegion(selectedPlace())) selectedByCategory[category] = options[0].id;
     currentMessage = null;
+    closeStampSheet();
     renderRegions();
     renderDetail();
     resetView();
@@ -1096,6 +1374,9 @@
   });
   $('#zoom-reset').addEventListener('click',resetView);
   window.addEventListener('resize',() => {
+    // Crossing to the desktop width hands the map back to the board, even if
+    // the media-query change event has not arrived yet.
+    if (!mobileLayout.matches) closeMapPop();
     // Reframe the current view to the new aspect ratio without losing its centre.
     const centerX = view.x+view.w/2, centerY = view.y+view.h/2;
     setView(view.w === 1000 ? {x:0,y:0,w:1000,h:520} : viewAround(centerX,centerY,view.w));
@@ -1390,7 +1671,7 @@
     selectedByCategory.cities = raw.id;
     updateCategoryUI();renderRegions();renderDetail();focusPlace(selectedPlace());renderMap();renderDirectory(true);
     showMessage('城市已加入；選月份蓋章。','success');
-    if (mobileLayout.matches) openMobileStamp();
+    if (mobileLayout.matches) { openMapPop(); focusPlace(selectedPlace()); openMobileStamp(); pinPlace(selectedPlace()); revealListRow(); }
     else $('.stamp-panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'start'});
   });
   $('#delete-city').addEventListener('click',() => {
