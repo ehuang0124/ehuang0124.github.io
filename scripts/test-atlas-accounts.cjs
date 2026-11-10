@@ -427,8 +427,9 @@ async function main() {
     assert.equal(page.$('#sign-in').hidden, false, 'visitors get a code sign-in button');
     assert.equal(page.$('#sign-in').textContent, '帳號登入');
     assert.equal(page.$('#account-card').hidden, true);
-    assert.equal(page.$('#passport-count').textContent, '1', 'visitors see the published collection');
-    assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
+    assert.equal(page.$('#passport-count').textContent, '0', "visitors see nobody's stamps");
+    assert.equal(page.$$('.map-country.done').length, 0, 'the visitor map carries no ink');
+    assert.equal(page.window.TravelAtlasAccount.rows().length, 0, 'the page never loads stamps without a session');
     assert.equal(page.$('#stamp-button').classList.contains('locked'), true, 'the stamp action is locked for visitors');
     assert.equal(page.$('#companion-manage').hidden, false, 'visitors can see how to start tagging');
     assert(page.$('#companion-manage').textContent.includes('登入後標記旅伴'));
@@ -739,11 +740,11 @@ async function main() {
     // One shared place, one visit: the counter says places, not rows.
     assert.equal(page.$('#friends-shared').textContent, '1');
     assert(page.$('#friends-visits').textContent.includes('1 次到訪'), 'the shared counter names visits separately');
-    // Signing out returns to the public atlas, which shows everyone.
+    // Signing out clears every stamp from view.
     await page.window.TravelAtlasAccount.signOut();
     await page.settle(); await page.settle();
-    assert.equal(page.$('#collection-label').textContent, '旅人共蓋章');
-    assert.equal(page.$$('.map-country.done').length, 2, 'the visitor sees every traveller on the map (TW and JP)');
+    assert.equal(page.$$('.map-country.done').length, 0, "a signed-out visitor sees nobody's stamps");
+    assert.equal(page.window.TravelAtlasAccount.rows().length, 0, 'signing out drops the loaded rows');
     console.log('PASS companions: live insert, shared trips, per-user views');
   }
 

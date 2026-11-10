@@ -418,12 +418,14 @@ create policy "own profile update"
 -- ---------------------------------------------------------------- stamps -----
 alter table public.stamps enable row level security;
 
--- The public atlas: signed-out visitors read everything but write nothing.
+-- Stamps are private to signed-in travellers: a signed-out visitor reads
+-- nothing (see migrations/20261110_private_stamps.sql).
 drop policy if exists "stamps are public to read" on public.stamps;
-create policy "stamps are public to read"
+drop policy if exists "travellers read stamps" on public.stamps;
+create policy "travellers read stamps"
   on public.stamps for select
-  to anon, authenticated
-  using (true);
+  to authenticated
+  using (public.atlas_is_traveller());
 
 drop policy if exists "own stamps insert" on public.stamps;
 create policy "own stamps insert"
@@ -448,10 +450,11 @@ create policy "own stamps delete"
 alter table public.custom_cities enable row level security;
 
 drop policy if exists "custom cities are readable" on public.custom_cities;
-create policy "custom cities are readable"
+drop policy if exists "travellers read custom cities" on public.custom_cities;
+create policy "travellers read custom cities"
   on public.custom_cities for select
-  to anon, authenticated
-  using (true);
+  to authenticated
+  using (public.atlas_is_traveller());
 
 drop policy if exists "own cities insert" on public.custom_cities;
 create policy "own cities insert"

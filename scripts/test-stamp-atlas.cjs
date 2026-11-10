@@ -103,6 +103,8 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       // The unified North America layer must still recognize legacy U.S. and Canada stamp keys.
       await page.evaluate(() => localStorage.setItem('eva.travel.stamp-atlas.v1',JSON.stringify({version:1,visits:{'us:yell':['2023-03'],'ca:banff':['2024-06']},customCities:[]})));
       await page.reload();
+      assert.equal(await page.locator('#passport-count').textContent(),'0','a signed-out visitor sees no stamps');
+      await ensureSignedIn();
       assert.equal(await page.locator('#passport-count').textContent(),'2');
       await chooseCollection('na');
       assert.equal(await page.locator('#tab-count-na').textContent(),'2 / 162');
@@ -123,13 +125,13 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert(await page.locator('#map-svg').getAttribute('viewBox').then(box => Number(box.split(' ')[2]) < 1000));
       await page.locator('#zoom-reset').click();
       assert.equal(await page.locator('#map-svg').getAttribute('viewBox'),'0 0 1000 520');
-      await page.locator('[data-region="AS"]').click();
+      await page.locator('#region-controls [data-region="AS"]').click();
       assert.equal(await page.locator('.place-item').count(),55);
       await page.locator('#place-search').fill('日本');
       assert.equal(await page.locator('.place-item[data-place="392"]').count(),1);
       assert(await page.locator('.place-item').count() > 1, 'search spans every collection');
       await page.locator('#place-search').fill('');
-      await page.locator('[data-region="all"]').click();
+      await page.locator('#region-controls [data-region="all"]').click();
       await page.locator('#map-svg').scrollIntoViewIfNeeded();
       const taiwanPoint = await page.locator('.map-country[data-id="158"]').evaluate(el => {
         const rect = el.getBoundingClientRect();
@@ -201,7 +203,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.place-item').count(),0);
       assert((await page.locator('.empty-results').textContent()).includes('還沒有蓋章'));
       await page.locator('#visited-filter').click();
-      await page.locator('[data-region="EU"]').click();
+      await page.locator('#region-controls [data-region="EU"]').click();
       await onShape('.map-point[data-id="berlin-de"]', 'click');
       assert.equal(await page.locator('#place-name').textContent(),'柏林');
       assert(await page.locator('.place-item').count() > 20);
@@ -219,23 +221,23 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert.equal(await page.locator('.map-us-state').count(),50);
       assert.equal(await page.locator('.map-point').count(),112);
       // Zoom a dense layer before targeting a state on a narrow screen.
-      await page.locator('[data-region="us"]').click();
+      await page.locator('#region-controls [data-region="us"]').click();
       await page.locator('#place-search').fill('加利福尼亞州');
       await page.locator('.place-item[data-place="state-ca"]').click();
       await onShape('.map-us-state[data-id="state-ca"]', 'hover');
       await page.locator('#place-search').fill('');
       assert((await page.locator('#map-tooltip').textContent()).includes('加利福尼亞州'));
       await page.mouse.move(5,5);
-      await page.locator('[data-region="ca"]').click();
+      await page.locator('#region-controls [data-region="ca"]').click();
       await page.locator('#place-search').fill('Banff');
       await page.locator('.place-item').click();
       await onShape('.map-point[data-id="banff"]', 'hover');
       await page.locator('#place-search').fill('');
       assert((await page.locator('#map-tooltip').textContent()).includes('亞伯達省'));
       await page.mouse.move(5,5);
-      assert((await page.locator('[data-region="us"]').textContent()).includes('114'));
-      assert((await page.locator('[data-region="ca"]').textContent()).includes('48'));
-      await page.locator('[data-region="all"]').click();
+      assert((await page.locator('#region-controls [data-region="us"]').textContent()).includes('114'));
+      assert((await page.locator('#region-controls [data-region="ca"]').textContent()).includes('48'));
+      await page.locator('#region-controls [data-region="all"]').click();
       await page.locator('#place-search').fill('加利福尼亞州');
       assert.equal(await page.locator('.place-item[data-place="state-ca"]').count(),1);
       await page.locator('.place-item[data-place="state-ca"]').click(); // focuses the small state
@@ -249,22 +251,22 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#history-list button[data-date="2024-06"]').click();
       assert.equal(await page.locator('.map-us-state.done').count(),0);
       await page.locator('#place-search').fill('');
-      await page.locator('[data-region="na-us-alaska"]').click();
+      await page.locator('#region-controls [data-region="na-us-alaska"]').click();
       assert.equal(await page.locator('.place-item').count(),9);
-      await page.locator('[data-region="na-us-hawaii"]').click();
+      await page.locator('#region-controls [data-region="na-us-hawaii"]').click();
       assert.equal(await page.locator('.place-item').count(),3);
-      await page.locator('[data-region="na-us-territories"]').click();
+      await page.locator('#region-controls [data-region="na-us-territories"]').click();
       assert.equal(await page.locator('.place-item').count(),2);
-      await page.locator('[data-region="all"]').click();
+      await page.locator('#region-controls [data-region="all"]').click();
       await page.locator('#place-search').fill('Chiricahua');
       assert.equal(await page.locator('.place-item').count(),1);
       await page.locator('.place-item').click();
       assert.equal(await page.locator('#place-name').textContent(),'奇里卡瓦');
       await page.locator('#place-search').fill('');
-      await page.locator('[data-region="ca"]').click();
+      await page.locator('#region-controls [data-region="ca"]').click();
       assert.equal(await page.locator('.place-item').count(),48);
       assert.equal(await page.locator('.map-point').count(),48);
-      await page.locator('[data-region="na-ca-north"]').click();
+      await page.locator('#region-controls [data-region="na-ca-north"]').click();
       assert.equal(await page.locator('.place-item').count(),14);
       await chooseCollection('jp');
       assert.equal(await page.locator('.place-item').count(),35);
@@ -284,7 +286,7 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       assert((await page.locator('#map-tooltip').textContent()).includes('近畿地方'));
       assert.equal(await page.locator('#place-name').textContent(),'富士箱根伊豆');
       await page.mouse.move(5,5);
-      await page.locator('[data-region="islands"]').click();
+      await page.locator('#region-controls [data-region="islands"]').click();
       assert.equal(await page.locator('.place-item').count(),6);
       await chooseCollection('cities');
       await page.locator('#add-city').click();

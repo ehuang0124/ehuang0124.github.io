@@ -48,7 +48,7 @@ async function chooseVisitMonth(page, month) {
         return url.startsWith(base) ? route.continue() : route.abort();
       });
       await page.goto(base + '/personal/travel/map/?demo=1');
-      await page.locator('.place-item').first().waitFor();
+      await page.locator('.place-item').first().waitFor({ state:'attached' });
       assert.equal(await page.evaluate(() => TravelAtlasAccount.mode), 'demo');
       assert.equal(projectRequests, 0, 'demo never contacts the configured project');
       assert(await page.locator('#stamp-button svg').count(), 'stamp action has a real stamp icon');
@@ -111,23 +111,18 @@ async function chooseVisitMonth(page, month) {
       assert.equal(await japan.locator('.map-seal').first().getAttribute('data-author-id'), 'demo-lin');
       assert.equal(await page.locator('#stamp-face-date').textContent(), '2023.04');
       assert.equal(await page.locator('#stamp-signature-list .stamp-signature').count(), 1);
-      // A read-only visitor sees every author. The map limits crowding to three,
-      // while the destination details retain all four real owners.
+      // A signed-out visitor sees nobody's seals, signatures or dates.
       await becomeVisitor();
-      assert.equal(await japan.locator('.map-seal').count(), 3);
-      assert.equal(await page.locator('#stamp-signature-list .stamp-signature').count(), 4);
-      for (const name of ['Eva Huang', '林宜臻', '陳柏宇', '田中雅子'])
-        assert((await page.locator('#stamp-signature-list').textContent()).includes(name));
+      assert.equal(await page.locator('.map-seal').count(), 0, 'the visitor map carries no seals');
+      assert.equal(await page.locator('#stamp-signature-list .stamp-signature').count(), 0);
       await page.locator(`.place-item[data-place="${id}"]`).click();
-      assert.equal(await country.locator('.map-seal').count(), 2, 'the visitor sees both independent owners');
-      assert.equal(await country.locator('.map-seal[data-author-id="demo-lin"] .map-seal-initial').textContent(), '林');
+      assert.equal(await country.count(), 0, 'no imprint for a visitor');
       await signInAsLin();
       page.once('dialog', dialog => dialog.accept());
       await page.locator('#history-list button[data-date="2019-01"]').click();
       assert.equal(await country.locator('.map-seal').count(), 0, 'removing my seal leaves my view unvisited');
       await becomeVisitor();
-      assert.equal(await country.locator('.map-seal').count(), 1, 'removing one owner leaves the other seal');
-      assert.equal(await country.locator('.map-seal-initial').textContent(), 'E');
+      assert.equal(await page.locator('.map-seal').count(), 0, 'a visitor still sees no seals');
       await signInAsLin();
       // Point layers and state outlines also use owner seals.
       await page.locator('#collection-inline').click();

@@ -98,10 +98,9 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
     const d3 = w3.document;
     assert.equal(d3.querySelector('#stamp-button').classList.contains('locked'), true, 'a visitor is read-only');
     assert(d3.querySelector('#stamp-button').textContent.includes('登入後蓋章'));
-    assert.equal(d3.querySelector('#collection-label').textContent, '旅人共蓋章');
-    const shared = d3.querySelector('#passport-count').textContent;
-    assert(Number(shared) > 0, 'the shared atlas is visible before sign-in');
-    assert.equal(d3.querySelectorAll('.map-country.done').length, 5, 'a visitor sees every traveller on the map (JP, TW, TH, FR, KR)');
+    assert.equal(d3.querySelector('#passport-count').textContent, '0', "a visitor sees nobody's stamps");
+    assert.equal(d3.querySelectorAll('.map-country.done, .map-seal').length, 0, 'the visitor map carries no ink');
+    assert.equal(d3.querySelector('#friends-section').hidden, true, 'shared trips are hidden from visitors');
     d3.querySelector('#sign-in').dispatchEvent(new w3.MouseEvent('click', { bubbles:true }));
     await new Promise(resolve => setTimeout(resolve, 30));
     d3.querySelector('#account-demo').dispatchEvent(new w3.MouseEvent('click', { bubbles:true }));
@@ -112,7 +111,8 @@ const wait = async (n=10) => { for (let i=0;i<n;i++) await new Promise(r=>setTim
     d3.querySelector('#sign-out').dispatchEvent(new w3.MouseEvent('click', { bubbles:true }));
     await new Promise(resolve => setTimeout(resolve, 160));
     assert.equal(d3.querySelector('#account-card').hidden, true, 'signed out');
-    assert.equal(d3.querySelector('#passport-count').textContent, shared, 'signing out keeps the public atlas visible');
+    assert.equal(d3.querySelector('#passport-count').textContent, '0', 'signing out clears every stamp from view');
+    assert.equal(d3.querySelectorAll('.map-country.done').length, 0);
   }
   console.log('PASS demo mode end-to-end (sign-in, companion, traveller switch, cross-tab live sync, read-only visitor)');
   process.exit(0);

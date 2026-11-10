@@ -82,7 +82,7 @@ const root = path.resolve(__dirname, '..');
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(base + '/personal/travel/map/');
-      await page.locator('.place-item').first().waitFor();
+      await page.locator('.place-item').first().waitFor({ state:'attached' });
       assert.equal(await page.locator('.place-item').count(), 240);
       await page.evaluate(() => document.fonts.ready);
       await page.locator('#map-svg').scrollIntoViewIfNeeded();

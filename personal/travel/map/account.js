@@ -352,7 +352,9 @@
   function sortRows() {
     return [...rowsById.values()].sort((a, b) => a.month.localeCompare(b.month) || a.placeKey.localeCompare(b.placeKey));
   }
-  function visibleRows() { return sortRows(); }
+  // A signed-out visitor sees nobody's stamps; travellers also read records
+  // that tag them, which the shared-trip view needs.
+  function visibleRows() { return state.user ? sortRows() : []; }
   function myRows() { return state.user ? sortRows().filter(row => row.userId === state.user.id) : []; }
   // Custom cities belong to the traveller who added them.
   function visibleCities() {
@@ -454,7 +456,7 @@
         // A link that carries the recovery type opens the reset view even if
         // the exchange completes after the page has already rendered.
         if (recoveryFlow) setTimeout(() => emit('recovery', true), 0);
-        // Every visitor loads the public atlas, signed in or not.
+        // Signed-in travellers load their atlas; visitors get an empty one.
         await syncPull();
         startPolling();
         window.addEventListener('online', () => { refreshConnection(); flush(); syncPull(); });
@@ -859,7 +861,7 @@
     setUser(null);
     await client.auth.signOut();
     setConnection('online');
-    // Stay a read-only visitor of the public atlas.
+    // Stay a read-only visitor; the pull clears every stamp from view.
     await syncPull();
     emit('cities', { reset:true });
   }
@@ -965,8 +967,7 @@
   function exitDemo() {
     setDemoSession(null);
     setUser(null);
-    // The map stays public after signing out: keep the shared rows, drop only
-    // this traveller's private custom cities.
+    // A signed-out visitor sees no stamps; the view clears with the session.
     syncPull();
   }
   api.setDemoUser = id => { if (state.mode === 'demo') enterDemo(id); };
@@ -1073,6 +1074,16 @@
     }
     if (state.mode !== 'cloud' || !client) return { ok:false, reason:'local' };
     if (!navigator.onLine) { setConnection('offline'); return { ok:false, reason:'offline' }; }
+    // Stamps and custom cities are private to signed-in travellers; the
+    // database refuses them to anonymous readers too.
+    if (!state.user) {
+      rowsById.clear();
+      citiesById.clear();
+      emit('rows', { reset:true });
+      emit('cities', { reset:true });
+      emit('status', status());
+      return { ok:true };
+    }
     try {
       const { data:rows, error } = await client.from('stamps').select('id,user_id,place_key,visit_month,companions,created_at,updated_at').order('visit_month', { ascending:true });
       if (error) throw error;
