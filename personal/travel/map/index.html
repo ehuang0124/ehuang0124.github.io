@@ -22,6 +22,7 @@
   <script src="./palette.js" defer></script>
   <script src="./world.js" defer></script>
   <script src="./places.js" defer></script>
+  <script src="./city-boards.js" defer></script>
   <script src="./okinawa-places.js" defer></script>
   <script src="./us-states.js" defer></script>
   <script src="./jp-admin.js" defer></script>
@@ -148,6 +149,7 @@
           <section class="directory" id="destination-index" aria-labelledby="directory-title">
             <div class="directory-head"><div><h2 id="directory-title">地點索引<span class="dot">.</span></h2></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文、英文或代號…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
             <div class="region-index" id="region-index" aria-label="依地區打開地圖"></div>
+            <p class="board-hint" id="board-hint" hidden>沒上榜的城市？<button type="button" id="board-search">直接搜尋 ⌕</button></p>
             <div id="region-controls" class="region-controls" aria-label="主要地理分區"></div>
             <div class="directory-results"><span id="result-count" role="status" aria-live="polite"></span></div>
             <div id="place-list" class="place-list" aria-label="可選擇的目的地清單"></div>
