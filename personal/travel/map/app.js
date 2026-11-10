@@ -1159,13 +1159,20 @@
     $('#mobile-stamp-close').focus({preventScroll:true});
   }
   function restoreStampPanel() { panelSlot.after(stampPanel); }
-  $('#mobile-stamp-close').addEventListener('click', () => mobileStampDialog.close());
+  // The dialog's close event fires a moment after close(); put the panel back
+  // straight away so nothing in between finds it missing. Escape still goes
+  // through the close event below.
+  function closeMobileStamp() {
+    if (mobileStampDialog.open) mobileStampDialog.close();
+    restoreStampPanel();
+  }
+  $('#mobile-stamp-close').addEventListener('click', closeMobileStamp);
   mobileStampDialog.addEventListener('close', restoreStampPanel);
   mobileStampDialog.addEventListener('click', event => {
-    if (event.target === mobileStampDialog) mobileStampDialog.close();
+    if (event.target === mobileStampDialog) closeMobileStamp();
   });
   mobileLayout.addEventListener('change', () => {
-    if (!mobileLayout.matches && mobileStampDialog.open) mobileStampDialog.close();
+    if (!mobileLayout.matches && mobileStampDialog.open) closeMobileStamp();
   });
   // On a phone the destination index lives in a full-screen search dialog; the
   // same section moves in and out, so search, filters and add-city keep one source.
@@ -1217,7 +1224,7 @@
       if (!start || start.id !== event.pointerId) return;
       const dx = event.clientX - start.x, dy = event.clientY - start.y;
       start = null;
-      if (dy > 60 && Math.abs(dy) > Math.abs(dx)) mobileStampDialog.close();
+      if (dy > 60 && Math.abs(dy) > Math.abs(dx)) closeMobileStamp();
       else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) stepPlace(dx < 0 ? 1 : -1);
     });
     bar.addEventListener('pointercancel', () => { start = null; });

@@ -46,7 +46,10 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
     const bundled = process.env.CHROMIUM_PATH ? null : (await import(require.resolve('@sparticuz/chromium'))).default;
     browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH || await bundled.executablePath(),args:bundled ? bundled.args.filter(arg => arg !== '--single-process') : ['--no-sandbox'],headless:true});
     const url = `http://127.0.0.1:${server.address().port}`;
-    for (const viewport of [{width:1440,height:960},{width:390,height:844},{width:320,height:700}]) {
+    // Desktop only: this walk drives the inline index and side panel. On a phone
+    // the index lives in a search dialog and the panel in a bottom sheet;
+    // test-mobile-postcard.cjs covers that flow and overflow at 390 and 320px.
+    for (const viewport of [{width:1440,height:960}]) {
       const context = await browser.newContext({viewport,reducedMotion:'reduce',acceptDownloads:true});
       await context.route('**/*',route => route.request().url().startsWith(url) ? route.continue() : route.abort());
       const page = await context.newPage(), errors = [];
