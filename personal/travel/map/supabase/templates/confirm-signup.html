@@ -1,0 +1,114 @@
+<!--
+  Stamp Atlas 世界蓋章地圖 — verification email for new signups (confirm signup)
+  Recreated 2026-11-09 from the requester's description (the original saved file was not found in this repo).
+
+  Subject (set separately in the dashboard, not in this file):
+  【Stamp Atlas 世界蓋章地圖】驗證你的電子郵件 · Verify your email
+
+  Where to paste: Supabase Dashboard → Authentication → Emails → Confirm signup
+  Variables supplied by Supabase (keep the double curly braces exactly as-is):
+    {{ .ConfirmationURL }}  the one-time verification link (button + backup link)
+    {{ .Email }}            the address being verified (greeting)
+  The link works once and expires in 1 hour (mailer_otp_exp = 3600); only the newest email counts.
+-->
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="x-apple-disable-message-reformatting">
+<title>【Stamp Atlas 世界蓋章地圖】驗證你的電子郵件 · Verify your email</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f5f1;">
+
+<!-- preheader (inbox preview line, hidden in the body) -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f6f5f1;opacity:0;">
+驗證你的電子郵件 · Verify your email — {{ .Email }}
+</div>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f5f1;">
+  <tr>
+    <td align="center" style="padding:36px 14px;">
+
+      <!-- card -->
+      <table role="presentation" width="480" cellspacing="0" cellpadding="0" border="0" style="width:480px;max-width:480px;background:#ffffff;border:1px solid #e4e2da;border-radius:16px;">
+
+        <!-- brand -->
+        <tr>
+          <td align="center" style="padding:30px 32px 0 32px;">
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.34em;text-transform:uppercase;color:#c9202f;">Stamp&nbsp;Atlas</div>
+            <div style="font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:.42em;color:#12314b;padding-top:5px;">世界蓋章地圖</div>
+            <div style="width:56px;height:3px;background:#c2a05c;border-radius:2px;margin:14px auto 0 auto;font-size:0;line-height:0;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <!-- heading -->
+        <tr>
+          <td align="center" style="padding:26px 32px 0 32px;">
+            <h1 style="margin:0;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:24px;line-height:1.35;font-weight:800;color:#12314b;">驗證你的電子郵件</h1>
+            <p style="margin:7px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-size:12.5px;font-style:italic;letter-spacing:.06em;color:#8b8b85;">Verify your email</p>
+          </td>
+        </tr>
+
+        <!-- greeting -->
+        <tr>
+          <td style="padding:24px 40px 0 40px;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;">
+            <p style="margin:0;font-size:15px;line-height:1.85;color:#1c1c1c;">你好！這封信要驗證的電子郵件地址是 <strong style="color:#12314b;">{{ .Email }}</strong>。點擊下方按鈕完成驗證，就會回到世界蓋章地圖，並自動登入。</p>
+            <p style="margin:10px 0 0 0;font-size:12.5px;line-height:1.75;color:#4c4c49;">Hi — this message verifies <strong>{{ .Email }}</strong>. Click the button below to confirm and you&rsquo;ll be signed back in on the map.</p>
+          </td>
+        </tr>
+
+        <!-- button -->
+        <tr>
+          <td align="center" style="padding:28px 32px 0 32px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td align="center" bgcolor="#c9202f" style="background:#c9202f;border-radius:10px;">
+                  <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 34px;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:16px;font-weight:800;letter-spacing:.05em;color:#ffffff;text-decoration:none;border-radius:10px;">驗證信箱&nbsp;·&nbsp;Verify&nbsp;email</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- backup link -->
+        <tr>
+          <td style="padding:26px 40px 0 40px;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;">
+            <p style="margin:0;font-size:12.5px;line-height:1.75;color:#4c4c49;">如果按鈕按不動，請複製以下連結，貼到瀏覽器開啟：</p>
+            <p style="margin:4px 0 0 0;font-size:11.5px;line-height:1.6;color:#8b8b85;">If the button doesn&rsquo;t work, copy this link into your browser:</p>
+            <div style="margin-top:10px;padding:12px 14px;background:#f6f5f1;border:1px solid #e4e2da;border-radius:8px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11px;line-height:1.6;color:#12314b;word-break:break-all;overflow-wrap:anywhere;"><a href="{{ .ConfirmationURL }}" target="_blank" style="color:#12314b;text-decoration:underline;text-underline-offset:2px;">{{ .ConfirmationURL }}</a></div>
+          </td>
+        </tr>
+
+        <!-- note -->
+        <tr>
+          <td style="padding:26px 40px 0 40px;">
+            <div style="border-top:1px solid #e4e2da;font-size:0;line-height:0;">&nbsp;</div>
+            <p style="margin:20px 0 8px 0;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.18em;color:#a3162a;">小提醒<span style="font-family:Georgia,serif;font-weight:400;font-style:italic;letter-spacing:.06em;color:#8b8b85;text-transform:none;"> · Please note</span></p>
+            <ul style="margin:0;padding-left:18px;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:12.5px;line-height:1.8;color:#4c4c49;">
+              <li>連結只能使用一次。<br><span style="font-size:11.5px;color:#8b8b85;">This link works once.</span></li>
+              <li style="margin-top:6px;">連結會在 1 小時後失效。<br><span style="font-size:11.5px;color:#8b8b85;">It expires in 1 hour.</span></li>
+              <li style="margin-top:6px;">只有最新一封驗證信有效；重新索取後，之前的連結就不能用了。<br><span style="font-size:11.5px;color:#8b8b85;">Only the newest verification email counts — once a new one is sent, earlier links stop working.</span></li>
+              <li style="margin-top:6px;">如果你沒有註冊 Stamp Atlas，忽略這封信即可。<br><span style="font-size:11.5px;color:#8b8b85;">If you didn&rsquo;t sign up for Stamp Atlas, you can ignore this email.</span></li>
+            </ul>
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td align="center" style="padding:26px 32px 30px 32px;">
+            <div style="border-top:1px solid #e4e2da;font-size:0;line-height:0;">&nbsp;</div>
+            <p style="margin:18px 0 0 0;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif;font-size:10.5px;line-height:1.7;color:#8b8b85;">Stamp Atlas 世界蓋章地圖 · 這封信由系統自動寄出，請勿直接回覆。<br>This is an automated message — please don&rsquo;t reply to it.</p>
+          </td>
+        </tr>
+
+      </table>
+      <!-- /card -->
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
