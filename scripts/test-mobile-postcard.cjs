@@ -52,12 +52,31 @@ const config = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:'',loca
       assert(point, 'China has a visible clickable point');
       await page.mouse.click(point.x, point.y);
       assert.equal(await page.locator('#place-name').innerText(), '中國');
+      // From the whole world the first tap only opens the continent.
+      assert.equal(await dialog.evaluate(el => el.open), false, 'the first world-view tap does not open the postcard');
+      assert.equal(await page.locator('.region-card[aria-pressed="true"]').getAttribute('data-region'), 'AS');
+      if (mobile) {
+        assert.equal(await page.locator('.place-card[aria-current="true"]').getAttribute('data-place'), '156', 'the tapped country is the current card');
+        const again = await page.locator('.map-country[data-id="156"]').evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          for (let y = Math.max(0, rect.top); y < Math.min(innerHeight, rect.bottom); y += 2)
+            for (let x = Math.max(0, rect.left); x < Math.min(innerWidth, rect.right); x += 2)
+              if (el.contains(document.elementFromPoint(x, y))) return {x, y};
+        });
+        await page.mouse.click(again.x, again.y);
+      }
       assert.equal(await dialog.evaluate(el => el.open), mobile);
       if (mobile) await page.locator('#mobile-stamp-close').click();
-      // The searchable destination index uses the same panel and picker.
+      // The searchable destination index uses the same panel and picker; on a
+      // phone it opens full screen from the search pill.
+      if (mobile) {
+        await page.locator('#deck-search').click();
+        assert.equal(await page.locator('#search-dialog').evaluate(el => el.open), true);
+      }
       await page.locator('#place-search').fill('法國');
       await page.locator('#place-list button[data-place]').first().click();
       assert.equal(await dialog.evaluate(el => el.open), mobile);
+      if (mobile) assert.equal(await page.locator('#search-dialog').evaluate(el => el.open), false, 'choosing a result closes the search');
       assert.equal(await dialog.getAttribute('data-family'), 'europe');
       assert.equal(await page.locator('#place-name').innerText(), '法國');
       const toggle = page.locator('#date-picker-toggle');
@@ -175,7 +194,7 @@ const config = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:'',loca
         await dialog.waitFor({state:'hidden'});
         assert.equal(await picker.isHidden(), true);
         assert.equal(await page.locator('.atlas-grid > .stamp-panel').count(), 1);
-        await page.locator('#place-list button[data-place]').first().click();
+        await page.locator('.place-card[data-place]').first().click();
         assert.equal(await value.inputValue(), selected);
         assert.equal(await picker.isHidden(), true);
         await toggle.click();

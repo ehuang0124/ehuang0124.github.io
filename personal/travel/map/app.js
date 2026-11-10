@@ -109,6 +109,8 @@
     if (text != null) element.textContent = text;
     return element;
   }
+  // Place ids are slugs or numbers; quoting them is enough for an attribute selector.
+  function cssId(id) { return String(id).replace(/["\\]/g, '\\$&'); }
   function makeSvg(tag, attributes) {
     const element = document.createElementNS(svgNS, tag);
     for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, String(value));
@@ -251,18 +253,13 @@
     if (!signedIn()) return [];
     return [...new Set(atlasAccount.rows.filter(row => row.userId === atlasAccount.user.id && row.placeKey === place.key).map(row => row.month))].sort();
   }
-  // Every stamp loaded from the shared atlas, whoever made it.
-  function everyVisit(place) {
-    if (!cloudMode()) return data.visits[place.key] || [];
-    return [...new Set(atlasAccount.rows.filter(row => row.placeKey === place.key).map(row => row.month))].sort();
-  }
   // One data scope drives the map, the counters, the filter and the history:
-  // a signed-in traveller sees their own footprint, a visitor sees the whole
-  // published atlas. Nothing on the page may read a different set of records.
-  function visitsOf(place) { return signedIn() ? ownVisits(place) : everyVisit(place); }
+  // a signed-in traveller sees their own footprint, and a signed-out visitor
+  // sees no stamps at all. Nothing on the page may read a different set of records.
+  function visitsOf(place) { return signedIn() ? ownVisits(place) : []; }
   function scopeRows(place) {
-    if (!cloudMode()) return [];
-    return atlasAccount.rows.filter(row => row.placeKey === place.key && (!signedIn() || row.userId === atlasAccount.user.id));
+    if (!cloudMode() || !signedIn()) return [];
+    return atlasAccount.rows.filter(row => row.placeKey === place.key && row.userId === atlasAccount.user.id);
   }
   // Every stamp of one place inside the active scope, grouped by its month.
   // Companions are read from the record's own owner, so another traveller who
@@ -339,7 +336,7 @@
     feedback.textContent = message;
     feedback.className = `stamp-feedback ${type}`;
   }
-  // Visitors count the whole atlas; signed-in travellers count their own places.
+  // Signed-in travellers count their own places; visitors count nothing.
   function stampCount(cat) {
     return catalogue[cat].filter(isStamped).length;
   }
@@ -353,10 +350,12 @@
       if (tab) tab.textContent = text;
       const pill = $(`#pill-count-${cat}`);
       if (pill) pill.textContent = text;
+      const card = $(`#pill-${cat}`);
+      if (card) card.style.setProperty('--progress', `${catalogue[cat].length ? Math.round(stampCount(cat) / catalogue[cat].length * 1000) / 10 : 0}%`);
     });
     $('#passport-count').textContent = counted.size;
     const label = $('#collection-label');
-    if (label) label.textContent = signedIn() ? '已蓋章' : (cloudMode() ? '旅人共蓋章' : '已蓋章');
+    if (label) label.textContent = '已蓋章';
     $('#board-visited').textContent = stampCount(category);
     $('#board-total').textContent = catalogue[category].length;
   }
@@ -401,10 +400,9 @@
   // Destination-specific postcard plates. stamp-art.js supplies an editorial
   // one-ink vignette (landscape, flower, figure or building) for every catalogue
   // entry; the deterministic terrain below keeps each plate unique.
-  function renderStampArt(place) {
+  function plateMarkup(place) {
     const atlas = window.TravelAtlasStampArt;
-    const svg = document.getElementById('stamp-art');
-    if (!atlas) return;
+    if (!atlas) return null;
     const motif = atlas.find(place);
     let seed = 2166136261;
     for (const char of String(place.id || place.key || place.en || place.zh)) {
@@ -425,7 +423,15 @@
       return next;
     })();
     const plate = `<g class="t-4">${contours}</g>`;
-    svg.innerHTML = `${plate}${atlas.render(motif)}<text class="art-serial" x="97" y="57">${String(serial).padStart(3,'0')}</text>`;
+    return { motif, serial, markup:`${plate}${atlas.render(motif)}<text class="art-serial" x="97" y="57">${String(serial).padStart(3,'0')}</text>` };
+  }
+  function renderStampArt(place) {
+    const atlas = window.TravelAtlasStampArt;
+    const svg = document.getElementById('stamp-art');
+    const art = plateMarkup(place);
+    if (!art) return;
+    const { motif, serial } = art;
+    svg.innerHTML = art.markup;
     svg.setAttribute('aria-label', `${motif.label}，${motif.kind}圖稿，${place.zh}專屬構圖，圖稿編號 ${serial}`);
     const caption = $('#plate-motif');
     if (caption) caption.textContent = atlas.label(place, motif);
@@ -641,11 +647,16 @@
     else note.textContent = '';
   }
 
+  // The index chips and the mobile region cards come from the same areas, so
+  // both always agree on what a region contains.
   function renderRegions() {
     const container = $('#region-controls');
+    const strip = $('#region-strip');
     const fragment = document.createDocumentFragment();
+    const cards = document.createDocumentFragment();
     CATEGORIES[category].regions.forEach(area => {
-      const count = area.id === 'all' ? catalogue[category].length : catalogue[category].filter(place => matchesRegion(place,area.id)).length;
+      const places = area.id === 'all' ? catalogue[category] : catalogue[category].filter(place => matchesRegion(place,area.id));
+      const count = places.length;
       if (!count && area.id !== 'all') return;
       const button = makeElement('button', '', area.label);
       button.type = 'button';
@@ -653,8 +664,22 @@
       button.setAttribute('aria-pressed', String(region === area.id));
       button.append(makeElement('span', '', String(count)));
       fragment.append(button);
+      const stamped = places.filter(isStamped).length;
+      const card = makeElement('button', 'region-card');
+      card.type = 'button';
+      card.dataset.region = area.id;
+      card.setAttribute('aria-pressed', String(region === area.id));
+      card.setAttribute('aria-label', `${area.label}，${stamped} / ${count} 已蓋章`);
+      card.style.setProperty('--progress', `${count ? Math.round(stamped / count * 1000) / 10 : 0}%`);
+      card.append(makeElement('strong', '', area.label), makeElement('span', 'region-card-count', `${stamped} / ${count}`), makeElement('i', 'region-card-bar'));
+      cards.append(card);
     });
     container.replaceChildren(fragment);
+    if (strip) {
+      strip.replaceChildren(cards);
+      const active = strip.querySelector('[aria-pressed="true"]');
+      if (active) strip.scrollLeft = Math.max(0, active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2);
+    }
   }
   function matchesRegion(place, target = region) {
     if (target === 'all') return true;
@@ -722,6 +747,140 @@
     });
     list.replaceChildren(fragment);
     list.scrollTop = oldScroll;
+    renderCarousel(places);
+  }
+
+  // ---------- mobile deck: swipe cards, the map follows ----------
+  const carousel = $('#place-carousel');
+  let carouselSignature = '';
+  let peekId = null;
+  // Cards in the current layer, in index order: the postcard steps through these.
+  function deckPlaces() { return visiblePlaces().filter(place => place.category === category); }
+  function cardFor(id) { return carousel ? carousel.querySelector(`.place-card[data-place="${cssId(id)}"]`) : null; }
+  function centerCard(id, smooth = false) {
+    const card = cardFor(id);
+    if (!card) return;
+    const left = Math.max(0, card.parentElement.offsetLeft - (carousel.clientWidth - card.parentElement.offsetWidth) / 2);
+    if (smooth && !reducedMotion() && typeof carousel.scrollTo === 'function') carousel.scrollTo({ left, behavior:'smooth' });
+    else carousel.scrollLeft = left;
+  }
+  function reducedMotion() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  const plateObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const svgArt = entry.target;
+      plateObserver.unobserve(svgArt);
+      const place = catalogue[category].find(item => item.id === svgArt.dataset.place) || CATEGORY_ORDER.flatMap(cat => catalogue[cat]).find(item => item.id === svgArt.dataset.place);
+      const art = place && plateMarkup(place);
+      if (art) svgArt.innerHTML = art.markup;
+    });
+  }, { root:carousel, rootMargin:'0px 240px' }) : null;
+  function placeCard(place, index) {
+    const item = makeElement('li', 'place-card-item');
+    const stamped = isStamped(place);
+    const card = makeElement('button', `place-card${stamped ? ' done' : ''}`);
+    card.type = 'button';
+    card.dataset.place = place.id;
+    paint(card, place);
+    const top = makeElement('span', 'place-card-top');
+    const flag = flagImage(place, 'flag place-card-flag');
+    if (flag) top.append(flag);
+    top.append(makeElement('span', 'place-card-index', String(index + 1).padStart(3, '0')));
+    const art = makeSvg('svg', { class:'place-card-art', viewBox:'0 0 100 58', 'aria-hidden':'true', 'data-place':place.id });
+    if (plateObserver) plateObserver.observe(art);
+    else { const plate = plateMarkup(place); if (plate) art.innerHTML = plate.markup; }
+    const name = makeElement('strong', 'place-card-name', place.zh);
+    if (place.category === 'cities' && place.code) name.append(makeElement('span', 'city-code', place.code));
+    const en = makeElement('small', 'place-card-en', place.en === place.zh ? (place.country || '') : place.en);
+    const status = makeElement('span', 'place-card-status');
+    const months = visitsOf(place);
+    if (stamped) {
+      const seal = makeElement('span', 'place-card-seal', stampAuthors(place)[0]?.initial || '旅');
+      seal.setAttribute('aria-hidden', 'true');
+      status.append(seal, makeElement('span', '', `${printedDate(months.at(-1))}${months.length > 1 ? ` · ${months.length} 次` : ''}`));
+    } else status.append(makeElement('span', '', '尚未蓋章'));
+    card.append(top, art, name, en, status);
+    card.setAttribute('aria-label', `${place.zh}${place.en && place.en !== place.zh ? `，${place.en}` : ''}，${stamped ? `已蓋章 ${printedDate(months.at(-1))}` : '尚未蓋章'}。打開明信片蓋章`);
+    item.append(card);
+    return item;
+  }
+  function markCurrentCard() {
+    if (!carousel) return;
+    const current = selectedPlace()?.id;
+    carousel.querySelectorAll('.place-card').forEach(card => {
+      if (card.dataset.place === current) card.setAttribute('aria-current', 'true');
+      else card.removeAttribute('aria-current');
+    });
+  }
+  function renderCarousel(places = visiblePlaces()) {
+    if (!carousel) return;
+    const term = query.trim();
+    $('#deck-title').textContent = term ? `搜尋「${term}」` : (CATEGORIES[category].regions.find(area => area.id === region)?.label === '全部' ? CATEGORIES[category].title : CATEGORIES[category].regions.find(area => area.id === region)?.label || CATEGORIES[category].title);
+    $('#deck-count').textContent = `${places.filter(isStamped).length} / ${places.length} 已蓋章`;
+    $('#deck-clear').hidden = !term;
+    $('#deck-search-text').textContent = term || '搜尋國家、城市或代號';
+    const signature = `${signedIn()}|${category}|${places.map(place => `${place.key}:${visitsOf(place).join(',')}`).join('|')}`;
+    if (signature !== carouselSignature) {
+      carouselSignature = signature;
+      const fragment = document.createDocumentFragment();
+      // Visitors meet the reason to sign in before the first card.
+      if (!signedIn()) {
+        const item = makeElement('li', 'place-card-item');
+        const invite = makeElement('button', 'place-card deck-signin');
+        invite.type = 'button';
+        invite.dataset.deckSignin = '';
+        invite.append(makeElement('span', 'deck-signin-mark', '印'), makeElement('strong', '', '登入開始蓋章'), makeElement('small', '', '戳章只有登入的旅人看得到'));
+        item.append(invite);
+        fragment.append(item);
+      }
+      if (!places.length) {
+        const item = makeElement('li', 'place-card-item deck-empty');
+        item.append(makeElement('strong', '', visitedOnly && !term ? '還沒有蓋章的地方。' : '沒有找到這一站。'));
+        fragment.append(item);
+      }
+      places.forEach((place, index) => fragment.append(placeCard(place, index)));
+      carousel.replaceChildren(fragment);
+      peekId = null;
+    }
+    markCurrentCard();
+  }
+  // The card in the middle of the strip lights up its place on the map and,
+  // when it is off screen, pans the map to it without changing the zoom.
+  function peekPlace(id) {
+    if (id === peekId) return;
+    peekId = id;
+    svg.querySelectorAll('.is-peek').forEach(element => element.classList.remove('is-peek'));
+    const place = catalogue[category].find(item => item.id === id);
+    if (!place) return;
+    const target = svg.querySelector(`.map-country[data-id="${cssId(id)}"],.map-us-state[data-id="${cssId(id)}"],.map-point[data-id="${cssId(id)}"]`);
+    if (target) target.classList.add('is-peek');
+    const marginX = view.w * .08, marginY = view.h * .08;
+    if (place.x < view.x + marginX || place.x > view.x + view.w - marginX || place.y < view.y + marginY || place.y > view.y + view.h - marginY) {
+      setView({ ...view, x:place.x - view.w / 2, y:place.y - view.h / 2 });
+      const again = svg.querySelector(`.map-point[data-id="${cssId(id)}"]`);
+      if (again) again.classList.add('is-peek');
+    }
+  }
+  function centredCardId() {
+    const middle = carousel.scrollLeft + carousel.clientWidth / 2;
+    let best = null, distance = Infinity;
+    carousel.querySelectorAll('.place-card[data-place]').forEach(card => {
+      const item = card.parentElement;
+      const d = Math.abs(item.offsetLeft + item.offsetWidth / 2 - middle);
+      if (d < distance) { distance = d; best = card.dataset.place; }
+    });
+    return best;
+  }
+  if (carousel) {
+    let peekTimer = null;
+    const settle = () => { clearTimeout(peekTimer); peekTimer = null; if (mobileLayout.matches) { const id = centredCardId(); if (id) peekPlace(id); } };
+    carousel.addEventListener('scroll', () => { clearTimeout(peekTimer); peekTimer = setTimeout(settle, 140); }, { passive:true });
+    carousel.addEventListener('scrollend', settle);
+    carousel.addEventListener('click', event => {
+      if (event.target.closest('[data-deck-signin]')) { openAccountDialog(); return; }
+      const card = event.target.closest('.place-card[data-place]');
+      if (card) selectPlaceAnywhere(card.dataset.place, false);
+    });
   }
 
   function mapRatio() { return Math.max(1, (surface.clientWidth || 800) / (surface.clientHeight || 500)); }
@@ -915,6 +1074,18 @@
     const fragment = document.createDocumentFragment();
     const scale = Math.min((svg.clientWidth || 800) / view.w,(svg.clientHeight || 500) / view.h);
     if (category === 'countries') {
+      // Countries smaller than a fingertip on screen get an invisible round
+      // target, so Singapore or Malta can be tapped once a continent is open.
+      // The whole-world view only picks a continent, so it needs none.
+      for (const place of region === 'all' ? [] : catalogue.countries.filter(p => matchesRegion(p) && p.bbox)) {
+        const [x1,y1,x2,y2] = place.bbox;
+        if (Math.max(x2 - x1, y2 - y1) * scale >= 8) continue;
+        const hit = makeSvg('circle', { class:'country-hit', cx:place.x, cy:place.y, r:11 / scale, 'data-id':place.id });
+        hit.addEventListener('pointerenter', event => showTooltip(place, event));
+        hit.addEventListener('pointermove', event => showTooltip(place, event));
+        hit.addEventListener('pointerleave', hideTooltip);
+        fragment.append(hit);
+      }
       for (const place of catalogue.countries.filter(p => matchesRegion(p) && isStamped(p))) {
         const mark = makeSvg('g',{class:'country-imprint','data-place-key':place.key,'aria-hidden':'true'});
         paint(mark, place);
@@ -996,6 +1167,61 @@
   mobileLayout.addEventListener('change', () => {
     if (!mobileLayout.matches && mobileStampDialog.open) mobileStampDialog.close();
   });
+  // On a phone the destination index lives in a full-screen search dialog; the
+  // same section moves in and out, so search, filters and add-city keep one source.
+  const searchDialog = $('#search-dialog');
+  const directory = $('#destination-index');
+  const directorySlot = document.createComment('destination index');
+  directory.before(directorySlot);
+  function openSearch() {
+    searchDialog.append(directory);
+    if (!searchDialog.open) searchDialog.showModal();
+    $('#place-search').focus({ preventScroll:true });
+  }
+  $('#deck-search').addEventListener('click', openSearch);
+  $('#search-dialog-close').addEventListener('click', () => searchDialog.close());
+  searchDialog.addEventListener('close', () => directorySlot.after(directory));
+  mobileLayout.addEventListener('change', () => { if (!mobileLayout.matches && searchDialog.open) searchDialog.close(); });
+  $('#deck-clear').addEventListener('click', () => {
+    query = '';
+    $('#place-search').value = '';
+    renderDirectory(true);
+    renderMap();
+    centerCard(selectedPlace()?.id);
+  });
+  function updateSheetSteps() {
+    const order = deckPlaces();
+    const index = order.findIndex(place => place.id === selectedPlace()?.id);
+    $('#sheet-prev').disabled = index <= 0;
+    $('#sheet-next').disabled = index < 0 || index >= order.length - 1;
+    $('#sheet-position').textContent = index < 0 ? '' : `${index + 1} / ${order.length}`;
+  }
+  function stepPlace(direction) {
+    const order = deckPlaces();
+    const index = order.findIndex(place => place.id === selectedPlace()?.id);
+    const next = order[index + direction];
+    if (index < 0 || !next) return;
+    selectPlace(next.id, true);
+  }
+  $('#sheet-prev').addEventListener('click', () => stepPlace(-1));
+  $('#sheet-next').addEventListener('click', () => stepPlace(1));
+  // Swipe the sheet's top bar: sideways steps between places, down closes.
+  (() => {
+    const bar = $('.stamp-panel-top');
+    let start = null;
+    bar.addEventListener('pointerdown', event => {
+      if (!mobileStampDialog.open || event.target.closest('button')) return;
+      start = { id:event.pointerId, x:event.clientX, y:event.clientY };
+    });
+    bar.addEventListener('pointerup', event => {
+      if (!start || start.id !== event.pointerId) return;
+      const dx = event.clientX - start.x, dy = event.clientY - start.y;
+      start = null;
+      if (dy > 60 && Math.abs(dy) > Math.abs(dx)) mobileStampDialog.close();
+      else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) stepPlace(dx < 0 ? 1 : -1);
+    });
+    bar.addEventListener('pointercancel', () => { start = null; });
+  })();
   function selectPlace(id,focus = false,fromIndex = false) {
     const place = catalogue[category].find(p => p.id === id);
     if (!place) return;
@@ -1006,8 +1232,10 @@
     renderMap();
     renderDirectory();
     hideTooltip();
+    updateSheetSteps();
     if (mobileLayout.matches) {
-      if (fromIndex) surface.scrollIntoView({block:'center',behavior:'instant'});
+      if (searchDialog.open) searchDialog.close();
+      centerCard(id);
       openMobileStamp();
     } else if (fromIndex) {
       const target = $('.atlas-grid');
@@ -1054,41 +1282,115 @@
   }
 
   // Delegate all map selection so country paths, state shapes, and marker hits stay clickable.
+  // A drag or pinch must never also count as a tap on whatever was under it.
+  let suppressClick = false;
+  function clientToSvg(clientX, clientY) {
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return { x:view.x + view.w / 2, y:view.y + view.h / 2 };
+    const pointAt = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
+    return { x:pointAt.x, y:pointAt.y };
+  }
+  function pixelScale(of = view) { return Math.min((svg.clientWidth || 800) / of.w, (svg.clientHeight || 500) / of.h); }
+  // Several fingertip-sized targets under one tap are a question, not an
+  // answer: zoom in on the spot instead of guessing which one was meant.
+  function ambiguousTap(event) {
+    if (view.w <= 24) return false;
+    const at = clientToSvg(event.clientX, event.clientY);
+    const reach = 14 / pixelScale();
+    const near = [...markerLayer.querySelectorAll('.map-point[data-id],.country-hit[data-id]')]
+      .map(element => catalogue[category].find(place => place.id === element.dataset.id))
+      .filter(place => place && Math.hypot(place.x - at.x, place.y - at.y) <= reach);
+    if (near.length < 2) return false;
+    setView(viewAround(at.x, at.y, Math.max(24, view.w * .5)));
+    return true;
+  }
   svg.addEventListener('click',event => {
+    if (suppressClick) { suppressClick = false; return; }
     const admin = event.target.closest('.map-jp-prefecture');
     if (admin && category === 'jp') {
       const pref = jpPrefById.get(admin.dataset.id);
       if (pref) showJapanAdmin(pref, event);
       return;
     }
-    const target = event.target.closest('.map-point,.map-country.selectable,.map-us-state.selectable');
+    const target = event.target.closest('.map-point,.country-hit,.map-country.selectable,.map-us-state.selectable');
     if (!target) return;
     const id = target.dataset.id;
     if (!id) return;
     event.preventDefault();
     event.stopPropagation();
+    const place = catalogue[category].find(item => item.id === id);
+    // From the whole world, the first tap only opens the continent: the place
+    // becomes the current card, and the next tap opens its postcard.
+    if (place && (category === 'countries' || category === 'cities') && region === 'all' && WORLD_AREA[place.region]) {
+      selectedByCategory[category] = id;
+      chooseRegion(place.region);
+      centerCard(id, true);
+      peekPlace(id);
+      return;
+    }
+    if (target.matches('.map-point,.country-hit') && ambiguousTap(event)) return;
     selectPlace(id,true);
   });
 
-  // Pointer drag pans only when begun on the sea; land and markers stay clickable.
-  let drag = null;
+  // One finger (or the mouse) pans from anywhere once it has moved 8px; two
+  // fingers pinch around their midpoint. A phone still scrolls the page with a
+  // vertical swipe (touch-action: pan-y), so the map never traps the page.
+  const pointers = new Map();
+  let gesture = null;
+  function pinchState() {
+    const [a, b] = [...pointers.values()];
+    return { distance:Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mid:{ x:(a.x + b.x) / 2, y:(a.y + b.y) / 2 } };
+  }
   svg.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || event.target.closest('.map-point,.map-country,.map-us-state,.map-jp-prefecture')) return;
-    drag = {id:event.pointerId,x:event.clientX,y:event.clientY,origin:{...view}};
-    svg.setPointerCapture(event.pointerId);
-    svg.classList.add('is-dragging');
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    suppressClick = false;
+    pointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+    if (pointers.size === 1) gesture = { type:'pending', id:event.pointerId, x:event.clientX, y:event.clientY, origin:{ ...view } };
+    else if (pointers.size === 2) {
+      const { distance, mid } = pinchState();
+      const bounds = svg.getBoundingClientRect();
+      gesture = { type:'pinch', distance, origin:{ ...view }, anchor:clientToSvg(mid.x, mid.y), bounds };
+      suppressClick = true;
+      svg.classList.add('is-dragging');
+    }
   });
   svg.addEventListener('pointermove', event => {
-    if (!drag || drag.id !== event.pointerId) return;
-    const scale = Math.min(svg.clientWidth/drag.origin.w,svg.clientHeight/drag.origin.h);
-    setView(clampView({...drag.origin,x:drag.origin.x-(event.clientX-drag.x)/scale,y:drag.origin.y-(event.clientY-drag.y)/scale}));
+    if (!pointers.has(event.pointerId) || !gesture) return;
+    pointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+    if (gesture.type === 'pending' && gesture.id === event.pointerId && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 8) {
+      gesture.type = 'pan';
+      try { svg.setPointerCapture(event.pointerId); } catch { /* the pointer already left */ }
+      svg.classList.add('is-dragging');
+      hideTooltip();
+    }
+    if (gesture.type === 'pan' && gesture.id === event.pointerId) {
+      const scale = pixelScale(gesture.origin);
+      setView(clampView({ ...gesture.origin, x:gesture.origin.x - (event.clientX - gesture.x) / scale, y:gesture.origin.y - (event.clientY - gesture.y) / scale }));
+    } else if (gesture.type === 'pinch' && pointers.size >= 2) {
+      const { distance, mid } = pinchState();
+      const width = Math.max(12, Math.min(1000, gesture.origin.w * gesture.distance / distance));
+      if (width >= 980) { setView({ x:0, y:0, w:1000, h:520 }); return; }
+      // Keep the map point first under the fingers under their midpoint now.
+      const scale = pixelScale(gesture.origin) * gesture.origin.w / width;
+      const { bounds, anchor } = gesture;
+      const cx = anchor.x - (mid.x - (bounds.left + bounds.width / 2)) / scale;
+      const cy = anchor.y - (mid.y - (bounds.top + bounds.height / 2)) / scale;
+      setView(viewAround(cx, cy, width));
+    }
   });
-  function stopDragging(event) {
-    if (drag?.id === event.pointerId) { drag = null; svg.classList.remove('is-dragging'); }
+  function endPointer(event) {
+    if (!pointers.delete(event.pointerId)) return;
+    if (!gesture) return;
+    if (gesture.type === 'pan' || gesture.type === 'pinch') suppressClick = event.type !== 'pointercancel' || gesture.type === 'pinch';
+    // Lifting one finger of a pinch ends the gesture; it does not turn into a pan.
+    if (!pointers.size || gesture.type === 'pinch' || gesture.id === event.pointerId) {
+      gesture = null;
+      svg.classList.remove('is-dragging');
+    }
   }
-  svg.addEventListener('pointerup',stopDragging);
-  svg.addEventListener('pointercancel',stopDragging);
-  svg.addEventListener('lostpointercapture',stopDragging);
+  svg.addEventListener('pointerup', endPointer);
+  svg.addEventListener('pointercancel', endPointer);
+  svg.addEventListener('lostpointercapture', event => { if (gesture?.type === 'pan' && gesture.id === event.pointerId) endPointer(event); });
   $('#zoom-in').addEventListener('click',() => setView(viewAround(view.x+view.w/2,view.y+view.h/2,Math.max(12,view.w*.72))));
   $('#zoom-out').addEventListener('click',() => {
     const width = Math.min(1000,view.w/ .72);
@@ -1169,7 +1471,7 @@
   });
   // A search result may belong to another layer, so the click follows the place
   // into its own tab before selecting it. The typed term survives the jump.
-  function selectPlaceAnywhere(id) {
+  function selectPlaceAnywhere(id, fromIndex = true) {
     const target = CATEGORY_ORDER.find(cat => catalogue[cat].some(place => place.id === id));
     if (!target) return;
     if (target !== category) {
@@ -1177,7 +1479,7 @@
       chooseCategory(target);
       if (term) { query = term; $('#place-search').value = term; renderDirectory(true); renderMap(); }
     }
-    selectPlace(id,true,true);
+    selectPlace(id,true,fromIndex);
   }
   list.addEventListener('click',event => {
     const addButton = event.target.closest('button[data-add-city]');
@@ -1282,6 +1584,17 @@
     void face.offsetWidth;
     face.classList.add('fresh');
     face.addEventListener('animationend', () => face.classList.remove('fresh'),{once:true});
+    if (!reducedMotion()) navigator.vibrate?.(12);
+    // The freshly coloured shape behind the sheet gives a short ink flash.
+    const id = selectedPlace()?.id;
+    const shape = id && svg.querySelector(`.map-country[data-id="${cssId(id)}"],.map-us-state[data-id="${cssId(id)}"],.map-point[data-id="${cssId(id)}"]`);
+    if (shape) {
+      shape.classList.remove('ink-flash');
+      void shape.getBoundingClientRect();
+      shape.classList.add('ink-flash');
+      shape.addEventListener('animationend', () => shape.classList.remove('ink-flash'), { once:true });
+    }
+    centerCard(id);
   }
   // One stamp at a time: the queued write keeps a fixed record, and the month
   // check keeps a double tap from producing two stamps.
@@ -1547,9 +1860,9 @@
     if (!cloudMode()) {
       return signedIn()
         ? '已登入（本機通行碼）'
-        : '訪客模式：可以瀏覽戳章，登入後才能蓋章。';
+        : '訪客模式：登入後才能看到與蓋下戳章。';
     }
-    if (!signedIn()) return '訪客模式：可以瀏覽所有戳章，登入後才能蓋章。';
+    if (!signedIn()) return '訪客模式：登入後才能看到與蓋下戳章。';
     const parts = [];
     const pending = atlasAccount.pending || 0;
     if (atlasAccount.connection === 'offline') parts.push('離線');
@@ -2277,6 +2590,8 @@
     const listEl = $('#friends-list');
     const empty = $('#friends-empty');
     const candidates = friendCandidates();
+    // Shared trips are stamps too, so a signed-out visitor never sees the section.
+    section.hidden = !signedIn();
     if (!signedIn() || atlasAccount.mode === 'local') {
       tabs.replaceChildren();
       listEl.replaceChildren();

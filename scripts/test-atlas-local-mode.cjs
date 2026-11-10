@@ -67,7 +67,8 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assertCount('.place-item .flag', 237, 'countries with an ISO code carry a flag (three disputed entries have no ISO code)');
   assertCount('.place-item[data-place="somaliland"] .flag', 0, 'no flag where there is no ISO code');
   assert.equal($('#place-flag img').getAttribute('src'), './flags/jp.svg', 'the selected country shows its flag');
-  assert.equal($('#passport-count').textContent, '2', 'legacy us:/ca: stamp keys still load');
+  assert.equal($('#passport-count').textContent, '0', 'a signed-out visitor sees no stamps, even ones saved in this browser');
+  assertCount('.country-imprint, .map-seal, .map-country.done', 0, 'the visitor map carries no ink');
 
   // A visitor may read the atlas but a stamp click only opens the sign-in dialog.
   $('.map-country[data-id="158"]').dispatchEvent(new window.MouseEvent('click',{bubbles:true}));
@@ -76,7 +77,7 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assert.equal($('#account-dialog').open, true, 'stamping without sign-in asks for the passphrase');
   assert.equal($('#local-signin').hidden, false, 'the local passphrase field is offered');
   assert($('#account-error').textContent.includes('登入後才能蓋章'));
-  assert.equal($('#passport-count').textContent, '2', 'nothing was written');
+  assert.equal($('#passport-count').textContent, '0', 'nothing was written');
   assert.equal(JSON.parse(window.localStorage.getItem('eva.travel.stamp-atlas.v1')).visits['countries:158'], undefined);
 
   // Wrong passphrase is rejected.
@@ -91,6 +92,7 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   assert.equal($('#account-card').hidden, false);
   assert.equal($('#account-name').textContent, 'Eva Huang');
   assert.equal($('#stamp-button').classList.contains('locked'), false, 'signed-in travellers may stamp');
+  assert.equal($('#passport-count').textContent, '2', 'signing in reveals the saved stamps; legacy us:/ca: keys still load');
 
   // stamping, duplicates, delete, persistence
   $('#visit-date').value = '2023-03'; change($('#visit-date'));
