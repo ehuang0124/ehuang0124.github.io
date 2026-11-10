@@ -31,8 +31,7 @@
     cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', regions:CONTINENTS, initial:'tokyo-jp' },
     na: { title:'北美區', map:'03 / NORTH AMERICA', regions:[
       {id:'all',label:'全部北美'}, {id:'us',label:'美國'}, {id:'ca',label:'加拿大'},
-      {id:'na-us-west',label:'美國・西岸'}, {id:'na-us-mountain',label:'美國・山地沙漠'}, {id:'na-us-midwest',label:'美國・中西部'}, {id:'na-us-east',label:'美國・東岸南方'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'},
-      {id:'na-ca-pacific',label:'加拿大・太平洋沿岸'}, {id:'na-ca-rockies',label:'加拿大・洛磯草原'}, {id:'na-ca-central',label:'加拿大・安大略魁北克'}, {id:'na-ca-atlantic',label:'加拿大・大西洋沿岸'}, {id:'na-ca-north',label:'加拿大・北方領地'}
+      {id:'na-us-pnw',label:'太平洋西北'}, {id:'na-us-california',label:'加州'}, {id:'na-us-southwest',label:'西南沙漠'}, {id:'na-us-rockies',label:'洛磯山脈'}, {id:'na-us-plains',label:'大平原'}, {id:'na-us-midwest',label:'中西部・五大湖'}, {id:'na-us-south',label:'德州與南方'}, {id:'na-us-southeast',label:'東南沿岸'}, {id:'na-us-midatlantic',label:'中大西洋'}, {id:'na-us-newengland',label:'新英格蘭'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'}
     ], initial:'yell' },
     jp: { title:'日本國家公園', map:'04 / JAPAN', regions:[{id:'all',label:'全部'},{id:'hokkaido',label:'北海道'},{id:'tohoku',label:'東北'},{id:'kanto',label:'關東・甲信越'},{id:'chubu',label:'中部山岳'},{id:'west',label:'近畿・中國・四國'},{id:'kyushu',label:'九州'},{id:'islands',label:'南方離島'}], initial:'fuji' },
     okinawa: { title:'沖繩專區', map:'05 / OKINAWA ISLANDS', regions:[{id:'all',label:'全部沖繩'}, ...Object.entries(okinawa.regions).map(([id, area]) => ({id, label:area.zh}))], initial:'churaumi' }
@@ -138,7 +137,7 @@
     na: [
       ...source.us.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region:`na-us-${region}`,where,lat,lon,nation:'US',category:'na',key:`us:${id}`,...point(lat,lon) })),
       ...stateSource.map(state => ({ ...state, region:`na-us-${state.region}`, nation:'US', category:'na', key:`us:${state.id}`, where:state.abbr, isState:true })),
-      ...source.ca.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region:`na-ca-${region}`,where,lat,lon,nation:'CA',category:'na',key:`ca:${id}`,...point(lat,lon) }))
+      ...source.ca.map(([id,en,zh,,where,lat,lon]) => ({ id,en,zh,region:'na-ca',where,lat,lon,nation:'CA',category:'na',key:`ca:${id}`,...point(lat,lon) }))
     ],
     jp: source.jp.map(([id,en,zh,region,where,lat,lon]) => ({ id,en,zh,region,where,lat,lon,category:'jp',key:`jp:${id}`,...point(lat,lon) })),
     okinawa: okinawa.places.map(p => ({ ...p, en:p.ja, where:p.city, lon:p.lng, nation:'JP', category:'okinawa', key:`okinawa:${p.id}`, ...point(p.lat,p.lng) }))
@@ -204,7 +203,7 @@
   // is solved from a fixed order, so a place keeps its colour every visit.
   const colours = new Map();
   function colourOf(place) { return place && colours.get(place.key) || null; }
-  // The atlas layers use travel regions (`na-us-west`, `jp` …), so each place
+  // The atlas layers use travel regions (`na-us-pnw`, `jp` …), so each place
   // is reduced to its continent before it is coloured.
   function continentOf(place) {
     if (place.category === 'na') return 'NA';
@@ -672,7 +671,7 @@
     if (target === 'all') return true;
     if (category === 'na') {
       if (target === 'us') return place.region.startsWith('na-us-');
-      if (target === 'ca') return place.region.startsWith('na-ca-');
+      if (target === 'ca') return place.region === 'na-ca';
     }
     return place.region === target;
   }
@@ -844,7 +843,7 @@
     stateLayer.append(path);
   });
   function renderUSStates() {
-    const showStates = category === 'na' && region !== 'ca' && !region.startsWith('na-ca-') && region !== 'na-us-territories';
+    const showStates = category === 'na' && region !== 'ca' && region !== 'na-us-territories';
     stateLayer.classList.toggle('active',showStates);
     for (const state of stateSource) {
       const path = statePaths.get(state.id);
@@ -1221,8 +1220,13 @@
   }
   function indexAreas() {
     const spec = CATEGORIES[category];
-    const areas = spec.regions.filter(area => area.id !== 'all' && !(category === 'na' && (area.id === 'us' || area.id === 'ca')));
-    return [{ id:'all', label:spec.title }, ...areas];
+    if (category === 'na') {
+      // The U.S. is split into travel regions; Canada is one region of its own,
+      // so its card follows the U.S. ones instead of the whole-country chips.
+      const usAreas = spec.regions.filter(area => area.id.startsWith('na-us-'));
+      return [{ id:'all', label:spec.title }, ...usAreas, spec.regions.find(area => area.id === 'ca')];
+    }
+    return [{ id:'all', label:spec.title }, ...spec.regions.filter(area => area.id !== 'all')];
   }
   function buildRegionCard(area) {
     const places = catalogue[category].filter(place => matchesRegion(place, area.id));
