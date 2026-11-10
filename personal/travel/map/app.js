@@ -26,9 +26,14 @@
   const CATEGORY_ORDER = ['countries', 'cities', 'na', 'jp', 'okinawa'];
   const REGION_NAMES = { AS:'亞洲', EU:'歐洲', AF:'非洲', NA:'北美洲', SA:'南美洲', OC:'大洋洲', AN:'南極周邊' };
   const CONTINENTS = [{ id:'all', label:'全部' }, ...Object.entries(REGION_NAMES).map(([id, label]) => ({ id, label }))];
+  // Themed ranking boards (city-boards.js) are how the city collection is
+  // browsed: chips and phone cards, ahead of the continents. A city on no board
+  // is reached by search.
+  const CITY_BOARDS = window.TravelAtlasCityBoards || [];
+  const CITY_BOARD_AREAS = CITY_BOARDS.map(board => ({ id:`board-${board.id}`, label:board.label, group:'board', board }));
   const CATEGORIES = {
     countries: { title:'世界國家', map:'01 / THE WHOLE WORLD', regions:CONTINENTS, initial:'392' },
-    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', regions:CONTINENTS, initial:'tokyo-jp' },
+    cities: { title:'世界主要城市', map:'02 / CITIES OF THE WORLD', regions:[CONTINENTS[0], ...CITY_BOARD_AREAS, ...CONTINENTS.slice(1)], boards:true, initial:'tokyo-jp' },
     na: { title:'北美區', map:'03 / NORTH AMERICA', regions:[
       {id:'all',label:'全部北美'}, {id:'us',label:'美國'}, {id:'ca',label:'加拿大'},
       {id:'na-us-pnw',label:'太平洋西北'}, {id:'na-us-california',label:'加州'}, {id:'na-us-southwest',label:'西南沙漠'}, {id:'na-us-rockies',label:'洛磯山脈'}, {id:'na-us-plains',label:'大平原'}, {id:'na-us-midwest',label:'中西部・五大湖'}, {id:'na-us-south',label:'德州與南方'}, {id:'na-us-southeast',label:'東南沿岸'}, {id:'na-us-midatlantic',label:'中大西洋'}, {id:'na-us-newengland',label:'新英格蘭'}, {id:'na-us-alaska',label:'阿拉斯加'}, {id:'na-us-hawaii',label:'夏威夷'}, {id:'na-us-territories',label:'美國屬地'}
@@ -198,6 +203,24 @@
     na:catalogue.na,
     jp:catalogue.jp
   });
+  // Board id → place id → { rank, note }. Only built-in cities can be on a
+  // board; an entry naming a city the catalogue lacks is dropped with a warning.
+  const boardRanks = new Map(CITY_BOARD_AREAS.map(({ id, board }) => {
+    const byId = new Map(BASE_CATALOGUE.cities.map(place => [place.id, place]));
+    let entries = board.entries || [];
+    if (board.compute === 'north' || board.compute === 'south') {
+      const sign = board.compute === 'north' ? -1 : 1;
+      entries = [...byId.values()].sort((a, b) => sign * (a.lat - b.lat)).slice(0, board.size || 10)
+        .map((place, index) => [index + 1, place.id, `${Math.abs(place.lat).toFixed(1)}°${place.lat >= 0 ? 'N' : 'S'}`]);
+    }
+    const ranks = new Map();
+    for (const [rank, placeId, note] of entries) {
+      if (byId.has(placeId)) ranks.set(placeId, { rank, note:note || '' });
+      else console.warn(`city board ${board.id}: no catalogue city ${placeId}`);
+    }
+    return [id, ranks];
+  }));
+  function boardEntry(place, target = region) { return boardRanks.get(target)?.get(place?.id) || null; }
   // Map colour: one hue per continent, four tones inside each hue, so touching
   // countries and neighbouring city pins never repeat a colour. The base atlas
   // is solved from a fixed order, so a place keeps its colour every visit.
@@ -654,7 +677,13 @@
   function renderRegions() {
     const container = $('#region-controls');
     const fragment = document.createDocumentFragment();
+    const grouped = CATEGORIES[category].boards;
+    let lastGroup = null;
     CATEGORIES[category].regions.forEach(area => {
+      if (grouped && area.id !== 'all' && (area.group || 'area') !== lastGroup) {
+        lastGroup = area.group || 'area';
+        fragment.append(makeElement('span', 'region-group', lastGroup === 'board' ? '排行榜' : '地區'));
+      }
       const places = area.id === 'all' ? catalogue[category] : catalogue[category].filter(place => matchesRegion(place,area.id));
       const count = places.length;
       if (!count && area.id !== 'all') return;
@@ -669,6 +698,7 @@
   }
   function matchesRegion(place, target = region) {
     if (target === 'all') return true;
+    if (boardRanks.has(target)) return Boolean(boardEntry(place, target));
     if (category === 'na') {
       if (target === 'us') return place.region.startsWith('na-us-');
       if (target === 'ca') return place.region === 'na-ca';
@@ -684,7 +714,10 @@
   function visiblePlaces() {
     const term = query.normalize('NFKD').toLocaleLowerCase().trim();
     const pool = searchPool();
-    return pool.filter(place => (term || matchesRegion(place)) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.abbr || ''} ${place.en} ${place.country || ''} ${place.where || ''} ${place.capital || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
+    const found = pool.filter(place => (term || matchesRegion(place)) && (!visitedOnly || isStamped(place)) && (!term || `${place.zh} ${place.code || ''} ${place.abbr || ''} ${place.en} ${place.country || ''} ${place.where || ''} ${place.capital || ''}`.normalize('NFKD').toLocaleLowerCase().includes(term)));
+    // A board lists its cities in rank order; a typed term keeps the A–Z index.
+    if (!term && boardRanks.has(region)) found.sort((a, b) => boardEntry(a).rank - boardEntry(b).rank || collator.compare(a.zh, b.zh));
+    return found;
   }
   function renderDirectory(resetScroll = false) {
     const oldScroll = resetScroll ? 0 : list.scrollTop;
@@ -711,7 +744,8 @@
       button.dataset.place = place.id;
       paint(button, place);
       if (selectedPlace()?.id === place.id) button.setAttribute('aria-current', 'true');
-      button.append(makeElement('span', 'item-index', String(index + 1).padStart(3, '0')));
+      const ranked = query.trim() ? null : boardEntry(place);
+      button.append(makeElement('span', `item-index${ranked ? ' item-rank' : ''}`, ranked ? String(ranked.rank).padStart(2, '0') : String(index + 1).padStart(3, '0')));
       const info = makeElement('span', 'item-info');
       const name = makeElement('strong', 'item-place-name');
       name.append(makeElement('i', 'item-tone'));
@@ -725,6 +759,7 @@
         name.append(code);
       }
       info.append(name, makeElement('small', '', place.en === place.zh ? place.country : place.en));
+      if (ranked?.note) info.lastElementChild.append(makeElement('span', 'item-board-note', ranked.note));
       if (place.category === 'okinawa') {
         if (legacyOkinawaVisits().includes(place.id)) info.append(makeElement('small', 'legacy-label', '舊清單：曾標記或預設（月份未記錄）'));
       }
@@ -786,7 +821,7 @@
     return viewFromBounds([Math.min(...points.map(p=>p.x)),Math.min(...points.map(p=>p.y)),Math.max(...points.map(p=>p.x)),Math.max(...points.map(p=>p.y))],padding,minWidth);
   }
   function defaultView() {
-    if (category === 'countries' || category === 'cities') return region === 'all' ? {x:0,y:0,w:1000,h:520} : viewFromGeo(WORLD_AREA[region],14,70);
+    if ((category === 'countries' || category === 'cities') && (region === 'all' || WORLD_AREA[region])) return region === 'all' ? {x:0,y:0,w:1000,h:520} : viewFromGeo(WORLD_AREA[region],14,70);
     if (category === 'na' && region === 'all') return viewFromGeo([-170,5,-50,83],16,280);
     if (category === 'na' && region === 'us') return viewFromGeo([-127,23,-66,52],12,190);
     if (category === 'na' && region === 'ca') return viewFromBounds(countryByIso.get('CA').bbox,13,200);
@@ -1081,6 +1116,10 @@
     openMapPop();
     resetView();
     renderMarkers();
+    // Seventeen city chips overflow the strip; bring the chosen one into view.
+    const tools = $('#map-pop-tools');
+    const chip = tools.querySelector('#region-controls [aria-pressed="true"]');
+    if (chip) tools.scrollLeft += chip.getBoundingClientRect().left - tools.getBoundingClientRect().left - 12;
   }
   // The board gets its pieces back as soon as the pop-out closes, not a task
   // later when the close event arrives; the event covers every other way out.
@@ -1220,6 +1259,8 @@
   }
   function indexAreas() {
     const spec = CATEGORIES[category];
+    // The city collection's cards are its ranking boards, not its continents.
+    if (spec.boards) return [{ id:'all', label:spec.title }, ...spec.regions.filter(area => area.group === 'board')];
     if (category === 'na') {
       // The U.S. is split into travel regions; Canada is one region of its own,
       // so its card follows the U.S. ones instead of the whole-country chips.
@@ -1239,7 +1280,7 @@
     const frame = thumbView(area.id);
     const thumb = makeSvg('svg', { class:'region-thumb', viewBox:`${frame.x} ${frame.y} ${frame.w} ${frame.h}`, preserveAspectRatio:'xMidYMid slice', 'aria-hidden':'true', focusable:'false' });
     thumb.append(makeSvg('use', { href:'#atlas-land', class:'thumb-land' }));
-    const radius = Math.max(frame.w / (wide ? 150 : 70), .5);
+    const radius = Math.max(frame.w / (wide ? 150 : area.board ? 45 : 70), .5);
     for (const place of places) {
       const shape = place.d && !wide
         ? makeSvg('path', { d:place.d, class:'thumb-shape' })
@@ -1253,7 +1294,12 @@
     const bar = makeElement('span', 'region-card-bar');
     bar.append(makeElement('i'));
     bar.setAttribute('aria-hidden', 'true');
-    card.append(thumb, makeElement('span', 'region-card-name', area.label), count, bar);
+    card.append(thumb, makeElement('span', 'region-card-name', area.label));
+    if (area.board) {
+      card.classList.add('board-card');
+      card.append(makeElement('span', 'region-card-note', area.board.source));
+    }
+    card.append(count, bar);
     return card;
   }
   function renderRegionIndex() {
@@ -1266,6 +1312,8 @@
       landDefs();
       regionIndexKey = key;
       regionIndex.replaceChildren(...indexAreas().map(buildRegionCard).filter(Boolean));
+      regionIndex.setAttribute('aria-label', CATEGORIES[category].boards ? '依排行榜打開地圖' : '依地區打開地圖');
+      $('#board-hint').hidden = !CATEGORIES[category].boards;
     }
     const byKey = new Map(catalogue[category].map(place => [place.key, place]));
     for (const card of regionIndex.children) {
@@ -1282,6 +1330,12 @@
     if (card) openRegionMap(card.dataset.region);
   });
   $('#map-open').addEventListener('click', () => openRegionMap('all'));
+  // Anything not on a board is one search away.
+  $('#board-search').addEventListener('click', () => {
+    const field = $('#place-search');
+    field.scrollIntoView({ block:'center', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    field.focus({ preventScroll:true });
+  });
   // The latest stamps of the open collection, newest first; each one opens its place.
   function renderRecentStamps() {
     const strip = $('#recent-stamps');
