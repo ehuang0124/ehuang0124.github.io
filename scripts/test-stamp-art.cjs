@@ -25,7 +25,7 @@ const catalogue = [
   ...places.cities.map(c => ({ category: 'cities', iso: c.iso, id: `${slug(c.en)}-${c.iso.toLowerCase()}`, region: regionOfCountry.get(c.iso) || 'AS', zh: c.zh })),
   ...places.us.map(p => ({ category: 'na', key: `us:${p[0]}`, id: p[0], region: `na-us-${p[3]}`, zh: p[2] })),
   ...states.map(s => ({ category: 'na', isState: true, abbr: s.abbr, key: `us:${s.id}`, id: s.id, region: `na-us-${s.region}`, zh: s.zh })),
-  ...places.ca.map(p => ({ category: 'na', key: `ca:${p[0]}`, id: p[0], region: `na-ca-${p[3]}`, zh: p[2] })),
+  ...places.ca.map(p => ({ category: 'na', key: `ca:${p[0]}`, id: p[0], region: 'na-ca', zh: p[2] })),
   ...places.jp.map(p => ({ category: 'jp', key: `jp:${p[0]}`, id: p[0], region: p[3], zh: p[2] }))
 ];
 assert.equal(catalogue.length, 608, 'the destination index must cover every catalogue entry');

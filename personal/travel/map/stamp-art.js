@@ -798,11 +798,11 @@
   };
   const REGION = { AS:'terrace', EU:'snowpeak', AF:'savanna', NA:'pine', SA:'rainforest', OC:'wave', AN:'aurora' };
   const NA_REGION = {
-    'na-us-west':'redwood', 'na-us-mountain':'mountain', 'na-us-midwest':'wheat',
-    'na-us-east':'magnolia', 'na-us-alaska':'aurora', 'na-us-hawaii':'hula',
-    'na-us-territories':'coral',
-    'na-ca-pacific':'pine', 'na-ca-rockies':'snowpeak', 'na-ca-central':'maple',
-    'na-ca-atlantic':'lighthouse', 'na-ca-north':'aurora'
+    'na-us-pnw':'pine', 'na-us-california':'redwood', 'na-us-southwest':'cactus',
+    'na-us-rockies':'mountain', 'na-us-plains':'bison', 'na-us-midwest':'lake',
+    'na-us-south':'magnolia', 'na-us-southeast':'palm', 'na-us-midatlantic':'capitol',
+    'na-us-newengland':'lighthouse', 'na-us-alaska':'aurora', 'na-us-hawaii':'hula',
+    'na-us-territories':'coral', 'na-ca':'maple'
   };
   const JP_REGION = { hokkaido:'snowpeak', tohoku:'fjord', kanto:'sakura', chubu:'snowpeak', west:'pagoda', kyushu:'volcano', islands:'coral' };
 

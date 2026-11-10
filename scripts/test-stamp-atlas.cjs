@@ -269,8 +269,12 @@ const TEST_CONFIG = `window.TravelAtlasConfig={supabaseUrl:'',supabaseAnonKey:''
       await page.locator('#region-controls [data-region="ca"]').click();
       assert.equal(await page.locator('.place-item').count(),48);
       assert.equal(await page.locator('.map-point').count(),48);
-      await page.locator('#region-controls [data-region="na-ca-north"]').click();
-      assert.equal(await page.locator('.place-item').count(),14);
+      // Canada is one region; the U.S. is split into travel regions.
+      assert.equal(await page.locator('#region-controls [data-region^="na-ca"]').count(),0);
+      await page.locator('#region-controls [data-region="na-us-newengland"]').click();
+      assert.equal(await page.locator('.place-item').count(),7);
+      await page.locator('#region-controls [data-region="na-us-pnw"]').click();
+      assert.equal(await page.locator('.place-item').count(),6);
       await chooseCollection('jp');
       assert.equal(await page.locator('.place-item').count(),35);
       assert.equal(await page.locator('.map-jp-prefecture').count(),47);
