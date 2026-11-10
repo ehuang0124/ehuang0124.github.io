@@ -157,7 +157,7 @@ const wait = async (n=8) => { for (let i=0;i<n;i++) await new Promise(r=>setTime
   $('#city-name').value = '臺南'; $('#city-lat').value = '22.998'; $('#city-lon').value = '120.212';
   $('#city-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
   await wait();
-  assert.equal($('#board-total').textContent, '172');
+  assert.equal($('#board-total').textContent, '194');
   const cityStored = JSON.parse(window.localStorage.getItem('eva.travel.stamp-atlas.v1'));
   assert.equal(cityStored.customCities.length, 1);
   // future month rejected

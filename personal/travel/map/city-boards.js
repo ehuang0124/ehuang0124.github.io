@@ -18,10 +18,28 @@ window.TravelAtlasCityBoards = [
     ]
   },
   {
-    id:'visited', label:'國際旅客最多', en:'MOST VISITED', kind:'ranking', source:'Mastercard 全球目的地城市指數 2019 · 過夜國際旅客',
+    id:'top100', label:'百大旅遊城市', en:'TOP 100 CITY DESTINATIONS', kind:'ranking', source:'Euromonitor 百大城市目的地 2025 · 依國際旅客選出、綜合吸引力排名',
     entries:[
-      [1,'bangkok-th',''],[2,'paris-fr',''],[3,'london-gb',''],[4,'dubai-ae',''],[5,'singapore-sg',''],
-      [6,'kuala-lumpur-my',''],[7,'new-york-us',''],[8,'istanbul-tr',''],[9,'tokyo-jp','']
+      [1,'paris-fr',''],[2,'madrid-es',''],[3,'tokyo-jp',''],[4,'rome-it',''],[5,'milan-it',''],
+      [6,'new-york-us',''],[7,'amsterdam-nl',''],[8,'barcelona-es',''],[9,'singapore-sg',''],[10,'seoul-kr',''],
+      [11,'osaka-jp',''],[12,'dubai-ae',''],[13,'los-angeles-us',''],[14,'istanbul-tr',''],[15,'taipei-tw',''],
+      [16,'berlin-de',''],[17,'hong-kong-hk',''],[18,'london-gb',''],[19,'kyoto-jp',''],[20,'bangkok-th','旅客人數第 1'],
+      [21,'orlando-us',''],[22,'munich-de',''],[23,'florence-it',''],[24,'kuala-lumpur-my',''],[25,'athens-gr',''],
+      [26,'lisbon-pt',''],[27,'las-vegas-us',''],[28,'sydney-au',''],[29,'melbourne-au',''],[30,'venice-it',''],
+      [31,'vienna-at',''],[32,'prague-cz',''],[33,'dublin-ie',''],[34,'shanghai-cn',''],[35,'san-francisco-us',''],
+      [36,'miami-us',''],[37,'frankfurt-de',''],[38,'copenhagen-dk',''],[39,'toronto-ca',''],[40,'washington-d-c-us',''],
+      [41,'guangzhou-cn',''],[42,'beijing-cn',''],[43,'hamburg-de',''],[44,'sao-paulo-br',''],[45,'pattaya-th','芭達雅－春武里'],
+      [46,'shenzhen-cn',''],[47,'phuket-th',''],[48,'antalya-tr',''],[49,'palma-de-mallorca-es','馬略卡島'],[50,'sapporo-jp',''],
+      [51,'seville-es',''],[52,'ho-chi-minh-city-vn',''],[53,'nice-fr',''],[54,'mexico-city-mx',''],[55,'zurich-ch',''],
+      [56,'busan-kr',''],[57,'oslo-no',''],[58,'vancouver-ca',''],[59,'brussels-be',''],[60,'budapest-hu',''],
+      [61,'macau-mo',''],[62,'valencia-es',''],[63,'helsinki-fi',''],[64,'fukuoka-jp',''],[65,'honolulu-us',''],
+      [66,'abu-dhabi-ae',''],[67,'stockholm-se',''],[68,'porto-pt',''],[69,'rhodes-gr','羅德島'],[70,'rio-de-janeiro-br',''],
+      [71,'verona-it',''],[72,'hanoi-vn',''],[73,'doha-qa',''],[74,'new-delhi-in','德里'],[75,'bologna-it',''],
+      [76,'riyadh-sa',''],[77,'montreal-ca',''],[78,'warsaw-pl',''],[79,'cancun-mx',''],[80,'buenos-aires-ar',''],
+      [81,'johor-bahru-my',''],[82,'heraklion-gr','克里特島'],[83,'bogota-co',''],[84,'lima-pe',''],[85,'edinburgh-gb',''],
+      [86,'nha-trang-vn',''],[87,'medina-sa',''],[88,'santiago-cl',''],[89,'thessaloniki-gr',''],[90,'jakarta-id',''],
+      [91,'mecca-sa',''],[92,'krakow-pl',''],[93,'punta-cana-do',''],[94,'tbilisi-ge',''],[95,'marrakech-ma',''],
+      [96,'denpasar-id','峇里島'],[97,'cairo-eg',''],[98,'zhuhai-cn',''],[99,'vilnius-lt',''],[100,'mugla-tr','博德魯姆、費特希耶一帶']
     ]
   },
   {
