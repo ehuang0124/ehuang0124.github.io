@@ -1,6 +1,4 @@
-/* Mobile-first stamping: cards and carousels do the navigating, the map
-   follows and stays tappable for colouring. Everything here either applies at
-   every width (map gestures, peek and ink feedback) or only at <=840px. */
+/* Map gestures and feedback at every width; the phone layout (<=840px) follows. */
 
 /* ---------- shared: map targets and feedback ---------- */
 .country-hit{fill:transparent;stroke:none;pointer-events:all;cursor:pointer}
@@ -11,22 +9,124 @@
 .ink-flash{animation:ink-flash .9s ease-out}
 @keyframes ink-flash{0%{filter:brightness(1.6) drop-shadow(0 0 0 transparent)}35%{filter:brightness(.82) drop-shadow(0 0 6px color-mix(in srgb,var(--family-tint,#c9202f) 70%,transparent))}100%{filter:none}}
 
-/* Desktop keeps its grid and side panel; these pieces exist only on a phone. */
-.mobile-deck,.sheet-handle,.sheet-steps,.mobile-stamp-close{display:none}
+/* Phones: index first, map on demand. The 地點索引 block is the home screen
+   (search, region cards, recent stamps); choosing a region pops the real map,
+   region chips and destination list out in #map-pop, and the real detail panel
+   rides in a bottom sheet (#mobile-stamp-dialog) inside it. Desktop keeps the
+   side-by-side board, so everything here is phone-only. */
+.region-index,.recent-stamps,.map-open,.map-pop,.sheet-toggle,.sheet-steps,.mobile-stamp-close{display:none}
 .mobile-stamp-dialog{border:0;padding:0}
-.search-dialog{border:0;padding:0}
-
 @media(max-width:840px){
-  /* ---------- straight to the map ---------- */
+  /* ---- home ---- */
+  .atlas-board{border:0;background:transparent;overflow:visible}
+  .atlas-grid{display:none}
+  .recent-stamps{display:flex;gap:8px;margin:0 0 14px;padding:2px 0 4px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+  .recent-stamps::-webkit-scrollbar{display:none}
+  .recent-stamps[hidden]{display:none}
+  .recent-stamp{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:64px;min-height:72px;padding:6px 4px;border:1.5px dashed color-mix(in srgb,var(--family-deep,var(--ng-navy)) 45%,var(--ng-white));border-radius:8px;background:var(--ng-white);color:var(--ng-ink);font:700 11px/1.2 var(--ng-sans);text-align:center}
+  .recent-stamp .flag{width:22px;height:auto;border-radius:2px}
+  .recent-stamp span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .recent-stamp time{font:700 9px var(--ng-grotesk);color:var(--ng-muted);letter-spacing:.04em}
+
+  .directory{border:0;padding:0!important;background:transparent}
+  .directory-head{gap:10px}
+  .directory-tools .search-field{min-height:46px;border-radius:12px;background:var(--ng-white)}
+  .region-index{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 6px}
+  .directory.has-query .region-index{display:none}
+  .directory > .region-controls,.directory-tools #visited-filter{display:none}
+  .directory:not(.has-query) > .directory-results,.directory:not(.has-query) > .place-list{display:none}
+  .directory.has-query .place-list{max-height:none;overflow:visible}
+  .region-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:8px 8px 10px;border:1px solid var(--ng-line);border-radius:12px;background:var(--ng-white);color:var(--ng-ink);text-align:left}
+  .region-card:hover{border-color:var(--family-tint,var(--ng-ink))}
+  .region-card.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:4px 12px}
+  .region-card.wide .region-thumb{grid-row:1/4}
+  .region-thumb{display:block;width:100%;height:auto;aspect-ratio:2/1;border-radius:8px;background:var(--ng-navy-soft)}
+  .thumb-land{fill:var(--ng-paper-deep)}
+  .thumb-shape,.thumb-dot{fill:color-mix(in srgb,var(--family-tint,#98a099) var(--tile-light,30%),var(--ng-white));stroke:var(--ng-white);stroke-width:.5;vector-effect:non-scaling-stroke}
+  .thumb-shape.done,.thumb-dot.done{fill:color-mix(in srgb,var(--family-tint,#98a099) var(--tile-solid,80%),var(--ng-white))}
+  .region-card-name{padding:0 4px;font:900 15px/1.25 var(--ng-sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .region-card-count{position:absolute;top:12px;right:12px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--ng-white) 92%,transparent);font:700 11px var(--ng-grotesk);color:var(--ng-muted)}
+  .region-card-count b{font-size:14px;color:var(--ng-ink)}
+  .region-card.wide .region-card-count{position:static;justify-self:start;padding:0 4px;background:none}
+  .region-card-bar{display:block;height:4px;margin:0 4px;border-radius:999px;background:var(--ng-paper-deep);overflow:hidden}
+  .region-card-bar i{display:block;height:100%;min-width:3px;border-radius:inherit;background:var(--family-tint,var(--ng-red))}
+  .map-open{display:inline-flex;align-items:center;gap:8px;position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));z-index:40;transform:translateX(-50%);padding:12px 20px;border:0;border-radius:999px;background:var(--ng-ink);color:var(--ng-white);font:700 14px var(--ng-sans);box-shadow:0 10px 26px -10px rgba(20,25,30,.55)}
+  .map-open svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+  .footer{padding-bottom:88px}
+
+  /* ---- map pop-out ---- */
+  html.map-pop-open{overflow:hidden}
+  .map-pop[open]{display:flex;flex-direction:column;position:fixed;inset:24px 0 0;width:100%;max-width:none;height:auto;max-height:none;margin:0;padding:0;border:0;border-radius:16px 16px 0 0;background:var(--ng-white);color:var(--ng-ink);overflow:clip;animation:map-pop-in .32s cubic-bezier(.2,.8,.2,1)}
+  .map-pop::backdrop{background:rgba(18,30,36,.48)}
+  @keyframes map-pop-in{from{transform:translateY(40%);opacity:.4}}
+  .map-pop-head{display:flex;align-items:center;gap:10px;min-height:58px;padding:8px 12px 8px 18px;flex:none}
+  .map-pop-dot{width:12px;height:12px;flex:none;border-radius:50%;background:var(--family-tint,var(--ng-red))}
+  .map-pop-head h2{min-width:0;margin:0;overflow:hidden;font:900 20px/1.2 var(--ng-sans);text-overflow:ellipsis;white-space:nowrap}
+  .map-pop-count{margin-left:auto;font:700 12px var(--ng-grotesk);color:var(--ng-muted);white-space:nowrap}
+  .map-pop-count b{font-size:18px;color:var(--ng-ink)}
+  .map-pop-close{display:grid;place-items:center;width:40px;height:40px;flex:none;border:0;border-radius:50%;background:var(--ng-paper);color:var(--ng-ink);font-size:24px;line-height:1}
+  .map-pop-map{flex:none;height:min(46dvh,420px);border-block:1px solid var(--ng-line)}
+  .map-pop .map-column{height:100%;border:0}
+  .map-pop .map-surface{height:100%!important;min-height:0!important;border:0!important;border-radius:0!important}
+  .map-pop .map-topline,.map-pop .map-legend{display:none}
+  .map-pop #map-svg{touch-action:none}
+  .map-pop .map-zoom{top:10px;right:10px}
+  .map-pop .map-zoom button{width:36px;height:36px}
+  .map-pop-tools{display:flex;gap:6px;flex:none;padding:10px 12px 6px;overflow-x:auto;scrollbar-width:none}
+  .map-pop-tools::-webkit-scrollbar{display:none}
+  .map-pop .region-controls{flex-wrap:nowrap;margin:0;gap:6px}
+  .map-pop .region-controls button,.map-pop #visited-filter{flex:none;min-height:34px;padding:6px 12px;border-radius:999px;font-size:12px}
+  .map-pop #visited-filter{white-space:nowrap}
+  .map-pop-list{display:flex;flex-direction:column;flex:1;min-height:0;padding:0 16px}
+  .map-pop .directory-results{flex:none;padding:4px 0 8px}
+  .map-pop .place-list{flex:1;min-height:0;max-height:none;grid-template-columns:1fr;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .map-pop.sheet-open .place-list{padding-bottom:230px}
+  .map-tooltip.pinned{padding:6px 10px;border-radius:10px;font:700 13px var(--ng-sans);white-space:nowrap}
+  .map-tooltip.pinned:after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:var(--ng-ink)}
+  .map-tooltip.pinned.below:after{bottom:auto;top:-5px;border:5px solid transparent;border-top:0;border-bottom-color:var(--ng-ink)}
+
+  /* ---- bottom sheet: the real detail panel ---- */
+  .map-pop .mobile-stamp-dialog[open]{display:block;position:absolute;inset:auto 0 0;z-index:5;width:100%;max-width:none;max-height:calc(100% - 64px);margin:0;padding:0;border:0;border-radius:16px 16px 0 0;background:var(--ng-white);overflow:auto;overscroll-behavior:contain;box-shadow:0 -10px 30px -12px rgba(16,27,37,.35);animation:sheet-in .28s cubic-bezier(.2,.8,.2,1);--stamp-ink:var(--family-deep,#2b4f7a)}
+  @keyframes sheet-in{from{transform:translateY(100%)}}
+  .mobile-stamp-dialog .stamp-panel{display:block;border:0;background:transparent}
+  .mobile-stamp-dialog .stamp-panel-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;min-height:30px;padding:0 6px 0 0;border:0;background:var(--ng-white)}
+  .mobile-stamp-dialog .stamp-panel-label{display:none}
+  .mobile-stamp-dialog .sheet-steps{display:flex;align-items:center;gap:2px;margin-right:4px}
+  .sheet-step{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--ng-line);border-radius:50%;background:var(--ng-white);color:var(--family-deep,var(--ng-ink));font:700 18px/1 var(--ng-sans)}
+  .sheet-step:disabled{opacity:.3}
+  .sheet-position{min-width:42px;text-align:center;font:700 10px var(--ng-grotesk);letter-spacing:.04em;color:var(--ng-muted)}
+  .sheet-toggle{display:block;flex:1;align-self:stretch;min-height:30px;border:0;background:transparent;cursor:grab;touch-action:none}
+  .sheet-toggle:before{content:"";display:block;width:40px;height:5px;margin:0 auto;border-radius:999px;background:var(--ng-line-strong)}
+  .mobile-stamp-close{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:var(--ng-paper);color:var(--ng-ink);font-size:22px;line-height:1}
+  .mobile-stamp-dialog .stamp-panel-inner{display:block;padding:0 16px calc(16px + env(safe-area-inset-bottom))}
+  .mobile-stamp-dialog .place-heading{cursor:pointer}
+  .mobile-stamp-dialog .place-heading h2{font-size:24px;line-height:1.2}
+  .mobile-stamp-dialog .place-heading #place-en{margin-top:2px}
+  .mobile-stamp-dialog .place-heading #place-location{margin-top:3px}
+  .mobile-stamp-dialog .impression-paper{min-height:220px;margin:14px 0}
+  .mobile-stamp-dialog .stamp-fields{margin:0}
+  .mobile-stamp-dialog .companion-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .mobile-stamp-dialog .companion-manage{width:auto;min-height:40px;padding:5px 10px;font-size:11px}
+  .mobile-stamp-dialog .stamp-button{min-height:52px;border-radius:12px;font-size:15px}
+  .mobile-stamp-dialog .stamp-button:not(.locked){background:var(--family-deep,#2b4f7a);border-color:var(--family-deep,#2b4f7a)}
+  .mobile-stamp-dialog .stamp-button:not(.locked):hover{background:var(--family-ink,#17304c)}
+  .mobile-stamp-dialog[data-sheet="full"] .stamp-button{position:sticky;bottom:8px;z-index:1}
+  .mobile-stamp-dialog .stamp-history{margin-top:12px}
+  /* Peek: name, month and the stamp button only; everything else waits for a pull up. */
+  .mobile-stamp-dialog[data-sheet="peek"] :is(.impression-paper,.stamp-signatures,#visit-date-label,.companion-block,.stamp-history,.delete-city,.legacy-note){display:none!important}
+  .mobile-stamp-dialog[data-sheet="peek"] .stamp-fields{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:8px;align-items:stretch;margin-top:12px}
+  .mobile-stamp-dialog[data-sheet="peek"] .date-stamp-picker{margin:0}
+  .mobile-stamp-dialog[data-sheet="peek"] .date-picker-toggle{height:100%;min-height:52px;border-radius:12px}
+  .mobile-stamp-dialog[data-sheet="peek"] .date-picker-action{display:none}
+  .mobile-stamp-dialog[data-sheet="peek"] .date-picker-toggle{gap:6px;padding-inline:10px}
+  .mobile-stamp-dialog[data-sheet="peek"] .date-picker-value{font-size:13px;white-space:nowrap}
+  .mobile-stamp-dialog[data-sheet="peek"] .stamp-button{margin:0;padding-inline:12px;font-size:14px;white-space:nowrap}
+  .mobile-stamp-dialog[data-sheet="peek"] .stamp-button-arrow{display:none}
+  .mobile-stamp-dialog[data-sheet="peek"] .stamp-feedback{grid-column:1/-1;margin:0}
+
+  /* ---------- hero and board heading: the cards carry the counts ---------- */
   .intro,.section-overline{display:none!important}
-  .atlas-board{border-radius:14px;overflow:hidden}
-  /* The collection card and the deck already carry the counts. */
   .board-heading{display:none}
-  /* Tall enough for a continent, short enough that the cards stay on screen. */
-  .map-surface{height:clamp(250px,74vw,440px)!important;min-height:0}
-  /* A vertical swipe over the map still scrolls the page. */
-  #map-svg{touch-action:pan-y}
-  .map-legend{display:none}
 
   /* ---------- collections as photo cards with progress ---------- */
   .atlas-collections-in{padding:8px 0 10px}
@@ -47,108 +147,6 @@
   .collection-pill.is-active .pill-count{color:var(--ng-white);background:none}
   .collection-pill:hover{transform:none}
 
-  /* ---------- the deck under the map ---------- */
-  .mobile-deck{display:block;padding:12px 0 14px;border-top:1px solid var(--ng-line);background:var(--ng-white)}
-  .deck-search{display:flex;align-items:center;gap:10px;width:calc(100% - 28px);margin:0 14px;min-height:46px;padding:0 6px 0 14px;border:1.5px solid var(--ng-line-strong);border-radius:999px;background:var(--ng-paper);color:var(--ng-ink-soft);font:600 13px var(--ng-sans);text-align:left;cursor:pointer}
-  .deck-search-icon{font-size:17px;color:var(--ng-ink)}
-  .deck-search-text{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .deck-search-all{flex:none;padding:7px 12px;border-radius:999px;background:var(--ng-ink);color:var(--ng-white);font-size:11px;font-weight:700}
-
-  .region-strip{display:flex;gap:8px;margin:12px 0 0;padding:2px 14px 4px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .region-strip::-webkit-scrollbar{display:none}
-  .region-card{position:relative;overflow:hidden;flex:0 0 auto;min-width:96px;display:grid;gap:2px;padding:8px 12px 10px;border:1.5px solid var(--ng-line);border-radius:10px;background:var(--ng-white);color:var(--ng-ink);text-align:left;scroll-snap-align:start;cursor:pointer}
-  .region-card strong{font:800 12.5px var(--ng-sans);white-space:nowrap}
-  .region-card-count{font:700 10px var(--mono);color:var(--ng-muted)}
-  .region-card-bar{position:absolute;left:0;bottom:0;height:3px;width:var(--progress,0%);background:var(--chapter-accent,var(--ng-red))}
-  .region-card[aria-pressed="true"]{border-color:var(--chapter-accent,var(--ng-ink));background:color-mix(in srgb,var(--chapter-accent,#c9202f) 10%,white);box-shadow:inset 0 0 0 1px var(--chapter-accent,var(--ng-ink))}
-
-  .deck-head{display:flex;align-items:baseline;gap:10px;padding:14px 14px 0}
-  .deck-head strong{font:800 15px var(--ng-sans)}
-  .deck-head span{font:700 10px var(--mono);color:var(--ng-muted)}
-  .deck-clear{margin-left:auto;border:0;background:none;color:var(--chapter-accent-ink,var(--ng-red));font:700 11px var(--ng-sans)}
-
-  .place-carousel{display:flex;gap:10px;margin:0;padding:10px 14px 6px;list-style:none;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-  .place-carousel::-webkit-scrollbar{display:none}
-  .place-card-item{flex:0 0 auto;scroll-snap-align:center}
-  .place-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:144px;height:178px;padding:10px 11px 11px;border:1.5px solid color-mix(in srgb,var(--family-tint,#8b8b85) 32%,white);border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--family-tint,#8b8b85) 9%,white),white 62%);color:var(--ng-ink);text-align:left;cursor:pointer;transition:transform .15s,box-shadow .15s}
-  .place-card:active{transform:scale(.97)}
-  .place-card[aria-current="true"]{border-color:var(--family-deep,var(--ng-ink));box-shadow:0 0 0 1.5px var(--family-deep,var(--ng-ink)),0 10px 22px -14px rgba(20,25,30,.5)}
-  .place-card.done{background:linear-gradient(180deg,color-mix(in srgb,var(--family-tint,#c9202f) 22%,white),white 70%)}
-  .place-card-top{display:flex;align-items:center;justify-content:space-between;width:100%}
-  .place-card-flag{width:24px;height:16px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
-  .place-card-index{margin-left:auto;font:700 9px var(--mono);color:var(--ng-muted);letter-spacing:.08em}
-  .place-card-art{display:block;width:100%;height:56px;margin:2px 0 1px;overflow:visible;fill:none;stroke:var(--family-deep,var(--ng-navy));stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;color:var(--family-deep,var(--ng-navy));opacity:.55}
-  .place-card.done .place-card-art{opacity:1}
-  .place-card-art .t-1{opacity:1}.place-card-art .t-2{opacity:.72}.place-card-art .t-3{opacity:.44}.place-card-art .t-4{opacity:.13}
-  .place-card-art .f{fill:currentColor;stroke:none}
-  .place-card-art .art-serial{display:none}
-  .place-card-name{display:flex;align-items:baseline;gap:5px;max-width:100%;font:800 15px/1.25 var(--ng-sans);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .place-card-name .city-code{font:700 9px var(--mono);color:var(--ng-muted)}
-  .place-card-en{max-width:100%;font:600 9.5px/1.3 var(--mono);letter-spacing:.04em;color:var(--ng-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-transform:uppercase}
-  .place-card-status{display:flex;align-items:center;gap:6px;margin-top:auto;font:700 10px var(--mono);color:var(--ng-ink-soft)}
-  .place-card-seal{display:grid;place-items:center;width:24px;height:24px;border:2px double var(--family-deep,#aa263b);border-radius:50%;color:var(--family-deep,#a92339);font:900 12px/1 var(--ng-sans);transform:rotate(-8deg)}
-  .place-card.deck-signin{justify-content:center;align-items:center;text-align:center;gap:8px;border:1.5px dashed var(--ng-red);background:var(--ng-red-tint)}
-  .deck-signin-mark{display:grid;place-items:center;width:46px;height:46px;border:3px double var(--ng-red);border-radius:50%;color:var(--ng-red);font:900 22px/1 var(--ng-sans);transform:rotate(-10deg)}
-  .place-card.deck-signin strong{font:800 14px var(--ng-sans);color:var(--ng-red-dark)}
-  .place-card.deck-signin small{font-size:10px;color:var(--ng-ink-soft);line-height:1.4}
-  .deck-empty{display:grid;place-items:center;width:calc(100vw - 60px);height:178px;border:1.5px dashed var(--ng-line-strong);border-radius:14px;color:var(--ng-muted);font-size:13px}
-
-  /* ---------- the index lives in a full-screen search dialog ---------- */
-  .atlas-board > .directory{display:none}
-  .search-dialog[open]{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;display:flex;flex-direction:column;background:var(--ng-white);overflow:hidden}
-  .search-dialog::backdrop{background:rgba(18,30,36,.4)}
-  .search-dialog-top{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 18px;border-bottom:1px solid var(--ng-line);font:700 10px var(--mono);letter-spacing:.16em;color:var(--ng-ink-soft)}
-  .search-dialog-top button{width:44px;height:44px;border:0;background:none;color:var(--ng-ink);font-size:28px;line-height:1}
-  .search-dialog .directory{display:flex;flex-direction:column;flex:1;min-height:0;margin:0;padding:14px 16px 10px;border:0}
-  .search-dialog .directory-head{order:0}
-  .search-dialog #directory-title{display:none}
-  .search-dialog .search-field{min-height:46px;font-size:16px}
-  .search-dialog .search-field input{font-size:16px}
-  .search-dialog .place-list{flex:1;min-height:0;max-height:none!important;overflow-y:auto}
-
-  /* ---------- the postcard is a bottom sheet over the map ---------- */
-  .atlas-grid > .stamp-panel{display:none}
-  .mobile-stamp-dialog[open]{display:block;position:fixed;inset:auto 0 0 0;width:100%;max-width:560px;max-height:86svh;margin:0 auto;padding:6px 6px 0;border:0;border-radius:18px 18px 0 0;overflow:auto;overscroll-behavior:contain;background:repeating-linear-gradient(-45deg,var(--family-tint,#3f6fa8) 0 7px,#fff 7px 14px,var(--ng-navy) 14px 21px,#fff 21px 28px);box-shadow:0 -12px 40px #101b2540;--stamp-ink:var(--family-deep,#2b4f7a);animation:sheet-up .26s cubic-bezier(.2,.8,.25,1)}
-  @keyframes sheet-up{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
-  .mobile-stamp-dialog::backdrop{background:rgba(18,30,36,.28)}
-  .mobile-stamp-dialog .stamp-panel{display:block;border-radius:13px 13px 0 0;background:#fff;overflow:hidden}
-  .mobile-stamp-dialog .stamp-panel-top{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px;padding:14px 8px 6px 18px;min-height:52px;background:#fff;color:var(--family-deep);letter-spacing:.14em;touch-action:none}
-  .mobile-stamp-dialog .sheet-handle{display:block;position:absolute;top:5px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:4px;background:var(--ng-line-strong)}
-  .mobile-stamp-dialog .stamp-panel-label{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .mobile-stamp-dialog .sheet-steps{display:flex;align-items:center;gap:2px}
-  .sheet-step{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--ng-line);border-radius:50%;background:#fff;color:var(--family-deep,var(--ng-ink));font:700 20px/1 var(--ng-sans)}
-  .sheet-step:disabled{opacity:.3}
-  .sheet-position{min-width:46px;text-align:center;font:700 10px var(--mono);letter-spacing:.04em;color:var(--ng-muted)}
-  .mobile-stamp-close{display:grid;place-items:center;width:40px;height:40px;border:0;background:transparent;color:var(--ng-ink);font-size:27px;line-height:1}
-  .mobile-stamp-dialog .stamp-panel-inner{display:block;padding:6px 20px calc(18px + env(safe-area-inset-bottom))}
-  .mobile-stamp-dialog .place-heading h2{font-size:27px;line-height:1.2}
-  .mobile-stamp-dialog .place-heading #place-en{margin-top:3px}
-  .mobile-stamp-dialog .place-heading #place-location{margin-top:4px}
-  .mobile-stamp-dialog .impression-paper{min-height:150px;margin:12px 0;padding:8px 10px 27px;background:color-mix(in srgb,var(--family-tint) 9%,white);border:0;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
-  .mobile-stamp-dialog .impression-paper:before{inset:5px;border:2px dotted color-mix(in srgb,var(--family-tint) 38%,white)}
-  /* A little perforated postage mark, separate from the circular travel seal. */
-  .mobile-stamp-dialog .impression-paper:after{content:'✈';position:absolute;top:10px;right:12px;display:grid;place-items:center;width:28px;height:35px;color:var(--family-deep);font-size:16px;background:#fff;border:2px dotted var(--family-tint);transform:rotate(7deg)}
-  .mobile-stamp-dialog .stamp-face{width:112px;height:112px;box-shadow:inset 0 0 0 4px var(--stamp-paper),inset 0 0 0 5px currentColor}
-  .mobile-stamp-dialog .stamp-face:before{inset:7px}
-  .mobile-stamp-dialog .stamp-art{width:65px;height:38px}
-  .mobile-stamp-dialog .stamp-face strong{font-size:15px;max-width:88px}
-  .mobile-stamp-dialog .stamp-rule{width:50px;margin:2px 0}
-  .mobile-stamp-dialog .stamp-face time{font-size:9px}
-  .mobile-stamp-dialog .stamp-preview-icon{width:15px;height:15px;margin:0}
-  .mobile-stamp-dialog .stamp-owner-seal{width:30px;height:30px;right:3px;bottom:13px}
-  .mobile-stamp-dialog .stamp-owner-seal b{font-size:16px}
-  .mobile-stamp-dialog .plate-caption{bottom:4px;left:12px;right:12px;padding-top:3px}
-  .mobile-stamp-dialog .stamp-fields{margin:0}
-  .mobile-stamp-dialog .companion-block{margin-top:8px;padding-top:8px}
-  .mobile-stamp-dialog .companion-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .mobile-stamp-dialog .companion-manage{width:auto;min-height:40px;padding:5px 10px;border-radius:6px;border-color:var(--family-deep);background:white;color:var(--family-deep);font-size:11px}
-  .mobile-stamp-dialog .companion-manage-icon{width:17px;height:17px}
-  .mobile-stamp-dialog .companion-note{margin:3px 0;font-size:10px}
-  .mobile-stamp-dialog .stamp-button{min-height:52px;font-size:15px}
-  .mobile-stamp-dialog .stamp-button:not(.locked){background:var(--family-deep,#2b4f7a);border-color:var(--family-deep,#2b4f7a);border-radius:10px}
-  .mobile-stamp-dialog .stamp-button:not(.locked):hover{background:var(--family-ink,#17304c)}
-  .mobile-stamp-dialog .stamp-history{margin-top:8px}
-
   /* ---------- below the fold: shared trips as a swipeable row ---------- */
   .friends-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
   .friends-tabs::-webkit-scrollbar{display:none}
@@ -166,6 +164,6 @@
 }
 
 @media(max-width:840px) and (prefers-reduced-motion:reduce){
-  .mobile-stamp-dialog[open]{animation:none}
+  .map-pop[open],.map-pop .mobile-stamp-dialog[open]{animation:none}
   .map-point.is-peek .point-halo{animation:none}
 }

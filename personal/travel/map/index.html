@@ -98,6 +98,7 @@
         <div id="atlas-panel" aria-labelledby="board-title" tabindex="0" class="atlas-board">
           <div class="board-heading"><div class="board-heading-left"><span class="live-dot" aria-hidden="true"></span><strong id="board-title">世界國家</strong></div><div class="board-heading-right"><span class="collection-total"><span id="collection-label">已蓋章</span> <b id="passport-count">0</b> 個地點</span><div class="board-total"><strong id="board-visited">0</strong><span class="board-slash">/</span><span id="board-total">240</span></div></div></div>
 
+          <div class="recent-stamps" id="recent-stamps" aria-label="最近蓋章" hidden></div>
           <div class="atlas-grid">
             <div class="map-column">
               <div class="map-surface" id="map-surface">
@@ -117,7 +118,7 @@
             </div>
 
             <aside class="stamp-panel" aria-label="目的地與蓋章台">
-              <div class="stamp-panel-top"><span class="sheet-handle" aria-hidden="true"></span><span class="stamp-panel-label">目的地 / DESTINATION</span><span class="sheet-steps"><button type="button" id="sheet-prev" class="sheet-step" aria-label="上一個地點">‹</button><span id="sheet-position" class="sheet-position" aria-live="polite"></span><button type="button" id="sheet-next" class="sheet-step" aria-label="下一個地點">›</button></span><button type="button" class="mobile-stamp-close" id="mobile-stamp-close" aria-label="關閉蓋章視窗">×</button></div>
+              <div class="stamp-panel-top"><button type="button" class="sheet-toggle" id="sheet-toggle" aria-expanded="false" aria-label="展開蓋章台"></button><span class="stamp-panel-label">目的地 / DESTINATION</span><span class="sheet-steps"><button type="button" id="sheet-prev" class="sheet-step" aria-label="上一個地點">‹</button><span id="sheet-position" class="sheet-position" aria-live="polite"></span><button type="button" id="sheet-next" class="sheet-step" aria-label="下一個地點">›</button></span><button type="button" class="mobile-stamp-close" id="mobile-stamp-close" aria-label="關閉蓋章視窗">×</button></div>
               <div class="stamp-panel-inner">
                 <div class="place-heading"><h2 class="place-name-line"><span id="place-flag" class="place-flag" aria-hidden="true"></span><span id="place-name">日本</span><span id="place-code" hidden></span></h2><p id="place-en">JAPAN</p><p id="place-location">亞洲 · 國家與地區</p><p id="legacy-note" class="legacy-note" hidden></p></div>
                 <div class="impression-paper" aria-label="紀念戳章預覽"><div class="stamp-face pending" id="stamp-face" aria-hidden="true"><svg class="stamp-art" id="stamp-art" viewBox="0 0 100 58" aria-hidden="true"></svg><svg class="stamp-tool-icon stamp-preview-icon" aria-hidden="true"><use href="#icon-rubber-stamp"/></svg><span class="stamp-owner-seal" id="stamp-owner-seal" hidden><b id="stamp-owner-initial"></b><small>TRIP</small></span><strong id="stamp-face-name">日本</strong><span class="stamp-rule"></span><time id="stamp-face-date">────.──</time></div><div class="plate-caption"><span id="plate-motif" class="plate-motif">日本 · 富士山</span><span class="plate-scale" role="img" aria-label="單色墨色四階"><i></i><i></i><i></i><i></i></span><span id="plate-kind" class="plate-kind">風景</span></div></div>
@@ -143,15 +144,10 @@
             </aside>
           </div>
 
-          <div class="mobile-deck" id="mobile-deck">
-            <button type="button" class="deck-search" id="deck-search" aria-haspopup="dialog" aria-controls="search-dialog"><span class="deck-search-icon" aria-hidden="true">⌕</span><span class="deck-search-text" id="deck-search-text">搜尋國家、城市或代號</span><span class="deck-search-all">全部清單</span></button>
-            <div class="region-strip" id="region-strip" aria-label="主要地理分區"></div>
-            <div class="deck-head"><strong id="deck-title">目的地</strong><span id="deck-count"></span><button type="button" id="deck-clear" class="deck-clear" hidden>清除搜尋 ×</button></div>
-            <ul class="place-carousel" id="place-carousel" aria-label="目的地卡片，左右滑動瀏覽，點一下打開明信片蓋章"></ul>
-          </div>
 
           <section class="directory" id="destination-index" aria-labelledby="directory-title">
             <div class="directory-head"><div><h2 id="directory-title">地點索引<span class="dot">.</span></h2></div><div class="directory-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="place-search" placeholder="搜尋中文、英文或代號…" aria-label="搜尋目的地" autocomplete="off"></label><button type="button" id="visited-filter" aria-pressed="false"><span aria-hidden="true">◎</span> 只看已蓋章</button></div></div>
+            <div class="region-index" id="region-index" aria-label="依地區打開地圖"></div>
             <div id="region-controls" class="region-controls" aria-label="主要地理分區"></div>
             <div class="directory-results"><span id="result-count" role="status" aria-live="polite"></span></div>
             <div id="place-list" class="place-list" aria-label="可選擇的目的地清單"></div>
@@ -176,8 +172,14 @@
     <footer class="footer"><span>© 2026 EVA HUANG</span><a href="./specimen.html">戳章圖稿索引 ↗</a><a href="/personal/travel/">← 回旅行地圖首頁</a></footer>
   </div>
 
-  <dialog id="mobile-stamp-dialog" class="mobile-stamp-dialog" aria-labelledby="place-name"></dialog>
-  <dialog id="search-dialog" class="search-dialog" aria-labelledby="directory-title"><div class="search-dialog-top"><span>DESTINATION INDEX / 地點索引</span><button type="button" id="search-dialog-close" aria-label="關閉地點索引">×</button></div></dialog>
+  <button type="button" class="map-open" id="map-open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>打開全部地圖</button>
+  <dialog id="map-pop" class="map-pop" aria-labelledby="map-pop-title">
+    <div class="map-pop-head"><span class="map-pop-dot" aria-hidden="true"></span><h2 id="map-pop-title">世界國家</h2><span class="map-pop-count"><b id="map-pop-visited">0</b> / <span id="map-pop-total">0</span></span><button type="button" class="map-pop-close" id="map-pop-close" aria-label="關閉地圖">×</button></div>
+    <div class="map-pop-map" id="map-pop-map"></div>
+    <div class="map-pop-tools" id="map-pop-tools"></div>
+    <div class="map-pop-list" id="map-pop-list"></div>
+    <dialog id="mobile-stamp-dialog" class="mobile-stamp-dialog" aria-labelledby="place-name" data-sheet="peek"></dialog>
+  </dialog>
 
   <dialog id="collection-menu" class="collection-menu" aria-labelledby="collection-menu-title">
     <div class="collection-menu-inner">
