@@ -73,7 +73,16 @@ The Okinawa feature page (`/personal/travel/okinawa/`) focuses on Fuzhou / Chine
 
 The page pairs four thematic narrative chapters (`#narrative`, linking directly into map pins) with a mainland-only interactive SVG atlas (`#atlas`, including a 6-site `只看移民史核心` filter and 1/7–1/10 route toggle) and the four-day itinerary (`#plan`). Place names live in the site index, hover tooltips and keyboard-accessible pins, not permanent map overlays. It intentionally excludes the 1945 Battle of Okinawa markers (`history-context.js`) and outer-island/Yanbaru regions so the editorial scope stays centered on Sino-Ryukyuan maritime immigration history and the 2027 mainland itinerary.
 
-The cover and landing card share a locally bundled copy of the [2010 Shuri Castle aerial photograph](https://commons.wikimedia.org/wiki/File:100927_Shuri_Cstl_aerial.jpg) (MLIT/GSI; reuse allowed with attribution, including the prescribed National Land Image Information credit in each page's footer). Both pages load the already bundled segmented Noto Sans TC variable font (`map/fonts/noto-sans-tc/`) so the new Traditional Chinese characters remain legible offline even when Google Fonts is unavailable. The shared masthead's Japanese 図 glyph has a small OFL-licensed JP fallback (`map/fonts/atlas-sans-jp-brand.woff2`).
+The cover and landing card share a locally bundled copy of the [2010 Shuri Castle aerial photograph](https://commons.wikimedia.org/wiki/File:100927_Shuri_Cstl_aerial.jpg) (MLIT/GSI; reuse allowed with attribution, including the prescribed National Land Image Information credit in each page's footer). Each of the four narrative chapters also has one locally bundled, captioned Commons landmark photograph, with photographer, original file, exact licence and changes credited beside the image:
+
+| Chapter / depicted place | Local photo | Original and photographer | Chosen reuse licence |
+| --- | --- | --- | --- |
+| 01 · Urasoe Castle's **reconstructed** outer wall, not medieval masonry | `okinawa/photos/urasoe-walls.jpg` | [Urasoe Castle Walls](https://commons.wikimedia.org/wiki/File:Urasoe_Castle_Walls.jpg), Sturmgewehr88 (2013) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) |
+| 02 · Kume Shiseibyo's present gate, at the **post-2013** temple site | `okinawa/photos/kume-shiseibyo.jpg` | [Kume-Shiseibyo, Naha](https://commons.wikimedia.org/wiki/File:151230_Kume-Shiseibyo_Naha_Okinawa_pref_Japan01n.jpg), 663highland (2015) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) |
+| 03 · Shikinaen's pond bridge and royal villa | `okinawa/photos/shikinaen.jpg` | [Naha Shikinaen](https://commons.wikimedia.org/wiki/File:Naha_Shikinaen17n4272.jpg), 663highland (2011) | [CC BY 2.5](https://creativecommons.org/licenses/by/2.5/deed.en) |
+| 04 · Tsuboya Yachimun Street near the 南窯 entrance | `okinawa/photos/tsuboya-street.jpg` | [Tsuboya-Yachimun-dori street](https://commons.wikimedia.org/wiki/File:JP-47_Naha_Tsuboya-Yachimun-dori_street.jpg), Hajime NAKANO (2006) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/deed.en) |
+
+These are small web JPEGs (500 × 375, 960 × 640, 960 × 640, and 480 × 640 respectively): the Urasoe and Tsuboya source downloads were Commons-indexed previews, and the Kume and Shikinaen images were downsized from larger Commons images. The site copies were recompressed and metadata-stripped, **not cropped or colour-edited**; the responsive figures also preserve each photo's aspect ratio. The photos remain subject to their individual licences, not a blanket licence for the site. Both the cover and landing card load the already bundled segmented Noto Sans TC variable font (`map/fonts/noto-sans-tc/`) so the new Traditional Chinese characters remain legible offline even when Google Fonts is unavailable. The shared masthead's Japanese 図 glyph has a small OFL-licensed JP fallback (`map/fonts/atlas-sans-jp-brand.woff2`).
 
 ## Browser regression tests
 
@@ -87,7 +96,7 @@ NODE_PATH=/tmp/atlas-test-deps/node_modules CHROMIUM_PATH=/path/to/chromium \
   node scripts/test-travel-landing.cjs
 ```
 
-Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. The landing test covers filled photos, text spacing, route wrapping, keyboard links and longer copy across desktop and mobile widths. The region tests cover timeline/marker filtering, Okinawa's 4 narrative chapters and 14 mainland sites, core-site and route toggles, reset behavior, itinerary jumps and keyboard focus.
+Alternatively install `@sparticuz/chromium` alongside `playwright-core` (requires compatible system libraries) and omit `CHROMIUM_PATH`. Tests serve this checkout on an ephemeral loopback port and block external photo requests. The landing test covers filled photos, text spacing, route wrapping, keyboard links and longer copy across desktop and mobile widths. The region tests cover timeline/marker filtering, Okinawa's 4 narrative chapters and their locally loaded, uncropped photographs, 14 mainland sites, core-site and route toggles, reset behavior, itinerary jumps and keyboard focus.
 
 ## Historical context and the Kanto/Kansai question
 

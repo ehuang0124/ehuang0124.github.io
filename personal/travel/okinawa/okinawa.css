@@ -244,6 +244,19 @@ section[id]{scroll-margin-top:88px}
   line-height:1.85;
   color:var(--ng-muted);
 }
+.chapter-figure{margin:20px 0 0;max-width:100%}
+.chapter-figure img{
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:var(--ng-r-sm);
+  background:var(--ng-paper);
+}
+.chapter-figure figcaption{margin-top:9px;font-family:var(--ng-sans);line-height:1.75;overflow-wrap:anywhere}
+.chapter-photo-place{display:block;font-size:12px;font-weight:700;color:var(--ng-ink-soft)}
+.chapter-photo-credit{display:block;margin-top:3px;font-size:11.5px;color:var(--ng-ink-soft)}
+.chapter-photo-credit a{color:var(--ng-ink-soft);text-underline-offset:2px}
+.chapter-photo-credit a:hover{color:var(--ng-red)}
 .chapter-body p{
   margin:0 0 14px;
   max-width:48em;
@@ -607,11 +620,15 @@ footer b{font-family:var(--ng-sans);font-weight:900;font-size:14px;letter-spacin
 }
 @media(max-width:860px){
   .chapter{grid-template-columns:1fr}
+  .chapter-figure{max-width:500px}
+  .chapter-figure--portrait{max-width:300px}
   .nav{display:none}
 }
 @media(max-width:720px){
   .wrap{width:calc(100% - 32px)}
   .hero-in{width:calc(100% - 32px)}
+  .chapter-figure{max-width:100%}
+  .chapter-figure--portrait{max-width:330px}
   .plan-grid{grid-template-columns:1fr}
   .hero-stats{gap:20px}
   .detail h3{font-size:22px}
