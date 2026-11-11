@@ -4,14 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Eva Huang on civic tech, public policy, and product.">
-  <meta name="theme-color" content="#fffdf5">
+  <meta name="theme-color" content="#FFFBF2">
   <title>Eva Huang</title>
   <style>
+    /* Sunshower palette: warm paper, slate ink, rain blue, sun gold. */
+    :root {
+      --paper: #FFFBF2;
+      --ink: #2B2F36;
+      --rain: #2F6A8A;
+      --rain-deep: #1B4A63;
+      --sunshower: linear-gradient(120deg, #FFE1A1 0%, #FCD0BE 45%, #BFDDF0 100%);
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: #fffdf5;
-      color: #34392f;
+      min-height: 100vh;
+      background:
+        linear-gradient(to bottom, rgba(255, 251, 242, 0) 0, var(--paper) 340px) no-repeat,
+        var(--sunshower) top / 100% 340px no-repeat,
+        var(--paper);
+      color: var(--ink);
       font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
       font-size: clamp(18px, 2.3vw, 21px);
       line-height: 1.75;
@@ -28,19 +40,26 @@
       letter-spacing: -.035em;
       line-height: 1.15;
     }
+    h1 span {
+      background: linear-gradient(100deg, #A86F12, #B85A45 45%, var(--rain));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
     p { margin: 0 0 24px; }
     a {
-      color: #52652e;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 5px;
+      color: var(--rain);
+      text-decoration: none;
+      background: var(--sunshower) 0 100% / 100% 2px no-repeat;
+      padding-bottom: 3px;
     }
-    a:hover { color: #293c10; }
-    a:focus-visible { outline: 2px solid #52652e; outline-offset: 6px; }
+    a:hover { color: var(--rain-deep); background-size: 100% 4px; }
+    a:focus-visible { outline: 2px solid var(--rain); outline-offset: 6px; }
   </style>
 </head>
 <body>
   <main>
-    <h1>Eva Huang</h1>
+    <h1><span>Eva Huang</span></h1>
     <p>I build technology for public life. What drives me is civic tech: making public services, public information, and civic participation work for the people they are meant to serve.</p>
     <p>My work sits where policy meets product. I like turning rules, constraints, and community needs into tools people can actually use, and asking who a system is built for and who it leaves out.</p>
     <p>I started out building cloud infrastructure at Salesforce, then joined an early-stage startup, where I learned to ship quickly, stay close to users, and own a product end to end.</p>

@@ -456,7 +456,7 @@ def html_document(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#F4F0E5">
+  <meta name="theme-color" content="#FFFBF2">
   <meta property="og:title" content="{safe_title}">
   <link rel="canonical" href="{safe_canonical}">
   <link rel="icon" type="image/svg+xml" href="{asset_root}2n-mark.svg">
