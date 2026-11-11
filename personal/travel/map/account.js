@@ -28,6 +28,13 @@
   // An expired or already-used mail link comes back with an error instead of
   // a session; the page says so instead of silently showing the map.
   let linkError = null;
+  // What a mail link brought back (tokens, token_hash, type, error), already
+  // taken out of the address by auth-link.js so it can never be shared.
+  const authLink = takeAuthLink();
+  // A mail link's login is minted the moment the link is clicked and lands
+  // here seconds later. An older one is a copied or forwarded address: it
+  // belongs to whoever clicked it, not to whoever is opening it now.
+  const LINK_SESSION_MAX_AGE_S = 10 * 60;
   const TRAVELLER_NAME_KEY = 'eva.travel.atlas.name.v1';
   // Display-name override for the browser-only gate, whose name comes from config.
   const LOCAL_NAME_KEY = 'eva.travel.atlas.local-name.v1';
@@ -424,7 +431,9 @@
         client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
           // The email link may open on another device/browser. The implicit callback
           // can complete there without a browser-specific PKCE verifier.
-          auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'implicit' }
+          // The URL is never read by the Auth client: auth-link.js has already
+          // taken the tokens out, and adoptLinkSession() decides whether to use them.
+          auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:false, flowType:'implicit' }
         });
         client.auth.onAuthStateChange((event, session) => {
           if (authenticating) return;
@@ -435,6 +444,7 @@
           if (event === 'TOKEN_REFRESHED' && state.user?.id === session.user.id && session.user.email_confirmed_at) return;
           resolveSession(session);
         });
+        if (!linkError) await adoptLinkSession();
         if (tokenHash) {
           try {
             const { error } = await client.auth.verifyOtp(tokenHash);
@@ -872,11 +882,7 @@
     try { return atlasUrl(); } catch { return undefined; }
   }
   function recoveryLink() {
-    try {
-      const query = new URLSearchParams(location.search);
-      const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
-      return query.get('type') === 'recovery' || hash.get('type') === 'recovery';
-    } catch { return false; }
+    return authLink.query.type === 'recovery' || authLink.hash.type === 'recovery';
   }
   async function requestPasswordReset(rawEmail) {
     if (state.mode !== 'cloud' || !client) return { ok:false, reason:'unavailable' };
@@ -921,36 +927,78 @@
   // Read an error the Auth server put on the way back (expired, used, or
   // denied link). Both the hash (implicit links) and the query are checked.
   function readLinkError() {
-    try {
-      const query = new URLSearchParams(location.search);
-      const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
-      const code = hash.get('error_code') || query.get('error_code') || hash.get('error') || query.get('error');
-      if (!code) return null;
-      return { code, description:hash.get('error_description') || query.get('error_description') || '' };
-    } catch { return null; }
+    const { query, hash } = authLink;
+    const code = hash.error_code || query.error_code || hash.error || query.error;
+    if (!code) return null;
+    return { code, description:hash.error_description || query.error_description || '' };
   }
   // Links built from a custom mail template may carry `token_hash` instead of
   // tokens in the hash; verify those here so either template works.
   function readTokenHash() {
-    try {
-      const query = new URLSearchParams(location.search);
-      const tokenHash = query.get('token_hash');
-      const type = query.get('type');
-      return tokenHash && type ? { token_hash:tokenHash, type } : null;
-    } catch { return null; }
+    const { token_hash:tokenHash, type } = authLink.query;
+    return tokenHash && type ? { token_hash:tokenHash, type } : null;
+  }
+  // auth-link.js normally runs first and leaves the values here. If it did
+  // not (an old cached page), take them out of the address now instead.
+  function takeAuthLink() {
+    let link = window.TravelAtlasAuthLink;
+    try { window.TravelAtlasAuthLink = null; } catch { /* ignore */ }
+    if (!link) link = stripAuthParams();
+    return { query:{ ...(link?.query || {}) }, hash:{ ...(link?.hash || {}) } };
   }
   // Drop auth parameters from the address bar so a reload or a shared link
-  // does not replay an expired token or error.
-  function cleanAuthParams() {
+  // never carries a login, an expired token or an error. Returns what it took.
+  function stripAuthParams() {
     try {
       const url = new URL(location.href);
-      const authKeys = ['token_hash', 'type', 'error', 'error_code', 'error_description', 'code', 'sb'];
-      let changed = false;
-      authKeys.forEach(key => { if (url.searchParams.has(key)) { url.searchParams.delete(key); changed = true; } });
-      const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
-      if (['access_token', 'error', 'error_code', 'error_description', 'type'].some(key => hash.has(key))) { url.hash = ''; changed = true; }
-      if (changed) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-    } catch { /* leave the address as it is */ }
+      const query = {};
+      ['token_hash', 'type', 'error', 'error_code', 'error_description', 'code', 'sb'].forEach(key => {
+        if (!url.searchParams.has(key)) return;
+        query[key] = url.searchParams.get(key);
+        url.searchParams.delete(key);
+      });
+      const params = new URLSearchParams(url.hash.replace(/^#/, ''));
+      const hash = {};
+      if (['access_token', 'refresh_token', 'error', 'error_code', 'error_description'].some(key => params.has(key))) {
+        params.forEach((value, key) => { hash[key] = value; });
+        url.hash = '';
+      }
+      if (!Object.keys(query).length && !Object.keys(hash).length) return null;
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+      return { query, hash };
+    } catch { return null; }
+  }
+  function cleanAuthParams() { stripAuthParams(); }
+  // Seconds since the access token was issued, or Infinity if unreadable.
+  function tokenAge(accessToken) {
+    try {
+      const part = String(accessToken).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const claims = JSON.parse(atob(part + '='.repeat((4 - part.length % 4) % 4)));
+      if (!Number.isFinite(claims.iat)) return Infinity;
+      return Math.max(0, Date.now() / 1000 - claims.iat);
+    } catch { return Infinity; }
+  }
+  // Sign in with the login a mail link brought, but only if it was minted
+  // moments ago. A copied or forwarded atlas address carrying someone else's
+  // tokens is dropped quietly: the visitor starts signed out, as themselves.
+  async function adoptLinkSession() {
+    const { access_token:accessToken, refresh_token:refreshToken } = authLink.hash;
+    authLink.hash = { ...authLink.hash, access_token:undefined, refresh_token:undefined };
+    if (!accessToken || !refreshToken) return;
+    if (tokenAge(accessToken) > LINK_SESSION_MAX_AGE_S) {
+      console.warn('ignored a stale login carried in the address');
+      recoveryFlow = false;
+      return;
+    }
+    try {
+      const { error } = await client.auth.setSession({ access_token:accessToken, refresh_token:refreshToken });
+      if (!error) return;
+      console.warn('mail link could not be used', error);
+    } catch (error) {
+      console.warn('mail link could not be used', error);
+    }
+    linkError = { code:'otp_expired', description:'' };
+    recoveryFlow = false;
   }
 
   function enterDemo(id = 'demo-eva') {
