@@ -53,12 +53,46 @@
       font-weight: 400;
       letter-spacing: -.02em;
     }
-    h3 {
-      margin: 32px 0 6px;
+    .projects { margin: 0 0 40px; border-top: 1px solid rgba(43, 47, 54, .14); }
+    .projects details { border-bottom: 1px solid rgba(43, 47, 54, .14); }
+    .projects summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 16px;
+      padding: 18px 28px 18px 0;
+      position: relative;
+      cursor: pointer;
+      list-style: none;
+    }
+    .projects summary::-webkit-details-marker { display: none; }
+    .projects summary::after {
+      content: "+";
+      position: absolute;
+      right: 0;
+      top: 16px;
+      color: var(--rain);
+      font-size: 1.15em;
+      transition: transform .2s ease;
+    }
+    .projects details[open] summary::after { transform: rotate(45deg); }
+    .projects summary:focus-visible { outline: 2px solid var(--rain); outline-offset: 4px; }
+    .projects h3 {
+      margin: 0;
       font-size: 1em;
       font-weight: 600;
       line-height: 1.4;
     }
+    .projects .year { color: rgba(43, 47, 54, .62); font-variant-numeric: tabular-nums; }
+    .projects .keywords {
+      grid-column: 1 / -1;
+      display: block;
+      margin: 4px 0 0;
+      color: rgba(43, 47, 54, .62);
+      font-size: .82em;
+      line-height: 1.5;
+    }
+    .projects details > p { margin: 0 0 20px; }
+    @media (prefers-reduced-motion: reduce) { .projects summary::after { transition: none; } }
     a {
       color: var(--rain);
       text-decoration: none;
@@ -79,20 +113,28 @@
 
     <h2>Projects</h2>
 
-    <h3>Bluesky job scam labeler</h3>
-    <p>For Cornell Tech's Trust &amp; Safety course, I built a Bluesky moderation labeler that flags recruitment fraud, impersonated employers, and deceptive job offers aimed at job seekers. Because people subscribe to labels instead of relying on takedowns, the project weighed how to warn users clearly while keeping false positives low.</p>
-
-    <h3>Electronic voting machines and democratic accountability</h3>
-    <p>For Cornell Tech's Internet Law and Policy course, I wrote <a href="https://docs.google.com/document/d/1acNoTd-vTA7jNlucvFxZRJmOc710oGfrQblra7f8a7w/edit?usp=sharing">a paper on U.S. electronic voting machines from 2000 to 2020</a>, from the Florida recount through the Help America Vote Act and federal certification. It argues that new machines only earn public trust when voters can cast and check ballots on their own, including voters with disabilities, and when election offices can catch and correct errors.</p>
-
-    <h3>Booking and payments for local businesses</h3>
-    <p>As an early product manager at the startup <a href="https://global.wishmobile.com/">WishMobile</a>, I led a booking product from zero to launch. I mapped how neighborhood wellness and recreation shops ran their days, then replaced phone confirmations with booking and payment through Google Maps or the shop's own site. It reached 18% of platform revenue within three months.</p>
-
-    <h3>Cloud infrastructure at Salesforce</h3>
-    <p>I work on the <a href="https://www.salesforce.com/platform/infrastructure/">API platform</a> that serves more than 41 billion requests a day, on tenant isolation for AI and government cloud workloads, and on defending public-sector tenants from live DDoS attacks. I also led Mesh Analyzer, which turned one-off customer debugging into a reviewable policy any team can reuse.</p>
-
-    <h3>Getting to the Kendeda Building</h3>
-    <p>At Georgia Tech's Energy Institute, I studied how people reach the <a href="https://livingbuilding.gatech.edu/">Kendeda Building</a>, the campus's Living Building Challenge certified building. I combined interviews, GIS mapping of community destinations, and four personas so different mobility needs weren't averaged into one user.</p>
+    <div class="projects">
+      <details>
+        <summary><h3>Bluesky job scam labeler</h3><span class="year">2026</span><span class="keywords">Trust and safety · Composable moderation · Scam defense</span></summary>
+        <p>For Cornell Tech's Trust &amp; Safety course, I built a Bluesky moderation labeler that flags recruitment fraud, impersonated employers, and deceptive job offers aimed at job seekers. Because people subscribe to labels instead of relying on takedowns, the project weighed how to warn users clearly while keeping false positives low.</p>
+      </details>
+      <details>
+        <summary><h3>Electronic voting machines and democratic accountability</h3><span class="year">2026</span><span class="keywords">Election technology · Accessibility · Internet law and policy</span></summary>
+        <p>For Cornell Tech's Internet Law and Policy course, I wrote <a href="https://docs.google.com/document/d/1acNoTd-vTA7jNlucvFxZRJmOc710oGfrQblra7f8a7w/edit?usp=sharing">a paper on U.S. electronic voting machines from 2000 to 2020</a>, from the Florida recount through the Help America Vote Act and federal certification. It argues that new machines only earn public trust when voters can cast and check ballots on their own, including voters with disabilities, and when election offices can catch and correct errors.</p>
+      </details>
+      <details>
+        <summary><h3>Booking and payments for local businesses</h3><span class="year">2024</span><span class="keywords">Product management · User research · Small businesses</span></summary>
+        <p>As an early product manager at the startup <a href="https://global.wishmobile.com/">WishMobile</a>, I led a booking product from zero to launch. I mapped how neighborhood wellness and recreation shops ran their days, then replaced phone confirmations with booking and payment through Google Maps or the shop's own site. It reached 18% of platform revenue within three months.</p>
+      </details>
+      <details>
+        <summary><h3>Cloud infrastructure at Salesforce</h3><span class="year">2021 – now</span><span class="keywords">Cloud infrastructure · Tenant isolation · Policy governance</span></summary>
+        <p>I work on the <a href="https://www.salesforce.com/platform/infrastructure/">API platform</a> that serves more than 41 billion requests a day, on tenant isolation for AI and government cloud workloads, and on defending public-sector tenants from live DDoS attacks. I also led Mesh Analyzer, which turned one-off customer debugging into a reviewable policy any team can reuse.</p>
+      </details>
+      <details>
+        <summary><h3>Getting to the Kendeda Building</h3><span class="year">2019</span><span class="keywords">Mobility · GIS · User research</span></summary>
+        <p>At Georgia Tech's Energy Institute, I studied how people reach the <a href="https://livingbuilding.gatech.edu/">Kendeda Building</a>, the campus's Living Building Challenge certified building. I combined interviews, GIS mapping of community destinations, and four personas so different mobility needs weren't averaged into one user.</p>
+      </details>
+    </div>
 
     <p><a href="/writing/">My writing</a> · <a href="https://www.linkedin.com/in/ehuang42/">LinkedIn</a> · <a href="mailto:ehuang0124@gmail.com">ehuang0124@gmail.com</a></p>
   </main>
